@@ -1,91 +1,145 @@
-import { useState } from 'react'
-import axios from "axios"
-import { useEffect } from 'react'
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-function App() {
+const COLORS = [
+  "#ffadad",
+  "#ffd6a5",
+  "#fdffb6",
+  "#caffbf",
+  "#9bf6ff",
+  "#a0c4ff",
+  "#bdb2ff",
+  "#ffc6ff",
+];
 
-  const [ notes, setNotes ] = useState([])
-
-
-  function fetchNotes(){
-    axios.get('http://localhost:3000/api/notes')
-    .then((res)=>{
-       setNotes(res.data.notes)
-    })
-  }
-
-
-  useEffect(()=>{
-    fetchNotes()
-  },[])
-
-
-  function handleForm(e){
-    e.preventDefault()
-
-    const {title,description}= e.target.elements;
-
-    console.log(title.value,description.value);
-
-    axios.post("http://localhost:3000/api/notes",{
-      title:title.value,
-      description:description.value,
-    
-    })
-    .then(()=>{
-      fetchNotes()
-    })
-  }
-
-  function handleDelete(noteId){
-
-    axios.delete("http://localhost:3000/api/notes/"+noteId)
-    .then(()=>{
-      fetchNotes()
-    })
-
-  }
-
-
-  function handleUpdate(noteId){
-
-    axios.patch("http://localhost:300/api/notes/"+noteId)
-    .then(()=>{
-      fetchNotes()
-    })
-
-  }
-
-
-  return (
-    <div>
-      <form onSubmit={handleForm}>
-
-        <input type="text" name="title" placeholder='Title' />
-        <br />
-        <textarea name="description" placeholder='Description'></textarea>
-        <br />
-        <button type="submit">Add Note</button>
-
-      </form>
-
-      <hr />
-      <div className="notes">
-        {
-          notes.map((note,idx) => {
-           return <div key={idx} className="note">
-              <h1>{note.title}</h1>
-              <p>{note.description}</p>
-              <button onClick={()=>{handleDelete(note._id)}}>Delete</button>
-
-              <button onClick={()=>{handleUpdate(note._id)}}>Edit</button>
-            </div>
-          })
-        }
-
-      </div>
-    </div>
-  )
+function getRandomColor() {
+  return COLORS[Math.floor(Math.random() * COLORS.length)];
 }
 
-export default App
+function App() {
+  const [notes, setNotes] = useState([]);
+  const [colorMap, setColorMap] = useState({});
+  const [editId, setEditId] = useState(null);
+  const [editText, setEditText] = useState("");
+
+  // 🔹 Fetch Notes + assign stable colors
+  function fetchNotes() {
+    axios.get("http://localhost:3000/api/notes").then((res) => {
+      const fetchedNotes = res.data.notes;
+
+      setColorMap((prev) => {
+        const updated = { ...prev };
+
+        fetchedNotes.forEach((note) => {
+          if (!updated[note._id]) {
+            updated[note._id] = getRandomColor();
+          }
+        });
+
+        return updated;
+      });
+
+      setNotes(fetchedNotes);
+    });
+  }
+
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
+  // 🔹 Add note
+  function handleForm(e) {
+    e.preventDefault();
+    const { title, description } = e.target.elements;
+
+    axios
+      .post("http://localhost:3000/api/notes", {
+        title: title.value,
+        description: description.value,
+      })
+      .then(() => {
+        e.target.reset();
+        fetchNotes();
+      });
+  }
+
+  // 🔹 Delete note
+  function handleDelete(id) {
+    axios.delete(`http://localhost:3000/api/notes/${id}`).then(() => {
+      setColorMap((prev) => {
+        const updated = { ...prev };
+        delete updated[id];
+        return updated;
+      });
+      fetchNotes();
+    });
+  }
+
+  // 🔹 Start edit
+  function startEdit(note) {
+    setEditId(note._id);
+    setEditText(note.description);
+  }
+
+  // 🔹 Save edit
+  function saveEdit(id) {
+    axios
+      .patch(`http://localhost:3000/api/notes/${id}`, {
+        description: editText,
+      })
+      .then(() => {
+        setEditId(null);
+        fetchNotes();
+      });
+  }
+
+  return (
+    <div className="app">
+      <h1 className="title">📝 Notes App</h1>
+
+      <form className="note-form" onSubmit={handleForm}>
+        <input name="title" placeholder="Title" required />
+        <textarea name="description" placeholder="Description" required />
+        <button>Add Note</button>
+      </form>
+
+      <div className="notes">
+        {notes.map((note) => (
+          <div
+            key={note._id}
+            className="note"
+            style={{ background: colorMap[note._id] }}
+          >
+            <h3>{note.title}</h3>
+
+            {editId === note._id ? (
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+              />
+            ) : (
+              <p>{note.description}</p>
+            )}
+
+            <div className="actions">
+              {editId === note._id ? (
+                <button onClick={() => saveEdit(note._id)}>Save</button>
+              ) : (
+                <button onClick={() => startEdit(note)}>Edit</button>
+              )}
+
+              <button
+                className="danger"
+                onClick={() => handleDelete(note._id)}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default App;
