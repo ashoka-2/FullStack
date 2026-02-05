@@ -24,7 +24,7 @@ function App() {
 
   // 🔹 Fetch Notes + assign stable colors
   function fetchNotes() {
-    axios.get("http://localhost:3000/api/notes").then((res) => {
+    axios.get("https://notes-app-g0i6.onrender.com/api/notes").then((res) => {
       const fetchedNotes = res.data.notes;
 
       setColorMap((prev) => {
@@ -53,7 +53,7 @@ function App() {
     const { title, description } = e.target.elements;
 
     axios
-      .post("http://localhost:3000/api/notes", {
+      .post("https://notes-app-g0i6.onrender.com/api/notes", {
         title: title.value,
         description: description.value,
       })
@@ -65,7 +65,7 @@ function App() {
 
   // 🔹 Delete note
   function handleDelete(id) {
-    axios.delete(`http://localhost:3000/api/notes/${id}`).then(() => {
+    axios.delete(`https://notes-app-g0i6.onrender.com/api/notes/${id}`).then(() => {
       setColorMap((prev) => {
         const updated = { ...prev };
         delete updated[id];
@@ -84,7 +84,7 @@ function App() {
   // 🔹 Save edit
   function saveEdit(id) {
     axios
-      .patch(`http://localhost:3000/api/notes/${id}`, {
+      .patch(`https://notes-app-g0i6.onrender.com/api/notes/${id}`, {
         description: editText,
       })
       .then(() => {
