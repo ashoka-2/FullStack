@@ -22,18 +22,11 @@ const userSchema = new mongoose.Schema({
         type:String,
         default:"https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
     },
-    // followers:[{
-    //     type:mongoose.Schema.Types.ObjectId,
-    //     ref:"user"
-    // }],
-    // following:[{
-    //     type:mongoose.Schema.Types.ObjectId,
-    //     ref:"user"
-    // }]
+   
 
 })
 
-const user = mongoose.model("user",userSchema);
+const userModel = mongoose.model("user",userSchema);
 
-module.exports = user;
+module.exports = userModel;
 

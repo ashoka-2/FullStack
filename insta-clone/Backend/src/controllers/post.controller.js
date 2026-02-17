@@ -2,8 +2,8 @@ const postModel = require('../model/post.model')
 
 const ImageKit = require("@imagekit/nodejs")
 const { toFile } = require("@imagekit/nodejs");
-// const { Folders } = require('@imagekit/nodejs/resources/index.js');
 const jwt = require('jsonwebtoken');
+const likeModel = require('../model/likes.model');
 
 
 
@@ -82,11 +82,94 @@ async function getPostDetailsController(req,res){
 
 
 
+async function likePostController(req,res){
+    const username = req.user.username;
+    const postId = req.params.postId
+
+
+    const post = await postModel.findById(postId);
+
+    if(!post){
+        return res.status(404).json({
+            message: "Post not found"
+    })
+    }
+
+    const isAlreadyLiked = await likeModel.findOne({
+        post:postId,
+        user:username
+    })
+
+    if(isAlreadyLiked){
+        return res.status(200).json({
+            message: "You have already liked this post",
+            like:isAlreadyLiked
+        })
+    }
+
+    const like = await likeModel.create({
+        post:postId,
+        user:username
+    })
+
+    
+    res.status(200).json({
+        message: "Post liked successfully",
+        like
+    })
+
+}
+
+
+
+async function unlikePostController(req,res){
+    const username = req.user.username;
+    const postId = req.params.postId;
+
+
+     const post = await postModel.findById(postId);
+     
+    if(!post){
+        return res.status(404).json({
+            message: "Post not found"
+        })
+    }
+
+    const isAlreadyLiked = await likeModel.findOne({
+        post:postId,
+        user:username
+    })
+
+    if(!isAlreadyLiked){
+        return res.status(400).json({
+            message: "You have not liked this post"
+        })
+    }
+
+
+    const unlike = await likeModel.findByIdAndDelete(isAlreadyLiked._id);
+
+    res.status(200).json({
+        message: "Post unliked successfully",
+        unlike
+    })
+
+}
+
+
+
+
+
+
+
+
 
 
 module.exports = {
     createPostController,
     getPostsController,
-    getPostDetailsController
+    getPostDetailsController,
+    likePostController,
+    unlikePostController
 }
 
