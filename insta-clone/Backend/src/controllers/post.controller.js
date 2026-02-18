@@ -4,6 +4,8 @@ const ImageKit = require("@imagekit/nodejs")
 const { toFile } = require("@imagekit/nodejs");
 const jwt = require('jsonwebtoken');
 const likeModel = require('../model/likes.model');
+const followModel = require('../model/follow.model');
+const userModel = require('../model/user.model');
 
 
 
@@ -159,7 +161,39 @@ async function unlikePostController(req,res){
 
 
 
+async function getAllPostsController(req, res) {
 
+    const username = req.user.username;
+
+   const acceptedFollowers = await followModel.find({
+        follower:username,
+        status:"accepted"
+    })
+
+    const followeeUsernames = acceptedFollowers.map(f => f.followee);
+
+    const users = await userModel.find({
+        username: { $in: followeeUsernames }
+    });
+
+    const userIds = users.map(u => u._id);
+
+    const posts = await postModel.find({
+        user: { $in: userIds }
+    });
+
+    if (posts.length === 0) {
+        return res.status(200).json({
+            message: "You have no friends yet, so no posts to show",
+            posts: []
+        });
+    }
+
+    res.status(200).json({
+        message: "Posts fetched successfully",
+        posts
+    })
+}
 
 
 
@@ -170,6 +204,8 @@ module.exports = {
     getPostsController,
     getPostDetailsController,
     likePostController,
-    unlikePostController
+    unlikePostController,
+    getAllPostsController
 }
+
 

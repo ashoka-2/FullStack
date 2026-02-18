@@ -117,7 +117,7 @@ async function respondToFollowRequestController(req,res){
     const followRequest = await followModel.findOne({
         follower:followerUsername,
         followee:followeeUsername,
-        status:"pending"
+        status:{$in: ["pending", "rejected","accepted"]}
     })
 
     if(!followRequest){
@@ -129,7 +129,7 @@ async function respondToFollowRequestController(req,res){
     const updatedFollowRequest = await followModel.findByIdAndUpdate(
         followRequest._id,
         {status:status},
-        {new:true}
+        {returnDocument:"after"}
     )
 
     res.status(200).json({
