@@ -1,7 +1,7 @@
 const express = require('express');
 
 
-const { createPostController,getPostsController, getPostDetailsController ,likePostController, unlikePostController, getAllPostsController} = require('../controllers/post.controller');
+const { createPostController,getPostsController, getPostDetailsController ,likePostController, unlikePostController, getFeedController} = require('../controllers/post.controller');
 
 
 const postRouter = express.Router();
@@ -23,7 +23,7 @@ postRouter.post('/like/:postId',identifyUser,likePostController)
 
 postRouter.post('/unlike/:postId',identifyUser,unlikePostController)
 
-postRouter.get('/all',identifyUser,getAllPostsController)
+postRouter.get('/feed',identifyUser,getFeedController)
 
 
 

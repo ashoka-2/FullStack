@@ -1,3 +1,6 @@
+@use "./button.scss";
+
+
 @font-face {
     font-family: Insta regular;
     src: url('../src/assets/fonts/insta-font.woff2');
@@ -19,6 +22,7 @@ width: 100%;
 --bg-secondary-color:#152127;
 --primary-blue-color: #0D3C71;
 --primary-border:#2D383D;
+--text-whte:#f1f1f1;
 }
 
 html{

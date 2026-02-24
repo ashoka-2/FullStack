@@ -13,8 +13,6 @@ const imagekit = new ImageKit({
     privateKey: process.env.IMAGEKIT_PRIVATE_KEY
 })
 
-
-
 async function createPostController(req, res) {
     const file = await imagekit.files.upload({
         file: await toFile(Buffer.from(req.file.buffer), 'file'),
@@ -34,8 +32,6 @@ async function createPostController(req, res) {
     })
 }
 
-
-
 async function getPostsController(req, res) {
 
     const userId = req.user.id;
@@ -49,8 +45,6 @@ async function getPostsController(req, res) {
         posts
     })
 }
-
-
 
 async function getPostDetailsController(req,res){
 
@@ -81,8 +75,6 @@ async function getPostDetailsController(req,res){
         post
     })
 }
-
-
 
 async function likePostController(req,res){
     const username = req.user.username;
@@ -122,35 +114,25 @@ async function likePostController(req,res){
 
 }
 
-
-
 async function unlikePostController(req,res){
     const username = req.user.username;
     const postId = req.params.postId;
-
-
      const post = await postModel.findById(postId);
-     
     if(!post){
         return res.status(404).json({
             message: "Post not found"
         })
     }
-
     const isAlreadyLiked = await likeModel.findOne({
         post:postId,
         user:username
     })
-
     if(!isAlreadyLiked){
         return res.status(400).json({
             message: "You have not liked this post"
         })
     }
-
-
     const unlike = await likeModel.findByIdAndDelete(isAlreadyLiked._id);
-
     res.status(200).json({
         message: "Post unliked successfully",
         unlike
@@ -158,10 +140,7 @@ async function unlikePostController(req,res){
 
 }
 
-
-
-
-async function getAllPostsController(req, res) {
+async function getFeedController(req, res) {
 
     const username = req.user.username;
 
@@ -180,7 +159,7 @@ async function getAllPostsController(req, res) {
 
     const posts = await postModel.find({
         user: { $in: userIds }
-    });
+    }).populate('user');
 
     if (posts.length === 0) {
         return res.status(200).json({
@@ -205,7 +184,7 @@ module.exports = {
     getPostDetailsController,
     likePostController,
     unlikePostController,
-    getAllPostsController
+    getFeedController
 }
 
 
