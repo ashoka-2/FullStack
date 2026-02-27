@@ -1,0 +1,138 @@
+.followers-page {
+  max-width: 600px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 20px;
+  color: var(--text-whte); // Apni CSS variables use kar lena
+  font-family: sans-serif;
+
+  .header {
+    border-bottom: 1px solid var(--primary-border);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+
+  .requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .loading-text {
+      text-align: center;
+      color: #a8a8a8;
+      font-size: 14px;
+    }
+
+    .request-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+
+        .profile-pic {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+
+        .names {
+          display: flex;
+          flex-direction: column;
+
+          .username {
+            font-size: 14px;
+            font-weight: 600;
+          }
+
+          .fullname {
+            font-size: 14px;
+            color: #a8a8a8;
+          }
+        }
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 8px;
+
+        button {
+          padding: 6px 16px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          border: none;
+          transition: 0.2s ease;
+        }
+
+        .btn-accept {
+          background-color: #0095f6; // Insta Blue
+          color: white;
+
+          &:hover {
+            background-color: #1877f2;
+          }
+        }
+
+        .btn-reject {
+          background-color: var(--bg-secondary-color, #363636);
+          color: var(--text-whte);
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+          }
+        }
+      }
+    }
+
+    // Jab koi request na ho
+    .no-requests {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+
+      .icon-circle {
+        width: 80px;
+        height: 80px;
+        border: 2px solid var(--primary-border);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+
+        i {
+          font-size: 40px;
+          color: var(--text-whte);
+        }
+      }
+
+      h3 {
+        font-size: 20px;
+        margin-bottom: 10px;
+      }
+
+      p {
+        font-size: 14px;
+        color: #a8a8a8;
+        max-width: 300px;
+      }
+    }
+  }
+}

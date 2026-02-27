@@ -55,7 +55,21 @@ catch(err){
 }
 
 
+export async function logout(){
+    const response = await api.post("/logout");
+    return response.data;
+}
 
+export async function editProfile(formData) {
+    try {
+        const response = await api.put("/edit-profile", formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    } catch(err) {
+        throw err;
+    }
+}
 
 
 

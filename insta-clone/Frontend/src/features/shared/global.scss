@@ -23,6 +23,7 @@ width: 100%;
 --primary-blue-color: #0D3C71;
 --primary-border:#2D383D;
 --text-whte:#f1f1f1;
+--nav-bar-width:250px;
 }
 
 html{
@@ -30,4 +31,29 @@ background-color: var(--bg-primary-color);
 font-family: Insta regular;
 color: #eaeaea;
 
+}
+
+
+.main-layout {
+  display: flex;
+  width: 100%;
+}
+
+.main-nav { 
+  width: var(--nav-bar-width);
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  border-right: 1px solid var(--primary-border);
+  background-color: var(--bg-primary-color);
+  padding: 20px;
+}
+
+.content-area {
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
 }

@@ -16,7 +16,9 @@ const postSchema = mongoose.Schema({
     },
     
 
-})
+},
+{timestamps:true}
+)
 
 
 

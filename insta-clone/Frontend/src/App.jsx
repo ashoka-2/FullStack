@@ -5,14 +5,19 @@ import {RouterProvider} from 'react-router';
 import { AuthProvider } from './features/auth/auth.context';
 
 import './features/shared/global.scss';
-import { PostContext, PostContextProvider } from './features/post/post.context';
+import {  PostContextProvider } from './features/post/post.context';
+import { UserContextprovider } from './features/Users/user.context';
 
 const App = () => {
   return (
     <AuthProvider>
       <PostContextProvider>
         
-      <RouterProvider router={router}/>
+      <UserContextprovider> 
+          
+        <RouterProvider router={router}/>
+          
+      </UserContextprovider>
 
       </PostContextProvider>
     </AuthProvider>    

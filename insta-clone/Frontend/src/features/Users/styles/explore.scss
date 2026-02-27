@@ -1,0 +1,95 @@
+.explore-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  color: var(--text-whte);
+  font-family: sans-serif;
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+
+  .users-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .loading-text, .no-users {
+      text-align: center;
+      color: #a8a8a8;
+      font-size: 14px;
+      padding: 40px 0;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+
+        img {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1px solid var(--primary-border);
+        }
+
+        .names {
+          display: flex;
+          flex-direction: column;
+
+          .username {
+            font-size: 14px;
+            font-weight: 600;
+          }
+
+          .fullname {
+            font-size: 14px;
+            color: #a8a8a8;
+            margin-top: 2px;
+          }
+        }
+      }
+
+      // Buttons ki Styling
+      button {
+        padding: 7px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: background-color 0.2s ease;
+
+        // Blue Button (Follow)
+        &.btn-primary {
+          background-color: #0095f6;
+          color: white;
+
+          &:hover {
+            background-color: #1877f2;
+          }
+        }
+
+        // Grey Button (Unfollow / Requested)
+        &.btn-secondary {
+          background-color: var(--bg-secondary-color, #363636);
+          color: var(--text-whte);
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+          }
+        }
+      }
+    }
+  }
+}

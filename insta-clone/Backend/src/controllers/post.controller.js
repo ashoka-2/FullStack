@@ -79,8 +79,6 @@ async function getPostDetailsController(req,res){
 async function likePostController(req,res){
     const username = req.user.username;
     const postId = req.params.postId
-
-
     const post = await postModel.findById(postId);
 
     if(!post){
@@ -133,6 +131,7 @@ async function unlikePostController(req,res){
         })
     }
     const unlike = await likeModel.findByIdAndDelete(isAlreadyLiked._id);
+    
     res.status(200).json({
         message: "Post unliked successfully",
         unlike
@@ -141,40 +140,54 @@ async function unlikePostController(req,res){
 }
 
 async function getFeedController(req, res) {
+    try {
+        const userId = req.user.id;
 
-    const username = req.user.username;
-
-   const acceptedFollowers = await followModel.find({
-        follower:username,
-        status:"accepted"
-    })
-
-    const followeeUsernames = acceptedFollowers.map(f => f.followee);
-
-    const users = await userModel.find({
-        username: { $in: followeeUsernames }
-    });
-
-    const userIds = users.map(u => u._id);
-
-    const posts = await postModel.find({
-        user: { $in: userIds }
-    }).populate('user');
-
-    if (posts.length === 0) {
-        return res.status(200).json({
-            message: "You have no friends yet, so no posts to show",
-            posts: []
+        const acceptedFollowers = await followModel.find({
+            follower: userId, 
+            status: "accepted"
         });
+
+        const followeeIds = acceptedFollowers.map(f => f.followee);
+
+        const rawPosts = await postModel.find({
+            user: { $in: followeeIds }
+        }).sort({ _id: -1 }).populate('user', 'username profilePic').lean(); 
+        if (rawPosts.length === 0) {
+            return res.status(200).json({
+                message: "You have no friends yet, so no posts to show",
+                posts: []
+            });
+        }
+
+        const username = req.user.username; 
+        const posts = await Promise.all(
+            rawPosts.map(async (post) => {
+                const isLiked = await likeModel.findOne({
+                    user: username,
+                    post: post._id
+                });
+
+                const likeCount = await likeModel.countDocuments({
+                    post: post._id
+                });
+
+                post.isLiked = Boolean(isLiked);
+                post.likeCount = likeCount;
+                return post;
+            })
+        );
+
+        res.status(200).json({
+            message: "Posts fetched successfully",
+            posts
+        });
+
+    } catch (error) {
+        console.error("Feed Error:", error);
+        res.status(500).json({ message: "Error fetching feed" });
     }
-
-    res.status(200).json({
-        message: "Posts fetched successfully",
-        posts
-    })
 }
-
-
 
 
 

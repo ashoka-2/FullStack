@@ -5,8 +5,8 @@ const userModel = require('../model/user.model');
 
 async function followUserController(req,res){
 
-    const followerUsername = req.user.username;
-    const followeeUsername = req.params.username;
+    const followerUsername = req.user.id;
+    const followeeUsername = req.params.id;
     
 
     if(followeeUsername === followerUsername){
@@ -15,9 +15,7 @@ async function followUserController(req,res){
         })
     }
 
-    const isFolloweeExists = await userModel.findOne({
-        username: followeeUsername
-    })
+    const isFolloweeExists = await userModel.findById(followeeUsername)
 
     if(!isFolloweeExists){
         return res.status(404).json({
@@ -57,8 +55,8 @@ async function followUserController(req,res){
 
 
 async function unfollowUserController(req,res){
-    const followerUSername = req.user.username;
-    const followeeUsername = req.params.username;
+    const followerUSername = req.user.id;
+    const followeeUsername = req.params.id;
 
 
     const isUserFollowing = await followModel.findOne({
@@ -86,13 +84,9 @@ async function unfollowUserController(req,res){
 
 async function getFollowersController(req,res){
 
-    const username = req.user.username;
-
-    const followers = await followModel.find({
-        followee:username,
-        status:"pending"
-
-    })
+    const userId = req.user.id;
+const followers = await followModel.find({ followee: userId, status: "pending" })
+    .populate('follower', 'username profilePic fullName'); 
 
     res.status(200).json({
         message:"Followers retrieved successfully",
@@ -103,8 +97,8 @@ async function getFollowersController(req,res){
 
 async function respondToFollowRequestController(req,res){
 
-    const followeeUsername = req.user.username;
-    const followerUsername = req.params.username;
+    const followeeUsername = req.user.id;
+    const followerUsername = req.params.id;
     const {status} = req.body;
 
 
@@ -141,10 +135,34 @@ async function respondToFollowRequestController(req,res){
 }
 
 
+async function getAllUsersController(req, res) {
+    try {
+        const userId = req.user.id; 
+        const rawUsers = await userModel.find({ 
+            _id: { $ne: userId } 
+        }).select("username profilePic fullName").lean();
 
+        const usersWithFollowStatus = await Promise.all(
+            rawUsers.map(async (user) => {
+                const followRecord = await followModel.findOne({
+                    follower: userId,
+                    followee: user._id
+                });
+                user.isFollowing = Boolean(followRecord); 
+                user.followStatus = followRecord ? followRecord.status : null; 
+                return user;
+            })
+        );
 
-
-
+        res.status(200).json({
+            message: "Users fetched successfully",
+            users: usersWithFollowStatus
+        });
+    } catch (error) {
+        console.error("Explore Users Error:", error);
+        res.status(500).json({ message: "Error fetching users" });
+    }
+}
 
 
 
@@ -153,5 +171,6 @@ module.exports = {
     unfollowUserController,
     getFollowersController,
     respondToFollowRequestController,
+    getAllUsersController
     
 }
