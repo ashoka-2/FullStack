@@ -42,9 +42,18 @@ async function uploadSong(req,res){
 async function getSong(req,res){
     const {mood} = req.query;
 
-     const song = await songModel.findOne({
-        mood
-     })
+     const songs = await songModel.aggregate([
+        {$match:{mood:mood}},
+        {$sample:{size:1}}
+     ]);
+
+     const song = songs.length > 0?songs[0]:null;
+
+     if(!song){
+        return res.status(404).json({
+            message:"No song found for the given mood"
+        })
+     }
 
      res.status(200).json({
         message:"Song fetched successfully",
