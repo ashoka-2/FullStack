@@ -1,17 +1,9 @@
-:root {
-    --player-bg: rgba(15, 23, 42, 0.75);
-    --player-border: rgba(255, 255, 255, 0.1);
-    --accent-color: #6366f1; // Matches the Face Scanner glow
-    --accent-hover: #4f46e5;
-    --text-main: #f8fafc;
-    --text-dim: #94a3b8;
-}
-
 .player {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
+    height: var(--player-h);
     background: var(--player-bg);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
@@ -25,7 +17,7 @@
     font-family: 'Inter', system-ui, sans-serif;
 
     /* ── Song Info ── */
-    &__info {
+    &-info {
         display: flex;
         align-items: center;
         gap: 16px;
@@ -33,10 +25,28 @@
         flex: 0 0 auto;
     }
 
-    &__poster-wrapper {
+    &-poster-wrapper {
         position: relative;
         width: 56px;
         height: 56px;
+
+        &.empty {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            &.skeleton-poster-bg {
+                animation: skeleton-pulse 1.5s infinite;
+            }
+
+            i {
+                font-size: 1.5rem;
+                color: var(--text-dim);
+                opacity: 0; /* Hide icon when skeleton */
+            }
+        }
 
         .playing-indicator {
             position: absolute;
@@ -44,15 +54,15 @@
             right: -4px;
             width: 12px;
             height: 12px;
-            background: var(--accent-color);
+            background: var(--accent);
             border-radius: 50%;
             border: 2px solid #0f172a;
-            box-shadow: 0 0 10px var(--accent-color);
+            box-shadow: 0 0 10px var(--accent);
             animation: pulse 2s infinite;
         }
     }
 
-    &__poster {
+    &-poster {
         width: 100%;
         height: 100%;
         border-radius: 12px;
@@ -60,13 +70,30 @@
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     }
 
-    &__meta {
+    &-meta {
         display: flex;
         flex-direction: column;
         gap: 4px;
+
+        &.skeleton {
+            .player-title, .player-mood {
+                color: transparent;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 4px;
+                animation: skeleton-pulse 1.5s infinite;
+            }
+            .player-title {
+                width: 120px;
+                height: 1.1rem;
+            }
+            .player-mood {
+                width: 60px;
+                height: 0.9rem;
+            }
+        }
     }
 
-    &__title {
+    &-title {
         font-size: 0.95rem;
         font-weight: 700;
         color: var(--text-main);
@@ -77,10 +104,10 @@
         letter-spacing: 0.2px;
     }
 
-    &__mood {
+    &-mood {
         font-size: 0.7rem;
         text-transform: uppercase;
-        color: var(--accent-color);
+        color: var(--accent);
         background: rgba(99, 102, 241, 0.15);
         padding: 4px 10px;
         border-radius: 20px;
@@ -90,21 +117,21 @@
     }
 
     /* ── Progress ── */
-    &__progress-wrap {
+    &-progress-wrap {
         display: flex;
         align-items: center;
         gap: 16px;
         flex: 1;
     }
 
-    &__time {
+    &-time {
         font-size: 0.8rem;
         font-weight: 500;
         color: var(--text-dim);
         font-variant-numeric: tabular-nums;
     }
 
-    &__progress {
+    &-progress {
         position: relative;
         flex: 1;
         height: 6px;
@@ -116,22 +143,22 @@
         &:hover {
             height: 8px;
 
-            .player__progress-thumb {
+            .player-progress-thumb {
                 opacity: 1;
                 transform: translateX(-50%) scale(1);
             }
         }
     }
 
-    &__progress-fill {
+    &-progress-fill {
         height: 100%;
-        background: var(--accent-color);
+        background: var(--accent);
         border-radius: 6px;
         pointer-events: none;
         box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
     }
 
-    &__progress-thumb {
+    &-progress-thumb {
         position: absolute;
         top: 50%;
         transform: translateX(-50%) translateY(-50%) scale(0.5);
@@ -146,14 +173,14 @@
     }
 
     /* ── Controls ── */
-    &__controls {
+    &-controls {
         display: flex;
         align-items: center;
         gap: 16px;
         flex: 0 0 auto;
     }
 
-    &__btn {
+    &-btn {
         background: none;
         border: none;
         color: var(--text-dim);
@@ -176,7 +203,7 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background: var(--accent-color);
+            background: var(--accent);
             color: #fff;
             box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
 
@@ -204,8 +231,8 @@
             padding: 6px 10px;
             
             &:hover {
-                border-color: var(--accent-color);
-                color: var(--accent-color);
+                border-color: var(--accent);
+                color: var(--accent);
                 background: rgba(99, 102, 241, 0.1);
             }
         }
@@ -216,11 +243,11 @@
     }
 
     /* ── Speed Menu ── */
-    &__speed-wrap {
+    &-speed-wrap {
         position: relative;
     }
 
-    &__speed-menu {
+    &-speed-menu {
         position: absolute;
         bottom: calc(100% + 15px);
         left: 50%;
@@ -237,7 +264,7 @@
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
-    &__speed-option {
+    &-speed-option {
         background: none;
         border: none;
         color: var(--text-dim);
@@ -255,18 +282,18 @@
 
         &.active {
             background: rgba(99, 102, 241, 0.2);
-            color: var(--accent-color);
+            color: var(--accent);
         }
     }
 
     /* ── Volume ── */
-    &__volume {
+    &-volume {
         display: flex;
         align-items: center;
         gap: 8px;
     }
 
-    &__volume-slider {
+    &-volume-slider {
         -webkit-appearance: none;
         appearance: none;
         width: 80px;
@@ -305,18 +332,24 @@
         gap: 16px;
         padding: 16px;
 
-        &__info {
+        &-info {
             flex: 1;
             min-width: unset;
         }
 
-        &__progress-wrap {
+        &-progress-wrap {
             order: 3;
             width: 100%;
         }
 
-        &__volume {
+        &-volume {
             display: none; // Hide volume slider on mobile for cleaner UI
         }
     }
+}
+
+@keyframes skeleton-pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 0.3; }
+    100% { opacity: 0.6; }
 }

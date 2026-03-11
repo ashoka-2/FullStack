@@ -19,9 +19,12 @@ const songSchema = new mongoose.Schema({
             values:["happy","sad","surprised","neutral"],
             message:"Enum this is"
         },
-
+    },
+    uploadedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users',
+        required: true
     }
-
 })
 
 

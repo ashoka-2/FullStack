@@ -8,6 +8,8 @@ async function uploadSong(req,res){
     const {mood} = req.body;
 
     const tags = id3.read(req.file.buffer)
+
+    
     
     const [songFile, posterFile] = await Promise.all([
         storageService.uploadFile({
@@ -27,7 +29,8 @@ async function uploadSong(req,res){
         title:tags.title,
         url:songFile.url,
         posterUrl:posterFile.url,
-        mood
+        mood,
+        uploadedBy: req.user.id
     })
 
     res.status(201).json({
@@ -62,10 +65,67 @@ async function getSong(req,res){
 }
 
 
+async function getMoodSongs(req,res){
+    const {mood} = req.query;
+
+    const songs = await songModel.find({mood});
+
+    res.status(200).json({
+        message:"Songs fetched successfully",
+        songs
+    })
+}
 
 
+
+async function getAllSongs(req,res){
+    const songs = await songModel.find();
+    res.status(200).json({
+        message:"All songs fetched successfully",
+        songs
+    })
+}
+
+async function updateSong(req, res) {
+    const { id } = req.params;
+    const { mood, title } = req.body;
+    try {
+        const songToCheck = await songModel.findById(id);
+        if(!songToCheck) return res.status(404).json({ message: "Song not found" });
+
+        if(songToCheck.uploadedBy.toString() !== req.user.id.toString()) {
+            return res.status(403).json({ message: "Unauthorized to edit this song" });
+        }
+
+        const song = await songModel.findByIdAndUpdate(id, { mood, title }, { new: true });
+        res.status(200).json({ message: "Song updated successfully", song });
+    } catch(error) {
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+async function deleteSong(req, res) {
+    const { id } = req.params;
+    try {
+        const songToCheck = await songModel.findById(id);
+        if(!songToCheck) return res.status(404).json({ message: "Song not found" });
+
+        if(songToCheck.uploadedBy.toString() !== req.user.id.toString()) {
+            return res.status(403).json({ message: "Unauthorized to delete this song" });
+        }
+
+        const song = await songModel.findByIdAndDelete(id);
+        res.status(200).json({ message: "Song deleted successfully", song });
+    } catch(error) {
+        res.status(500).json({ message: "Server error" });
+    }
+}
 
 module.exports = {
     uploadSong,
-    getSong
+    getSong,
+    getMoodSongs,
+    getAllSongs,
+    updateSong,
+    deleteSong
 }
