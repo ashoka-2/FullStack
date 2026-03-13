@@ -1,13 +1,17 @@
 
-import express from 'express';
-const router = express.Router();
+import {Router} from 'express';
 import {registerUser,loginUser} from "../controllers/auth.controller.js"
-
-router.post('/register',registerUser);
-router.post('/login',loginUser);
-// router.get('/logout',logoutUser);
-// router.get('/me',getGetMe);
+import { loginValidator, registerValidator } from '../validators/auth.validator.js';
 
 
+const authRouter = Router();
 
-export default router;
+
+authRouter.post('/register',registerValidator,registerUser);
+authRouter.post('/login',loginValidator,loginUser);
+// authRouter.get('/logout',logoutUser);
+// authRouter.get('/me',getGetMe);
+
+
+
+export default authRouter;

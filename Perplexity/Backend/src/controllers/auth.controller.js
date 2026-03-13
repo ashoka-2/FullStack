@@ -1,6 +1,6 @@
-import userModel from "../models/auth.model.js";
+import userModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import { sendEmail } from "../services/mail.service.js";
 
 export async function registerUser(req, res) {
     const { username, email, password } = req.body;
@@ -16,31 +16,47 @@ export async function registerUser(req, res) {
     if(userExists){
         return res.status(400).json({
             success: false,
-            message: "User with the same username or email already exists"
+            message: "User with the same username or email already exists",
+            err:"user already exists"
         })
     }
 
 
-    const hashedpassword = await bcrypt.hash(password,10);
    
-    const user = userModel.create({
+    const user = await userModel.create({
         username,
         email,
-        password:hashedpassword
+        password
+    })
+     
+
+    await sendEmail({
+        to:email,
+        subject:"Welcome to Perplexity - Please verify your email",
+        html:`
+        <h1>Hi ${username}</h1>
+        <h1>Welcome to <strong>Perplexity</strong></h1>
+        <p>
+        Thank you for registering on our platform. Please verify your email to start using Perplexity and explore the amazing features we offer.
+        </p>
+        <p>Best regards,<br>The Perplexity Team</p>
+        `
     })
 
-    if (!user) {
-        return res.status(400).json({
-            success: false,
-            message: "User registration failed"
-        })
-    }
 
-    const emailVerificationToken = jwt.sign({
-        email:user.email
-    },process.env.JWT_SECRET,{
-        expiresIn:"3d"
-    })
+
+    // if (!user) {
+    //     return res.status(400).json({
+    //         success: false,
+    //         message: "User registration failed"
+    //     })
+    // }
+
+    // const emailVerificationToken = jwt.sign({
+    //     email:user.email
+    // },process.env.JWT_SECRET,{
+    //     expiresIn:"3d"
+    // })
 
 
 
@@ -50,7 +66,11 @@ export async function registerUser(req, res) {
     res.status(200).json({
         success: true,
         message: "User registered successfully",
-        user
+        user:{
+            id:user._id,
+            username:user.username,
+            email:user.email,
+        }
     })
 }
 
@@ -63,7 +83,7 @@ export async function loginUser(req,res){
             {username},
             {email}
         ]
-    })
+    }).select("+password")
 
     if(!user){
         return res.status(400).json({
