@@ -66,6 +66,55 @@ export async function registerUser(req, res) {
   });
 }
 
+
+export async function resendVerificationEmail(req, res) {
+  const { email } = req.body; 
+
+  if (!email) {
+    return res.status(400).json({ success: false, message: "Email is required" });
+  }
+
+  const user = await userModel.findOne({ email });
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found with this email",
+    });
+  }
+
+  if (user.verified) {
+    return res.status(400).json({
+      success: false,
+      message: "User email is already verified. Please log in.",
+    });
+  }
+
+  const emailVerificationToken = jwt.sign(
+    { email: user.email },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
+  );
+
+  await sendEmail({
+    to: email,
+    subject: "Resend: Verify your Perplexity email",
+    html: `
+        <h1>Hi ${user.username}</h1>
+        <p>You requested a new verification link.</p>
+        <p>Click the link below to verify your email:</p>
+        <a href="http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}">Verify Email</a>
+        <p>Best regards,<br>The Perplexity Team</p>
+    `,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Verification email sent successfully",
+  });
+}
+
+
 export async function verifyEmail(req, res) {
   const { token } = req.query;
 
@@ -81,6 +130,17 @@ export async function verifyEmail(req, res) {
       message: "Invalid token",
       err: "user not found",
     });
+  }
+
+
+  if (user.verified) {
+    const html = `
+      <h1>Email Already Verified</h1>
+      <p>Hi ${user.username},</p>
+      <p>Your email is already verified. You don't need to verify it again.</p>
+      <a href="http://localhost:3000/api/auth/login">Log In Here</a>
+    `;
+    return res.status(200).send(html);
   }
 
   user.verified = true;

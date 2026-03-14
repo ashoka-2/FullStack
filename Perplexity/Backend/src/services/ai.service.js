@@ -7,7 +7,7 @@ const model = new ChatGoogleGenerativeAI({
 
 
 export async function generateResponse() {
-  const response = await model.invoke("How to make AI?");
+  const response = await model.invoke("Who is the prime minister of nepal?");
 //   return response.text;
 console.log(response.text);
 
