@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'PPLX-Sans';
+  src: url('../assets/fonts/PPLX-Sans-Beta-v1-VF.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'PPLX-Mono';
+  src: url('../assets/fonts/PPLX-Mono-Beta-v0-VF.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'FKGrotesk';
+  src: url('../assets/fonts/FKGroteskNeue.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@theme {
+  --font-sans: 'PPLX-Sans', 'FKGrotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'PPLX-Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --color-primary: #60A6AF;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #050505;
+  color: #f4f4f5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar for Perplexity Vibe */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2d2e2e;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f3f;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(18, 18, 18, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-dark {
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.h-screen-safe {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.max-w-fluid {
+  max-width: min(100%, 760px);
+  width: 100%;
+}
+
+@media (min-width: 1440px) {
+  .max-w-fluid {
+    max-width: 860px;
+  }
+}
+
+@media (min-width: 2560px) {
+  .max-w-fluid {
+    max-width: 1200px;
+  }
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: clamp(2rem, 10vw, 3rem) !important; }
+  .text-base { font-size: 0.9375rem; }
+}
