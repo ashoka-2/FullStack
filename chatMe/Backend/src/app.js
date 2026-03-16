@@ -5,8 +5,10 @@ const app = express();
 
 // Middlewares setup
 // Frontend URL environment se le rahe hain CORS ke liye
+const allowedOrigin = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, "") : '*';
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: allowedOrigin,
     methods: ['GET', 'POST'],
     credentials: true
 }));

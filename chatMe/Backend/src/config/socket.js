@@ -1,10 +1,12 @@
 const { Server } = require('socket.io');
 
 const initSocket = (server) => {
+    const allowedOrigin = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, "") : '*';
+
     const io = new Server(server, {
         cors: {
             // Frontend URL environments se le rahe hain
-            origin: process.env.FRONTEND_URL || "*", 
+            origin: allowedOrigin, 
             methods: ["GET", "POST"]
         }
     });
