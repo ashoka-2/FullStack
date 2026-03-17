@@ -1,17 +1,15 @@
 import nodemailer from "nodemailer";
 
-// Using App Password with Port 587 (TLS) for better connectivity on Render
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // TLS for port 587
+    service: 'gmail', 
     auth: {
-        user: process.env.GOOGLE_USER,
-        pass: process.env.GOOGLE_APP_PASSWORD
+        user: (process.env.GOOGLE_USER || "").trim(),
+        pass: (process.env.GOOGLE_APP_PASSWORD || "").trim()
     },
-    tls: {
-        rejectUnauthorized: false // Connectivity issues fix karne ke liye
-    }
+    connectionTimeout: 10000, 
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+    pool: true 
 });
 
 transporter.verify((error, success) => {
