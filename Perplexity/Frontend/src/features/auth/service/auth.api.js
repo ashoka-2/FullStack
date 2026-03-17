@@ -1,11 +1,11 @@
 import axios from 'axios';
 
-const apiUrl = import.meta.env.VITE_HOST_URL
+const apiUrl = import.meta.env.VITE_HOST_URL?.replace(/\/$/, '');
 
 const api = axios.create({
-    baseURL:apiUrl,
-    withCredentials:true
-})
+    baseURL: apiUrl || 'http://localhost:3000',
+    withCredentials: true
+});
 
 
  export async function register({username,email,password}){

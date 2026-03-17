@@ -3,9 +3,9 @@ import axios from "axios"
 const backendUrl = import.meta.env.VITE_HOST_URL
 
 export const api = axios.create({
-    baseURL:backendUrl,
-    withCredentials:true,
-})
+    baseURL: (import.meta.env.VITE_HOST_URL || 'http://localhost:3000').replace(/\/$/, ''),
+    withCredentials: true,
+});
 
 export async function sendMessage(message, chatId, file) {
     const formData = new FormData();
@@ -13,7 +13,7 @@ export async function sendMessage(message, chatId, file) {
     if (chatId) formData.append("chat", chatId);
     if (file) formData.append("file", file);
 
-    const response = await api.post("api/chats/message", formData, {
+    const response = await api.post("/api/chats/message", formData, {
         headers: {
             'Content-Type': 'multipart/form-data'
         }
@@ -21,9 +21,9 @@ export async function sendMessage(message, chatId, file) {
     return response.data;
 }
 
-export async function getChats(){
-    const response = await api.get("api/chats/")
-    return response.data
+export async function getChats() {
+    const response = await api.get("/api/chats/");
+    return response.data;
 }
 
 export async function getMessages(chatId){

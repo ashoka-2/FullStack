@@ -3,150 +3,167 @@ import jwt from "jsonwebtoken";
 import { sendEmail } from "../services/mail.service.js";
 
 export async function registerUser(req, res) {
-  const { username, email, password } = req.body;
+  try {
+    const { username, email, password } = req.body;
 
-  const userExists = await userModel.findOne({
-    $or: [{ username }, { email }],
-  });
+    const userExists = await userModel.findOne({
+      $or: [{ username }, { email }],
+    });
 
-  if (userExists) {
-    return res.status(400).json({
+    if (userExists) {
+      return res.status(400).json({
+        success: false,
+        message: "User with the same username or email already exists",
+        err: "user already exists",
+      });
+    }
+
+    const user = await userModel.create({
+      username,
+      email,
+      password,
+    });
+
+    const emailVerificationToken = jwt.sign(
+      {
+        email: user.email,
+      },
+      process.env.JWT_SECRET,
+    );
+
+    // Attempt to send email, but don't let it crash the registration if it fails (optional strategic choice)
+    // Or, wrap in dedicated try-catch
+    try {
+        await sendEmail({
+          to: email,
+          subject: "Welcome to Perplexity - Please verify your email",
+          html: `
+            <div style="background-color: #000000; padding: 40px 20px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100%;">
+              <div style="background-color: #0a0a0a; max-width: 500px; margin: 0 auto; border-radius: 24px; border: 1px solid #2d2e2e; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+                <div style="padding: 48px; text-align: center;">
+                  <div style="width: 56px; height: 56px; background-color: #1a1a1a; border-radius: 16px; margin: 0 auto 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #333;">
+                     <table width="100%" height="100%"><tr><td align="center">
+                       <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="#20b8cd"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM11.0026 16L6.75997 11.7574L8.17418 10.3431L11.0026 13.1716L16.6595 7.51472L18.0737 8.92893L11.0026 16Z"></path></svg>
+                     </td></tr></table>
+                  </div>
+                  <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0 0 16px; letter-spacing: -0.025em;">Verify your email</h1>
+                  <p style="color: #a1a1aa; font-size: 16px; line-height: 24px; margin-bottom: 32px;">
+                    Welcome to <strong style="color: #fff;">Perplexity</strong>, ${username}. We're excited to have you join our community of curious minds. Please click below to verify your account.
+                  </p>
+                  <a href="${process.env.BACKEND_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${emailVerificationToken}" 
+                     style="display: inline-block; background-color: #20b8cd; color: #000; padding: 16px 40px; border-radius: 14px; font-size: 16px; font-weight: 700; text-decoration: none; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 20px rgba(32, 184, 205, 0.15);">
+                    Verify Email Address
+                  </a>
+                  <div style="margin-top: 48px; padding-top: 32px; border-top: 1px solid #1f1f1f;">
+                    <p style="color: #52525b; font-size: 13px; line-height: 20px; margin: 0;">
+                      If you didn't create an account, you can safely ignore this email.
+                    </p>
+                    <p style="color: #20b8cd; font-size: 13px; font-weight: 600; margin-top: 12px;">
+                      The Perplexity Team
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `,
+        });
+    } catch (e) {
+        console.error("Failed to send welcome email:", e.message);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User registered successfully",
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (err) {
+    console.error("Register Error:", err);
+    res.status(500).json({
       success: false,
-      message: "User with the same username or email already exists",
-      err: "user already exists",
+      message: "Internal server error during registration",
+      error: err.message
     });
   }
-
-  const user = await userModel.create({
-    username,
-    email,
-    password,
-  });
-
-  const emailVerificationToken = jwt.sign(
-    {
-      email: user.email,
-    },
-    process.env.JWT_SECRET,
-  );
-
-  await sendEmail({
-    to: email,
-    subject: "Welcome to Perplexity - Please verify your email",
-    html: `
-      <div style="background-color: #000000; padding: 40px 20px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100%;">
-        <div style="background-color: #0a0a0a; max-width: 500px; margin: 0 auto; border-radius: 24px; border: 1px solid #2d2e2e; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-          <div style="padding: 48px; text-align: center;">
-            <div style="width: 56px; height: 56px; background-color: #1a1a1a; border-radius: 16px; margin: 0 auto 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #333;">
-               <table width="100%" height="100%"><tr><td align="center">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="#20b8cd"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM11.0026 16L6.75997 11.7574L8.17418 10.3431L11.0026 13.1716L16.6595 7.51472L18.0737 8.92893L11.0026 16Z"></path></svg>
-               </td></tr></table>
-            </div>
-            <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0 0 16px; letter-spacing: -0.025em;">Verify your email</h1>
-            <p style="color: #a1a1aa; font-size: 16px; line-height: 24px; margin-bottom: 32px;">
-              Welcome to <strong style="color: #fff;">Perplexity</strong>, ${username}. We're excited to have you join our community of curious minds. Please click below to verify your account.
-            </p>
-            <a href="${process.env.BACKEND_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${emailVerificationToken}" 
-               style="display: inline-block; background-color: #20b8cd; color: #000; padding: 16px 40px; border-radius: 14px; font-size: 16px; font-weight: 700; text-decoration: none; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 20px rgba(32, 184, 205, 0.15);">
-              Verify Email Address
-            </a>
-            <div style="margin-top: 48px; padding-top: 32px; border-top: 1px solid #1f1f1f;">
-              <p style="color: #52525b; font-size: 13px; line-height: 20px; margin: 0;">
-                If you didn't create an account, you can safely ignore this email.
-              </p>
-              <p style="color: #20b8cd; font-size: 13px; font-weight: 600; margin-top: 12px;">
-                The Perplexity Team
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    `,
-  });
-
-  if (!user) {
-    return res.status(400).json({
-      success: false,
-      message: "User registration failed",
-    });
-  }
-
-  res.status(200).json({
-    success: true,
-    message: "User registered successfully",
-    user: {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-    },
-  });
 }
 
 
 export async function resendVerificationEmail(req, res) {
-  const { email } = req.body; 
+  try {
+    const { email } = req.body; 
 
-  if (!email) {
-    return res.status(400).json({ success: false, message: "Email is required" });
-  }
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
 
-  const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email });
 
-  if (!user) {
-    return res.status(404).json({
-      success: false,
-      message: "User not found with this email",
-    });
-  }
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found with this email",
+      });
+    }
 
-  if (user.verified) {
-    return res.status(400).json({
-      success: false,
-      message: "User email is already verified. Please log in.",
-    });
-  }
+    if (user.verified) {
+      return res.status(400).json({
+        success: false,
+        message: "User email is already verified. Please log in.",
+      });
+    }
 
-  const emailVerificationToken = jwt.sign(
-    { email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: '1h' }
-  );
+    const emailVerificationToken = jwt.sign(
+      { email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
-  await sendEmail({
-    to: email,
-    subject: "Verify your Perplexity email",
-    html: `
-      <div style="background-color: #000000; padding: 40px 20px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100%;">
-        <div style="background-color: #0a0a0a; max-width: 500px; margin: 0 auto; border-radius: 24px; border: 1px solid #2d2e2e; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-          <div style="padding: 48px; text-align: center;">
-            <div style="width: 56px; height: 56px; background-color: #1a1a1a; border-radius: 16px; margin: 0 auto 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #333;">
-               <table width="100%" height="100%"><tr><td align="center">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="#20b8cd"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM11.0026 16L6.75997 11.7574L8.17418 10.3431L11.0026 13.1716L16.6595 7.51472L18.0737 8.92893L11.0026 16Z"></path></svg>
-               </td></tr></table>
-            </div>
-            <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0 0 16px; letter-spacing: -0.025em;">New verification link</h1>
-            <p style="color: #a1a1aa; font-size: 16px; line-height: 24px; margin-bottom: 32px;">
-              Hi ${user.username}, you requested a new verification link for your Perplexity account. This link will expire in 1 hour.
-            </p>
-            <a href="${process.env.BACKEND_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${emailVerificationToken}" 
-               style="display: inline-block; background-color: #20b8cd; color: #000; padding: 16px 40px; border-radius: 14px; font-size: 16px; font-weight: 700; text-decoration: none; box-shadow: 0 10px 20px rgba(32, 184, 205, 0.15);">
-              Verify Email Address
-            </a>
-            <div style="margin-top: 48px; padding-top: 32px; border-top: 1px solid #1f1f1f;">
-              <p style="color: #52525b; font-size: 13px; line-height: 20px; margin: 0;">
-                The link is valid for 60 minutes.
+    await sendEmail({
+      to: email,
+      subject: "Verify your Perplexity email",
+      html: `
+        <div style="background-color: #000000; padding: 40px 20px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100%;">
+          <div style="background-color: #0a0a0a; max-width: 500px; margin: 0 auto; border-radius: 24px; border: 1px solid #2d2e2e; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <div style="padding: 48px; text-align: center;">
+              <div style="width: 56px; height: 56px; background-color: #1a1a1a; border-radius: 16px; margin: 0 auto 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #333;">
+                 <table width="100%" height="100%"><tr><td align="center">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="#20b8cd"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM11.0026 16L6.75997 11.7574L8.17418 10.3431L11.0026 13.1716L16.6595 7.51472L18.0737 8.92893L11.0026 16Z"></path></svg>
+                 </td></tr></table>
+              </div>
+              <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0 0 16px; letter-spacing: -0.025em;">New verification link</h1>
+              <p style="color: #a1a1aa; font-size: 16px; line-height: 24px; margin-bottom: 32px;">
+                Hi ${user.username}, you requested a new verification link for your Perplexity account. This link will expire in 1 hour.
               </p>
+              <a href="${process.env.BACKEND_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${emailVerificationToken}" 
+                 style="display: inline-block; background-color: #20b8cd; color: #000; padding: 16px 40px; border-radius: 14px; font-size: 16px; font-weight: 700; text-decoration: none; box-shadow: 0 10px 20px rgba(32, 184, 205, 0.15);">
+                Verify Email Address
+              </a>
+              <div style="margin-top: 48px; padding-top: 32px; border-top: 1px solid #1f1f1f;">
+                <p style="color: #52525b; font-size: 13px; line-height: 20px; margin: 0;">
+                  The link is valid for 60 minutes.
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    `,
-  });
+      `,
+    });
 
-  res.status(200).json({
-    success: true,
-    message: "Verification email sent successfully",
-  });
+    res.status(200).json({
+      success: true,
+      message: "Verification email sent successfully",
+    });
+  } catch (err) {
+    console.error("Resend Email Error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to resend verification email",
+      error: err.message
+    });
+  }
 }
 
 
