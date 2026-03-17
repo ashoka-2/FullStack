@@ -1,37 +1,37 @@
 import nodemailer from "nodemailer";
 
+// Using App Password for better stability on hosted platforms like Render
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    service: 'gmail',
     auth: {
-        type: "OAuth2",
         user: process.env.GOOGLE_USER,
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-    },
-    tls: {
-        rejectUnauthorized: false
+        pass: process.env.GOOGLE_APP_PASSWORD // 16-digit App Password
     }
 });
 
 transporter.verify((error, success) => {
     if (error) {
-        console.error("❌ Email transporter failed to verify:", error.message);
+        console.error("❌ Email Transporter Failed (Check Render Logs):", error);
     } else {
-        console.log("✅ Email transporter is ready to send messages");
+        console.log("✅ Email service is online and ready");
     }
 });
 
 export async function sendEmail({ to, subject, html, text = "" }) {
-    const mailOptions = {
-        from: process.env.GOOGLE_USER,
-        to,
-        subject,
-        html,
-        text
+    try {
+        const mailOptions = {
+            from: process.env.GOOGLE_USER,
+            to,
+            subject,
+            html,
+            text
+        };
+        const details = await transporter.sendMail(mailOptions);
+        console.log("Email sent :", details);
+        return "emails sent successfully to " + to;
+    } catch (error) {
+        console.error("Detailed Email Error:", error);
+        // Return a localized error instead of throwing to prevent 500 crash
+        return { error: true, message: error.message };
     }
-    const details = await transporter.sendMail(mailOptions);
-    console.log("Email sent :", details);
-    return "emails sent successfully to " + to;
-
 }
