@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   RiArrowRightLine,
   RiRobot2Line,
@@ -18,14 +18,73 @@ import {
   RiGlobalLine,
   RiMagicLine
 } from '@remixicon/react';
+import { useChat } from '../hook/useChat';
+import { useNavigate } from 'react-router';
+import { useSelector, useDispatch } from 'react-redux';
+import Toast from '../../Components/Toast';
+import { setError } from '../chat.slice';
 
 const ChatArea = () => {
   const [input, setInput] = useState('');
-  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+  const { handleSendMessage, handleGetSuggestions, loading } = useChat();
+  const error = useSelector(state => state.chat.error);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [aiSuggestions, setAiSuggestions] = useState(null);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true);
 
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      setSuggestionsLoading(true);
+      const data = await handleGetSuggestions();
+      if (data) setAiSuggestions(data);
+      setSuggestionsLoading(false);
+    };
+    fetchSuggestions();
+  }, []);
+
+  const iconMap = {
+    global: RiGlobalLine,
+    robot: RiRobot2Line,
+    file: RiFileList3Line,
+    magic: RiMagicLine,
+    compass: RiCompass3Line,
+    book: RiBookOpenLine,
+    heart: RiHeart2Line
+  };
+
+  const onSubmit = async (e, text = null) => {
+    if (e) e.preventDefault();
+    const messageToSend = text || input;
+    const file = files[0]; // Sending only the first file for now
+    
+    if ((!messageToSend.trim() && !file) || loading) return;
+
+    try {
+      setInput('');
+      setFiles([]);
+      const response = await handleSendMessage(messageToSend, null, file);
+      if (response && response.chat) {
+        navigate(`/chat/${response.chat._id}`);
+      }
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+        return;
+      }
+      e.preventDefault();
+      onSubmit(e);
+    }
+  };
 
   const handleFileUpload = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -54,21 +113,14 @@ const ChatArea = () => {
     }
   };
 
-  const models = [
-    { name: 'Sonar', info: '', icon: null, locked: true },
-    { name: 'GPT-4o', info: '', icon: RiRobot2Line, locked: true },
-    { name: 'Gemini 1.5 Pro', info: '', icon: null, locked: true },
-    { name: 'Claude 3.5 Sonnet', info: '', icon: null, locked: true },
-    { name: 'Claude 3 Opus', info: 'Max', icon: null, locked: true },
-    { name: 'Llama 3.1 70B', info: 'New', icon: null, locked: true }
-  ];
-
   return (
-    <main className="flex-1 flex flex-col items-center bg-[#050505] relative overflow-x-hidden overflow-y-auto custom-scrollbar pb-32 md:pb-16"
+    <main className="flex-1 w-full flex flex-col items-center bg-[#050505] relative overflow-x-hidden overflow-y-auto custom-scrollbar pb-32 md:pb-16"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      <Toast message={error} type="error" onClose={() => dispatch(setError(null))} />
+
       {/* Drag Overlay */}
       {isDragging && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-6">
@@ -84,11 +136,10 @@ const ChatArea = () => {
           perplexity
         </h1>
 
-        {/* Search Input Box - Fixed at bottom on mobile, absolute/relative on desktop */}
+        {/* Search Input Box */}
         <div className="w-full md:relative md:block fixed bottom-0 left-0 right-0 z-50 p-4 md:p-0 bg-gradient-to-t from-[#050505] via-[#050505] md:bg-transparent to-transparent">
-          <div className={`w-full bg-[#121212] border ${isDragging ? 'border-[#60A6AF]' : 'border-[#2d2e2e]'} focus-within:border-zinc-700 rounded-[24px] md:rounded-[28px] px-4 md:px-6 py-3.5 md:py-5 transition-all duration-300 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
+          <div className={`w-full max-w-[800px] mx-auto bg-[#121212] border ${isDragging ? 'border-[#60A6AF]' : 'border-[#2d2e2e]'} focus-within:border-zinc-700 rounded-[24px] md:rounded-[28px] px-4 md:px-6 py-3.5 md:py-5 transition-all duration-300 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
 
-            {/* Attached Files pills */}
             {files.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {files.map((file, i) => (
@@ -106,6 +157,7 @@ const ChatArea = () => {
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="Ask anything..."
               className="w-full bg-transparent border-none outline-none text-zinc-100 text-[16px] md:text-[18px] placeholder:text-zinc-500 resize-none min-h-[44px] md:min-h-[60px] leading-relaxed font-sans font-medium"
             />
@@ -122,44 +174,12 @@ const ChatArea = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Model Selector */}
-                <div className="relative">
-                  <button
-                    onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-zinc-800 text-zinc-500 text-[13px] font-bold transition-all ${isModelDropdownOpen ? 'bg-zinc-800 text-zinc-200' : ''}`}
-                  >
-                    <span>Model</span>
-                    <RiArrowDownSLine size={14} className={`transition-transform duration-200 ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {isModelDropdownOpen && (
-                    <div className="absolute bottom-full right-0 mb-3 w-64 bg-[#1a1a1a] border border-zinc-800 rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2">
-                      <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800 mb-2">
-                        <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Select AI Model</span>
-                      </div>
-                      {models.map((model, i) => (
-                        <button key={i} className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-zinc-800 text-zinc-200 text-sm transition-all group">
-                          <div className="flex items-center gap-3">
-                            <div className="w-5 h-5 flex items-center justify-center text-zinc-500 group-hover:text-zinc-200">
-                              {model.icon ? <model.icon size={16} /> : <div className="w-4 h-4 rounded-full border border-zinc-700" />}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{model.name}</span>
-                              {model.info && <span className="text-[9px] px-1.5 py-0.5 bg-zinc-900 text-zinc-500 rounded font-bold uppercase">{model.info}</span>}
-                            </div>
-                          </div>
-                          {model.locked && <RiArrowDownSLine size={14} className="text-zinc-700 opacity-20" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
                 <button className="p-1.5 text-zinc-500 hover:text-zinc-100 transition-colors">
                   <RiMicLine size={18} />
                 </button>
 
                 <button
+                  onClick={onSubmit}
                   disabled={!input.trim() && files.length === 0}
                   className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${input.trim() || files.length > 0 ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-zinc-800 text-zinc-600 opacity-50'}`}
                 >
@@ -170,58 +190,89 @@ const ChatArea = () => {
           </div>
 
           {/* Assistant Suggestions Pills */}
-          <div className="flex items-center gap-3 mt-6 px-1 overflow-x-auto no-scrollbar">
-            {[
-              { icon: RiCompass3Line, label: 'For you' },
-              { icon: RiFileList3Line, label: 'Study guide' },
-              { icon: RiBriefcaseLine, label: 'Business' },
-              { icon: RiHeart2Line, label: 'Health' }
-            ].map((pill, i) => (
-              <button key={i} className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-transparent border border-zinc-800 hover:border-zinc-700 text-zinc-500 text-[13px] font-medium transition-all group">
-                <pill.icon size={14} className="text-zinc-500 mr-2 group-hover:text-zinc-300" />
-                <span>{pill.label}</span>
-              </button>
-            ))}
+          <div className="flex items-center justify-center gap-3 mt-6 px-1 overflow-x-auto no-scrollbar max-w-[800px] mx-auto">
+            {suggestionsLoading ? (
+              [1, 2, 3, 4].map(i => (
+                <div key={i} className="flex-shrink-0 w-24 h-8 rounded-full bg-zinc-900 border border-zinc-800 animate-pulse" />
+              ))
+            ) : (
+                (aiSuggestions?.pills || ['For you', 'Study guide', 'Business', 'Health']).map((pillLabel, i) => {
+                const Icon = iconMap[aiSuggestions?.topics?.[i]?.iconType] || RiCompass3Line;
+                return (
+                  <button 
+                    key={i} 
+                    onClick={(e) => onSubmit(e, pillLabel)}
+                    className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-transparent border border-zinc-800 hover:border-zinc-700 text-zinc-500 text-[13px] font-medium transition-all group"
+                  >
+                    <Icon size={14} className="text-zinc-500 mr-2 group-hover:text-zinc-300" />
+                    <span>{pillLabel}</span>
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
 
         {/* Suggested Queries List */}
-        <div className="w-full mt-10 space-y-4">
-          {[
-            'Show me latest Flipkart deals',
-            'Find online courses to master digital art',
-            'Recommend Bollywood movies for a long flight',
-            'Show me best practices for CSS Grid and Flexbox',
-            'Compare CSS flexbox vs grid layouts'
-          ].map((query, i) => (
-            <button key={i} className="w-full text-left px-4 py-2 text-[14px] text-zinc-400 hover:text-zinc-100 transition-all border-b border-zinc-900/50 pb-3 block truncate font-medium">
-              {query}
-            </button>
-          ))}
+        <div className="w-full max-w-[800px] mt-10 space-y-4">
+          {suggestionsLoading ? (
+            [1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="w-full h-8 bg-zinc-900/50 rounded-lg animate-pulse" />
+            ))
+          ) : (
+            (aiSuggestions?.queries || [
+              'Show me latest Flipkart deals',
+              'Find online courses to master digital art',
+              'Recommend Bollywood movies for a long flight',
+              'Show me best practices for CSS Grid and Flexbox',
+              'Compare CSS flexbox vs grid layouts'
+            ]).map((query, i) => (
+              <button 
+                key={i} 
+                onClick={(e) => onSubmit(e, query)}
+                className="w-full text-left px-4 py-2 text-[14px] text-zinc-400 hover:text-zinc-100 transition-all border-b border-zinc-900/50 pb-3 block truncate font-medium"
+              >
+                {query}
+              </button>
+            ))
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10 w-full mb-20 px-1">
-          {[
-            { label: 'Advancements in Fusion Energy', desc: 'Science · 4h ago', icon: RiGlobalLine },
-            { label: 'Build AI agents with Node.js', desc: 'Tutorial · Today', icon: RiRobot2Line },
-            { label: 'Deep dive into tech layoffs', desc: 'Business · 1d ago', icon: RiFileList3Line },
-            { label: 'The 3-body problem explained', desc: 'Physics · 6h ago', icon: RiMagicLine }
-          ].map((topic, i) => (
-            <button key={i} className="flex flex-col gap-3 p-5 bg-zinc-900/30 border border-white/5 rounded-2xl hover:border-zinc-800 hover:bg-zinc-800/30 transition-all text-left group">
-              <div className="flex items-center justify-between w-full">
-                <div className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center">
-                  <topic.icon className="text-zinc-600 group-hover:text-zinc-400" size={18} />
-                </div>
-                <RiArrowRightLine size={14} className="text-zinc-800 group-hover:text-zinc-500 mr-1" />
-              </div>
-              <div>
-                <h3 className="text-[14px] font-bold text-zinc-200 group-hover:text-white transition-colors leading-[1.4]">
-                  {topic.label}
-                </h3>
-                <p className="text-[10px] text-zinc-600 mt-1 font-bold uppercase tracking-tight">{topic.desc}</p>
-              </div>
-            </button>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10 w-full max-w-[800px] mb-20 px-1">
+          {suggestionsLoading ? (
+            [1, 2, 3, 4].map(i => (
+              <div key={i} className="h-[120px] bg-zinc-900/30 border border-white/5 rounded-2xl animate-pulse" />
+            ))
+          ) : (
+            (aiSuggestions?.topics || [
+              { label: 'Advancements in Fusion Energy', desc: 'Science · 4h ago', iconType: 'global' },
+              { label: 'Build AI agents with Node.js', desc: 'Tutorial · Today', iconType: 'robot' },
+              { label: 'Deep dive into tech layoffs', desc: 'Business · 1d ago', iconType: 'file' },
+              { label: 'The 3-body problem explained', desc: 'Physics · 6h ago', iconType: 'magic' }
+            ]).map((topic, i) => {
+              const Icon = iconMap[topic.iconType] || RiMagicLine;
+              return (
+                <button 
+                    key={i} 
+                    onClick={(e) => onSubmit(e, topic.label)}
+                    className="flex flex-col gap-3 p-5 bg-zinc-900/30 border border-white/5 rounded-2xl hover:border-zinc-800 hover:bg-zinc-800/30 transition-all text-left group"
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center">
+                      <Icon className="text-zinc-600 group-hover:text-zinc-400" size={18} />
+                    </div>
+                    <RiArrowRightLine size={14} className="text-zinc-800 group-hover:text-zinc-500 mr-1" />
+                  </div>
+                  <div>
+                    <h3 className="text-[14px] font-bold text-zinc-200 group-hover:text-white transition-colors leading-[1.4]">
+                      {topic.label}
+                    </h3>
+                    <p className="text-[10px] text-zinc-600 mt-1 font-bold uppercase tracking-tight">{topic.desc}</p>
+                  </div>
+                </button>
+              );
+            })
+          )}
         </div>
       </div>
     </main>

@@ -7,9 +7,18 @@ export const api = axios.create({
     withCredentials:true,
 })
 
-export async function sendMessage(message,chatId){
-    const response = await api.post("api/chat/message",{message,chat:chatId})
-    return response.data
+export async function sendMessage(message, chatId, file) {
+    const formData = new FormData();
+    formData.append("message", message);
+    if (chatId) formData.append("chat", chatId);
+    if (file) formData.append("file", file);
+
+    const response = await api.post("api/chats/message", formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
 }
 
 export async function getChats(){
@@ -24,5 +33,10 @@ export async function getMessages(chatId){
 
 export async function deleteChat(chatId){
     const response = await api.delete(`/api/chats/delete/${chatId}`)
+    return response.data
+}
+
+export async function getSuggestions(){
+    const response = await api.get("/api/chats/suggestions")
     return response.data
 }

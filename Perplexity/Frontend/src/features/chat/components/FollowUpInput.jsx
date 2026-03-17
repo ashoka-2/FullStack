@@ -13,6 +13,7 @@ import {
 const FollowUpInput = ({ 
     input, 
     setInput, 
+    onSubmit,
     files, 
     removeFile, 
     isUploadMenuOpen, 
@@ -25,6 +26,18 @@ const FollowUpInput = ({
     fileInputRef, 
     handleFileUpload 
 }) => {
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            if (e.ctrlKey || e.metaKey || e.shiftKey) {
+                // Let the browser insert a newline
+                return;
+            }
+            e.preventDefault();
+            onSubmit(e);
+        }
+    };
+
     return (
         <div className="absolute bottom-0 left-0 w-full lg:pl-56 bg-linear-to-t from-[#050505] via-[#050505]/95 to-transparent z-40 pb-6 md:pb-8 pointer-events-none transition-all">
             <div className="max-w-fluid mx-auto px-4 md:px-6 pointer-events-auto">
@@ -47,6 +60,7 @@ const FollowUpInput = ({
                         rows="1"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         placeholder="Ask a follow-up"
                         className="w-full bg-transparent border-none outline-none text-zinc-100 text-[18px] md:text-[20px] placeholder:text-zinc-600 font-medium py-1 resize-none min-h-[40px] max-h-[160px] custom-scrollbar mb-3"
                     />
@@ -84,6 +98,7 @@ const FollowUpInput = ({
                                 <RiMicLine size={20} />
                             </button>
                             <button 
+                                onClick={onSubmit}
                                 disabled={!input.trim() && files.length === 0}
                                 className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${input.trim() || files.length > 0 ? 'bg-white text-black shadow-lg' : 'bg-zinc-800 text-zinc-600 opacity-50'}`}
                             >

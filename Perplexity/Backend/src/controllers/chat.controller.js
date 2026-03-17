@@ -1,51 +1,70 @@
-import { generateChatTitle, generateResponse } from "../services/ai.service.js";
-
+import { generateChatTitle, generateResponse, generateSuggestions } from "../services/ai.service.js";
 import chatModel from "../models/chat.model.js";
 import messageModel from "../models/message.model.js";
+import { uploadFile } from "../services/imagekit.service.js";
 
 export async function sendMessage(req, res) {
-    const { message, chat: chatId } = req.body;
+    try {
+        const { message, chat: chatId } = req.body;
+        const file = req.file;
 
+        let fileDetails = null;
 
-    let title = null, chat = null;
+        if (file) {
+            try {
+                fileDetails = await uploadFile({
+                    buffer: file.buffer,
+                    filename: file.originalname,
+                    folder: "perplexity/chats"
+                });
+            } catch (error) {
+                console.error("Image upload failed:", error);
+                if (!message) {
+                    return res.status(500).json({ message: "Image upload failed" });
+                }
+            }
+        }
 
-    if (!chatId) {
+        let title = null, chat = null;
 
-        title = await generateChatTitle(message);
-        chat = await chatModel.create({
-            user: req.user.id,
-            title
+        if (!chatId) {
+            title = await generateChatTitle(message || "Image Upload");
+            chat = await chatModel.create({
+                user: req.user.id,
+                title
+            })
+        }
 
+        const userMessage = await messageModel.create({
+            chat: chatId || chat._id,
+            content: message || "Sent an image",
+            role: "user",
+            file: fileDetails
         })
+
+        const messages = await messageModel.find({ chat: chatId || chat._id });
+    
+        const result = await generateResponse(messages);
+
+        const aiMessage = await messageModel.create({
+            chat: chatId || chat._id,
+            content: result,
+            role: "ai"
+        })
+
+        res.status(201).json({
+            title: title,
+            chat: chat || await chatModel.findById(chatId),
+            userMessage,
+            aiMessage
+        })
+    } catch (error) {
+        console.error("Error in sendMessage controller:", error);
+        res.status(500).json({
+            message: "Internal server error",
+            error: error.message
+        });
     }
-
-    const userMessage = await messageModel.create({
-        chat: chatId || chat._id,
-        content: message,
-        role: "user"
-    })
-
-
-
-    const messages = await messageModel.find({ chat: chatId || chat._id });
-  
-
-    const result = await generateResponse(messages);
-
-    const aiMessage = await messageModel.create({
-        chat: chatId || chat._id,
-        content: result,
-        role: "ai"
-    })
-
-
-
-    res.status(201).json({
-        title: title,
-        chat,
-        userMessage,
-        aiMessage
-    })
 }
 
 
@@ -53,7 +72,7 @@ export async function sendMessage(req, res) {
 export async function getChats(req,res){
     const user = req.user;
 
-    const chats = await chatModel.find({user: user.id})
+    const chats = await chatModel.find({user: user.id}).sort({ updatedAt: -1 })
 
     res.status(200).json({
         message: "Chats retrieved successfully",
@@ -65,7 +84,7 @@ export async function getChats(req,res){
 export async function getMessages(req,res){
     const { chatId } = req.params;
 
-    const chat = await chatModel.findById({
+    const chat = await chatModel.findOne({
         _id:chatId,
         user:req.user.id
     })
@@ -107,4 +126,20 @@ export async function deleteChat(req,res){
     res.status(200).json({
         message: "Chat deleted successfully",
     });
+}
+
+export async function getSuggestions(req, res) {
+    try {
+        const suggestions = await generateSuggestions();
+        res.status(200).json({
+            message: "Suggestions generated successfully",
+            suggestions
+        });
+    } catch (error) {
+        console.error("Error in getSuggestions controller:", error);
+        res.status(500).json({
+            message: "Failed to generate suggestions",
+            error: error.message
+        });
+    }
 }

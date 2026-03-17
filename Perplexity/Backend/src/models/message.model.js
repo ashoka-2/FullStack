@@ -15,6 +15,10 @@ const messageSchema = new mongoose.Schema({
         type:String,
         enum:['user','ai'],
         required:true
+    },
+    file: {
+        type: Object, // To store ImageKit response details like url, fileId, etc.
+        default: null
     }
 },{
     timestamps:true

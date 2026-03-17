@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   RiSearchLine,
   RiAddLine,
@@ -9,37 +9,40 @@ import {
   RiGlobalLine,
   RiNotification3Line,
   RiSettings4Line,
-  RiLogoutBoxRLine
+  RiLogoutBoxRLine,
+  RiDeleteBinLine
 } from '@remixicon/react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useLocation } from 'react-router';
 import { setUser } from '../auth/auth.slice';
 import PerplexityIcon from './PerplexityIcon';
+import { useChat } from '../chat/hook/useChat';
+import { SidebarSkeleton } from '../chat/components/Skeletons';
+import ConfirmationModal from './ConfirmationModal';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const user = useSelector(state => state.auth.user);
+  const chats = useSelector(state => state.chat.chats);
+  const loading = useSelector(state => state.chat.loading);
   const location = useLocation();
   const dispatch = useDispatch();
+  const { handleGetChats, handleDeleteChat, isCreating } = useChat();
+  const [modalType, setModalType] = useState(null); // 'delete'
+  const [targetId, setTargetId] = useState(null);
+
+  useEffect(() => {
+    if (user) {
+      handleGetChats();
+    }
+  }, [user]);
 
   const menuItems = [
     { icon: PerplexityIcon, label: 'Search', path: '/', active: location.pathname === '/' },
-    { icon: RiHistoryLine, label: 'Library', path: '/library', active: location.pathname === '/library' },
+    { icon: RiHistoryLine, label: 'Chats', path: '/library', active: location.pathname === '/library' },
   ];
 
   const secondaryItems = [
     // { icon: RiLineChartLine, label: 'Finance', path: '/finance' },
-  ];
-
-  const recentChats = [
-    { id: '0', title: 'bollyflix' },
-    { id: '1', title: 'Compare prices for noise' },
-    { id: '2', title: 'Sei.' },
-    { id: '3', title: 'sheryians/job' },
-    { id: '4', title: 'dub.co partners' },
-    { id: '5', title: 'sarthak sharma github' },
-    { id: '6', title: 'latitude and longitude' },
-    { id: '7', title: 'netmirror' },
-    { id: '8', title: 'body: Column( children: [' },
   ];
 
   return (
@@ -73,29 +76,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           ))}
         </nav>
 
-        {/* New Thread Button */}
+        {/* New Chat Button */}
         <Link to="/" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-all group mb-4">
           <RiAddLine size={18} className="text-zinc-500 group-hover:text-zinc-300" />
-          <span className="text-sm font-medium">New Thread</span>
+          <span className="text-sm font-medium">New Chat</span>
         </Link>
-
-        {/* Secondary Menu */}
-        <div className="space-y-1 mb-4">
-          {secondaryItems.map((item, idx) => (
-            <Link
-              key={idx}
-              to={item.path}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-all group"
-            >
-              <item.icon size={18} className="text-zinc-500" />
-              <span className="text-sm font-medium">{item.label}</span>
-            </Link>
-          ))}
-          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-all group">
-            <RiMoreFill size={18} className="text-zinc-500" />
-            <span className="text-sm font-medium">More</span>
-          </button>
-        </div>
 
         {/* Recent Section */}
         <div className="flex-1 overflow-hidden flex flex-col min-h-0">
@@ -104,24 +89,51 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-0.5 custom-scrollbar pb-4 pr-1">
-            {recentChats.map((thread) => (
-              <Link
-                key={thread.id}
-                to={`/chat/${thread.id}`}
-                className={`block w-full text-left px-3 py-1.5 rounded-lg text-[13px] truncate transition-all font-medium 
-                ${location.pathname === `/chat/${thread.id}` ? 'text-zinc-100 bg-[#1a1a1a]' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#121212]'}`}
-              >
-                {thread.title}
-              </Link>
-            ))}
-            <Link
-              to="/library"
-              className="px-3 py-1.5 text-[11px] font-bold text-[#60A6AF] hover:text-[#60A6AF]/80 uppercase tracking-wider block w-fit transition-colors"
-            >
-              View All
-            </Link>
+            {loading && chats.length === 0 ? (
+              <SidebarSkeleton />
+            ) : (
+              <>
+                {isCreating && (
+                    <div className="px-3 py-1.5 animate-pulse">
+                        <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
+                    </div>
+                )}
+                {chats.slice(0, 10).map((thread) => (
+                  <div key={thread._id} className="group flex items-center gap-1">
+                    <Link
+                      to={`/chat/${thread._id}`}
+                      className={`flex-1 block text-left px-3 py-1.5 rounded-lg text-[13px] truncate transition-all font-medium 
+                      ${location.pathname === `/chat/${thread._id}` ? 'text-zinc-100 bg-[#1a1a1a]' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#121212]'}`}
+                    >
+                      {thread.title || 'Untitled Chat'}
+                    </Link>
+                    <button 
+                      onClick={() => {
+                        setTargetId(thread._id);
+                        setModalType('delete');
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-zinc-600 hover:text-red-400 transition-all"
+                    >
+                      <RiDeleteBinLine size={14} />
+                    </button>
+                  </div>
+                ))}
+                {chats.length > 0 && (
+                  <Link
+                    to="/library"
+                    className="px-3 py-1.5 text-[11px] font-bold text-[#60A6AF] hover:text-[#60A6AF]/80 uppercase tracking-wider block w-fit transition-colors"
+                  >
+                    View All
+                  </Link>
+                )}
+                {chats.length === 0 && !loading && (
+                  <div className="px-3 py-2 text-[11px] text-zinc-600">No recent chats</div>
+                )}
+              </>
+            )}
           </div>
         </div>
+
 
         {/* Footer Area */}
         <div className="mt-auto space-y-4 pt-4 border-t border-zinc-900/50">
@@ -148,6 +160,16 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </div>
         </div>
       </aside>
+
+      <ConfirmationModal 
+        isOpen={modalType === 'delete'}
+        onClose={() => setModalType(null)}
+        onConfirm={() => {
+            if (targetId) handleDeleteChat(targetId);
+        }}
+        title="Delete Chat"
+        message="This chat session and its messages will be permanently deleted."
+      />
 
       {/* Mobile Drawer Overlay */}
       {isOpen && (

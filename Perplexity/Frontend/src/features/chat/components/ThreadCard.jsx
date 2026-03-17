@@ -3,7 +3,15 @@ import { Link } from 'react-router';
 import { RiMoreFill, RiShareLine, RiDeleteBinLine } from '@remixicon/react';
 import PerplexityIcon from '../../Components/PerplexityIcon';
 
-const ThreadCard = ({ thread, viewMode }) => {
+import { useChat } from '../hook/useChat';
+
+const ThreadCard = ({ thread, viewMode, onDelete }) => {
+    const onDeleteClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onDelete();
+    };
+
     if (viewMode === 'grid') {
         return (
             <Link 
@@ -14,9 +22,14 @@ const ThreadCard = ({ thread, viewMode }) => {
                     <div className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-white/5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
                         {thread.date}
                     </div>
-                    <button className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-zinc-800 transition-all text-zinc-500">
-                        <RiMoreFill size={16} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={onDeleteClick}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-500/10 transition-all text-zinc-600 hover:text-red-400"
+                        >
+                            <RiDeleteBinLine size={16} />
+                        </button>
+                    </div>
                 </div>
                 <h3 className="text-lg font-bold text-white group-hover:text-[#60A6AF] transition-colors line-clamp-1 mb-2">
                     {thread.title}
@@ -50,8 +63,8 @@ const ThreadCard = ({ thread, viewMode }) => {
                 </div>
             </div>
             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                <button className="p-2 text-zinc-600 hover:text-white transition-colors"><RiShareLine size={18} /></button>
-                <button className="p-2 text-zinc-600 hover:text-red-400 transition-colors"><RiDeleteBinLine size={18} /></button>
+                <button className="p-2 text-zinc-600 hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}><RiShareLine size={18} /></button>
+                <button className="p-2 text-zinc-600 hover:text-red-400 transition-colors" onClick={onDeleteClick}><RiDeleteBinLine size={18} /></button>
             </div>
         </Link>
     );

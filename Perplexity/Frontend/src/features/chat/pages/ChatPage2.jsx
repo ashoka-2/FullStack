@@ -2,11 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 import {
     RiMenuLine,
-    RiShareLine
+    RiShareLine,
+    RiArrowDownLine
 } from '@remixicon/react';
 import Sidebar from '../../Components/Sidebar';
 import ChatMessage from '../components/ChatMessage';
 import FollowUpInput from '../components/FollowUpInput';
+import { useChat } from '../hook/useChat';
+import { useSelector } from 'react-redux';
+import { MessagesSkeleton, ThinkingSkeleton } from '../components/Skeletons';
+import Toast from '../../Components/Toast';
+import { setError } from '../chat.slice';
+import { useDispatch } from 'react-redux';
 
 const ChatPage2 = () => {
     const { id } = useParams();
@@ -20,43 +27,88 @@ const ChatPage2 = () => {
     const [isLinkInputOpen, setIsLinkInputOpen] = useState(false);
     const [linkInput, setLinkInput] = useState('');
 
+    const { handleGetMessages, handleSendMessage, loading } = useChat();
+    const messages = useSelector(state => state.chat.messages);
+    const error = useSelector(state => state.chat.error);
+    const dispatch = useDispatch();
+    const [latestMessageId, setLatestMessageId] = useState(null);
+    const [showScrollButton, setShowScrollButton] = useState(false);
+
+    useEffect(() => {
+        if (id) {
+            handleGetMessages(id);
+        }
+    }, [id]);
+
+    const handleRetry = () => {
+        dispatch(setError(null));
+        if (id) {
+            handleGetMessages(id);
+        }
+    };
+
+    const scrollToBottom = () => {
+        if (scrollerRef.current) {
+            scrollerRef.current.scrollTo({
+                top: scrollerRef.current.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    // Auto scroll to bottom when messages load or a new message is added
+    useEffect(() => {
+        if (messages.length > 0) {
+            // Use requestAnimationFrame to ensure DOM is updated
+            requestAnimationFrame(() => {
+                const scroller = scrollerRef.current;
+                if (scroller) {
+                    scroller.scrollTop = scroller.scrollHeight;
+                }
+            });
+        }
+    }, [messages.length, id]); // Scroll on new messages or chat switch
+
+    // Show/hide scroll to bottom button based on scroll position
     useEffect(() => {
         const handleScroll = () => {
             if (scrollerRef.current) {
-                setIsScrolled(scrollerRef.current.scrollTop > 10);
+                const { scrollTop, scrollHeight, clientHeight } = scrollerRef.current;
+                // Show button if we're not near the bottom (more than 300px away)
+                const isNearBottom = scrollHeight - scrollTop - clientHeight < 300;
+                setShowScrollButton(!isNearBottom);
+                setIsScrolled(scrollTop > 20);
             }
         };
+
         const scroller = scrollerRef.current;
         if (scroller) {
             scroller.addEventListener('scroll', handleScroll);
         }
-        return () => {
-            if (scroller) {
-                scroller.removeEventListener('scroll', handleScroll);
-            }
-        };
+        return () => scroller?.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const conversation = [
-        {
-            id: 'msg_1',
-            role: 'user',
-            content: 'sheryians/job'
-        },
-        {
-            id: 'msg_2',
-            role: 'assistant',
-            content: `Sheryians is a coding school and tech community focused on helping people become job-ready developers, designers, and problem-solvers. sheryians +2
+    const handleSendFollowUp = async (e) => {
+        if (e) e.preventDefault();
+        const file = files.find(f => !f.isLink)?.fileObject; // Find the first actual file
+        if ((!input.trim() && !file) || loading) return;
 
-### Core Programs
-* Frontend Development
-* UI/UX Design & Research
-* Backend Engineering
-* Job Bootcamp 1.0
+        const currentInput = input;
+        setInput(''); // Immediately clear input
+        setFiles([]);
 
-The curriculum is designed with industry standards and real-world projects to ensure students gain practical skills.`
+        try {
+            const response = await handleSendMessage(currentInput, id, file);
+            if (response && response.aiMessage) {
+                setLatestMessageId(response.aiMessage._id);
+                // Force scroll to bottom when AI starts responding
+                setTimeout(scrollToBottom, 100);
+            }
+        } catch (error) {
+            console.error("Failed to send follow-up:", error);
+            setInput(currentInput); // Restore on error
         }
-    ];
+    };
 
     const removeFile = (index) => {
         setFiles(files.filter((_, i) => i !== index));
@@ -64,7 +116,7 @@ The curriculum is designed with industry standards and real-world projects to en
 
     const handleFileUpload = (e) => {
         const uploadedFiles = Array.from(e.target.files);
-        setFiles([...files, ...uploadedFiles.map(f => ({ name: f.name, isLink: false }))]);
+        setFiles([...files, ...uploadedFiles.map(f => ({ name: f.name, isLink: false, fileObject: f }))]);
         setIsUploadMenuOpen(false);
     };
 
@@ -80,6 +132,8 @@ The curriculum is designed with industry standards and real-world projects to en
     return (
         <div className="flex bg-[#050505] min-h-screen text-zinc-100 font-sans selection:bg-[#60A6AF]/30 overflow-hidden">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+
+            <Toast message={error} type="error" onClose={() => dispatch(setError(null))} />
 
             <div className={`flex-1 flex flex-col h-screen lg:pl-56 overflow-hidden relative transition-all duration-300`}>
 
@@ -104,17 +158,45 @@ The curriculum is designed with industry standards and real-world projects to en
                     </div>
                 </header>
 
-                <div ref={scrollerRef} className="flex-1 overflow-y-auto px-4 md:px-6 py-8 md:py-16 pb-[300px] custom-scrollbar scroll-smooth">
-                    <div className="max-w-fluid mx-auto space-y-12">
-                        {conversation.map((msg) => (
-                            <ChatMessage key={msg.id} msg={msg} />
-                        ))}
+                <div ref={scrollerRef} className="flex-1 overflow-y-auto px-4 md:px-6 py-8 md:py-16 pb-[300px] custom-scrollbar scroll-smooth relative">
+                    <div className="max-w-fluid mx-auto space-y-24 mb-32">
+                        {loading && messages.length === 0 ? (
+                            <MessagesSkeleton />
+                        ) : (
+                            <>
+                                {messages.map((msg, index) => (
+                                    <ChatMessage 
+                                        key={msg._id} 
+                                        msg={{ ...msg, content: msg.content, role: msg.role === 'ai' ? 'assistant' : 'user' }} 
+                                        isLatest={index === messages.length - 1}
+                                        isNewMessage={msg._id === latestMessageId}
+                                    />
+                                ))}
+                                {loading && (
+                                    <ThinkingSkeleton />
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
+
+                {/* Move to bottom button */}
+                {showScrollButton && (
+                    <div className="absolute bottom-[180px] left-0 right-0 flex justify-center z-40 pointer-events-none">
+                        <button 
+                            onClick={scrollToBottom}
+                            className="bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-100 p-2.5 rounded-full shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-4 duration-300 group pointer-events-auto"
+                            title="Move to bottom"
+                        >
+                            <RiArrowDownLine size={20} className="group-hover:translate-y-0.5 transition-transform" />
+                        </button>
+                    </div>
+                )}
 
                 <FollowUpInput
                     input={input}
                     setInput={setInput}
+                    onSubmit={handleSendFollowUp}
                     files={files}
                     removeFile={removeFile}
                     isUploadMenuOpen={isUploadMenuOpen}
@@ -136,6 +218,7 @@ The curriculum is designed with industry standards and real-world projects to en
                 )}
             </div>
         </div>
+
     );
 };
 
