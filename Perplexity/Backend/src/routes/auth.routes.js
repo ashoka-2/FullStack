@@ -14,7 +14,7 @@ authRouter.post("/resend-verification-email",resendVerificationEmail)
 
 authRouter.post('/register',registerValidator,registerUser);
 authRouter.post('/login',loginValidator,loginUser);
-authRouter.get('/logout',logoutUser);
+authRouter.get('/logout',authUser,logoutUser);
 authRouter.get('/me',authUser,getMe);
 
 

@@ -1,13 +1,13 @@
 import nodemailer from "nodemailer";
 
-// Using App Password for better stability on hosted platforms like Render
+// Using App Password with Port 587 (TLS) for better connectivity on Render
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    host: 'smtp.gmail.com',
     port: 587,
-    secure: false,
+    secure: false, // TLS for port 587
     auth: {
         user: process.env.GOOGLE_USER,
-        pass: process.env.GOOGLE_APP_PASSWORD // 16-digit App Password
+        pass: process.env.GOOGLE_APP_PASSWORD
     },
     tls: {
         rejectUnauthorized: false // Connectivity issues fix karne ke liye
@@ -36,7 +36,7 @@ export async function sendEmail({ to, subject, html, text = "" }) {
         return "emails sent successfully to " + to;
     } catch (error) {
         console.error("Detailed Email Error:", error);
-        // Return a localized error instead of throwing to prevent 500 crash
+        // Error object return kar rahe hain taaki server 500 na ho
         return { error: true, message: error.message };
     }
 }
