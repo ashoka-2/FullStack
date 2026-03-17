@@ -46,7 +46,7 @@ export async function registerUser(req, res) {
             <p style="color: #a1a1aa; font-size: 16px; line-height: 24px; margin-bottom: 32px;">
               Welcome to <strong style="color: #fff;">Perplexity</strong>, ${username}. We're excited to have you join our community of curious minds. Please click below to verify your account.
             </p>
-            <a href="http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}" 
+            <a href="${process.env.BACKEND_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${emailVerificationToken}" 
                style="display: inline-block; background-color: #20b8cd; color: #000; padding: 16px 40px; border-radius: 14px; font-size: 16px; font-weight: 700; text-decoration: none; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 20px rgba(32, 184, 205, 0.15);">
               Verify Email Address
             </a>
@@ -128,7 +128,7 @@ export async function resendVerificationEmail(req, res) {
             <p style="color: #a1a1aa; font-size: 16px; line-height: 24px; margin-bottom: 32px;">
               Hi ${user.username}, you requested a new verification link for your Perplexity account. This link will expire in 1 hour.
             </p>
-            <a href="http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}" 
+            <a href="${process.env.BACKEND_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${emailVerificationToken}" 
                style="display: inline-block; background-color: #20b8cd; color: #000; padding: 16px 40px; border-radius: 14px; font-size: 16px; font-weight: 700; text-decoration: none; box-shadow: 0 10px 20px rgba(32, 184, 205, 0.15);">
               Verify Email Address
             </a>
@@ -311,7 +311,12 @@ export async function loginUser(req, res) {
     },
   );
 
-  res.cookie("token", token);
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: true, // Required for sameSite: 'none'
+    sameSite: 'none',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
 
   res.status(200).json({
     success: true,
