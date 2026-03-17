@@ -5,12 +5,7 @@ import cors from "cors";
 import morgan from "morgan";
 import chatRouter from "./routes/chat.routes.js";
 
-
 const app = express();
-app.use(morgan("dev"));
-app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({extended:true}));
 
 const allowedOrigins = [
     'https://perplexity-cohort.vercel.app',
@@ -19,13 +14,13 @@ const allowedOrigins = [
     'http://localhost:3000'
 ].filter(Boolean);
 
+// 1. CORS at the very top (Order is critical)
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
-            callback(new Error('Not allowed by CORS'));
+            callback(null, false); // Fail silently or with error
         }
     },
     credentials: true,
@@ -33,13 +28,16 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
+app.use(morgan("dev"));
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.get('/',(req,res)=>{
-    res.json({Message:"Welcome to Perplexity Backend API"})
+app.get('/', (req, res) => {
+    res.json({ Message: "Welcome to Perplexity Backend API" })
 })
 
-app.use("/api/auth",authRouter)
-app.use("/api/chats",chatRouter)
+app.use("/api/auth", authRouter)
+app.use("/api/chats", chatRouter)
 
 export default app;
-
