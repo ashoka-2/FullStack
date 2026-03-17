@@ -2,10 +2,15 @@ import nodemailer from "nodemailer";
 
 // Using App Password for better stability on hosted platforms like Render
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
     auth: {
         user: process.env.GOOGLE_USER,
         pass: process.env.GOOGLE_APP_PASSWORD // 16-digit App Password
+    },
+    tls: {
+        rejectUnauthorized: false // Connectivity issues fix karne ke liye
     }
 });
 
