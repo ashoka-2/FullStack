@@ -1,46 +1,62 @@
-import nodemailer from "nodemailer";
+import { google } from 'googleapis';
 
-console.log("👉 Mail service file start ho gayi hai...");
+console.log("👉 Mail service (HTTP API Version) start ho gayi hai...");
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,         
-    auth: {
-        type: 'OAuth2',
-        user: (process.env.GOOGLE_USER || "").trim(),
-        clientId: (process.env.GOOGLE_CLIENT_ID || "").trim(),
-        clientSecret: (process.env.GOOGLE_CLIENT_SECRET || "").trim(),
-        refreshToken: (process.env.GOOGLE_REFRESH_TOKEN || "").trim()
-    },
-    family: 4, 
-    connectionTimeout: 10000
-});
+const OAuth2 = google.auth.OAuth2;
 
-console.log("👉 Transporter ban gaya, ab verify kar rahe hain...");
+// Ye function har email bhejne par fresh connection banayega
+const createGmailClient = () => {
+    const oauth2Client = new OAuth2(
+        (process.env.GOOGLE_CLIENT_ID || "").trim(),
+        (process.env.GOOGLE_CLIENT_SECRET || "").trim(),
+        "https://developers.google.com/oauthplayground"
+    );
 
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("❌ Email Transporter Failed:", error);
-    } else {
-        console.log("✅ Email service is online and ready (OAuth2 + IPv4)");
-    }
-});
+    oauth2Client.setCredentials({
+        refresh_token: (process.env.GOOGLE_REFRESH_TOKEN || "").trim()
+    });
+
+    return google.gmail({ version: 'v1', auth: oauth2Client });
+};
+
+// Gmail API ko email ka data base64url format mein chahiye hota hai
+const makeBody = (to, from, subject, message) => {
+    const str = [
+        `To: ${to}`,
+        `From: ${from}`,
+        `Subject: ${subject}`,
+        `MIME-Version: 1.0`,
+        `Content-Type: text/html; charset=utf-8`,
+        '',
+        message
+    ].join('\n');
+
+    // Convert to base64url format
+    return Buffer.from(str)
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+};
 
 export async function sendEmail({ to, subject, html, text = "" }) {
     try {
-        const mailOptions = {
-            from: process.env.GOOGLE_USER,
-            to,
-            subject,
-            html,
-            text
-        };
-        const details = await transporter.sendMail(mailOptions);
-        console.log("✅ Email sent successfully to :", details.accepted);
+        console.log(`⏳ Bhejne ki koshish kar rahe hain: ${to}`);
+        
+        const gmail = createGmailClient();
+        const rawMessage = makeBody(to, process.env.GOOGLE_USER, subject, html || text);
+
+        const res = await gmail.users.messages.send({
+            userId: 'me',
+            requestBody: {
+                raw: rawMessage
+            }
+        });
+
+        console.log("✅ BOOM! Email sent successfully via Gmail HTTP API! ID:", res.data.id);
         return { success: true, message: "Email sent" };
     } catch (error) {
-        console.error("❌ Detailed Email Error:", error);
+        console.error("❌ Gmail HTTP API Error:", error.message);
         return { error: true, message: error.message };
     }
 }
