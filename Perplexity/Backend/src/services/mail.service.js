@@ -2,14 +2,17 @@ import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,       
-    secure: false,   
-    family: 4,       
+    port: 587,
+    secure: false, 
     auth: {
-        user: process.env.GOOGLE_USER,
-        pass: process.env.GOOGLE_APP_PASSWORD 
+        user: (process.env.GOOGLE_USER || "").trim(),
+        pass: (process.env.GOOGLE_APP_PASSWORD || "").trim()
     },
-    tls: { rejectUnauthorized: false }
+    family: 4, 
+    connectionTimeout: 10000,
+    tls: {
+        rejectUnauthorized: false
+    }
 });
 
 transporter.verify((error, success) => {
