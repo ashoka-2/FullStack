@@ -7,11 +7,12 @@ export const api = axios.create({
     withCredentials: true,
 });
 
-export async function sendMessage(message, chatId, file) {
+export async function sendMessage(message, chatId, file, socketId) {
     const formData = new FormData();
     formData.append("message", message);
     if (chatId) formData.append("chat", chatId);
     if (file) formData.append("file", file);
+    if (socketId) formData.append("socketId", socketId);
 
     const response = await api.post("/api/chats/message", formData, {
         headers: {

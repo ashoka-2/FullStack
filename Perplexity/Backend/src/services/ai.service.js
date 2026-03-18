@@ -699,7 +699,7 @@ const modelWithTools = mistralModel.bindTools([searchInternetTool, emailTool]);
 // 3. MAIN CHAT LOGIC (Dynamic Router)
 // ==========================================
 
-export async function generateResponse(messages) {
+export async function generateResponse(messages, onChunk) {
   const hasImage = messages.some(msg => msg.file && msg.file.url);
   const today = getCurrentTimeContext();
 
@@ -751,13 +751,25 @@ export async function generateResponse(messages) {
 
     try {
       console.log("📸 Processing Image with Gemini 2.5 Lite...");
-      const response = await geminiVisionModel.invoke(geminiMessages);
-      return response.content;
+      const stream = await geminiVisionModel.stream(geminiMessages);
+      let fullContent = "";
+      for await (const chunk of stream) {
+        const content = chunk.content;
+        fullContent += content;
+        if (onChunk) onChunk(content);
+      }
+      return fullContent;
     } catch (error1) {
       console.warn("⚠️ 2.5-Lite failed (Quota full/429). Switching to 1.5-Flash backup...");
       try {
-        const response2 = await geminiTextModel.invoke(geminiMessages);
-        return response2.content;
+        const stream2 = await geminiTextModel.stream(geminiMessages);
+        let fullContent2 = "";
+        for await (const chunk of stream2) {
+          const content = chunk.content;
+          fullContent2 += content;
+          if (onChunk) onChunk(content);
+        }
+        return fullContent2;
       } catch (error2) {
         console.error("⚠️ 1.5-Flash also failed. Final fallback to Mistral (Text-only).");
         // Convert multimodal content to text-only for Mistral
@@ -768,7 +780,7 @@ export async function generateResponse(messages) {
           }
           return msg;
         });
-        return await runMistralLoop([new SystemMessage({ content: `[VISION UNAVAILABLE: Answer only using text context]\n${systemContent}` }), ...sanitizedHistory]);
+        return await runMistralLoop([new SystemMessage({ content: `[VISION UNAVAILABLE: Answer only using text context]\n${systemContent}` }), ...sanitizedHistory], onChunk);
       }
     }
   }
@@ -779,11 +791,11 @@ export async function generateResponse(messages) {
   // Saving Gemini Quota! Directing all text to Mistral.
   console.log("📝 Text Query detected. Processing with Mistral + Tools...");
   const textMessages = [new SystemMessage({ content: systemContent }), ...history];
-  return await runMistralLoop(textMessages);
+  return await runMistralLoop(textMessages, onChunk);
 }
 
 // Extracted Tool Loop for Mistral
-async function runMistralLoop(currentMessages) {
+async function runMistralLoop(currentMessages, onChunk) {
   let iterations = 0;
   const maxIterations = 5;
   let response;
@@ -819,7 +831,16 @@ async function runMistralLoop(currentMessages) {
     iterations++;
   }
 
-  return response.content;
+  // Final streaming of output
+  const stream = await modelWithTools.stream(currentMessages);
+  let fullContent = "";
+  for await (const chunk of stream) {
+    const content = chunk.content;
+    fullContent += content;
+    if (onChunk) onChunk(content);
+  }
+
+  return fullContent;
 }
 
 // ==========================================

@@ -2,6 +2,7 @@ import { generateChatTitle, generateResponse, generateSuggestions } from "../ser
 import chatModel from "../models/chat.model.js";
 import messageModel from "../models/message.model.js";
 import { uploadFile } from "../services/imagekit.service.js";
+import { getIO } from "../sockets/server.socket.js";
 
 export async function sendMessage(req, res) {
     try {
@@ -43,8 +44,15 @@ export async function sendMessage(req, res) {
         })
 
         const messages = await messageModel.find({ chat: chatId || chat._id });
-    
-        const result = await generateResponse(messages);
+        
+        const io = getIO();
+        const socketId = req.body.socketId;
+
+        const result = await generateResponse(messages, (chunk) => {
+            if (socketId) {
+                io.to(socketId).emit("chunk", chunk);
+            }
+        });
 
         const aiMessage = await messageModel.create({
             chat: chatId || chat._id,

@@ -13,9 +13,10 @@ import {
     setLoading, 
     setError, 
     setCurrentChatId,
-    setIsCreating 
+    setIsCreating,
+    appendChunk 
 } from "../chat.slice";
-import { initializeSocketConnection } from "../service/chat.socket";
+import { getSocket, initializeSocketConnection } from "../service/chat.socket";
 import { useNavigate } from "react-router";
 
 export const useChat = () => {
@@ -41,16 +42,28 @@ export const useChat = () => {
             };
             dispatch(addMessage(tempUserMsg));
 
-            const response = await sendMessage(message, chatId, file);
+            // Add placeholder AI message for streaming
+            const tempAiMsg = { 
+                _id: "streaming-msg-" + Date.now(), 
+                role: 'ai', 
+                content: "",
+                isStreaming: true 
+            };
+            dispatch(addMessage(tempAiMsg));
+
+            const socket = getSocket();
+            const response = await sendMessage(message, chatId, file, socket?.id);
             
-            // Re-sync messages if it was a new chat or replace temp with real data
+            // Re-sync messages if it was a new chat
             if (response.chat) {
                 dispatch(setCurrentChatId(response.chat._id));
-                // Refresh chats to show the new one in sidebar
                 handleGetChats();
             }
             
-            if (response.aiMessage) dispatch(addMessage(response.aiMessage));
+            // Refresh the entire messages list with real DB data once streaming is done
+            if (response.chat) {
+                handleGetMessages(response.chat._id);
+            }
             
             return response;
         } catch (error) {

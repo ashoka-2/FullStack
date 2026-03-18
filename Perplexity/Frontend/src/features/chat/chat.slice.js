@@ -36,9 +36,15 @@ const chatSlice = createSlice({
             state.chats = [];
             state.messages = [];
             state.currentChatId = null;
+        },
+        appendChunk: (state, action) => {
+            const lastMessage = state.messages[state.messages.length - 1];
+            if (lastMessage && lastMessage.role === "ai" && lastMessage.isStreaming) {
+                lastMessage.content += action.payload;
+            }
         }
     }
 });
 
-export const { setChats, setMessages, addMessage, setCurrentChatId, setLoading, setError, setIsCreating, clearChat } = chatSlice.actions;
+export const { setChats, setMessages, addMessage, setCurrentChatId, setLoading, setError, setIsCreating, clearChat, appendChunk } = chatSlice.actions;
 export default chatSlice.reducer;

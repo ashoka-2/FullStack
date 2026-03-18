@@ -1,15 +1,21 @@
-import {io} from "socket.io-client";
+import { io } from "socket.io-client";
 
-export const initializeSocketConnection = ()=>{
+let socket;
 
-    const socketUrl = import.meta.env.VITE_HOST_URL;
+export const initializeSocketConnection = () => {
+    if (socket) return socket;
 
-    const socket = io(socketUrl,{
-        withCredentials:true,
+    const socketUrl = import.meta.env.VITE_HOST_URL || 'http://localhost:3000';
+
+    socket = io(socketUrl, {
+        withCredentials: true,
     })
 
-    socket.on("connect",()=>{
-        console.log("Connected to Socket.io server");
-        
+    socket.on("connect", () => {
+        console.log("Connected to Socket.io server", socket.id);
     })
+
+    return socket;
 }
+
+export const getSocket = () => socket;
