@@ -65,8 +65,8 @@ export async function registerUser(req, res) {
       `,
     });
 
-    if (!emailResult.success) {
-      console.error("Failed to send welcome email:", emailResult.error);
+    if (emailResult.error) {
+      console.error("Failed to send welcome email:", emailResult.message);
     }
 
     res.status(200).json({
@@ -150,11 +150,11 @@ export async function resendVerificationEmail(req, res) {
       `,
     });
 
-    if (!emailResult.success) {
+    if (emailResult.error) {
       return res.status(500).json({
         success: false,
         message: "Failed to send verification email",
-        error: emailResult.error
+        error: emailResult.message
       });
     }
 

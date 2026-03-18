@@ -676,10 +676,10 @@ const searchInternetTool = tool(
 const emailTool = tool(
   async ({ to, subject, html }) => {
     const result = await sendEmail({ to, subject, html });
-    if (result.success) {
-      return `Email successfully sent to ${to}.`;
+    if (result.error) {
+      return `Failed to send email: ${result.message}`;
     }
-    return `Failed to send email: ${result.error}`;
+    return `Email successfully sent to ${to}.`;
   },
   {
     name: "emailTool",
