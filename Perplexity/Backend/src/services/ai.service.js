@@ -675,12 +675,11 @@ const searchInternetTool = tool(
 
 const emailTool = tool(
   async ({ to, subject, html }) => {
-    try {
-      await sendEmail({ to, subject, html });
+    const result = await sendEmail({ to, subject, html });
+    if (result.success) {
       return `Email successfully sent to ${to}.`;
-    } catch (error) {
-      return `Failed to send email: ${error.message}`;
     }
+    return `Failed to send email: ${result.error}`;
   },
   {
     name: "emailTool",
