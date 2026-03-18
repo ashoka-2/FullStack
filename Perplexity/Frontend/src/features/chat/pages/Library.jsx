@@ -46,7 +46,7 @@ const Library = () => {
         }));
 
     return (
-        <div className="flex bg-[#050505] min-h-screen text-zinc-100 font-sans selection:bg-[#60A6AF]/30">
+        <div className="flex bg-white dark:bg-[#050505] min-h-screen text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             <Toast message={error} type="error" onClose={() => dispatch(setError(null))} />
@@ -58,33 +58,33 @@ const Library = () => {
                     <div className="lg:hidden flex items-center mb-6">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="p-2 -ml-2 text-zinc-500 hover:text-white transition-all"
+                            className="p-2 -ml-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all"
                         >
                             <RiMenuLine size={24} />
                         </button>
-                        <span className="text-lg font-bold text-white ml-2">Chats</span>
+                        <span className="text-lg font-bold text-zinc-900 dark:text-white ml-2">Chats</span>
                     </div>
  
                     <div className="flex items-center gap-3 mb-10 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
                         <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#60A6AF] to-[#4a8a92] flex items-center justify-center text-zinc-950 shrink-0 shadow-lg shadow-[#60A6AF]/10">
                             <RiHistoryLine size={22} />
                         </div>
-                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white shrink-0">Chats</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white shrink-0">Chats</h1>
                     </div>
 
                         <div className="flex items-center gap-3 w-full">
                             <div className="relative group flex-1 md:w-64 max-w-sm">
                                 <PerplexityIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-[#60A6AF] transition-colors" size={16} />
                                 <input
-                                    className="w-full bg-[#0a0a0a] border border-white/5 rounded-xl pl-10 pr-4 py-2 text-sm font-medium focus:outline-none focus:border-[#60A6AF]/30 focus:bg-zinc-900 transition-all"
+                                    className="w-full bg-zinc-100 dark:bg-[#0a0a0a] border border-zinc-200 dark:border-white/5 rounded-xl pl-10 pr-4 py-2 text-sm font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#60A6AF]/30 focus:bg-white dark:focus:bg-zinc-900 transition-all"
                                     placeholder="Search your chats..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
-                            <div className="flex items-center p-1 bg-[#0a0a0a] border border-white/5 rounded-xl shrink-0">
-                                <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-zinc-800 text-[#60A6AF]' : 'text-zinc-600 hover:text-zinc-300'}`}><RiLayoutGridLine size={18} /></button>
-                                <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-zinc-800 text-[#60A6AF]' : 'text-zinc-600 hover:text-zinc-300'}`}><RiListCheck2 size={18} /></button>
+                            <div className="flex items-center p-1 bg-zinc-100 dark:bg-[#0a0a0a] border border-zinc-200 dark:border-white/5 rounded-xl shrink-0">
+                                <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-zinc-800 text-[#60A6AF]' : 'text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-300'}`}><RiLayoutGridLine size={18} /></button>
+                                <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white dark:bg-zinc-800 text-[#60A6AF]' : 'text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-300'}`}><RiListCheck2 size={18} /></button>
                             </div>
                         </div>
  

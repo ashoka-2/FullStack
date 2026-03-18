@@ -21,8 +21,8 @@ const CodeBlock = ({ code, language, ...props }) => {
     };
 
     return (
-        <div className="relative group my-6 rounded-xl overflow-hidden border border-zinc-800 bg-[#0d0d0d]">
-            <div className="flex items-center justify-between px-4 py-2 bg-zinc-900 border-b border-zinc-800">
+        <div className="relative group my-6 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-[#0d0d0d]">
+            <div className="flex items-center justify-between px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
                 <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">{language}</span>
                 <button 
                     onClick={handleCopy}
@@ -87,13 +87,13 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                             <img src={msg.file.url} alt="Attached" className="w-full h-auto object-cover" />
                         </div>
                     )}
-                    <div className="bg-[#1a1a1a] text-zinc-100 px-4 md:px-5 py-2 md:py-2.5 rounded-[20px] md:rounded-[22px] text-[14px] md:text-[15px] font-bold border border-white/5 shadow-sm transition-all hover:bg-[#222]">
+                    <div className="bg-zinc-100 dark:bg-[#1a1a1a] text-zinc-900 dark:text-zinc-100 px-4 md:px-5 py-2 md:py-2.5 rounded-[20px] md:rounded-[22px] text-[14px] md:text-[15px] font-bold border border-zinc-200 dark:border-white/5 shadow-sm transition-all hover:bg-zinc-200 dark:hover:bg-[#222]">
                         {contentToRender}
                     </div>
                 </div>
             ) : (
                 <div className="flex flex-col gap-6 ">
-                    <div className="prose prose-invert prose-emerald max-w-none text-zinc-200 leading-[1.7] md:leading-[1.8] text-[15px] md:text-[17px] font-medium tracking-tight">
+                    <div className="prose prose-emerald dark:prose-invert max-w-none text-zinc-950 dark:text-zinc-200 leading-[1.7] md:leading-[1.8] text-[15px] md:text-[17px] font-medium tracking-tight">
                         <ReactMarkdown 
                             remarkPlugins={[remarkGfm]}
                             components={{
@@ -108,41 +108,43 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                             {...props} 
                                         />
                                     ) : (
-                                        <code className={`${className} bg-zinc-800/50 px-1.5 py-0.5 rounded text-sm text-zinc-300 font-mono`} {...props}>
+                                        <code className={`${className} bg-zinc-100 dark:bg-zinc-800/50 px-1.5 py-0.5 rounded text-sm text-zinc-600 dark:text-zinc-300 font-mono`} {...props}>
                                             {children}
                                         </code>
                                     )
                                 },
-                                p: ({children}) => <p className="text-zinc-300 leading-relaxed mb-6 last:mb-0">{children}</p>,
+                                p: ({children}) => <p className="text-zinc-800 dark:text-zinc-300 leading-relaxed mb-6 last:mb-0">{children}</p>,
                                 ul: ({children}) => <ul className="list-disc pl-5 space-y-3 mb-6 last:mb-0">{children}</ul>,
-                                li: ({children}) => <li className="text-zinc-300 leading-relaxed pl-1">{children}</li>,
-                                h1: ({children}) => <h1 className="text-2xl md:text-3xl font-bold text-white mt-10 mb-6 tracking-tight">{children}</h1>,
-                                h2: ({children}) => <h2 className="text-xl md:text-2xl font-bold text-white mt-8 mb-4 tracking-tight">{children}</h2>,
-                                h3: ({children}) => <h3 className="text-lg md:text-xl font-bold text-white mt-6 mb-3 tracking-tight">{children}</h3>,
+                                li: ({children}) => <li className="text-zinc-800 dark:text-zinc-300 leading-relaxed pl-1">{children}</li>,
+                                h1: ({children}) => <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white mt-10 mb-6 tracking-tight">{children}</h1>,
+                                h2: ({children}) => <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-white mt-8 mb-4 tracking-tight">{children}</h2>,
+                                h3: ({children}) => <h3 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white mt-6 mb-3 tracking-tight">{children}</h3>,
                             }}
                         >
                             {contentToRender}
                         </ReactMarkdown>
                     </div>
-                    <div className="flex items-center gap-5 pt-4 border-t border-zinc-900/50 opacity-40 hover:opacity-100 transition-opacity">
-                        <button 
-                            onClick={handleCopy}
-                            className="flex items-center gap-1.5 group transition-colors"
-                        >
-                            {copied ? (
-                                <>
-                                    <span className="text-[12px] font-bold text-emerald-500">Copied!</span>
-                                    <RiCheckLine size={18} className="text-emerald-500" />
-                                </>
-                            ) : (
-                                <RiFileCopyLine size={18} className="text-zinc-500 group-hover:text-zinc-100" />
-                            )}
-                        </button>
-                        <RiRefreshLine size={18} className="text-zinc-500 hover:text-zinc-100 cursor-pointer" />
-                        <div className="flex-1" />
-                        <RiThumbUpLine size={18} className="text-zinc-700 hover:text-[#60A6AF] cursor-pointer" />
-                        <RiThumbDownLine size={18} className="text-zinc-700 hover:text-red-500 cursor-pointer" />
-                    </div>
+                    {msg.content && (
+                        <div className="flex items-center gap-5 pt-4 border-t border-zinc-200 dark:border-zinc-900/50 opacity-40 hover:opacity-100 transition-opacity">
+                            <button 
+                                onClick={handleCopy}
+                                className="flex items-center gap-1.5 group transition-colors"
+                            >
+                                {copied ? (
+                                    <>
+                                        <span className="text-[12px] font-bold text-emerald-500">Copied!</span>
+                                        <RiCheckLine size={18} className="text-emerald-500" />
+                                    </>
+                                ) : (
+                                    <RiFileCopyLine size={18} className="text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-100" />
+                                )}
+                            </button>
+                            <RiRefreshLine size={18} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer" />
+                            <div className="flex-1" />
+                            <RiThumbUpLine size={18} className="text-zinc-700 hover:text-[#60A6AF] cursor-pointer" />
+                            <RiThumbDownLine size={18} className="text-zinc-700 hover:text-red-500 cursor-pointer" />
+                        </div>
+                    )}
                 </div>
             )}
         </div>

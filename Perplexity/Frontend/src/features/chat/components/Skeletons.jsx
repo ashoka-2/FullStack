@@ -45,7 +45,7 @@ export const MessagesSkeleton = () => (
 );
 
 export const ThinkingSkeleton = () => (
-    <div className="flex flex-col gap-6 pt-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <div className="flex items-center gap-3">
             <div className="w-6 h-6 rounded-full bg-[#60A6AF]/20 flex items-center justify-center">
                  <div className="w-2 h-2 rounded-full bg-[#60A6AF] animate-ping" />

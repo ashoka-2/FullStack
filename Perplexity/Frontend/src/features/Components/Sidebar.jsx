@@ -10,7 +10,9 @@ import {
   RiNotification3Line,
   RiSettings4Line,
   RiLogoutBoxRLine,
-  RiDeleteBinLine
+  RiDeleteBinLine,
+  RiSunLine,
+  RiMoonClearLine
 } from '@remixicon/react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useLocation } from 'react-router';
@@ -32,6 +34,21 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const [modalType, setModalType] = useState(null); // 'delete'
   const [targetId, setTargetId] = useState(null);
 
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+
   useEffect(() => {
     if (user) {
       handleGetChats();
@@ -50,7 +67,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 z-50 w-56 h-screen flex flex-col bg-[#050505] text-zinc-400 p-3 transition-transform duration-300 ease-in-out shrink-0
+        className={`fixed top-0 left-0 z-50 w-56 h-screen flex flex-col bg-zinc-50 dark:bg-[#050505] text-zinc-500 dark:text-zinc-400 p-3 transition-transform duration-300 ease-in-out shrink-0
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Mobile Close Button */}
@@ -70,17 +87,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               key={idx}
               to={item.path}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group
-                ${item.active ? 'bg-[#1a1a1a] text-zinc-100' : 'hover:bg-[#121212] hover:text-zinc-200'}`}
+                ${item.active ? 'bg-zinc-200 dark:bg-[#1a1a1a] text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:bg-zinc-100 dark:hover:bg-[#121212] hover:text-zinc-700 dark:hover:text-zinc-200'}`}
             >
-              <item.icon size={18} className={item.active ? 'text-zinc-100' : 'text-zinc-500'} />
+              <item.icon size={18} className={item.active ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-500'} />
               <span className="text-sm font-medium">{item.label}</span>
             </Link>
           ))}
         </nav>
 
         {/* New Chat Button */}
-        <Link to="/" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#1a1a1a] transition-all group mb-4">
-          <RiAddLine size={18} className="text-zinc-500 group-hover:text-zinc-300" />
+        <Link to="/" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-[#1a1a1a] transition-all group mb-4">
+          <RiAddLine size={18} className="text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300" />
           <span className="text-sm font-medium">New Chat</span>
         </Link>
 
@@ -105,7 +122,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     <Link
                       to={`/chat/${thread._id}`}
                       className={`flex-1 block text-left px-3 py-1.5 rounded-lg text-[13px] truncate transition-all font-medium 
-                      ${location.pathname === `/chat/${thread._id}` ? 'text-zinc-100 bg-[#1a1a1a]' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#121212]'}`}
+                      ${location.pathname === `/chat/${thread._id}` ? 'text-zinc-900 dark:text-zinc-100 bg-zinc-200 dark:bg-[#1a1a1a]' : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-[#121212]'}`}
                     >
                       {thread.title || 'Untitled Chat'}
                     </Link>
@@ -114,7 +131,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                         setTargetId(thread._id);
                         setModalType('delete');
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-zinc-600 hover:text-red-400 transition-all"
+                      className="p-1 text-zinc-400 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 transition-all shrink-0"
                     >
                       <RiDeleteBinLine size={14} />
                     </button>
@@ -138,14 +155,33 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
 
         {/* Footer Area */}
-        <div className="mt-auto space-y-4 pt-4 border-t border-zinc-900/50">
+        <div className="mt-auto space-y-4 pt-4 border-t border-zinc-900/50 dark:border-zinc-900/50 border-zinc-200">
+          
+          {/* Theme Toggle Button */}
+          <button 
+            onClick={toggleTheme}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-[#1a1a1a] transition-all group"
+          >
+            {theme === 'dark' ? (
+                <>
+                  <RiSunLine size={18} className="text-zinc-500 group-hover:text-amber-400" />
+                  <span className="text-sm font-medium">Light Mode</span>
+                </>
+            ) : (
+                <>
+                  <RiMoonClearLine size={18} className="text-zinc-500 group-hover:text-indigo-400" />
+                  <span className="text-sm font-medium">Dark Mode</span>
+                </>
+            )}
+          </button>
+
           {/* User Profile */}
           <div className="flex items-center justify-between px-2 pb-2">
             <div className="flex items-center gap-2 group max-w-[140px]">
               <div className="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
                 {user?.username?.[0]?.toUpperCase() || 'A'}
               </div>
-              <span className="text-xs font-bold text-zinc-200 truncate group-hover:text-white transition-colors">
+              <span className="text-xs font-bold text-zinc-900 dark:text-zinc-200 truncate group-hover:text-zinc-700 dark:group-hover:text-white transition-colors">
                 {user?.username || 'Guest'}
               </span>
             </div>

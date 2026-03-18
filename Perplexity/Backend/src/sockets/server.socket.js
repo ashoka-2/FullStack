@@ -4,7 +4,7 @@ let io;
 export function initSocket(httpServer){
     io = new Server(httpServer,{
         cors:{
-            origin:process.env.FRONTEND_URL,
+            origin: ["https://perplexity-cohort.vercel.app", "http://localhost:5173", "http://127.0.0.1:5173", process.env.FRONTEND_URL].filter(Boolean),
             credentials:true
         }
     })

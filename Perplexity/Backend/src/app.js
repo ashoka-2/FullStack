@@ -7,12 +7,27 @@ import chatRouter from "./routes/chat.routes.js";
 
 const app = express();
 
-// 1. CORS at the very top (Security Requirement)
+// Allow both production and local development origins
+const allowedOrigins = [
+    'https://perplexity-cohort.vercel.app',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    process.env.FRONTEND_URL
+].filter(Boolean); // Remove undefined values
+
 app.use(cors({
-    origin: ['https://perplexity-cohort.vercel.app',"http://localhost:5173",process.env.FRONTEND_URL],
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-socket-id']
 }));
 
 app.use(morgan("dev"));

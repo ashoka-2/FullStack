@@ -23,16 +23,15 @@ const Toast = ({ message, type = 'error', onClose, duration = 4000 }) => {
   if (!message) return null;
 
   const styles = {
-    error: {
-      bg: 'bg-[#1a1010] border-red-900/50 text-red-100',
+    error: {      bg: 'bg-[#1a1010] dark:bg-[#1a1010] border-red-200 dark:border-red-900/50 text-red-900 dark:text-red-100',
       icon: <RiErrorWarningLine className="w-5 h-5 text-red-500" />
     },
     success: {
-      bg: 'bg-[#101a14] border-emerald-900/50 text-emerald-100',
+      bg: 'bg-emerald-50 dark:bg-[#101a14] border-emerald-200 dark:border-emerald-900/50 text-emerald-900 dark:text-emerald-100',
       icon: <RiCheckboxCircleLine className="w-5 h-5 text-emerald-500" />
     },
     info: {
-      bg: 'bg-[#10161a] border-blue-900/50 text-blue-100',
+      bg: 'bg-blue-50 dark:bg-[#10161a] border-blue-200 dark:border-blue-900/50 text-blue-900 dark:text-blue-100',
       icon: <RiInformationLine className="w-5 h-5 text-blue-500" />
     }
   };
@@ -57,7 +56,7 @@ const Toast = ({ message, type = 'error', onClose, duration = 4000 }) => {
             setIsVisible(false);
             setTimeout(onClose, 300);
           }}
-          className="shrink-0 ml-3 text-zinc-500 hover:text-white transition-colors cursor-pointer"
+          className="shrink-0 ml-3 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
         >
           <RiCloseLine className="w-5 h-5" />
         </button>

@@ -20,14 +20,14 @@ const Dashboard = () => {
     }, [])
 
     return (
-        <div className="flex bg-[#050505] min-h-screen text-zinc-100 overflow-hidden font-sans selection:bg-[#60A6AF]/30">
+        <div className="flex bg-white dark:bg-[#050505] min-h-screen text-zinc-900 dark:text-zinc-100 overflow-hidden font-sans selection:bg-[#60A6AF]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             <Toast message={error} type="error" onClose={() => dispatch(setError(null))} />
 
             <div className={`flex-1 flex flex-col relative lg:pl-56 transition-all duration-300 ${isSidebarOpen ? 'opacity-50 blur-sm pointer-events-none lg:opacity-100 lg:blur-none lg:pointer-events-auto' : ''}`}>
 
-                <header className="lg:hidden flex items-center justify-between px-6 h-14 bg-[#050505] shrink-0 z-40 border-b border-white/5">
+                <header className="lg:hidden flex items-center justify-between px-6 h-14 bg-white dark:bg-[#050505] shrink-0 z-40 border-b border-zinc-200 dark:border-white/5">
                     <button
                         onClick={() => setIsSidebarOpen(true)}
                         className="p-2 -ml-2 text-zinc-500 hover:text-white transition-all"

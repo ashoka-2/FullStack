@@ -21,10 +21,10 @@ const ConfirmationModal = ({
             />
             
             {/* Modal Content */}
-            <div className="relative w-full max-w-sm bg-[#121212] border border-white/5 rounded-3xl p-8 shadow-2xl animate-in zoom-in duration-300">
+            <div className="relative w-full max-w-sm bg-zinc-50 dark:bg-[#121212] border border-zinc-200 dark:border-white/5 rounded-3xl p-8 shadow-2xl animate-in zoom-in duration-300">
                 <button 
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
+                    className="absolute top-4 right-4 p-2 rounded-xl text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 transition-all"
                 >
                     <RiCloseLine size={20} />
                 </button>
@@ -34,7 +34,7 @@ const ConfirmationModal = ({
                         <RiAlertLine size={32} />
                     </div>
 
-                    <h2 className="text-xl font-bold text-white mb-3">
+                    <h2 className="text-xl font-bold text-zinc-900 dark:text-white mb-3">
                         {title}
                     </h2>
                     
@@ -45,7 +45,7 @@ const ConfirmationModal = ({
                     <div className="flex gap-3 w-full">
                         <button 
                             onClick={onClose}
-                            className="flex-1 px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all text-sm font-bold tracking-wide"
+                            className="flex-1 px-4 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all text-sm font-bold tracking-wide"
                         >
                             {cancelText}
                         </button>

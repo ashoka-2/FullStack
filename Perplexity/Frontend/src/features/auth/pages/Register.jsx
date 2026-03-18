@@ -63,17 +63,17 @@ const Register = () => {
   }
 
   return (
-    <section className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6 selection:bg-[#60A6AF]/30">
-      <div className="w-full max-w-[480px] bg-[#191a1a] border border-[#2d2e2e] rounded-3xl p-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+    <section className="min-h-screen bg-white dark:bg-[#0a0a0a] flex items-center justify-center p-6 selection:bg-[#60A6AF]/30 transition-colors duration-300">
+      <div className="w-full max-w-[480px] bg-zinc-50 dark:bg-[#191a1a] border border-zinc-200 dark:border-[#2d2e2e] rounded-3xl p-10 shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
         {/* Perplexity Glow Effects */}
         <div className="absolute -top-[10%] -right-[10%] w-[300px] h-[300px] bg-[#60A6AF]/5 blur-[100px] rounded-full pointer-events-none" />
         <div className="absolute -bottom-[10%] -left-[10%] w-[250px] h-[250px] bg-[#60A6AF]/3 blur-[80px] rounded-full pointer-events-none" />
 
         <div className="relative z-10 flex flex-col items-center text-center mb-10">
-          <div className="w-14 h-14 bg-zinc-800/50 rounded-2xl mb-6 flex items-center justify-center border border-[#2d2e2e] shadow-inner">
+          <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-800/50 rounded-2xl mb-6 flex items-center justify-center border border-zinc-200 dark:border-[#2d2e2e] shadow-inner">
             <RiUserAddLine className="w-7 h-7 text-[#60A6AF]" />
           </div>
-          <h1 className="text-3xl font-extrabold text-zinc-100 tracking-tight">Create your account</h1>
+          <h1 className="text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight">Create your account</h1>
           <p className="text-zinc-500 mt-3 text-sm font-medium">Join the next generation of knowledge discovery.</p>
         </div>
 

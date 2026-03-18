@@ -130,7 +130,7 @@ const ChatPage2 = () => {
     };
 
     return (
-        <div className="flex bg-[#050505] min-h-screen text-zinc-100 font-sans selection:bg-[#60A6AF]/30 overflow-hidden">
+        <div className="flex bg-white dark:bg-[#050505] min-h-screen text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30 overflow-hidden">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             <Toast message={error} type="error" onClose={() => dispatch(setError(null))} />
@@ -138,20 +138,20 @@ const ChatPage2 = () => {
             <div className={`flex-1 flex flex-col h-screen lg:pl-56 overflow-hidden relative transition-all duration-300`}>
 
                 {/* Header Container */}
-                <header className={`h-14 bg-[#050505] z-30 shrink-0 transition-all duration-300 ${isScrolled ? 'border-b border-zinc-900 shadow-lg bg-[#050505]/95 backdrop-blur-md' : ''}`}>
+                <header className={`h-14 bg-white dark:bg-[#050505] z-30 shrink-0 transition-all duration-300 ${isScrolled ? 'border-b border-zinc-200 dark:border-zinc-900 shadow-lg bg-white/95 dark:bg-[#050505]/95 backdrop-blur-md' : ''}`}>
                     <div className="max-w-fluid mx-auto h-full flex items-center justify-between px-6">
                         <div className="flex items-center gap-4 md:gap-6 overflow-hidden">
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className="lg:hidden p-2 -ml-2 text-zinc-500 hover:text-white transition-all"
+                                className="lg:hidden p-2 -ml-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all"
                             >
                                 <RiMenuLine size={20} />
                             </button>
-                            <button className="flex items-center gap-2 text-[13px] font-bold text-zinc-100 border-b-2 border-white pb-3 mt-3 shrink-0">
+                            <button className="flex items-center gap-2 text-[13px] font-bold text-zinc-900 dark:text-zinc-100 border-b-2 border-zinc-900 dark:border-white pb-3 mt-3 shrink-0">
                                 Knowledge
                             </button>
                         </div>
-                        <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 transition-all text-[11px] font-bold text-zinc-200 shrink-0">
+                        <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all text-[11px] font-bold text-zinc-700 dark:text-zinc-200 shrink-0">
                             <RiShareLine size={12} />
                             <span className="hidden sm:inline">Share</span>
                         </button>
@@ -159,7 +159,7 @@ const ChatPage2 = () => {
                 </header>
 
                 <div ref={scrollerRef} className="flex-1 overflow-y-auto px-4 md:px-6 py-8 md:py-16 pb-[300px] custom-scrollbar scroll-smooth relative">
-                    <div className="max-w-fluid mx-auto space-y-24 mb-32">
+                    <div className="max-w-fluid mx-auto space-y-8 mb-32">
                         {loading && messages.length === 0 ? (
                             <MessagesSkeleton />
                         ) : (
