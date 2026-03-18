@@ -46,7 +46,10 @@ export function useAuth(){
             const response = await getMe()
             dispatch(setUser(response.user))
         }catch(error){
-            dispatch(setError(error.response?.data?.message || "Failed to fetch user details"))
+            // 401 means not logged in - don't show an error toast for this
+            if(error.response?.status !== 401) {
+                dispatch(setError(error.response?.data?.message || "Failed to fetch user details"))
+            }
             dispatch(setUser(null))
         }finally{
             dispatch(setLoading(false))

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../hook/useAuth';
 import FormField from '../components/FormField';
@@ -6,6 +6,7 @@ import Toast from '../../Components/Toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearError } from '../auth.slice';
 import { RiUserAddLine, RiCheckboxCircleFill, RiMailSendLine, RiLoader4Line } from '@remixicon/react';
+import gsap from 'gsap';
 
 const Register = () => {
   const [username, setUsername] = useState('')
@@ -16,6 +17,10 @@ const Register = () => {
   const [localError, setLocalError] = useState(null)
   const [resendStatus, setResendStatus] = useState(null)
 
+  const containerRef = useRef(null);
+  const headerRef = useRef(null);
+  const formRef = useRef(null);
+
   const dispatch = useDispatch();
   const { handleRegister, handleResendEmail } = useAuth();
   
@@ -23,6 +28,26 @@ const Register = () => {
   const loading = useSelector(state => state.auth.loading);
 
   useEffect(() => {
+    const tl = gsap.timeline();
+    
+    // Premium entrance animation using both from and to (via fromTo)
+    tl.fromTo(containerRef.current, 
+      { opacity: 0, y: 30, scale: 0.98 },
+      { opacity: 1, y: 0, scale: 1, duration: 1.2, ease: "power4.out" }
+    );
+    
+    tl.fromTo(headerRef.current,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" },
+      "-=0.8"
+    );
+
+    tl.fromTo(formRef.current?.children,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power2.out" },
+      "-=0.5"
+    );
+
     return () => {
       dispatch(clearError());
     };
@@ -36,6 +61,24 @@ const Register = () => {
 
     if (password !== confirmPassword) {
       setLocalError("Passwords do not match!");
+      return;
+    }
+
+    // Password validation
+    if (password.length < 8) {
+      setLocalError("Password must be at least 8 characters long");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setLocalError("Password must contain at least one uppercase letter");
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      setLocalError("Password must contain at least one number");
+      return;
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      setLocalError("Password must contain at least one special character");
       return;
     }
 
@@ -64,12 +107,15 @@ const Register = () => {
 
   return (
     <section className="min-h-screen bg-white dark:bg-[#0a0a0a] flex items-center justify-center p-6 selection:bg-[#60A6AF]/30 transition-colors duration-300">
-      <div className="w-full max-w-[480px] bg-zinc-50 dark:bg-[#191a1a] border border-zinc-200 dark:border-[#2d2e2e] rounded-3xl p-10 shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+      <div 
+        ref={containerRef}
+        className="w-full max-w-[480px] bg-zinc-50 dark:bg-[#191a1a] border border-zinc-200 dark:border-[#2d2e2e] rounded-3xl p-10 shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden"
+      >
         {/* Perplexity Glow Effects */}
         <div className="absolute -top-[10%] -right-[10%] w-[300px] h-[300px] bg-[#60A6AF]/5 blur-[100px] rounded-full pointer-events-none" />
         <div className="absolute -bottom-[10%] -left-[10%] w-[250px] h-[250px] bg-[#60A6AF]/3 blur-[80px] rounded-full pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col items-center text-center mb-10">
+        <div ref={headerRef} className="relative z-10 flex flex-col items-center text-center mb-10">
           <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-800/50 rounded-2xl mb-6 flex items-center justify-center border border-zinc-200 dark:border-[#2d2e2e] shadow-inner">
             <RiUserAddLine className="w-7 h-7 text-[#60A6AF]" />
           </div>
@@ -77,7 +123,11 @@ const Register = () => {
           <p className="text-zinc-500 mt-3 text-sm font-medium">Join the next generation of knowledge discovery.</p>
         </div>
 
-        <form onSubmit={handleRegisterClick} className="space-y-6">
+        <form 
+          ref={formRef}
+          onSubmit={handleRegisterClick} 
+          className="space-y-6"
+        >
           <FormField
             label="Username"
             type="text"
