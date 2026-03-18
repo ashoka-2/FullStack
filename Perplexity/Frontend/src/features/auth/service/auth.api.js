@@ -28,3 +28,8 @@ const api = axios.create({
     const response = await api.post("/api/auth/resend-verification-email",{email})
     return response.data
  }
+ 
+ export async function logout(){
+    const response = await api.post("/api/auth/logout")
+    return response.data
+ }

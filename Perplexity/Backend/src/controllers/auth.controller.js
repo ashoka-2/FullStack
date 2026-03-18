@@ -373,10 +373,14 @@ export async function getMe(req,res){
 
 }
 
-export async function logoutUser(req,res){
-    res.clearCookie("token");
-    res.status(200).json({
-        success: true,
-        message: "User logged out successfully",
-    });
+export async function logoutUser(req, res) {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
+  res.status(200).json({
+    success: true,
+    message: "User logged out successfully",
+  });
 }

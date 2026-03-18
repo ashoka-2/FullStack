@@ -17,6 +17,7 @@ import { Link, useLocation } from 'react-router';
 import { setUser } from '../auth/auth.slice';
 import PerplexityIcon from './PerplexityIcon';
 import { useChat } from '../chat/hook/useChat';
+import { useAuth } from '../auth/hook/useAuth';
 import { SidebarSkeleton } from '../chat/components/Skeletons';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -27,6 +28,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   const { handleGetChats, handleDeleteChat, isCreating } = useChat();
+  const { handleLogout } = useAuth();
   const [modalType, setModalType] = useState(null); // 'delete'
   const [targetId, setTargetId] = useState(null);
 
@@ -150,7 +152,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <div className="flex items-center gap-2">
               <RiNotification3Line size={16} className="text-zinc-600 hover:text-zinc-300 cursor-pointer" />
               <button
-                onClick={() => dispatch(setUser(null))}
+                onClick={handleLogout}
                 className="text-zinc-600 hover:text-red-400 transition-colors"
                 title="Logout"
               >
