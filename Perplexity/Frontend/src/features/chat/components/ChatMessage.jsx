@@ -60,34 +60,13 @@ const CodeBlock = ({ code, language, ...props }) => {
 const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
     const isUser = msg.role === 'user';
     const shouldAnimate = !isUser && isLatest && isNewMessage;
-    const [displayedContent, setDisplayedContent] = useState(shouldAnimate ? '' : msg.content);
-    const [isTyping, setIsTyping] = useState(shouldAnimate);
+    const [displayedContent, setDisplayedContent] = useState(msg.content);
+    const [isTyping, setIsTyping] = useState(false);
     const [copied, setCopied] = useState(false);
 
     useEffect(() => {
-        if (shouldAnimate && msg.content) {
-            let index = 0;
-            const text = msg.content;
-            setIsTyping(true);
-            
-            const interval = setInterval(() => {
-                if (index < text.length) {
-                    // Display 4 characters at once for faster animation
-                    const nextIndex = Math.min(index + 4, text.length);
-                    setDisplayedContent(text.slice(0, nextIndex));
-                    index = nextIndex;
-                } else {
-                    setIsTyping(false);
-                    clearInterval(interval);
-                }
-            }, 5);
-
-            return () => clearInterval(interval);
-        } else if (!shouldAnimate) {
-            setDisplayedContent(msg.content);
-            setIsTyping(false);
-        }
-    }, [msg.content, shouldAnimate]);
+        setDisplayedContent(msg.content);
+    }, [msg.content]);
 
     const handleCopy = () => {
         if (msg.content) {

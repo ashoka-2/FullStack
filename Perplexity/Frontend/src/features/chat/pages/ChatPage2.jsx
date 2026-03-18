@@ -173,6 +173,10 @@ const ChatPage2 = () => {
                                     />
                                 ))}
                                 {loading && (
+                                    messages.length === 0 || 
+                                    messages[messages.length - 1].role !== 'ai' || 
+                                    !messages[messages.length - 1].content
+                                ) && (
                                     <ThinkingSkeleton />
                                 )}
                             </>
