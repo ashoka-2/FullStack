@@ -3,7 +3,9 @@ import nodemailer from "nodemailer";
 console.log("👉 Mail service file start ho gayi hai...");
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,         
     auth: {
         type: 'OAuth2',
         user: (process.env.GOOGLE_USER || "").trim(),
@@ -11,7 +13,7 @@ const transporter = nodemailer.createTransport({
         clientSecret: (process.env.GOOGLE_CLIENT_SECRET || "").trim(),
         refreshToken: (process.env.GOOGLE_REFRESH_TOKEN || "").trim()
     },
-    family: 4,
+    family: 4, 
     connectionTimeout: 10000
 });
 
