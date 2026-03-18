@@ -1,5 +1,7 @@
 import nodemailer from "nodemailer";
 
+console.log("👉 Mail service file start ho gayi hai...");
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -8,14 +10,18 @@ const transporter = nodemailer.createTransport({
         clientId: (process.env.GOOGLE_CLIENT_ID || "").trim(),
         clientSecret: (process.env.GOOGLE_CLIENT_SECRET || "").trim(),
         refreshToken: (process.env.GOOGLE_REFRESH_TOKEN || "").trim()
-    }
+    },
+    family: 4,
+    connectionTimeout: 10000
 });
+
+console.log("👉 Transporter ban gaya, ab verify kar rahe hain...");
 
 transporter.verify((error, success) => {
     if (error) {
-        console.error("❌ Email Transporter Failed (Check Render Logs):", error);
+        console.error("❌ Email Transporter Failed:", error);
     } else {
-        console.log("✅ Email service is online and ready");
+        console.log("✅ Email service is online and ready (OAuth2 + IPv4)");
     }
 });
 
@@ -29,11 +35,10 @@ export async function sendEmail({ to, subject, html, text = "" }) {
             text
         };
         const details = await transporter.sendMail(mailOptions);
-        console.log("Email sent :", details);
-        return "emails sent successfully to " + to;
+        console.log("✅ Email sent successfully to :", details.accepted);
+        return { success: true, message: "Email sent" };
     } catch (error) {
-        console.error("Detailed Email Error:", error);
-        // Error object return kar rahe hain taaki server 500 na ho
+        console.error("❌ Detailed Email Error:", error);
         return { error: true, message: error.message };
     }
 }
