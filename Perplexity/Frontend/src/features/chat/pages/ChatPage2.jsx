@@ -32,8 +32,6 @@ const ChatPage2 = () => {
     // Attachment & Upload Menu States
     const [files, setFiles] = useState([]); // Jo file hum user se local upload lenge
     const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false); // Attachment dropdown on/off
-    const [isLinkInputOpen, setIsLinkInputOpen] = useState(false); // Link add karne wala popup
-    const [linkInput, setLinkInput] = useState(''); // Link ki value
     
     // Chat custom hook functions
     const { handleGetMessages, handleSendMessage, loading } = useChat();
@@ -173,14 +171,6 @@ const ChatPage2 = () => {
         setIsUploadMenuOpen(false);
     };
 
-    const handleAddLink = (e) => {
-        e.preventDefault();
-        if (linkInput.trim()) {
-            setFiles([...files, { name: linkInput, isLink: true }]);
-            setLinkInput('');
-            setIsLinkInputOpen(false);
-        }
-    };
 
     return (
         <div className="flex bg-white dark:bg-[#050505] min-h-screen text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30 overflow-hidden">
@@ -265,11 +255,6 @@ const ChatPage2 = () => {
                     removeFile={removeFile}
                     isUploadMenuOpen={isUploadMenuOpen}
                     setIsUploadMenuOpen={setIsUploadMenuOpen}
-                    isLinkInputOpen={isLinkInputOpen}
-                    setIsLinkInputOpen={setIsLinkInputOpen}
-                    linkInput={linkInput}
-                    setLinkInput={setLinkInput}
-                    handleAddLink={handleAddLink}
                     fileInputRef={fileInputRef}
                     handleFileUpload={handleFileUpload}
                 />

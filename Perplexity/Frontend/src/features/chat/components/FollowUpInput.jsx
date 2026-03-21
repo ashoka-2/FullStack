@@ -2,7 +2,6 @@ import React from 'react';
 import { 
     RiAddLine, 
     RiUploadCloudLine, 
-    RiLinksLine, 
     RiMicLine, 
     RiArrowUpLine, 
     RiCloseLine, 
@@ -18,11 +17,6 @@ const FollowUpInput = ({
     removeFile, 
     isUploadMenuOpen, 
     setIsUploadMenuOpen, 
-    setIsLinkInputOpen, 
-    isLinkInputOpen, 
-    linkInput, 
-    setLinkInput, 
-    handleAddLink, 
     fileInputRef, 
     handleFileUpload 
 }) => {
@@ -83,10 +77,6 @@ const FollowUpInput = ({
                                             <RiUploadCloudLine size={18} className="text-zinc-400 group-hover:text-[#60A6AF]" />
                                             <span>Upload file</span>
                                         </button>
-                                        <button onClick={() => { setIsLinkInputOpen(true); setIsUploadMenuOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[13px] font-bold transition-all group">
-                                            <RiLinksLine size={18} className="text-zinc-400 group-hover:text-[#60A6AF]" />
-                                            <span>Add link</span>
-                                        </button>
                                     </div>
                                 )}
                             </div>
@@ -108,15 +98,7 @@ const FollowUpInput = ({
                     </div>
                     <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" multiple />
 
-                    {isLinkInputOpen && (
-                        <form onSubmit={handleAddLink} className="mt-4 border-t border-zinc-200 dark:border-zinc-900/50 pt-4 animate-in slide-in-from-top-2">
-                            <div className="flex items-center gap-3 p-3 bg-zinc-100 dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800 rounded-2xl">
-                                <RiLinksLine size={18} className="text-[#60A6AF]" />
-                                <input autoFocus value={linkInput} onChange={(e) => setLinkInput(e.target.value)} placeholder="Paste link..." className="bg-transparent border-none outline-none text-zinc-900 dark:text-zinc-100 text-sm flex-1 font-medium" />
-                                <RiCloseLine size={20} className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-white cursor-pointer" onClick={() => setIsLinkInputOpen(false)} />
-                            </div>
-                        </form>
-                    )}
+
                 </div>
             </div>
         </div>

@@ -3,18 +3,13 @@ import { postImageToInstagram } from "../instagram.service.js";
 import messageModel from "../../models/message.model.js";
 import * as z from "zod";
 
-/**
- * Snap2Bill Instagram Posting Tool
- */
+
 export const postToInstagramTool = (userContext) => tool(
   async ({ imageUrl, caption }) => {
     try {
       let finalImageUrl = imageUrl;
 
-      // 1. URL AUTO-HEALING & ANTI-HALLUCINATION
-      // AI sometimes hallucinates fake 'ik.imagekit.io/ai_images/...' URLs. 
-      // We ALWAYS fetch the latest verified image from the database to be 100% sure.
-      console.log("🔍 [IG-Tool] Verifying image URL logic...");
+
       const lastMsgWithImage = await messageModel.findOne({
         "file.url": { $regex: "ik.imagekit.io" }
       }).sort({ createdAt: -1 });
@@ -24,11 +19,7 @@ export const postToInstagramTool = (userContext) => tool(
         console.log("🛡️ [IG-Tool] Anti-Hallucination Active: Enforced REAL DB Image ->", finalImageUrl);
       }
 
-      // 2. Final URL Validation
-      // instagram.tool.js ke andar (line 30 ke aas paas)
-      // instagram.tool.js ke andar transformation logic fix:
 
-      // instagram.tool.js ke andar transformation fix:
 
       if (finalImageUrl.includes("ik.imagekit.io")) {
         if (!finalImageUrl.includes("/tr:")) {

@@ -1,6 +1,3 @@
-// ============================================================
-// CHAT RESPONSE GENERATOR — GEMINI-FIRST ROUTING
-// ============================================================
 
 import { HumanMessage, SystemMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import axios from "axios";
@@ -121,6 +118,8 @@ export async function generateResponse(messages, onChunk, userContext) {
     });
     if (!(geminiMessages[0] instanceof HumanMessage)) geminiMessages.unshift(new HumanMessage({ content: systemContent }));
 
+    const { tools, map } = getTools(userContext);
+
     const visionModels = [
       { model: geminiVision1, name: "Gemini 2.5-Flash-Lite" },
       { model: geminiVision2, name: "Gemini 1.5-Flash" },
@@ -128,21 +127,15 @@ export async function generateResponse(messages, onChunk, userContext) {
 
     for (const { model, name } of visionModels) {
       try {
-        console.log(`📸 [Vision] Attempting with ${name}...`);
-        const stream = await model.stream(geminiMessages);
-        let fullContent = "";
-        for await (const chunk of stream) {
-          fullContent += chunk.content;
-          if (onChunk) onChunk(chunk.content);
-        }
-        return fullContent;
+        console.log(`📸 [Vision] Attempting tool execution with ${name}...`);
+        const visionWithTools = model.bindTools(tools);
+        return await runModelLoop(geminiMessages, onChunk, visionWithTools, map, name);
       } catch (err) {
         console.warn(`⚠️ [Vision] ${name} failed: ${err.message?.substring(0, 50)}...`);
       }
     }
     
     // No Vision models worked → Fallback to Text-only Mistral
-    const { tools, map } = getTools(userContext);
     const sanitizedHistory = history.map(msg => {
       if (Array.isArray(msg.content)) {
         const textOnly = msg.content.filter(i => i.type === "text").map(i => i.text).join("\n");
