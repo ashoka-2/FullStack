@@ -3,7 +3,8 @@ import { useParams } from 'react-router';
 import {
     RiMenuLine,
     RiShareLine,
-    RiArrowDownLine
+    RiArrowDownLine,
+    RiCheckLine
 } from '@remixicon/react';
 import Sidebar from '../../Components/Sidebar';
 import ChatMessage from '../components/ChatMessage';
@@ -16,33 +17,59 @@ import { setError } from '../chat.slice';
 import { useDispatch } from 'react-redux';
 
 const ChatPage2 = () => {
+    // URL params se chat id nikal rahe hain (eg: /chat/123 -> id: 123)
     const { id } = useParams();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [input, setInput] = useState('');
-    const [isScrolled, setIsScrolled] = useState(false);
-    const scrollerRef = useRef(null);
-    const fileInputRef = useRef(null);
-    const [files, setFiles] = useState([]);
-    const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
-    const [isLinkInputOpen, setIsLinkInputOpen] = useState(false);
-    const [linkInput, setLinkInput] = useState('');
-
+    
+    // UI states
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile pe sidebar open/close
+    const [input, setInput] = useState(''); // Chat box input
+    const [isScrolled, setIsScrolled] = useState(false); // Header pe shadow lagan ke liye jab page scroll ho
+    
+    // References & Elements
+    const scrollerRef = useRef(null); // Chat history overflow scroll control
+    const fileInputRef = useRef(null); // Hidden file input selector
+    
+    // Attachment & Upload Menu States
+    const [files, setFiles] = useState([]); // Jo file hum user se local upload lenge
+    const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false); // Attachment dropdown on/off
+    const [isLinkInputOpen, setIsLinkInputOpen] = useState(false); // Link add karne wala popup
+    const [linkInput, setLinkInput] = useState(''); // Link ki value
+    
+    // Chat custom hook functions
     const { handleGetMessages, handleSendMessage, loading } = useChat();
+
+    // Redux se messages aur global error fetch kar rahe hain
     const messages = useSelector(state => state.chat.messages);
     const error = useSelector(state => state.chat.error);
     const dispatch = useDispatch();
     const [latestMessageId, setLatestMessageId] = useState(null);
     const [showScrollButton, setShowScrollButton] = useState(false);
 
+    // Share link button state
+    const [isCopied, setIsCopied] = useState(false);
+
+    const handleShare = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 2000); // 2 seconds delay
+        } catch (err) {
+            console.error('Failed to copy', err);
+        }
+    };
+
     useEffect(() => {
-        if (id) {
+        // Jab user naya message send karta hai ChatArea se, hum turant '/chat/new' pe navigate kar dete hain (Optimistic Routing)
+        // Isliye 'new' wale route pe backend call na lage (kyunki ye valid ObjectId nahi hai), 
+        // hum check laga rhe hain ki id 'new' na ho
+        if (id && id !== 'new') {
             handleGetMessages(id);
         }
     }, [id]);
 
     const handleRetry = () => {
         dispatch(setError(null));
-        if (id) {
+        if (id && id !== 'new') {
             handleGetMessages(id);
         }
     };
@@ -56,18 +83,44 @@ const ChatPage2 = () => {
         }
     };
 
-    // Auto scroll to bottom when messages load or a new message is added
+    // Auto scroll logic: either to bottom or to a specifically searched message
     useEffect(() => {
         if (messages.length > 0) {
-            // Use requestAnimationFrame to ensure DOM is updated
+            // requestAnimationFrame DOM paint hone ka wait karta hai taaki sab render ho chuka ho
             requestAnimationFrame(() => {
                 const scroller = scrollerRef.current;
+                const hash = window.location.hash;
+                
+                // Agar URL mein hash hai (Matlab Library page ke message search se redirect hua hai)
+                if (hash && hash.startsWith('#msg-')) {
+                    const targetElement = document.querySelector(hash);
+                    if (targetElement && scroller) {
+                        // Screen ko us highlighted message par scroll kar do
+                        scroller.scrollTo({
+                            top: targetElement.offsetTop - 40, // Header ke liye thodi space chhodne ke liye
+                            behavior: 'smooth'
+                        });
+                        
+                        // Ek subtle glow (highlight) dekar 2 seconds baad nikal dete hain, jisse premium feel aaye
+                        targetElement.style.transition = 'background-color 1s ease';
+                        targetElement.style.backgroundColor = 'rgba(96, 166, 175, 0.1)';
+                        setTimeout(() => {
+                            targetElement.style.backgroundColor = 'transparent';
+                            // Ek baar dhundh liya toh aage disturb na hone ke liye hash path hata dete hain (optional)
+                            window.history.replaceState(null, null, ' ');
+                        }, 2500);
+                        
+                        return; // Yahan return kar diye taaki neeche wali "scroll to bottom" trigger na ho
+                    }
+                }
+                
+                // Normal Behavior: Agar kisi khas message ka search nahi hai, toh seedha chat ke end (bottom) par pahuche
                 if (scroller) {
                     scroller.scrollTop = scroller.scrollHeight;
                 }
             });
         }
-    }, [messages.length, id]); // Scroll on new messages or chat switch
+    }, [messages.length, id]);
 
     // Show/hide scroll to bottom button based on scroll position
     useEffect(() => {
@@ -139,7 +192,7 @@ const ChatPage2 = () => {
 
                 {/* Header Container */}
                 <header className={`h-14 bg-white dark:bg-[#050505] z-30 shrink-0 transition-all duration-300 ${isScrolled ? 'border-b border-zinc-200 dark:border-zinc-900 shadow-lg bg-white/95 dark:bg-[#050505]/95 backdrop-blur-md' : ''}`}>
-                    <div className="max-w-fluid mx-auto h-full flex items-center justify-between px-6">
+                    <div className="max-w-[800px] mx-auto h-full flex items-center justify-between px-6">
                         <div className="flex items-center gap-4 md:gap-6 overflow-hidden">
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
@@ -151,15 +204,22 @@ const ChatPage2 = () => {
                                 Knowledge
                             </button>
                         </div>
-                        <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all text-[11px] font-bold text-zinc-700 dark:text-zinc-200 shrink-0">
-                            <RiShareLine size={12} />
-                            <span className="hidden sm:inline">Share</span>
+                        <button 
+                            onClick={handleShare}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-[11px] font-bold shrink-0 border
+                                ${isCopied 
+                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400' 
+                                    : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200'
+                                }`}
+                        >
+                            {isCopied ? <RiCheckLine size={12} /> : <RiShareLine size={12} />}
+                            <span className="hidden sm:inline">{isCopied ? "Copied" : "Share"}</span>
                         </button>
                     </div>
                 </header>
 
                 <div ref={scrollerRef} className="flex-1 overflow-y-auto px-4 md:px-6 py-8 md:py-16 pb-[300px] custom-scrollbar scroll-smooth relative">
-                    <div className="max-w-fluid mx-auto space-y-8 mb-32">
+                    <div className="max-w-[800px] mx-auto space-y-8 mb-32">
                         {loading && messages.length === 0 ? (
                             <MessagesSkeleton />
                         ) : (
@@ -186,7 +246,7 @@ const ChatPage2 = () => {
 
                 {/* Move to bottom button */}
                 {showScrollButton && (
-                    <div className="absolute bottom-[180px] left-0 right-0 flex justify-center z-40 pointer-events-none">
+                    <div className="absolute bottom-[180px] left-0 right-0 lg:pl-56 flex justify-center z-40 pointer-events-none">
                         <button 
                             onClick={scrollToBottom}
                             className="bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-100 p-2.5 rounded-full shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-4 duration-300 group pointer-events-auto"

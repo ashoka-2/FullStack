@@ -37,7 +37,17 @@ export async function deleteChat(chatId){
     return response.data
 }
 
-export async function getSuggestions(){
-    const response = await api.get("/api/chats/suggestions")
-    return response.data
+export async function getSuggestions(chatId) {
+    const response = await api.get("/api/chats/suggestions", {
+        params: { chatId }
+    });
+    return response.data;
+}
+
+// Backend par naya global search execute karne wala API call
+export async function searchMessagesGlobally(query) {
+    const response = await api.get(`/api/chats/search`, {
+        params: { q: query }
+    });
+    return response.data;
 }

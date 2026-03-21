@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 import { RiMoreFill, RiShareLine, RiDeleteBinLine } from '@remixicon/react';
 import PerplexityIcon from '../../Components/PerplexityIcon';
 
-import { useChat } from '../hook/useChat';
 
 const ThreadCard = ({ thread, viewMode, onDelete }) => {
     const onDeleteClick = (e) => {

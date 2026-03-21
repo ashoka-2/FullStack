@@ -16,7 +16,7 @@ const Layout = () => {
         if (!authLoading) {
             setAuthWaitDone(true);
         }
-        
+
         // Sync Initial Theme
         const theme = localStorage.getItem('theme') || 'dark';
         console.log('Theme changed to:', theme);
@@ -29,13 +29,17 @@ const Layout = () => {
         localStorage.setItem('theme', theme);
     }, [authLoading]);
 
-    // We show loader if it hasn't finished OR if we are still waiting for initial auth
-    if (!loaderFinished || !authWaitDone) {
-        return <Loading onFinished={() => setLoaderFinished(true)} />;
-    }
+    // Agar loader chal raha hai ya auth abhi fetch nahi hua, toh scroll aur interactable elements ban kar denge (overflow-hidden)
+    const isOverlayActive = !loaderFinished || !authWaitDone;
 
     return (
-        <div className="bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300 min-h-screen">
+        <div className={`bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300 min-h-screen relative ${isOverlayActive ? 'h-screen overflow-hidden' : ''}`}>
+            {/* Loading component screen ke upar aayega jaise ek parda (curtain) */}
+            {isOverlayActive && (
+                <Loading onFinished={() => setLoaderFinished(true)} authReady={authWaitDone} />
+            )}
+
+            {/* Jab tak parda (loading) hai, tab tak app back me render ho raha hai taaki data fetch ho sake */}
             <ScrollToTop />
             <Outlet />
         </div>

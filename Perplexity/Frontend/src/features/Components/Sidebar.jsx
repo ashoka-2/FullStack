@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import {
   RiSearchLine,
   RiAddLine,
@@ -12,7 +13,8 @@ import {
   RiLogoutBoxRLine,
   RiDeleteBinLine,
   RiSunLine,
-  RiMoonClearLine
+  RiMoonClearLine,
+  RiInstagramLine
 } from '@remixicon/react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useLocation } from 'react-router';
@@ -47,7 +49,31 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  // Is function ko Skiper26 ke native transition jaisa banaya gaya hai. Ye click origin property extract karta hai
+  // aur Native browser View Transitions API ko start karta hai smooth circle opening reveal animation ke liye!
+  const toggleTheme = (e) => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    
+    // Fallback: Agar kisi user ka browser bahut purana hai jisme ViewTransition support nahi hai 
+    if (!document.startViewTransition) {
+        setTheme(nextTheme);
+        return;
+    }
+
+    // CSS variables document ki x y coordinates se set ho rhi hai 
+    // Isse animation jahan click kiya hai wahen se gol (circle) expand hona shuru hoga!
+    const x = e.clientX || window.innerWidth / 2;
+    const y = e.clientY || window.innerHeight / 2;
+    document.documentElement.style.setProperty('--click-x', `${x}px`);
+    document.documentElement.style.setProperty('--click-y', `${y}px`);
+
+    document.startViewTransition(() => {
+        // flushSync react state ko immediately screen render pr force karta hai startViewTransition ke liye
+        flushSync(() => {
+            setTheme(nextTheme);
+        });
+    });
+  };
 
   useEffect(() => {
     if (user) {
@@ -58,6 +84,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const menuItems = [
     { icon: PerplexityIcon, label: 'Search', path: '/', active: location.pathname === '/' },
     { icon: RiHistoryLine, label: 'Chats', path: '/library', active: location.pathname === '/library' },
+    { icon: RiInstagramLine, label: 'Insta Post', path: '/connect-instagram', active: location.pathname === '/connect-instagram' },
   ];
 
   const secondaryItems = [

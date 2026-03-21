@@ -40,7 +40,7 @@ const FollowUpInput = ({
 
     return (
         <div className="absolute bottom-0 left-0 w-full lg:pl-56 bg-gradient-to-t from-white dark:from-[#050505] via-white/95 dark:via-[#050505]/95 to-transparent z-40 pb-6 md:pb-8 pointer-events-none transition-all">
-            <div className="max-w-fluid mx-auto px-4 md:px-6 pointer-events-auto">
+            <div className="max-w-[800px] mx-auto px-4 md:px-6 pointer-events-auto">
                 <div className="w-full bg-zinc-50 dark:bg-[#121212] border border-zinc-200 dark:border-[#2d2e2e] focus-within:border-zinc-300 dark:focus-within:border-zinc-700 rounded-[28px] px-6 py-4 transition-all duration-300 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.1)] dark:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)]">
                     
                     {/* File Pills */}

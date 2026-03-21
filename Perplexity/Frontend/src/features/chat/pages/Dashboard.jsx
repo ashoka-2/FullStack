@@ -25,7 +25,7 @@ const Dashboard = () => {
 
             <Toast message={error} type="error" onClose={() => dispatch(setError(null))} />
 
-            <div className={`flex-1 flex flex-col relative lg:pl-56 transition-all duration-300 ${isSidebarOpen ? 'opacity-50 blur-sm pointer-events-none lg:opacity-100 lg:blur-none lg:pointer-events-auto' : ''}`}>
+            <div className={`flex-1 flex flex-col h-screen overflow-hidden relative lg:pl-56 transition-all duration-300 ${isSidebarOpen ? 'opacity-50 blur-sm pointer-events-none lg:opacity-100 lg:blur-none lg:pointer-events-auto' : ''}`}>
 
                 <header className="lg:hidden flex items-center justify-between px-6 h-14 bg-white dark:bg-[#050505] shrink-0 z-40 border-b border-zinc-200 dark:border-white/5">
                     <button
@@ -38,7 +38,8 @@ const Dashboard = () => {
                     </div>
                 </header>
 
-                <div className="flex-1 flex flex-col items-center responsive-container py-4">
+                {/* Yahan height constrain kar diya taaki ChatArea apna custom scrollbar khud manage kare bilkul ChatPage2 id ki tarah */}
+                <div className="flex-1 overflow-hidden flex flex-col">
                     <ChatArea />
                 </div>
             </div>

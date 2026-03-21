@@ -5,10 +5,13 @@ import {
     RiCompass3Line,
     RiLayoutGridLine,
     RiListCheck2,
-    RiMenuLine
+    RiMenuLine,
+    RiMessage2Line
 } from '@remixicon/react';
+import { useNavigate } from 'react-router';
 import Sidebar from '../../Components/Sidebar';
 import ThreadCard from '../components/ThreadCard';
+import MessageSearchResults from '../components/MessageSearchResults';
 import PerplexityIcon from '../../Components/PerplexityIcon';
 import { useChat } from '../hook/useChat';
 import { useSelector } from 'react-redux';
@@ -19,9 +22,10 @@ import { useDispatch } from 'react-redux';
 import ConfirmationModal from '../../Components/ConfirmationModal';
 
 const Library = () => {
+    const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [viewMode, setViewMode] = useState('grid');
-    const { handleGetChats, handleDeleteChat } = useChat();
+    const { handleGetChats, handleDeleteChat, handleSearchMessagesGlobally } = useChat();
     const chats = useSelector(state => state.chat.chats);
     const error = useSelector(state => state.chat.error);
     const dispatch = useDispatch();
@@ -29,9 +33,32 @@ const Library = () => {
     const [targetThreadId, setTargetThreadId] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Inner messages search states
+    const [globalSearchResults, setGlobalSearchResults] = useState([]);
+    const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
+
     useEffect(() => {
         handleGetChats();
     }, []);
+
+    // Ye useEffect 'Debouncing' laagu karta hai taaki jab user type kate, har single keyboard button (keystroke) 
+    // pe backend freeze na ho. User rukega tabhi 500ms delay ke baad aaram se message search jayega. Backend aur performance bachti hai isse!
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setGlobalSearchResults([]);
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(async () => {
+            setIsSearchingGlobal(true);
+            const results = await handleSearchMessagesGlobally(searchQuery);
+            setGlobalSearchResults(results || []);
+            setIsSearchingGlobal(false);
+        }, 500); // 500 millisecond wait till the user pauses typing
+
+        // Cleanup: Agar user 500ms se phele dobaara dbata hai toh purana timer clear ho jata hai.
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery]);
 
     const chatsList = chats
         .filter(chat => 
@@ -46,26 +73,31 @@ const Library = () => {
         }));
 
     return (
-        <div className="flex bg-white dark:bg-[#050505] min-h-screen text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30">
+        <div className="flex bg-white dark:bg-[#050505] min-h-screen text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30 overflow-x-hidden relative w-full">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             <Toast message={error} type="error" onClose={() => dispatch(setError(null))} />
 
-            <div className="flex-1 lg:pl-56 transition-all duration-300">
+            <div className="flex-1 lg:pl-56 min-w-0 transition-all duration-300 w-full relative">
                 <main className="max-w-[1000px] mx-auto px-4 md:px-6 py-8 md:py-12">
 
-                    {/* Mobile Menu Toggle */}
-                    <div className="lg:hidden flex items-center mb-6">
+                    {/* Mobile Menu Toggle - Fixed Header */}
+                    <div className="lg:hidden fixed top-0 left-0 right-0 z-30 flex items-center py-4 bg-white/95 dark:bg-[#050505]/95 backdrop-blur-md px-4 border-b border-zinc-200 dark:border-white/10 shadow-sm dark:shadow-none">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="p-2 -ml-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all"
+                            className="p-2 -ml-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all bg-zinc-100/50 dark:bg-zinc-900/50 rounded-lg"
                         >
                             <RiMenuLine size={24} />
                         </button>
-                        <span className="text-lg font-bold text-zinc-900 dark:text-white ml-2">Chats</span>
+                        <span className="text-lg font-bold text-zinc-900 dark:text-white ml-2 flex items-center gap-2">
+                            <RiHistoryLine size={20} className="text-[#60A6AF]" /> Chats
+                        </span>
                     </div>
+
+                    {/* Spacer for fixed header */}
+                    <div className="h-8 lg:hidden w-full" />
  
-                    <div className="flex items-center gap-3 mb-10 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
+                    <div className="hidden lg:flex items-center gap-3 mb-10 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
                         <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#60A6AF] to-[#4a8a92] flex items-center justify-center text-zinc-950 shrink-0 shadow-lg shadow-[#60A6AF]/10">
                             <RiHistoryLine size={22} />
                         </div>
@@ -108,11 +140,20 @@ const Library = () => {
                         )}
                         {!useSelector(state => state.chat.loading) && chatsList.length === 0 && (
                             <div className="col-span-full py-20 text-center text-zinc-500 text-sm font-medium">
-                                {searchQuery ? `No chats found for "${searchQuery}"` : "No chats yet. Start a conversation!"}
+                                {searchQuery ? `No chat titles found for "${searchQuery}"` : "No chats yet. Start a conversation!"}
                             </div>
                         )}
                     </div>
+
+                    {/* Global Search Results Section ki rendering naye component se ho rahi hai taaki code aasan bane */}
+                    <MessageSearchResults 
+                        searchQuery={searchQuery}
+                        isSearchingGlobal={isSearchingGlobal}
+                        globalSearchResults={globalSearchResults}
+                    />
+
                 </main>
+
             </div>
 
             {isSidebarOpen && (

@@ -384,3 +384,45 @@ export async function logoutUser(req, res) {
     message: "User logged out successfully",
   });
 }
+
+export async function connectInstagram(req, res) {
+  try {
+    const { accessToken, userId } = req.body;
+
+    if (!accessToken || !userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Access token and User ID are required",
+      });
+    }
+
+    const user = await userModel.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    user.instagram = {
+      accessToken,
+      userId,
+      isConnected: true,
+    };
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Instagram account connected successfully",
+      instagram: {
+          userId: user.instagram.userId,
+          isConnected: true
+      }
+    });
+  } catch (error) {
+    console.error("Connect Instagram Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to connect Instagram account",
+      error: error.message,
+    });
+  }
+}

@@ -16,37 +16,56 @@ import {
   RiArrowUpLine,
   RiCompass3Line,
   RiGlobalLine,
-  RiMagicLine
+  RiMagicLine,
+  RiInstagramLine,
+  RiMailSendLine
 } from '@remixicon/react';
 import { useChat } from '../hook/useChat';
 import { useNavigate } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import Toast from '../../Components/Toast';
-import { setError } from '../chat.slice';
+import { setError, setMessages } from '../chat.slice';
+import PerplexityIcon from '../../Components/PerplexityIcon';
 
 const ChatArea = () => {
+  // Input message store karne ke liye
   const [input, setInput] = useState('');
+  
+  // Agar user koi file ya image attach karta hai toh usko isme store karte hain
   const [files, setFiles] = useState([]);
+  
+  // Drag and drop UI toggle ke liye flag
   const [isDragging, setIsDragging] = useState(false);
+  
+  // Custom hook se function le rahe hain jo chat bhejne aur suggestions lane me madad karega
   const { handleSendMessage, handleGetSuggestions, loading } = useChat();
+  
+  // Global error state laye hain Redux se, taaki upar Toast me dikha sakein
   const error = useSelector(state => state.chat.error);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  
+  // Naye AI suggestions (pills, queries, topics) store karne ke liye
   const [aiSuggestions, setAiSuggestions] = useState(null);
+  
+  // Initial suggestions laate waqt skeleton dikhane ke liye loading flag
   const [suggestionsLoading, setSuggestionsLoading] = useState(true);
 
+  // Hidden file input element ka reference taaki attachment button se waha click karwa sakein
   const fileInputRef = useRef(null);
 
+  // Jaise hi component pehli baar load ho, default suggestions backend se fetch karo
   useEffect(() => {
     const fetchSuggestions = async () => {
       setSuggestionsLoading(true);
       const data = await handleGetSuggestions();
-      if (data) setAiSuggestions(data);
+      if (data) setAiSuggestions(data); // Agar data aaya toh state update kardo
       setSuggestionsLoading(false);
     };
     fetchSuggestions();
   }, []);
 
+  // Icon ka dictionary taaki backend se sirf string (jaise 'robot') aaye aur hum proper icon dikha sakein
   const iconMap = {
     global: RiGlobalLine,
     robot: RiRobot2Line,
@@ -57,56 +76,104 @@ const ChatArea = () => {
     heart: RiHeart2Line
   };
 
+  // AI ke extra capabilities ko yaha dynamic array mein rakha gaya hai
+  // Taaki future mein naye tools aane par simply yahan unhe joda ja sake bina UI code badle
+  const capabilities = [
+    {
+       title: "Post to Instagram",
+       description: "Instantly create and publish image posts directly to your Instagram account.",
+       icon: RiInstagramLine,
+       colorClass: "text-[#E1306C]",
+       bgHover: "hover:bg-[#E1306C]/10 hover:border-[#E1306C]/30"
+    },
+    {
+       title: "Send Emails",
+       description: "Draft and send professional emails straight from the chat interface.",
+       icon: RiMailSendLine,
+       colorClass: "text-[#EA4335]",
+       bgHover: "hover:bg-[#EA4335]/10 hover:border-[#EA4335]/30"
+    }
+  ];
+
+  // Jab user Enter dabaye, send button dabaye ya koi suggestion click kare
   const onSubmit = async (e, text = null) => {
     if (e) e.preventDefault();
-    const messageToSend = text || input;
-    const file = files[0]; // Sending only the first file for now
     
+    // Agar func ko naya text mila hai (matlab user ne suggestion click kiya) toh usa use karo warna input box ka text
+    const messageToSend = text || input;
+    
+    // Abhi ke liye sirf pehli file bhej rahe hain backend ko (Single file attachment support)
+    const file = files[0]; 
+    
+    // Agar type bhi nahi kiya aur file bhi select nahi ki toh send nahi karenge. Ya fir agar pehle se message jaa raha ho (loading) to rokenge
     if ((!messageToSend.trim() && !file) || loading) return;
 
     try {
+      // Input box box ko immediately khali karna zaruri hai taki user dohra type na kare
       setInput('');
       setFiles([]);
-      const response = await handleSendMessage(messageToSend, null, file);
-      if (response && response.chat) {
-        navigate(`/chat/${response.chat._id}`);
-      }
+      
+      // Purane stored messages saaf kar do taaki new page pe pichle chat ki baatein na aayen
+      dispatch(setMessages([]));
+      
+      // Optimistic Routing: Server ki response ka wait karne ke bajaye user ko turant new chat screen pe bhej do
+      navigate('/chat/new');
+      
+      // Asynchronously handle message sending, hum yahan await nahi laga rahe taaki ui fass na jaye
+      handleSendMessage(messageToSend, null, file).then(response => {
+        // Ek baar server se asli chat _id aa gayi, tab silently URL ko update kardo (replace: true ensures strict history)
+        if (response && response.chat) {
+          navigate(`/chat/${response.chat._id}`, { replace: true });
+        }
+      }).catch(err => {
+          console.error("Message send failed:", err);
+      });
+      
     } catch (error) {
-      console.error("Failed to send message:", error);
+      console.error("Message send failed:", error); // Dev logging
     }
   };
 
+  // Keyboard 'Enter' se message send karne ke liye function
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
+      // Agar user shift ya ctrl daba ke enter mare toh usko new line samajhenge (Message na bhejeyngy)
       if (e.ctrlKey || e.metaKey || e.shiftKey) {
         return;
       }
-      e.preventDefault();
-      onSubmit(e);
+      e.preventDefault(); // Default line skip rokna
+      onSubmit(e); // Message bhejna start
     }
   };
 
+  // Attachment button ke zariye aayi files state me set karna
   const handleFileUpload = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    setFiles(prev => [...prev, ...selectedFiles]);
+    setFiles(prev => [...prev, ...selectedFiles]); // Purani plus nayi file add
   };
 
+  // Selected file array me se particular index wali file udana
   const removeFile = (index) => {
     setFiles(files.filter((_, i) => i !== index));
   };
 
+  // Drag start (jab screen par file laaye)
   const handleDragOver = (e) => {
     e.preventDefault();
-    setIsDragging(true);
+    setIsDragging(true); // Overlay UI dikhaye
   };
 
+  // Jab file screen se hata di bina drop kare
   const handleDragLeave = () => {
     setIsDragging(false);
   };
 
+  // File chhorne par drop handle karna
   const handleDrop = (e) => {
     e.preventDefault();
-    setIsDragging(false);
+    setIsDragging(false); // Drop ho gaya UI wapas normal kardo
+    
+    // Drop ki gyi files state me save kar lo
     const droppedFiles = Array.from(e.dataTransfer.files);
     if (droppedFiles.length > 0) {
       setFiles(prev => [...prev, ...droppedFiles]);
@@ -132,13 +199,36 @@ const ChatArea = () => {
       )}
 
       <div className="w-full max-w-fluid flex flex-col items-center relative z-10 px-4 md:px-0 pt-12 md:pt-[15vh]">
-        <h1 className="text-[3.5rem] md:text-[5.5rem] font-extralight text-zinc-900 dark:text-white tracking-tighter mb-8 md:mb-12 text-center opacity-90 transition-opacity hover:opacity-100">
-          perplexity
+        <h1 className="text-[3.5rem] md:text-[5.5rem] font-extralight text-zinc-900 dark:text-white tracking-tighter mb-8 md:mb-12 text-center opacity-90 transition-opacity hover:opacity-100 flex items-center gap-2">
+         <PerplexityIcon size={50}/> Perplexity
         </h1>
 
+        {/* Assistant Suggestions Pills ab heading ke theek niche hain */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-8 px-1 max-w-[800px] mx-auto w-full">
+          {suggestionsLoading ? (
+            [1, 2, 3, 4].map(i => (
+              <div key={i} className="flex-shrink-0 w-24 h-8 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-pulse" />
+            ))
+          ) : (
+              (aiSuggestions?.pills || ['For you', 'Study guide', 'Business', 'Health']).map((pillLabel, i) => {
+              const Icon = iconMap[aiSuggestions?.topics?.[i]?.iconType] || RiCompass3Line;
+              return (
+                <button 
+                  key={i} 
+                  onClick={(e) => onSubmit(e, pillLabel)}
+                  className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-transparent border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-600 dark:text-zinc-500 text-[13px] font-medium transition-all group"
+                >
+                  <Icon size={14} className="text-zinc-500 mr-2 group-hover:text-zinc-900 dark:group-hover:text-zinc-300" />
+                  <span>{pillLabel}</span>
+                </button>
+              );
+            })
+          )}
+        </div>
+
         {/* Search Input Box */}
-        <div className="w-full md:relative md:block fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 md:p-0 bg-gradient-to-t from-white dark:from-[#050505] via-white/95 dark:via-[#050505]/95 md:bg-transparent to-transparent backdrop-blur-[2px] md:backdrop-blur-0">
-          <div className={`w-full max-w-[800px] mx-auto bg-zinc-50 dark:bg-[#121212] border ${isDragging ? 'border-[#60A6AF]' : 'border-zinc-200 dark:border-[#2d2e2e]'} focus-within:border-zinc-300 dark:focus-within:border-zinc-700 rounded-[28px] px-5 md:px-6 py-4 md:py-5 transition-all duration-300 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
+        <div className="w-full md:relative md:block fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 md:p-0 bg-gradient-to-t from-[#f3f4f6] dark:from-[#050505] via-[#f3f4f6]/95 dark:via-[#050505]/95 md:bg-transparent md:dark:bg-transparent to-transparent backdrop-blur-[2px] md:backdrop-blur-0">
+          <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[#121212] border ${isDragging ? 'border-[#60A6AF]' : 'border-zinc-200 dark:border-[#2d2e2e]'} focus-within:border-zinc-300 dark:focus-within:border-zinc-700 rounded-[28px] px-5 md:px-6 py-4 md:py-5 transition-all duration-300 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
 
             {files.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
@@ -187,29 +277,6 @@ const ChatArea = () => {
                 </button>
               </div>
             </div>
-          </div>
-
-          {/* Assistant Suggestions Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-6 px-1 max-w-[800px] mx-auto">
-            {suggestionsLoading ? (
-              [1, 2, 3, 4].map(i => (
-                <div key={i} className="flex-shrink-0 w-24 h-8 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-pulse" />
-              ))
-            ) : (
-                (aiSuggestions?.pills || ['For you', 'Study guide', 'Business', 'Health']).map((pillLabel, i) => {
-                const Icon = iconMap[aiSuggestions?.topics?.[i]?.iconType] || RiCompass3Line;
-                return (
-                  <button 
-                    key={i} 
-                    onClick={(e) => onSubmit(e, pillLabel)}
-                    className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-transparent border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-600 dark:text-zinc-500 text-[13px] font-medium transition-all group"
-                  >
-                    <Icon size={14} className="text-zinc-500 mr-2 group-hover:text-zinc-900 dark:group-hover:text-zinc-300" />
-                    <span>{pillLabel}</span>
-                  </button>
-                );
-              })
-            )}
           </div>
         </div>
 
@@ -275,6 +342,32 @@ const ChatArea = () => {
           )}
         </div>
         
+        {/* Dynamic AI Capabilities Showcase */}
+        {/* Is component block se humne Instagram aur Email jaise specific integrations ko darshaya hai. Ye generic hai. */}
+        <div className="w-full max-w-[800px] mt-6 mb-20 px-1">
+          <div className="mb-4">
+             <h3 className="text-[12px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest pl-1">Capabilities</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {capabilities.map((cap, i) => {
+               const Icon = cap.icon;
+               return (
+                 <div key={i} className={`flex flex-col gap-2 p-4 bg-zinc-50 dark:bg-[#121212]/50 border border-zinc-200 dark:border-white/5 rounded-2xl transition-all cursor-default ${cap.bgHover}`}>
+                   <div className="flex items-center gap-3">
+                     <div className={`w-8 h-8 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shadow-sm ${cap.colorClass}`}>
+                        <Icon size={16} />
+                     </div>
+                     <span className="text-[14px] font-extrabold text-zinc-800 dark:text-zinc-200">{cap.title}</span>
+                   </div>
+                   <p className="text-[12px] text-zinc-500 font-medium leading-[1.5] mt-1 pr-4">
+                     {cap.description}
+                   </p>
+                 </div>
+               )
+            })}
+          </div>
+        </div>
+
         {/* Mobile Spacer to prevent overlap with fixed search bar */}
         <div className="h-40 md:hidden" />
       </div>

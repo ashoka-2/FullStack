@@ -1,640 +1,36 @@
-// // import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-// // import { ChatMistralAI } from "@langchain/mistralai";
-// // import { HumanMessage, SystemMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
-// // import { tool } from "@langchain/core/tools";
-// // import { tavily } from "@tavily/core";
-// // import { sendEmail } from "./mail.service.js";
-// // import axios from "axios";
-// // import * as z from "zod";
 
-// // // ==========================================
-// // // 1. AI MODELS INITIALIZATION (Crash-Proof)
-// // // ==========================================
 
-// // const geminiModel = new ChatGoogleGenerativeAI({
-// //     model: "gemini-2.5-flash-lite", 
-// //     apiKey: process.env.GEMINI_API_KEY,
-// //     apiVersion: "v1beta",
-// //     maxRetries: 3,
-// //     temperature: 0.1,
-// // });
-
-// // const mistralModel = new ChatMistralAI({
-// //     model: "mistral-small-latest",
-// //     apiKey: process.env.MISTRAL_API_KEY,
-// //     temperature: 0,
-// //     maxRetries: 2,
-// // });
-
-// // const tvly = new tavily(process.env.TAVILY_API_KEY);
-
-// // // Dynamically fetch accurate time for context
-// // const getCurrentTimeContext = () => {
-// //     return new Date().toLocaleString('en-IN', { 
-// //         timeZone: 'Asia/Kolkata',
-// //         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-// //         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
-// //     });
-// // };
-
-// // // ==========================================
-// // // 2. TOOLS DEFINITION
-// // // ==========================================
-
-// // const searchInternetTool = tool(
-// //     async ({ query }) => {
-// //         try {
-// //             const data = await tvly.search(query, { searchDepth: "basic", maxResults: 3 });
-// //             return data.results.map(r => `Title: ${r.title}\nDetails: ${r.content}`).join("\n\n");
-// //         } catch (error) {
-// //             console.error("Search Tool Error:", error.message);
-// //             return "Search temporarily unavailable. Proceed with internal knowledge or inform the user.";
-// //         }
-// //     },
-// //     {
-// //         name: "searchInternet",
-// //         description: "CRITICAL: Use this tool to search the internet for current events, news, dates, and real-time facts.",
-// //         schema: z.object({ query: z.string().describe("The search query") })
-// //     }
-// // );
-
-// // const emailTool = tool(
-// //     async ({ to, subject, html }) => {
-// //         try {
-// //             await sendEmail({ to, subject, html });
-// //             return `Email successfully sent to ${to}.`;
-// //         } catch (error) {
-// //             return `Failed to send email: ${error.message}`;
-// //         }
-// //     },
-// //     {
-// //         name: "emailTool",
-// //         description: "Use this tool to send emails on behalf of the user.",
-// //         schema: z.object({
-// //             to: z.string().describe("Recipient email address"),
-// //             subject: z.string().describe("Subject of the email"),
-// //             html: z.string().describe("HTML content of the email")
-// //         })
-// //     }
-// // );
-
-// // const toolsMap = { searchInternet: searchInternetTool, emailTool };
-// // const modelWithTools = mistralModel.bindTools([searchInternetTool, emailTool]);
-
-// // // ==========================================
-// // // 3. MAIN CHAT LOGIC (Perplexity Core)
-// // // ==========================================
-
-// // export async function generateResponse(messages) {
-// //     const hasImage = messages.some(msg => msg.file && msg.file.url);
-// //     const today = getCurrentTimeContext();
-
-// //     // SUPER FEATURE: Secure Image Fetching with Base64 transformation
-// //     const history = await Promise.all(messages.map(async (msg) => {
-// //         let content = msg.content || "";
-
-// //         if (msg.file && msg.file.url) {
-// //             try {
-// //                 // Fetch the image and convert to base64
-// //                 const imageRes = await axios.get(msg.file.url, { 
-// //                     responseType: 'arraybuffer',
-// //                     timeout: 8000
-// //                 });
-// //                 const base64 = Buffer.from(imageRes.data).toString('base64');
-// //                 const mimeType = imageRes.headers['content-type'] || 'image/jpeg';
-
-// //                 // For Gemini Vision, we provide a clearer multimodal structure
-// //                 content = [
-// //                     { 
-// //                         type: "text", 
-// //                         text: `Attached Image: [${msg.file.url}]\n\nQuestion: ${msg.content || "Please analyze this image and explain what is in it."}` 
-// //                     },
-// //                     { 
-// //                         type: "image_url", 
-// //                         image_url: {
-// //                             url: `data:${mimeType};base64,${base64}`
-// //                         } 
-// //                     },
-// //                 ];
-// //             } catch (error) {
-// //                 console.error("⚠️ Image processing failed:", error.message);
-// //                 content = `${msg.content || ""}\n[Note: Image analysis failed. Internal URL: ${msg.file.url}]`;
-// //             }
-// //         }
-
-// //         // Standardized message construction
-// //         if (msg.role === "ai") return new AIMessage(content);
-// //         return new HumanMessage(content);
-// //     }));
-// //     const systemContent = `You are an advanced AI assistant. Current Date and Time: ${today}.
-// //     CRITICAL INSTRUCTIONS:
-// //     1. Your internal data ends in 2023. You MUST use 'searchInternet' for ANY facts, news, or current events.
-// //     2. Provide highly accurate, detailed, and well-structured answers.
-// //     3. If an image is presented, describe it and answer related questions precisely.`;
-
-// //     // Multimodal Routing with Error Handling Fallback
-// //     if (hasImage) {
-// //         try {
-// //             // For Gemini, move system content into the first human message to avoid "systemInstruction" errors
-// //             const geminiMessages = history.map((msg, idx) => {
-// //                 if (idx === 0 && msg instanceof HumanMessage) {
-// //                     const originalContent = msg.content;
-// //                     const newContent = Array.isArray(originalContent) 
-// //                         ? [{ type: "text", text: systemContent }, ...originalContent]
-// //                         : `${systemContent}\n\nUser Question: ${originalContent}`;
-// //                     return new HumanMessage(newContent);
-// //                 }
-// //                 return msg;
-// //             });
-
-// //             // If history didn't start with a human message (unlikely), prepend one
-// //             if (!(geminiMessages[0] instanceof HumanMessage)) {
-// //                 geminiMessages.unshift(new HumanMessage(systemContent));
-// //             }
-
-// //             const response = await geminiModel.invoke(geminiMessages);
-// //             return response.content;
-// //         } catch (error) {
-// //             console.error("⚠️ Gemini Vision failed:", error.message);
-
-// //             // Prefix a system note for Mistral fallback
-// //             const fallbackInstruction = `[SYSTEM NOTE: Gemini Vision failed to analyze the image. Proceed with text-only analysis based strictly on the user's text.]\n\n${systemContent}`;
-
-// //             // Re-construct messages for Mistral: CRITICAL - convert multimodal blocks to plain text
-// //             const sanitizedHistory = history.map(msg => {
-// //                 if (msg instanceof HumanMessage && Array.isArray(msg.content)) {
-// //                     // Extract only the text part from multimodal content
-// //                     const textContent = msg.content
-// //                         .filter(item => item.type === "text")
-// //                         .map(item => item.text)
-// //                         .join("\n");
-// //                     return new HumanMessage(textContent);
-// //                 }
-// //                 return msg;
-// //             });
-
-// //             const mistralMessages = [
-// //                 new SystemMessage(fallbackInstruction),
-// //                 ...sanitizedHistory
-// //             ];
-
-// //             return await runMistralLoop(mistralMessages);
-// //         }
-// //     }
-
-// //     // Default routing: Mistral + Parallel Tools Loop
-// //     const mistralMessages = [
-// //         new SystemMessage(systemContent),
-// //         ...history
-// //     ];
-
-// //     return await runMistralLoop(mistralMessages);
-// // }
-
-// // // Extracted Mistral Loop for cleaner fallback logic
-// // async function runMistralLoop(currentMessages) {
-// //     let iterations = 0;
-// //     const maxIterations = 5;
-// //     let response;
-
-// //     while (iterations < maxIterations) {
-// //         try {
-// //             response = await modelWithTools.invoke(currentMessages);
-
-// //             if (!response.tool_calls || response.tool_calls.length === 0) {
-// //                 break;
-// //             }
-
-// //             currentMessages.push(response);
-
-// //             // Execute all requested tools in parallel 
-// //             const toolPromises = response.tool_calls.map(async (toolCall) => {
-// //                 const toolInstance = toolsMap[toolCall.name];
-// //                 if (toolInstance) {
-// //                     try {
-// //                         const result = await toolInstance.invoke(toolCall.args);
-// //                         return new ToolMessage({
-// //                             content: typeof result === 'string' ? result : JSON.stringify(result),
-// //                             tool_call_id: toolCall.id
-// //                         });
-// //                     } catch (err) {
-// //                         return new ToolMessage({
-// //                             content: `Tool error: ${err.message}`,
-// //                             tool_call_id: toolCall.id
-// //                         });
-// //                     }
-// //                 }
-// //                 return null;
-// //             });
-
-// //             const toolResults = await Promise.all(toolPromises);
-// //             currentMessages.push(...toolResults.filter(Boolean));
-
-// //             iterations++;
-// //         } catch (error) {
-// //             console.error("Mistral/Tool Execution Error:", error.message);
-// //             return "I encountered an error while processing your request. Please try again or refine your query.";
-// //         }
-// //     }
-
-// //     return response.content;
-// // }
-
-// // // ==========================================
-// // // 4. HELPER FUNCTIONS
-// // // ==========================================
-
-// // export async function generateChatTitle(message) {
-// //     try {
-// //         const response = await mistralModel.invoke([
-// //             new SystemMessage("Generate a 2 to 4 word title for this chat based on the user's first message. Reply with ONLY the title, no quotes."),
-// //             new HumanMessage(message)
-// //         ]);
-// //         return response.content.replace(/['"]/g, '').trim();
-// //     } catch (error) {
-// //         return "New Research";
-// //     }
-// // }
-
-// // export async function generateSuggestions(userContext = "advanced MERN stack, LangChain AI, and modern web development") {
-// //     const today = getCurrentTimeContext();
-// //     const prompt = `You are a personalized search engine AI. Today is ${today}.
-// //     Context: ${userContext}.
-// //     Generate a JSON object with exactly:
-// //     - "pills": 4 short tech categories.
-// //     - "queries": query questions.
-// //     - "topics": 4 objects { "label", "desc", "iconType" (global, robot, file, magic, compass) }.
-// //     Return ONLY raw JSON.`;
-
-// //     try {
-// //         const response = await geminiModel.invoke([new HumanMessage(prompt)]);
-// //         const text = response.content;
-// //         const startIndex = text.indexOf('{');
-// //         const endIndex = text.lastIndexOf('}');
-
-// //         if (startIndex !== -1 && endIndex !== -1) {
-// //             const cleanJson = text.substring(startIndex, endIndex + 1);
-// //             return JSON.parse(cleanJson);
-// //         }
-// //         throw new Error("Invalid format from AI");
-// //     } catch (error) {
-// //         console.error("AI Suggestions Fallback:", error.message);
-// //         // Fallback to Mistral for live but safer suggestions if Gemini is struggling
-// //         try {
-// //             const mResponse = await mistralModel.invoke([new HumanMessage(prompt + " Return only the JSON and nothing else.")]);
-// //             const mText = mResponse.content;
-// //             const s = mText.indexOf('{');
-// //             const e = mText.lastIndexOf('}');
-// //             if (s !== -1 && e !== -1) return JSON.parse(mText.substring(s, e + 1));
-// //         } catch (mErr) {
-// //             console.error("Mistral Fallback also failed");
-// //         }
-
-// //         return {
-// //             pills: ["AI Agents", "MERN Stack", "WebRTC", "System Design"],
-// //             queries: ["How to build a Perplexity clone?", "React 19 vs React 18", "Gemini 1.5 Vision tutorial", "Optimizing MongoDB queries", "LangChain tool calling guide"],
-// //             topics: [
-// //                 { label: "LangChain Updates", desc: "AI · Live", iconType: "robot" },
-// //                 { label: "Modern Web Trends 2026", desc: "Code · Trending", iconType: "global" },
-// //                 { label: "Gemini 1.5 Breakthroughs", desc: "Google · Today", iconType: "magic" },
-// //                 { label: "Full-Stack Roadmap", desc: "Career · 2h ago", iconType: "file" }
-// //             ]
-// //         };
-// //     }
-// // }
-
-// import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-// import { ChatMistralAI } from "@langchain/mistralai";
-// import { HumanMessage, SystemMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
-// import { tool } from "@langchain/core/tools";
-// import { tavily } from "@tavily/core";
-// import { sendEmail } from "./mail.service.js";
-// import axios from "axios";
-// import * as z from "zod";
-
-// // ==========================================
-// // 1. AI MODELS INITIALIZATION (Multi-Tier)
-// // ==========================================
-
-// // Tier 1: Best for Images & Speed
-// const geminiVisionModel = new ChatGoogleGenerativeAI({
-//     model: "gemini-2.5-flash-lite", 
-//     apiKey: process.env.GEMINI_API_KEY,
-//     apiVersion: "v1beta",
-//     maxRetries: 1, // Kam retries taaki turant fallback trigger ho
-//     temperature: 0.1,
-// });
-
-// // Tier 2: Solid Backup for Text & Images
-// const geminiTextModel = new ChatGoogleGenerativeAI({
-//     model: "gemini-1.5-flash", 
-//     apiKey: process.env.GEMINI_API_KEY,
-//     apiVersion: "v1beta",
-//     maxRetries: 1,
-//     temperature: 0.1,
-// });
-
-// // Tier 3: Best for Tool Calling & Reasoning
-// const mistralModel = new ChatMistralAI({
-//     model: "mistral-small-latest",
-//     apiKey: process.env.MISTRAL_API_KEY,
-//     temperature: 0,
-//     maxRetries: 1,
-// });
-
-// const tvly = new tavily(process.env.TAVILY_API_KEY);
-
-// const getCurrentTimeContext = () => {
-//     return new Date().toLocaleString('en-IN', { 
-//         timeZone: 'Asia/Kolkata',
-//         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-//         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
-//     });
-// };
-
-// // ==========================================
-// // 2. TOOLS DEFINITION
-// // ==========================================
-
-// const searchInternetTool = tool(
-//     async ({ query }) => {
-//         try {
-//             const data = await tvly.search(query, { searchDepth: "basic", maxResults: 3 });
-//             return data.results.map(r => `Title: ${r.title}\nDetails: ${r.content}`).join("\n\n");
-//         } catch (error) {
-//             console.error("Search Tool Error:", error.message);
-//             return "Search temporarily unavailable. Proceed with internal knowledge.";
-//         }
-//     },
-//     {
-//         name: "searchInternet",
-//         description: "CRITICAL: Search the internet for current events, news, dates, and real-time facts.",
-//         schema: z.object({ query: z.string().describe("The search query") })
-//     }
-// );
-
-// const emailTool = tool(
-//     async ({ to, subject, html }) => {
-//         try {
-//             await sendEmail({ to, subject, html });
-//             return `Email successfully sent to ${to}.`;
-//         } catch (error) {
-//             return `Failed to send email: ${error.message}`;
-//         }
-//     },
-//     {
-//         name: "emailTool",
-//         description: "Send emails on behalf of the user.",
-//         schema: z.object({
-//             to: z.string().describe("Recipient email address"),
-//             subject: z.string().describe("Subject of the email"),
-//             html: z.string().describe("HTML content of the email")
-//         })
-//     }
-// );
-
-// const toolsMap = { searchInternet: searchInternetTool, emailTool };
-// const modelWithTools = mistralModel.bindTools([searchInternetTool, emailTool]);
-
-// // ==========================================
-// // 3. MAIN CHAT LOGIC (Unbreakable Router)
-// // ==========================================
-
-// export async function generateResponse(messages) {
-//     const hasImage = messages.some(msg => msg.file && msg.file.url);
-//     const today = getCurrentTimeContext();
-
-//     const history = await Promise.all(messages.map(async (msg) => {
-//         let content = msg.content || "";
-
-//         if (msg.file && msg.file.url) {
-//             try {
-//                 const imageRes = await axios.get(msg.file.url, { responseType: 'arraybuffer', timeout: 8000 });
-//                 const base64 = Buffer.from(imageRes.data).toString('base64');
-//                 const mimeType = imageRes.headers['content-type'] || 'image/jpeg';
-
-//                 content = [
-//                     { type: "text", text: `Attached Image: [${msg.file.url}]\n\nQuestion: ${msg.content || "Analyze this image."}` },
-//                     { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
-//                 ];
-//             } catch (error) {
-//                 console.error("⚠️ Image processing failed:", error.message);
-//                 content = `${msg.content || ""}\n[Note: Image analysis failed to load.]`;
-//             }
-//         }
-//         if (msg.role === "ai") return new AIMessage(content);
-//         return new HumanMessage(content);
-//     }));
-
-//     const systemContent = `You are an advanced AI assistant. Current Date: ${today}.
-//     CRITICAL INSTRUCTIONS:
-//     1. Your internal data ends in 2023. You MUST use 'searchInternet' for ANY facts, news, or current events.
-//     2. Provide highly accurate, detailed, and well-structured answers.`;
-
-//     // ----------------------------------------------------------------
-//     // ROUTE A: IMAGE WORKFLOW (Vision Priority)
-//     // ----------------------------------------------------------------
-//     if (hasImage) {
-//         // Setup multimodal format
-//         const geminiMessages = history.map((msg, idx) => {
-//             if (idx === 0 && msg instanceof HumanMessage) {
-//                 const originalContent = msg.content;
-//                 const newContent = Array.isArray(originalContent) 
-//                     ? [{ type: "text", text: systemContent }, ...originalContent]
-//                     : `${systemContent}\n\nUser Question: ${originalContent}`;
-//                 return new HumanMessage(newContent);
-//             }
-//             return msg;
-//         });
-//         if (!(geminiMessages[0] instanceof HumanMessage)) geminiMessages.unshift(new HumanMessage(systemContent));
-
-//         try {
-//             // Attempt 1: Gemini 2.5 Flash Lite
-//             const response = await geminiVisionModel.invoke(geminiMessages);
-//             return response.content;
-//         } catch (error1) {
-//             console.error("⚠️ 2.5-Lite Vision failed, falling back to 1.5-Flash...", error1.message);
-
-//             try {
-//                 // Attempt 2: Gemini 1.5 Flash
-//                 const response2 = await geminiTextModel.invoke(geminiMessages);
-//                 return response2.content;
-//             } catch (error2) {
-//                 console.error("⚠️ 1.5-Flash Vision also failed, falling back to Mistral (Text Only)...", error2.message);
-
-//                 // Attempt 3: Mistral (Text Only)
-//                 const fallbackInstruction = `[SYSTEM NOTE: Vision models are down. Proceed with text-only analysis.]\n\n${systemContent}`;
-//                 const sanitizedHistory = history.map(msg => {
-//                     if (msg instanceof HumanMessage && Array.isArray(msg.content)) {
-//                         const textContent = msg.content.filter(item => item.type === "text").map(item => item.text).join("\n");
-//                         return new HumanMessage(textContent);
-//                     }
-//                     return msg;
-//                 });
-
-//                 try {
-//                     return await runMistralLoop([new SystemMessage(fallbackInstruction), ...sanitizedHistory]);
-//                 } catch (error3) {
-//                     return "Sorry, all AI models are currently overwhelmed. Please try again in a few seconds.";
-//                 }
-//             }
-//         }
-//     }
-
-//     // ----------------------------------------------------------------
-//     // ROUTE B: TEXT WORKFLOW (Tool Priority)
-//     // ----------------------------------------------------------------
-//     const textMessages = [new SystemMessage(systemContent), ...history];
-
-//     try {
-//         // Attempt 1: Mistral + Tools
-//         return await runMistralLoop(textMessages);
-//     } catch (error1) {
-//         console.error("⚠️ Mistral Tools failed, falling back to Gemini Text Backup...", error1.message);
-
-//         try {
-//             // Attempt 2: Gemini 1.5 Flash Backup (No tools, just answer)
-//             const response = await geminiTextModel.invoke(textMessages);
-//             return response.content;
-//         } catch (error2) {
-//             return "Sorry, I am having trouble connecting to my servers right now. Please try again.";
-//         }
-//     }
-// }
-
-// // Extracted Mistral Loop
-// async function runMistralLoop(currentMessages) {
-//     let iterations = 0;
-//     const maxIterations = 5;
-//     let response;
-
-//     while (iterations < maxIterations) {
-//         response = await modelWithTools.invoke(currentMessages);
-
-//         if (!response.tool_calls || response.tool_calls.length === 0) {
-//             break;
-//         }
-
-//         currentMessages.push(response);
-
-//         const toolPromises = response.tool_calls.map(async (toolCall) => {
-//             const toolInstance = toolsMap[toolCall.name];
-//             if (toolInstance) {
-//                 try {
-//                     const result = await toolInstance.invoke(toolCall.args);
-//                     return new ToolMessage({
-//                         content: typeof result === 'string' ? result : JSON.stringify(result),
-//                         tool_call_id: toolCall.id
-//                     });
-//                 } catch (err) {
-//                     return new ToolMessage({ content: `Tool error: ${err.message}`, tool_call_id: toolCall.id });
-//                 }
-//             }
-//             return null;
-//         });
-
-//         const toolResults = await Promise.all(toolPromises);
-//         currentMessages.push(...toolResults.filter(Boolean));
-//         iterations++;
-//     }
-
-//     return response.content;
-// }
-
-// // ==========================================
-// // 4. HELPER FUNCTIONS
-// // ==========================================
-
-// export async function generateChatTitle(message) {
-//     try {
-//         const response = await mistralModel.invoke([
-//             new SystemMessage("Generate a 2 to 4 word title for this chat based on the user's first message. Reply with ONLY the title, no quotes."),
-//             new HumanMessage(message)
-//         ]);
-//         return response.content.replace(/['"]/g, '').trim();
-//     } catch (error) {
-//         return "New Research";
-//     }
-// }
-
-// export async function generateSuggestions(userContext = "advanced MERN stack, LangChain AI, and modern web development") {
-//     const today = getCurrentTimeContext();
-//     const prompt = `You are a personalized search engine AI. Today is ${today}.
-//     Context: ${userContext}.
-//     Generate a JSON object with exactly:
-//     - "pills": 4 short tech categories.
-//     - "queries": query questions.
-//     - "topics": 4 objects { "label", "desc", "iconType" (global, robot, file, magic, compass) }.
-//     Return ONLY raw JSON.`;
-
-//     try {
-//         // Use 2.5 Lite for fastest suggestions
-//         const response = await geminiVisionModel.invoke([new HumanMessage(prompt)]);
-//         const text = response.content;
-//         const startIndex = text.indexOf('{');
-//         const endIndex = text.lastIndexOf('}');
-
-//         if (startIndex !== -1 && endIndex !== -1) {
-//             return JSON.parse(text.substring(startIndex, endIndex + 1));
-//         }
-//         throw new Error("Invalid format from AI");
-//     } catch (error) {
-//         console.error("AI Suggestions Fallback:", error.message);
-//         try {
-//             const mResponse = await mistralModel.invoke([new HumanMessage(prompt + " Return only the JSON and nothing else.")]);
-//             const mText = mResponse.content;
-//             const s = mText.indexOf('{');
-//             const e = mText.lastIndexOf('}');
-//             if (s !== -1 && e !== -1) return JSON.parse(mText.substring(s, e + 1));
-//         } catch (mErr) {
-//             console.error("Mistral Fallback also failed");
-//         }
-
-//         return {
-//             pills: ["AI Agents", "MERN Stack", "WebRTC", "System Design"],
-//             queries: ["How to build a Perplexity clone?", "React 19 vs React 18", "Gemini Vision tutorial", "Optimizing MongoDB queries", "LangChain tool calling guide"],
-//             topics: [
-//                 { label: "LangChain Updates", desc: "AI · Live", iconType: "robot" },
-//                 { label: "Modern Web Trends", desc: "Code · Trending", iconType: "global" },
-//                 { label: "AI Breakthroughs", desc: "Tech · Today", iconType: "magic" },
-//                 { label: "Full-Stack Roadmap", desc: "Career · 2h ago", iconType: "file" }
-//             ]
-//         };
-//     }
-// }
-
+// LangChain aur Google/Mistral models ko connect karne ke liye imports
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatMistralAI } from "@langchain/mistralai";
 import { HumanMessage, SystemMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
-import { tool } from "@langchain/core/tools";
-import { tavily } from "@tavily/core";
-import { sendEmail } from "./mail.service.js";
 import axios from "axios";
-import * as z from "zod";
 
-// ==========================================
-// 1. AI MODELS INITIALIZATION (Smart Quota Management)
-// ==========================================
+// Alag se banaye गए tools ko import kar rahe hain (Modular approach)
+import { searchInternetTool } from "./Tools/search.tool.js";
+import { emailTool } from "./Tools/email.tool.js";
+import { postToInstagramTool } from "./Tools/instagram.tool.js";
 
-// Tier 1: Primary Vision Model (Used ONLY for images - 20 req/day)
+
+// Tier 1: Gemini 2.5 Flash lite (Khaas karke vision/images ke liye)
 const geminiVisionModel = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash-lite",
   apiKey: process.env.GEMINI_API_KEY,
-  apiVersion: "v1beta",
-  maxRetries: 0, // No retry, fail fast to fallback
-  temperature: 0.1,
-});
-
-// Tier 2: Backup Vision Model (If Tier 1 quota is exhausted)
-const geminiTextModel = new ChatGoogleGenerativeAI({
-  model: "gemini-1.5-flash-lite",
-  apiKey: process.env.GEMINI_API_KEY,
-  apiVersion: "v1beta",
+  apiVersion: "v1",
   maxRetries: 1,
   temperature: 0.1,
 });
 
-// Tier 3: Workhorse Model (Used for ALL text, tools, and suggestions)
+// Tier 2: Gemini Text Backup (Agar primary vision fail ho jaye)
+const geminiTextModel = new ChatGoogleGenerativeAI({
+  model: "gemini-2.5-flash-lite",
+  apiKey: process.env.GEMINI_API_KEY,
+  apiVersion: "v1",
+  maxRetries: 1,
+  temperature: 0.1,
+});
+
+// Tier 3: Mistral Model (Common text tasks aur tools ke liye best hai)
 const mistralModel = new ChatMistralAI({
   model: "mistral-small-latest",
   apiKey: process.env.MISTRAL_API_KEY,
@@ -642,8 +38,8 @@ const mistralModel = new ChatMistralAI({
   maxRetries: 2,
 });
 
-const tvly = new tavily(process.env.TAVILY_API_KEY);
 
+// Aaj ka accurate Indian time nikalne ke liye context helper
 const getCurrentTimeContext = () => {
   return new Date().toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
@@ -652,59 +48,29 @@ const getCurrentTimeContext = () => {
   });
 };
 
-// ==========================================
-// 2. TOOLS DEFINITION (Web Search & Email)
-// ==========================================
+// Saare active tools ko merge karke LangChain ko dene ke liye framework
+const getTools = (userContext) => {
+  const instagramTool = postToInstagramTool(userContext);
+  return {
+    tools: [searchInternetTool, emailTool, instagramTool],
+    map: { searchInternet: searchInternetTool, emailTool, post_to_instagram: instagramTool }
+  };
+};
 
-const searchInternetTool = tool(
-  async ({ query }) => {
-    try {
-      const data = await tvly.search(query, { searchDepth: "basic", maxResults: 3 });
-      return data.results.map(r => `Title: ${r.title}\nDetails: ${r.content}`).join("\n\n");
-    } catch (error) {
-      console.error("Search Tool Error:", error.message);
-      return "Search is temporarily unavailable. Answer based on your knowledge.";
-    }
-  },
-  {
-    name: "searchInternet",
-    description: "CRITICAL: Search the internet for the latest news, events, and real-time facts.",
-    schema: z.object({ query: z.string().describe("The search query") })
-  }
-);
 
-const emailTool = tool(
-  async ({ to, subject, html }) => {
-    const result = await sendEmail({ to, subject, html });
-    if (result.error) {
-      return `Failed to send email: ${result.message}`;
-    }
-    return `Email successfully sent to ${to}.`;
-  },
-  {
-    name: "emailTool",
-    description: "Send an email on behalf of the user.",
-    schema: z.object({
-      to: z.string().describe("Recipient email address"),
-      subject: z.string().describe("Subject of the email"),
-      html: z.string().describe("HTML content")
-    })
-  }
-);
 
-const toolsMap = { searchInternet: searchInternetTool, emailTool };
-const modelWithTools = mistralModel.bindTools([searchInternetTool, emailTool]);
+export async function generateResponse(messages, onChunk, userContext) {
+  const cleanMessages = messages;
 
-// ==========================================
-// 3. MAIN CHAT LOGIC (Dynamic Router)
-// ==========================================
-
-export async function generateResponse(messages, onChunk) {
-  const hasImage = messages.some(msg => msg.file && msg.file.url);
+  // Ab hum poori history check nahi karenge, sirf "CURRENT" naye message ko check karenge
+  // Taaki bina image wale normal text sawal seedha Mistral pass jayein aur Gemini faltu trigger na ho!
+  const textCheckMessages = [...cleanMessages].reverse();
+  const lastUserMsg = textCheckMessages.find(msg => msg.role === "user" || msg.role === "human");
+  const hasImage = lastUserMsg && lastUserMsg.file && lastUserMsg.file.url;
   const today = getCurrentTimeContext();
 
-  // Safely process message history & fetch images if present
-  const history = await Promise.all(messages.map(async (msg) => {
+  // History process kar rahe hain aur images ko Base64 mein convert kar rahe hain vision ke liye
+  const history = await Promise.all(cleanMessages.map(async (msg) => {
     let content = msg.content || "";
 
     if (msg.file && msg.file.url) {
@@ -730,13 +96,17 @@ export async function generateResponse(messages, onChunk) {
   const systemContent = `You are a highly advanced AI assistant. Current Date and Time: ${today}.
     CRITICAL INSTRUCTIONS:
     1. Your training data is old. You MUST use the 'searchInternet' tool for ANY current events, news, or facts.
-    2. Provide accurate, detailed, and well-structured answers in Markdown format.`;
+    2. Provide accurate, detailed, and well-structured answers in Markdown format.
+    3. You are a Social Media Automation Agent.
+       - Use 'post_to_instagram' ONLY on explicit user request.
+       - Caption Handling: If user provides a caption, use it verbatim + 3-5 hashtags.
+       - If AI caption requested: Generate one based on image content then call the tool.
+       - Media Check: Only post ik.imagekit.io links.
+       - Constraints: Warn if attempting >25 posts/24h.`;
 
-  // ----------------------------------------------------------------
-  // ROUTE A: IMAGE WORKFLOW (Gemini)
-  // ----------------------------------------------------------------
+
   if (hasImage) {
-    // Setup Gemini messages (moving system prompt to first human message)
+    // Gemini Vision ke liye messages ko format kar rahe hain
     const geminiMessages = history.map((msg, idx) => {
       if (idx === 0 && msg instanceof HumanMessage) {
         const originalContent = msg.content;
@@ -750,66 +120,87 @@ export async function generateResponse(messages, onChunk) {
     if (!(geminiMessages[0] instanceof HumanMessage)) geminiMessages.unshift(new HumanMessage({ content: systemContent }));
 
     try {
-      console.log("📸 Processing Image with Gemini 2.5 Lite...");
-      const stream = await geminiVisionModel.stream(geminiMessages);
-      let fullContent = "";
-      for await (const chunk of stream) {
-        const content = chunk.content;
-        fullContent += content;
-        if (onChunk) onChunk(content);
-      }
-      return fullContent;
+      // Step 1: Gemini Primary se image analyze karwane ki koshish (Google API)
+      console.log("📸 Processing Image with Google Vision API (Gemini)...");
+      const { tools, map } = getTools(userContext);
+      const modelWithTools = geminiVisionModel.bindTools(tools);
+      
+      return await runMistralLoop(geminiMessages, onChunk, modelWithTools, map);
     } catch (error1) {
-      console.warn("⚠️ 2.5-Lite failed (Quota full/429). Switching to 1.5-Flash backup...");
-      try {
-        const stream2 = await geminiTextModel.stream(geminiMessages);
-        let fullContent2 = "";
-        for await (const chunk of stream2) {
-          const content = chunk.content;
-          fullContent2 += content;
-          if (onChunk) onChunk(content);
+      // Agar Gemini Limit: 0 constraint pe phadta hai, toh wo pura console laal (red) nahi karega! 
+      // Bas ek chota info display dekar seedha Mistral pe skip maar dega!
+      console.warn("⚠️ Google Gemini Free Tier Blocked (Limit: 0) or Key failed. Seamlessly switched to Text-Only AI (Mistral).");
+      
+      // Convert multimodal content to text-only for Mistral jab Gemini ki aukaat khatam ho jaye
+      const sanitizedHistory = history.map(msg => {
+        if (Array.isArray(msg.content)) {
+          const textContent = msg.content.filter(item => item.type === "text").map(item => item.text).join("\n");
+          return msg instanceof AIMessage ? new AIMessage({ content: textContent }) : new HumanMessage({ content: textContent });
         }
-        return fullContent2;
-      } catch (error2) {
-        console.error("⚠️ 1.5-Flash also failed. Final fallback to Mistral (Text-only).");
-        // Convert multimodal content to text-only for Mistral
-        const sanitizedHistory = history.map(msg => {
-          if (Array.isArray(msg.content)) {
-            const textContent = msg.content.filter(item => item.type === "text").map(item => item.text).join("\n");
-            return msg instanceof AIMessage ? new AIMessage({ content: textContent }) : new HumanMessage({ content: textContent });
-          }
-          return msg;
-        });
-        return await runMistralLoop([new SystemMessage({ content: `[VISION UNAVAILABLE: Answer only using text context]\n${systemContent}` }), ...sanitizedHistory], onChunk);
-      }
+        return msg;
+      });
+      
+      const { tools, map } = getTools(userContext);
+      const modelWithTools = mistralModel.bindTools(tools);
+      // Fallback Seedha Mistral (No secondary gemini checks block)
+      return await runMistralLoop([new SystemMessage({ content: `[VISION UNAVAILABLE: Answer purely using text context]\n${systemContent}` }), ...sanitizedHistory], onChunk, modelWithTools, map);
     }
   }
 
   // ----------------------------------------------------------------
   // ROUTE B: TEXT-ONLY WORKFLOW (Mistral + Tools)
   // ----------------------------------------------------------------
-  // Saving Gemini Quota! Directing all text to Mistral.
+  // Gemini ka Quota bachane ke liye text-only queries seedha Mistral pe bhej rahe hain
   console.log("📝 Text Query detected. Processing with Mistral + Tools...");
   const textMessages = [new SystemMessage({ content: systemContent }), ...history];
-  return await runMistralLoop(textMessages, onChunk);
+  const { tools, map } = getTools(userContext);
+  const modelWithTools = mistralModel.bindTools(tools);
+  
+  return await runMistralLoop(textMessages, onChunk, modelWithTools, map);
 }
 
-// Extracted Tool Loop for Mistral
-async function runMistralLoop(currentMessages, onChunk) {
+// Ek function jo normal text-only messages ko seedha answer karta hai
+async function handleTextFallback(textMessages, onChunk, toolsMap) {
+  try {
+    const { tools } = getTools(""); 
+    const modelWithTools = mistralModel.bindTools(tools);
+    return await runMistralLoop(textMessages, onChunk, modelWithTools, toolsMap);
+  } catch (err) {
+    if (err.status === 429 || (err.message && err.message.includes('429'))) {
+      console.warn("⚠️ Mistral Rate Limit Exceeded. Using Gemini Text Backup (gemini-flash-latest)...");
+      try {
+        const geminiFallback = new ChatGoogleGenerativeAI({
+          model: "gemini-flash-latest",
+          apiKey: process.env.GEMINI_API_KEY,
+          temperature: 0.1,
+        });
+        const { tools } = getTools("");
+        const modelWithToolsFallback = geminiFallback.bindTools(tools);
+        return await runMistralLoop(textMessages, onChunk, modelWithToolsFallback, toolsMap);
+      } catch(geminiErr) {
+        throw new Error("All AI models are completely rate limited! Please wait a minute and try again.");
+      }
+    }
+    throw err;
+  }
+}
+
+// Mistral ka tool execution loop: jab tak AI tools call karega, hum results pass karenge
+async function runMistralLoop(currentMessages, onChunk, modelWithTools, toolsMap) {
   let iterations = 0;
-  const maxIterations = 5;
+  const maxIterations = 5; 
   let response;
 
   while (iterations < maxIterations) {
     response = await modelWithTools.invoke(currentMessages);
 
+    // Agar AI ne koi tool call nahi kiya, toh loop break karo
     if (!response.tool_calls || response.tool_calls.length === 0) {
-      break; // No more tools to call, exit loop
+      break; 
     }
 
     currentMessages.push(response);
 
-    // Run tools in parallel for speed
     const toolPromises = response.tool_calls.map(async (toolCall) => {
       const toolInstance = toolsMap[toolCall.name];
       if (toolInstance) {
@@ -831,7 +222,6 @@ async function runMistralLoop(currentMessages, onChunk) {
     iterations++;
   }
 
-  // Final streaming of output
   const stream = await modelWithTools.stream(currentMessages);
   let fullContent = "";
   for await (const chunk of stream) {
@@ -848,57 +238,102 @@ async function runMistralLoop(currentMessages, onChunk) {
 // ==========================================
 
 export async function generateChatTitle(message) {
+  // 🚀 HIGH PERFORMANCE UPDATE:
+  // Mistral API ki "1 Request/second" limit bacha kar rakhne ke liye ab hum Chat Title AI se nahi nikalwayenge.
   try {
-    const response = await mistralModel.invoke([
-      new SystemMessage({ content: "Generate a 2 to 4 word title for this chat based on the user's first message. Reply with ONLY the title, no quotes." }),
-      new HumanMessage({ content: message })
-    ]);
-    return response.content.replace(/['"]/g, '').trim();
+    if (!message || typeof message !== 'string') return "New Chat";
+    const words = message.trim().split(/\s+/);
+    if (words.length > 5) {
+      return words.slice(0, 5).join(" ") + "...";
+    }
+    return message;
   } catch (error) {
-    return "New Research Chat";
+    return "New Chat";
   }
 }
 
-export async function generateSuggestions(userContext = "advanced MERN stack development, LangChain AI agents, WebRTC") {
-  const today = getCurrentTimeContext();
-  const prompt = `You are a personalized search engine AI. Today is ${today}.
-    Context: The user is interested in ${userContext}.
-    Generate a JSON object with exactly:
-    - "pills": 4 short tech categories (strings).
-    - "queries": 5 engaging search questions (strings).
-    - "topics": 4 objects with "label" (title), "desc" (category/time), "iconType" (one of: global, robot, file, magic, compass).
-    Return ONLY raw JSON formatting without backticks or markdown blocks.`;
+// Default suggestions (Fallback if internet/API fails)
+const DEFAULT_SUGGESTIONS = {
+  pills: ["AI Agents", "MERN Stack", "WebRTC", "System Design"],
+  queries: [
+    "How to build a Perplexity clone with LangChain?",
+    "What's new in React 19?",
+    "Mistral vs Gemini tool calling comparison",
+    "Optimizing MongoDB indexing",
+    "How to deploy MERN app on Vercel?"
+  ],
+  topics: [
+    { label: "LangChain Updates", desc: "AI · Live", iconType: "robot" },
+    { label: "Modern Web Trends 2026", desc: "Code · Trending", iconType: "global" },
+    { label: "AI Breakthroughs", desc: "Tech · Today", iconType: "magic" },
+    { label: "Full-Stack Roadmap", desc: "Career · 2h ago", iconType: "file" }
+  ]
+};
+
+import { tavily } from "@tavily/core";
+
+// Variables to store cached daily news (In-memory Store)
+let cachedNewsSuggestions = null;
+let lastNewsFetchTime = 0;
+
+// Ye function Live News fetch karega Tavily se
+async function getDynamicDefaultSuggestions() {
+  const now = Date.now();
+  if (cachedNewsSuggestions && (now - lastNewsFetchTime < 6 * 60 * 60 * 1000)) {
+    return cachedNewsSuggestions;
+  }
 
   try {
-    // MISTRAL IS USED HERE TO SAVE GEMINI QUOTA
-    const response = await mistralModel.invoke([new HumanMessage({ content: prompt })]);
-    const text = response.content;
+    const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
+    const searchResponse = await tvly.search("Top 4 latest trending technology news headlines today", {
+      searchDepth: "basic",
+      includeImages: false
+    });
 
-    // Robust JSON Extractor Regex
-    const match = text.match(/\{[\s\S]*\}/);
-    if (match) {
-      return JSON.parse(match[0]);
+    const results = searchResponse.results.slice(0, 4);
+
+    if (results.length > 0) {
+      cachedNewsSuggestions = {
+        pills: ["Trending Tech", "Startups", "AI Tools", "Gadgets"],
+        queries: [
+          `Summarize this: ${results[0]?.title || "Latest update"}`,
+          `Tell me more about ${results[1]?.title ? results[1].title.substring(0,30) + "..." : "tech market"}`,
+          "What are the top 5 programming news today?",
+          "Explain the latest tech market shifts",
+          "Search for best developer tools 2026"
+        ],
+        topics: results.map((result, i) => {
+          let domainName = "source";
+          try { domainName = new URL(result.url).hostname.replace('www.', ''); } catch(e) {}
+          return {
+            label: result.title.substring(0, 55) + (result.title.length > 55 ? "..." : ""),
+            desc: `News · ${domainName}`,
+            iconType: ["global", "file", "magic", "compass"][i % 4]
+          };
+        })
+      };
+      
+      lastNewsFetchTime = now; 
+      console.log("📰 Fetched fresh live news successfully!");
+      return cachedNewsSuggestions;
     }
-    throw new Error("No JSON object found in response");
   } catch (error) {
-    console.error("⚠️ AI Suggestions Fallback triggered:", error.message);
-
-    // Static intelligent fallback so UI never breaks
-    return {
-      pills: ["AI Agents", "MERN Stack", "WebRTC", "System Design"],
-      queries: [
-        "How to build a Perplexity clone with LangChain?",
-        "What's new in React 19?",
-        "Mistral vs Gemini tool calling comparison",
-        "Optimizing MongoDB indexing",
-        "How to deploy MERN app on Vercel?"
-      ],
-      topics: [
-        { label: "LangChain Updates", desc: "AI · Live", iconType: "robot" },
-        { label: "Modern Web Trends 2026", desc: "Code · Trending", iconType: "global" },
-        { label: "AI Breakthroughs", desc: "Tech · Today", iconType: "magic" },
-        { label: "Full-Stack Roadmap", desc: "Career · 2h ago", iconType: "file" }
-      ]
-    };
+    console.error("⚠️ Failed to fetch live daily news, using static fallback...", error.message);
   }
+
+  return DEFAULT_SUGGESTIONS;
+}
+
+// Suggestions generate karne ka main logic
+export async function generateSuggestions(messages = []) {
+  // 🚀 To save massive Mistral DB RPM (Rate Limits), we NO LONGER use AI models to guess chat-context.
+  // Instead, ALWAYS return the Live News feed. Real Perplexity uses identical feed components globally!
+  
+  if (messages.length === 0) {
+    console.log("ℹ️ Empty chat detected. Returning dynamic daily news...");
+  } else {
+    console.log("ℹ️ Active chat detected. Supplying context-free suggestions to save massive AI tokens...");
+  }
+
+  return await getDynamicDefaultSuggestions();
 }

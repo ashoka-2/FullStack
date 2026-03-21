@@ -79,7 +79,8 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
     const contentToRender = isTyping ? displayedContent : msg.content;
 
     return (
-        <div className={`flex flex-col gap-6 animate-in fade-in duration-500`}>
+        // id property add ki gayi hai taaki hash URL (#msg-1234) ke through is particular message tak auto scroll kara ja sake
+        <div id={`msg-${msg._id}`} className={`flex flex-col gap-6 animate-in fade-in duration-500`}>
             {isUser ? (
                 <div className="flex flex-col items-end gap-3 pr-1">
                     {msg.file && msg.file.url && (

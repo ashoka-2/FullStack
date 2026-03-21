@@ -28,6 +28,11 @@ const userSchema = new mongoose.Schema({
     verified:{
         type:Boolean,
         default:false
+    },
+    instagram: {
+        accessToken: { type: String, select: false }, // Sensitive data, not returned by default
+        userId: String,
+        isConnected: { type: Boolean, default: false }
     }
 },{timestamps:true})
 

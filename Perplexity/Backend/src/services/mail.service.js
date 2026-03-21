@@ -4,7 +4,7 @@ console.log("👉 Mail service (HTTP API Version) start ho gayi hai...");
 
 const OAuth2 = google.auth.OAuth2;
 
-// Ye function har email bhejne par fresh connection banayega
+// Gmail API aur OAuth2 ko initialize kar rahe hain
 const createGmailClient = () => {
     const oauth2Client = new OAuth2(
         (process.env.GOOGLE_CLIENT_ID || "").trim(),
@@ -12,6 +12,7 @@ const createGmailClient = () => {
         "https://developers.google.com/oauthplayground"
     );
 
+    // Refresh token set kar rahe hain taaki login baar-baar na mangna pade
     oauth2Client.setCredentials({
         refresh_token: (process.env.GOOGLE_REFRESH_TOKEN || "").trim()
     });
@@ -19,7 +20,7 @@ const createGmailClient = () => {
     return google.gmail({ version: 'v1', auth: oauth2Client });
 };
 
-// Gmail API ko email ka data base64url format mein chahiye hota hai
+// Email ka body structure taiyar kar rahe hain (Base64url safe format mein)
 const makeBody = (to, from, subject, message) => {
     const str = [
         `To: ${to}`,
@@ -31,7 +32,7 @@ const makeBody = (to, from, subject, message) => {
         message
     ].join('\n');
 
-    // Convert to base64url format
+    // Gmail API ko base64 format mein hi data chahiye hota hai
     return Buffer.from(str)
         .toString('base64')
         .replace(/\+/g, '-')
@@ -46,6 +47,7 @@ export async function sendEmail({ to, subject, html, text = "" }) {
         const gmail = createGmailClient();
         const rawMessage = makeBody(to, process.env.GOOGLE_USER, subject, html || text);
 
+        // Gmail API ko hit kar rahe hain email send karne ke liye
         const res = await gmail.users.messages.send({
             userId: 'me',
             requestBody: {
@@ -56,6 +58,7 @@ export async function sendEmail({ to, subject, html, text = "" }) {
         console.log("✅ BOOM! Email sent successfully via Gmail HTTP API! ID:", res.data.id);
         return { success: true, message: "Email sent" };
     } catch (error) {
+        // Agar refresh token expired hai ya permission nahi hai toh error yahan aayega
         console.error("❌ Gmail HTTP API Error:", error.message);
         return { error: true, message: error.message };
     }

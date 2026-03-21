@@ -19,7 +19,12 @@ const messageSchema = new mongoose.Schema({
     file: {
         type: Object, // To store ImageKit response details like url, fileId, etc.
         default: null
-    }
+    },
+    socialPosts: [{
+        platform: { type: String, enum: ['instagram'] },
+        mediaId: String,
+        postedAt: { type: Date, default: Date.now }
+    }]
 },{
     timestamps:true
 })
