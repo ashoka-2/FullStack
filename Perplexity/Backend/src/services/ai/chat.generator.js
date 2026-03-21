@@ -10,7 +10,7 @@
 
 import { HumanMessage, SystemMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import axios from "axios";
-import { geminiVisionModel, geminiTextModel, mistralModel } from "./models.js";
+import { geminiVision1, geminiVision2, geminiVision3, mistralModel, gemmaFallbackModel } from "./models.js";
 import { searchInternetTool } from "../Tools/search.tool.js";
 import { emailTool } from "../Tools/email.tool.js";
 import { postToInstagramTool } from "../Tools/instagram.tool.js";
@@ -162,49 +162,45 @@ export async function generateResponse(messages, onChunk, userContext) {
       geminiMessages.unshift(new HumanMessage({ content: systemContent }));
     }
 
-    try {
-      // Pehle Gemini 2.5 Lite try karo (seedha .stream(), no tools binding)
-      console.log("📸 Processing Image with Gemini 2.5 Lite...");
-      const stream = await geminiVisionModel.stream(geminiMessages);
-      let fullContent = "";
-      for await (const chunk of stream) {
-        fullContent += chunk.content;
-        if (onChunk) onChunk(chunk.content);
-      }
-      return fullContent;
+    // 3-tier vision cascade — 60 images/day total!
+    const visionModels = [
+      { model: geminiVision1, name: "Gemini 2.5-Flash-Lite" },
+      { model: geminiVision2, name: "Gemini 2.0-Flash" },
+      { model: geminiVision3, name: "Gemini 2.5-Flash" },
+    ];
 
-    } catch (error1) {
-      console.warn("⚠️ Gemini 2.5-Lite quota/fail. Switching to 1.5-Flash backup...");
+    for (const { model, name } of visionModels) {
       try {
-        // Backup: Gemini 1.5 Flash Lite
-        const stream2 = await geminiTextModel.stream(geminiMessages);
-        let fullContent2 = "";
-        for await (const chunk of stream2) {
-          fullContent2 += chunk.content;
+        console.log(`📸 Processing Image with ${name}...`);
+        const stream = await model.stream(geminiMessages);
+        let fullContent = "";
+        for await (const chunk of stream) {
+          fullContent += chunk.content;
           if (onChunk) onChunk(chunk.content);
         }
-        return fullContent2;
-
-      } catch (error2) {
-        // Dono Gemini fail → Mistral text-only fallback
-        console.error("⚠️ Both Gemini models failed. Final fallback to Mistral (text-only).");
-        const sanitizedHistory = history.map(msg => {
-          if (Array.isArray(msg.content)) {
-            const textOnly = msg.content.filter(i => i.type === "text").map(i => i.text).join("\n");
-            return msg instanceof AIMessage
-              ? new AIMessage({ content: textOnly })
-              : new HumanMessage({ content: textOnly });
-          }
-          return msg;
-        });
-        const { tools, map } = getTools(userContext);
-        const modelWithTools = mistralModel.bindTools(tools);
-        return await runMistralLoop(
-          [new SystemMessage({ content: `[VISION UNAVAILABLE]\n${systemContent}` }), ...sanitizedHistory],
-          onChunk, modelWithTools, map
-        );
+        return fullContent; // Success → return immediately
+      } catch (err) {
+        console.warn(`⚠️ ${name} failed (${err.message?.substring(0, 60)}). Trying next tier...`);
       }
     }
+
+    // Saare Gemini fail → Mistral text-only fallback
+    console.error("⚠️ All Gemini Vision models exhausted. Falling back to Mistral (text-only).");
+    const sanitizedHistory = history.map(msg => {
+      if (Array.isArray(msg.content)) {
+        const textOnly = msg.content.filter(i => i.type === "text").map(i => i.text).join("\n");
+        return msg instanceof AIMessage
+          ? new AIMessage({ content: textOnly })
+          : new HumanMessage({ content: textOnly });
+      }
+      return msg;
+    });
+    const { tools, map } = getTools(userContext);
+    const modelWithTools = mistralModel.bindTools(tools);
+    return await runMistralLoop(
+      [new SystemMessage({ content: `[VISION UNAVAILABLE]\n${systemContent}` }), ...sanitizedHistory],
+      onChunk, modelWithTools, map
+    );
   }
 
   // ── ROUTE B: TEXT REQUEST → MISTRAL + TOOLS ─────────────────
@@ -212,5 +208,15 @@ export async function generateResponse(messages, onChunk, userContext) {
   const textMessages = [new SystemMessage({ content: systemContent }), ...history];
   const { tools, map } = getTools(userContext);
   const modelWithTools = mistralModel.bindTools(tools);
-  return await runMistralLoop(textMessages, onChunk, modelWithTools, map);
+  try {
+    return await runMistralLoop(textMessages, onChunk, modelWithTools, map);
+  } catch (err) {
+    // Agar Mistral 429 ho → Gemma 3 12B se text answer karo (14,400 RPD!)
+    if (err.statusCode === 429 || err.message?.includes('429')) {
+      console.warn("⚠️ Mistral rate limited! Switching to Gemma 3 12B fallback...");
+      const gemmaWithTools = gemmaFallbackModel.bindTools(tools);
+      return await runMistralLoop(textMessages, onChunk, gemmaWithTools, map);
+    }
+    throw err;
+  }
 }
