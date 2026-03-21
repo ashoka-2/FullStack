@@ -1,10 +1,10 @@
 // ============================================================
-// CHAT RESPONSE GENERATOR — LOGGING & ROUTING
+// CHAT RESPONSE GENERATOR — GEMINI-FIRST ROUTING
 // ============================================================
 
 import { HumanMessage, SystemMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import axios from "axios";
-import { geminiVision1, geminiVision2, mistralModel, geminiChatFallback } from "./models.js";
+import { geminiChatPrimary, geminiVision1, geminiVision2, mistralModel } from "./models.js";
 import { searchInternetTool } from "../Tools/search.tool.js";
 import { emailTool } from "../Tools/email.tool.js";
 import { postToInstagramTool } from "../Tools/instagram.tool.js";
@@ -30,17 +30,17 @@ const getTools = (userContext) => {
   };
 };
 
-async function runMistralLoop(currentMessages, onChunk, modelWithTools, toolsMap, modelLabel = "Mistral") {
+async function runModelLoop(currentMessages, onChunk, modelWithTools, toolsMap, label = "AI") {
   let iterations = 0;
   const maxIterations = 5;
 
   while (iterations < maxIterations) {
-    console.log(`🤖 [${modelLabel}] Invoking with Tools (Iteration: ${iterations + 1})...`);
+    console.log(`🤖 [${label}] Invoking (Iteration: ${iterations + 1})...`);
     const response = await modelWithTools.invoke(currentMessages);
 
     if (!response.tool_calls || response.tool_calls.length === 0) break;
 
-    console.log(`🛠️ [${modelLabel}] Tool Call Detected: ${response.tool_calls.map(t => t.name).join(", ")}`);
+    console.log(`🛠️ [${label}] Tool Call: ${response.tool_calls.map(t => t.name).join(", ")}`);
     currentMessages.push(response);
 
     const toolResults = await Promise.all(
@@ -55,7 +55,7 @@ async function runMistralLoop(currentMessages, onChunk, modelWithTools, toolsMap
           });
         } catch (err) {
           return new ToolMessage({
-            content: `Tool execution failed: ${err.message}`,
+            content: `Tool error: ${err.message}`,
             tool_call_id: toolCall.id
           });
         }
@@ -66,7 +66,7 @@ async function runMistralLoop(currentMessages, onChunk, modelWithTools, toolsMap
     iterations++;
   }
 
-  console.log(`📡 [${modelLabel}] Final response streaming...`);
+  console.log(`📡 [${label}] Final streaming...`);
   const stream = await modelWithTools.stream(currentMessages);
   let fullContent = "";
   for await (const chunk of stream) {
@@ -78,10 +78,7 @@ async function runMistralLoop(currentMessages, onChunk, modelWithTools, toolsMap
 
 export async function generateResponse(messages, onChunk, userContext) {
   const today = getCurrentTimeContext();
-
-  const lastUserMsg = [...messages].reverse().find(
-    msg => msg.role === "user" || msg.role === "human"
-  );
+  const lastUserMsg = [...messages].reverse().find(msg => msg.role === "user" || msg.role === "human");
   const hasImage = lastUserMsg?.file?.url;
 
   const history = await Promise.all(messages.map(async (msg) => {
@@ -92,7 +89,7 @@ export async function generateResponse(messages, onChunk, userContext) {
         const base64 = Buffer.from(imageRes.data).toString('base64');
         const mimeType = imageRes.headers['content-type'] || 'image/jpeg';
         content = [
-          { type: "text", text: `User uploaded an image. [\nQuestion: ${msg.content || "Analyze this."}` },
+          { type: "text", text: `User uploaded: [\nQuestion: ${msg.content || "Analyze this."}` },
           { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
         ];
       } catch (error) {
@@ -102,38 +99,25 @@ export async function generateResponse(messages, onChunk, userContext) {
     return msg.role === "ai" ? new AIMessage({ content }) : new HumanMessage({ content });
   }));
 
-  // AI ka system prompt — Role, Rules, aur Capabilities define karta hai
-  const systemContent = `You are a highly advanced AI assistant. Current Date and Time: ${today}.
-    CRITICAL INSTRUCTIONS:
-    1. Your training data is old. ALWAYS use the 'searchInternet' tool for current events or facts.
-    2. Provide accurate, detailed answers in Markdown format.
-    3. You are also a Social Media Automation Agent:
-       - Use 'post_to_instagram' ONLY when user explicitly asks to post.
-       - If user gives a caption: use it verbatim + add 3-5 hashtags.
-       - If no caption: generate one from image content, then post.
-       - Only post images from ik.imagekit.io domain.
-       - Warn user if they try to post more than 25 times in 24 hours.`;
+  const systemContent = `You are a highly advanced AI. Date: ${today}.
+    1. Mandatory: Use 'searchInternet' for news/facts.
+    2. Format: Markdown.
+    3. Social: 'post_to_instagram' only on explicit request. image source MUST BE ik.imagekit.io.`;
 
-
-  // ── ROUTE A: IMAGE REQUEST → GEMINI VISION ──────────────────
   if (hasImage) {
     const geminiMessages = history.map((msg, idx) => {
       if (idx === 0 && msg instanceof HumanMessage) {
         const originalContent = msg.content;
-        const newContent = Array.isArray(originalContent)
-          ? [{ type: "text", text: systemContent }, ...originalContent]
-          : `${systemContent}\n\nUser Question: ${originalContent}`;
+        const newContent = Array.isArray(originalContent) ? [{ type: "text", text: systemContent }, ...originalContent] : `${systemContent}\n\nUser Question: ${originalContent}`;
         return new HumanMessage({ content: newContent });
       }
       return msg;
     });
-    if (!(geminiMessages[0] instanceof HumanMessage)) {
-      geminiMessages.unshift(new HumanMessage({ content: systemContent }));
-    }
+    if (!(geminiMessages[0] instanceof HumanMessage)) geminiMessages.unshift(new HumanMessage({ content: systemContent }));
 
     const visionModels = [
-      { model: geminiVision1, name: "Gemini 2.5-Flash-Lite (Tier 1)" },
-      { model: geminiVision2, name: "Gemini 1.5-Flash (Tier 2)" },
+      { model: geminiVision1, name: "Gemini 2.5-Flash-Lite" },
+      { model: geminiVision2, name: "Gemini 1.5-Flash" },
     ];
 
     for (const { model, name } of visionModels) {
@@ -145,14 +129,14 @@ export async function generateResponse(messages, onChunk, userContext) {
           fullContent += chunk.content;
           if (onChunk) onChunk(chunk.content);
         }
-        console.log(`✅ [Vision] Success with ${name}!`);
         return fullContent;
       } catch (err) {
         console.warn(`⚠️ [Vision] ${name} failed: ${err.message?.substring(0, 50)}...`);
       }
     }
-
-    // Mistral Fallback for Images
+    
+    // No Vision models worked → Fallback to Text-only Mistral
+    const { tools, map } = getTools(userContext);
     const sanitizedHistory = history.map(msg => {
       if (Array.isArray(msg.content)) {
         const textOnly = msg.content.filter(i => i.type === "text").map(i => i.text).join("\n");
@@ -160,23 +144,26 @@ export async function generateResponse(messages, onChunk, userContext) {
       }
       return msg;
     });
-    const { tools, map } = getTools(userContext);
-    console.log("⚠️ [Vision] All Gemini Vision tiers exhausted. Using Mistral (text-only).");
-    return await runMistralLoop([new SystemMessage({ content: `[VISION UNAVAILABLE]\n${systemContent}` }), ...sanitizedHistory], onChunk, mistralModel.bindTools(tools), map, "Mistral-Fallback");
+    return await runModelLoop([new SystemMessage({ content: systemContent }), ...sanitizedHistory], onChunk, mistralModel.bindTools(tools), map, "Mistral-Image-Fallback");
   }
 
-  // TEXT ROUTE
-  console.log("📝 [Text] Request detected. Starting Mistral flow...");
+  // ── TEXT ROUTE: 3.1 FLASH-LITE PRIMARY ───────────────────────
+  console.log("📝 [Text] Attempting with Gemini 3.1 Flash-Lite (Primary)...");
   const textMessages = [new SystemMessage({ content: systemContent }), ...history];
   const { tools, map } = getTools(userContext);
+  
   try {
-    return await runMistralLoop(textMessages, onChunk, mistralModel.bindTools(tools), map, "Mistral-Primary");
+    // Gemini 3.1 Primary (with Tools) 
+    const geminiWithTools = geminiChatPrimary.bindTools(tools);
+    return await runModelLoop(textMessages, onChunk, geminiWithTools, map, "Gemini-Primary");
   } catch (err) {
-    if (err.statusCode === 429 || err.message?.includes('429')) {
-      console.warn("⏳ [Text] Mistral Rate Limited. Switching to Gemini Fallback (gemini-1.5-flash)...");
-      const geminiWithTools = geminiChatFallback.bindTools(tools);
-      return await runMistralLoop(textMessages, onChunk, geminiWithTools, map, "Gemini-Fallback");
+    // If Gemini 3.1 fails or 429s → Fallback to Mistral
+    console.warn("⏳ [Text] Gemini Primary failed. Falling back to Mistral...");
+    try {
+      const mistralWithTools = mistralModel.bindTools(tools);
+      return await runModelLoop(textMessages, onChunk, mistralWithTools, map, "Mistral-Fallback");
+    } catch (err2) {
+      throw err2;
     }
-    throw err;
   }
 }
