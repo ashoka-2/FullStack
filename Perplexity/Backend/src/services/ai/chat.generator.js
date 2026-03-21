@@ -99,10 +99,16 @@ export async function generateResponse(messages, onChunk, userContext) {
     return msg.role === "ai" ? new AIMessage({ content }) : new HumanMessage({ content });
   }));
 
-  const systemContent = `You are a highly advanced AI. Date: ${today}.
-    1. Mandatory: Use 'searchInternet' for news/facts.
-    2. Format: Markdown.
-    3. Social: 'post_to_instagram' only on explicit request. image source MUST BE ik.imagekit.io.`;
+  const systemContent = `You are a highly advanced AI. Current Date: ${today}.
+    
+    CRITICAL INSTRUCTIONS:
+    1. Information: Your knowledge is old. ALWAYS hit 'searchInternet' for current events.
+    2. Social Media Automation:
+       - Use 'post_to_instagram' ONLY if the user explicitly asks to post.
+       - IMPORTANT: For 'post_to_instagram', you MUST look through the chat history and provide the EXACT image URL from ImageKit (ik.imagekit.io). Do NOT call the tool with an empty imageUrl.
+       - Caption: If the user provides one, use it. If not, write a catchy one with 3-5 hashtags.
+       - If you posted a mediaId already, do not post it again unless asked.
+    3. Formatting: Output in clean Markdown.`;
 
   if (hasImage) {
     const geminiMessages = history.map((msg, idx) => {

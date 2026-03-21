@@ -6,77 +6,86 @@ import * as z from "zod";
 /**
  * Instagram Posting Tool
  */
-// LangChain Instagram tool jo AI ko posts karne ki power deta hai
 export const postToInstagramTool = (userContext) => tool(
-    async ({ imageUrl, caption, aiCaptionRequested }) => {
+    async ({ imageUrl, caption }) => {
       try {
-        // 1. Validation - check kar rahe hain image ImageKit pe hai ya nahi
-        if (!imageUrl || !imageUrl.includes("ik.imagekit.io")) {
-          return "ERROR: media must be first uploaded to our CDN (imagekit.io).";
+        let finalImageUrl = imageUrl;
+
+        // 1. URL AUTO-HEALING: Agar Gemini ne URL nahi diya, toh chat history se uthao
+        if (!finalImageUrl) {
+          console.log("🔍 Tool: No imageUrl provided by AI. Searching in chat history...");
+          // User messages mein se sabse latest ik.imagekit.io URL dhoondo
+          const lastMsgWithImage = await messageModel.findOne({ 
+            "file.url": { $regex: "ik.imagekit.io" } 
+          }).sort({ createdAt: -1 });
+
+          if (lastMsgWithImage?.file?.url) {
+            finalImageUrl = lastMsgWithImage.file.url;
+            console.log("✅ Tool: Found image in DB:", finalImageUrl);
+          }
+        }
+
+        // 2. Final URL Validation
+        if (!finalImageUrl || !finalImageUrl.includes("ik.imagekit.io")) {
+          return "ERROR: No valid ImageKit URL found. Please provide an image first.";
         }
   
-        // 2. User Authentication Check - kya user ne account connect kiya hai?
+        // 3. User Authentication
         const ig = userContext?.instagram;
-        const hasCredentials = ig?.accessToken && ig?.userId;
-        if (!hasCredentials && !ig?.isConnected) {
-          return "ERROR: You haven't connected your Instagram account yet. Please connect your account in settings.";
+        if (!ig?.accessToken || !ig?.userId) {
+          return "ERROR: Instagram account not connected. Please connect in settings.";
         }
   
-        // 3. Quota Check - ek din mein sirf 25 posts allowed hain (Instagram limits)
+        // 4. Rate Limiting (25/day)
         const userIdKey = userContext._id?.toString() || "system";
         global.ig_usage = global.ig_usage || {};
         const userUsage = global.ig_usage[userIdKey] || { count: 0, lastReset: Date.now() };
   
-        // 24 ghante baad limit reset kar rahe hain
         if (Date.now() - userUsage.lastReset > 24 * 60 * 60 * 1000) {
           userUsage.count = 0;
           userUsage.lastReset = Date.now();
         }
   
-        const MAX_POSTS_24H = 25;
-        if (userUsage.count >= MAX_POSTS_24H) {
-           return `WARNING: Instagram API limit reached (25/day) for your account.`;
+        if (userUsage.count >= 25) {
+           return "WARNING: Daily Instagram limit (25) reached.";
         }
   
-        // 4. Caption Optimization - hashtags auto-add kar rahe hain agar missing ho
-        let finalCaption = caption || "";
+        // 5. Caption Polish
+        let finalCaption = caption || "Posted via AI Assistant";
         if (!finalCaption.includes("#")) {
-          const hashtags = ["#AI", "#Perplexity", "#SheryiansCodingSchool", "#Automation", "#SmartAi"];
-          finalCaption += "\n\n" + hashtags.slice(0, 5).join(" ");
+          finalCaption += "\n\n#AI #Automation #SmartPost #Perplexity";
         }
   
         console.log("📸 Posting media to user's Instagram...");
-        const mediaId = await postImageToInstagram(imageUrl, finalCaption, {
+        const mediaId = await postImageToInstagram(finalImageUrl, finalCaption, {
             accessToken: ig.accessToken,
             userId: ig.userId
         });
   
-        // Database mein post record save kar rahe hain chat message tracking ke liye
+        // 6. DB Tracking
         try {
-          const msgWithFile = await messageModel.findOne({ "file.url": imageUrl });
+          const msgWithFile = await messageModel.findOne({ "file.url": finalImageUrl });
           if (msgWithFile) {
             msgWithFile.socialPosts.push({ platform: 'instagram', mediaId });
             await msgWithFile.save();
           }
-        } catch (cleanupErr) {
-          console.error("Cleanup failed:", cleanupErr.message);
-        }
+        } catch (e) {}
   
-        // Quota update kar rahe hain
         userUsage.count += 1;
         global.ig_usage[userIdKey] = userUsage;
-        return `SUCCESS: Media successfully posted to your Instagram. media_id: ${mediaId}. Image preserved in chat.`;
+        return `SUCCESS: Posted successfully! media_id: ${mediaId}`;
+
       } catch (error) {
+        console.error("❌ Instagram Tool Error:", error.message);
         return `FAILED: ${error.message}`;
       }
     },
     {
       name: "post_to_instagram",
-      description: "Post to the user's connected Instagram account.",
+      description: "Posts an image to Instagram. IMPORTANT: You MUST provide the imageUrl from the chat history (it must be an ik.imagekit.io URL).",
       schema: z.object({
-        imageUrl: z.string(),
-        caption: z.string().optional(),
-        aiCaptionRequested: z.boolean().optional()
+        imageUrl: z.string().optional().describe("The full URL of the image to post (must be from ik.imagekit.io)"),
+        caption: z.string().optional().describe("A short caption with hashtags")
       })
     }
   );
