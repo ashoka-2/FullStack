@@ -98,7 +98,7 @@ const ConnectInstagram = () => {
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-2 text-sm font-bold text-zinc-700 dark:text-zinc-300 ml-1">
                                         <RiKey2Line size={16} className="text-[#20b8cd]" />
-                                        Page Access Token
+                                        Instagram Access Token
                                     </label>
                                     <div className="relative group">
                                         <input
@@ -106,11 +106,11 @@ const ConnectInstagram = () => {
                                             required
                                             value={formData.accessToken}
                                             onChange={(e) => setFormData({ ...formData, accessToken: e.target.value })}
-                                            placeholder="Paste your Page Access Token here (EAA...)"
+                                            placeholder="Paste your token here (IGAAP...)"
                                             className="w-full bg-zinc-100/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-white/10 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#20b8cd] transition-all placeholder:text-zinc-400"
                                         />
                                     </div>
-                                    <p className="text-[10px] text-zinc-500 ml-1">Must have <span className="text-zinc-700 dark:text-zinc-300 font-mono italic">instagram_content_publish</span> permission.</p>
+                                    <p className="text-[10px] text-zinc-500 ml-1">Must have <span className="text-zinc-700 dark:text-zinc-300 font-mono italic">instagram_business_content_publish</span> permission.</p>
                                 </div>
 
                                 <div className="space-y-2">
@@ -193,13 +193,13 @@ const ConnectInstagram = () => {
                                 />
                                 <StepItem 
                                     num="2" 
-                                    title="Add Instagram API" 
-                                    desc="Add 'Instagram Graph API' to your app products. It's the engine that powers this tool."
+                                    title="Set up Instagram Login" 
+                                    desc="In your App Dashboard, add the 'Instagram' product and choose 'API setup with Instagram login'."
                                 />
                                 <StepItem 
                                     num="3" 
-                                    title="Connect FB Page & IG" 
-                                    desc={<>Crucial: Go to your FB Page settings and <span className="font-bold underline">Link</span> your Instagram Professional account.</>}
+                                    title="Add Account" 
+                                    desc={<>Under the 'Generate access tokens' section, click <span className="font-bold underline">Add an Instagram account</span> and log in.</>}
                                 />
                                 <div className="relative pl-12 pb-2">
                                     <div className="absolute left-6 top-8 bottom-0 w-[2px] bg-zinc-100 dark:bg-zinc-800"></div>
@@ -209,16 +209,15 @@ const ConnectInstagram = () => {
                                     </div>
                                     <div className="bg-zinc-50 dark:bg-zinc-950/50 p-4 rounded-2xl border border-zinc-200 dark:border-white/5 space-y-3">
                                         <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
-                                            Open <a href="https://developers.facebook.com/tools/explorer/" target="_blank" className="text-[#20b8cd] font-bold underline inline-flex items-center gap-1">Graph Explorer <RiExternalLinkLine size={10}/></a>.
-                                            Select your app. Under <span className="text-[#ee2a7b]">Permissions</span> ensure you have added:
+                                            Click the <span className="font-bold text-emerald-500">Generate token</span> button next to your account.
                                         </p>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {['instagram_basic', 'instagram_content_publish', 'pages_show_list'].map(p => (
+                                            {['Copy Token', 'Copy User ID'].map(p => (
                                                 <span key={p} className="text-[9px] font-mono bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-500 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700">{p}</span>
                                             ))}
                                         </div>
                                         <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-2">
-                                            Click <span className="font-bold text-emerald-500">Generate Token</span>, select your Page, and copy the token. For ID, run: <code className="bg-zinc-200 dark:bg-zinc-800 px-1 rounded">me/accounts?fields=instagram_business_account</code> to find your Instagram Business ID.
+                                            Paste the generated Access Token into the form. The <span className="text-[#ee2a7b]">17-digit Instagram ID</span> is displayed right below your username on that same page!
                                         </p>
                                     </div>
                                 </div>

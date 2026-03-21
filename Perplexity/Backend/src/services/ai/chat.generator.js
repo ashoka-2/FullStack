@@ -106,7 +106,7 @@ export async function generateResponse(messages, onChunk, userContext) {
     2. Social Media Automation:
        - Use 'post_to_instagram' ONLY if the user explicitly asks to post.
        - IMPORTANT: For 'post_to_instagram', you MUST look through the chat history and provide the EXACT image URL from ImageKit (ik.imagekit.io). Do NOT call the tool with an empty imageUrl.
-       - Caption: If the user provides one, use it. If not, write a catchy one with 3-5 hashtags.
+       - AIM FOR VIRAL VIRALITY: If the user does not provide a caption, automatically generate a highly engaging, viral caption with relevant emojis and 3-5 trending hashtags BEFORE calling the post_to_instagram tool.
        - If you posted a mediaId already, do not post it again unless asked.
     3. Formatting: Output in clean Markdown.`;
 
