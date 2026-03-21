@@ -61,7 +61,15 @@ export async function sendMessage(req, res) {
         const io = getIO();
         const socketId = req.body.socketId;
 
-        const fullUser = await userModel.findById(req.user.id).select("+instagram.accessToken instagram.userId instagram.isConnected");
+        const fullUser = await userModel.findById(req.user.id).select("instagram.accessToken instagram.userId instagram.isConnected");
+        
+        // Ensure accessToken is included if it was select:false
+        if (!fullUser.instagram?.accessToken) {
+            const userWithToken = await userModel.findById(req.user.id).select("+instagram.accessToken");
+            if (userWithToken.instagram?.accessToken) {
+                fullUser.instagram.accessToken = userWithToken.instagram.accessToken;
+            }
+        }
 
         const result = await generateResponse(messages, (chunk) => {
             if (socketId) {

@@ -32,6 +32,12 @@ export const postToInstagramTool = (userContext) => tool(
   
         // 3. User Authentication
         const ig = userContext?.instagram;
+        
+        // DEBUG LOGS (Sensitive data masked)
+        console.log("🛠️ [Instagram Tool] Debugging credentials:");
+        console.log("   - User ID (from DB):", ig?.userId);
+        console.log("   - Token present:", !!ig?.accessToken);
+        
         if (!ig?.accessToken || !ig?.userId) {
           return "ERROR: Instagram account not connected. Please connect in settings.";
         }
