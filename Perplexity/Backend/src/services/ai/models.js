@@ -11,9 +11,9 @@
 //   Total  → 60 images/day!
 //
 // TEXT CASCADE:
-//   Title  → gemini-3.1-flash-lite-preview (500 RPD) ← Alag quota!
+//   Title  → gemini-3.1-flash-lite-preview (500 RPD) ← Mistral se alag quota!
 //   Chat   → mistral-small-latest          (30 RPM)
-//   Backup → gemma-3-12b-it               (14,400 RPD)
+//   Backup → gemini-2.0-flash              (Tool calling support wala!) ← Gemma nahi!
 // ============================================================
 
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
@@ -68,10 +68,10 @@ export const mistralModel = new ChatMistralAI({
   maxRetries: 2,
 });
 
-// Ultimate Fallback: Gemma 3 12B — 14,400 RPD!
-// Mistral 429 hit kare tab seedha yahan aa jao
-export const gemmaFallbackModel = new ChatGoogleGenerativeAI({
-  model: "gemma-3-12b-it",
+// Mistral 429 fallback: gemini-2.0-flash — Tool calling SUPPORT karta hai!
+// ⚠️ Gemma use mat karo — gemma-3-12b-it TOOLS SUPPORT NAHI KARTA (400 Bad Request)
+export const geminiChatFallback = new ChatGoogleGenerativeAI({
+  model: "gemini-2.0-flash",
   apiKey: process.env.GEMINI_API_KEY,
   apiVersion: "v1beta",
   maxRetries: 1,

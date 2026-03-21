@@ -10,7 +10,7 @@
 
 import { HumanMessage, SystemMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import axios from "axios";
-import { geminiVision1, geminiVision2, geminiVision3, mistralModel, gemmaFallbackModel } from "./models.js";
+import { geminiVision1, geminiVision2, geminiVision3, mistralModel, geminiChatFallback } from "./models.js";
 import { searchInternetTool } from "../Tools/search.tool.js";
 import { emailTool } from "../Tools/email.tool.js";
 import { postToInstagramTool } from "../Tools/instagram.tool.js";
@@ -211,11 +211,12 @@ export async function generateResponse(messages, onChunk, userContext) {
   try {
     return await runMistralLoop(textMessages, onChunk, modelWithTools, map);
   } catch (err) {
-    // Agar Mistral 429 ho → Gemma 3 12B se text answer karo (14,400 RPD!)
+    // Agar Mistral 429 ho → gemini-2.0-flash use karo (Tool calling SUPPORT karta hai!)
+    // ⚠️ Gemma use mat karo — woh tools support nahi karta!
     if (err.statusCode === 429 || err.message?.includes('429')) {
-      console.warn("⚠️ Mistral rate limited! Switching to Gemma 3 12B fallback...");
-      const gemmaWithTools = gemmaFallbackModel.bindTools(tools);
-      return await runMistralLoop(textMessages, onChunk, gemmaWithTools, map);
+      console.warn("⚠️ Mistral rate limited! Switching to Gemini 2.0-Flash fallback (with tools)...");
+      const geminiWithTools = geminiChatFallback.bindTools(tools);
+      return await runMistralLoop(textMessages, onChunk, geminiWithTools, map);
     }
     throw err;
   }
