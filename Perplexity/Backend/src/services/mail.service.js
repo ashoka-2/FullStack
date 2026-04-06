@@ -1,6 +1,5 @@
 import { google } from 'googleapis';
 
-console.log("👉 Mail service (HTTP API Version) start ho gayi hai...");
 
 const OAuth2 = google.auth.OAuth2;
 
@@ -12,7 +11,7 @@ const createGmailClient = () => {
         "https://developers.google.com/oauthplayground"
     );
 
-    // Refresh token set kar rahe hain taaki login baar-baar na mangna pade
+    // Refresh token set kar rahe hain taaki login baar-baar na mangna pade or app publish bhi kar diya hai google console mein
     oauth2Client.setCredentials({
         refresh_token: (process.env.GOOGLE_REFRESH_TOKEN || "").trim()
     });
