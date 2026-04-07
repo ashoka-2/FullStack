@@ -8,7 +8,9 @@ app.get("/", (req, res) => {
 })
 
 app.post("/use-graph",async (req,res)=>{
-    await useGraph("Write a factorial function in JS")
+    const result = await useGraph("Write a factorial function in JS")
+
+    res.json(result)
 })
 
 
