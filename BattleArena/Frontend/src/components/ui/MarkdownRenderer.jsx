@@ -23,7 +23,7 @@ const MarkdownRenderer = ({ content }) => {
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          code({ node, inline, className, children, ...props }) {
+          code({ inline, className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
             return !inline && match ? (
               <div className="border-2 border-black bg-black/10 my-4 overflow-hidden rounded">
@@ -58,3 +58,4 @@ const MarkdownRenderer = ({ content }) => {
 };
 
 export default MarkdownRenderer;
+

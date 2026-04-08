@@ -1,6 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+﻿import React, { useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setInput, submitBattleThunk } from '../../features/chat/chatSlice';
+import { setInput, sendMessage, receiveBattleResult, receiveBattleError } from '../../features/chat/chatSlice';
+
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const ChatInput = () => {
   const dispatch = useDispatch();
@@ -15,10 +19,26 @@ const ChatInput = () => {
     }
   }, [inputValue]);
 
-  const handleSubmit = () => {
-    const trimmed = inputValue.trim();
-    if (!trimmed || isLoading) return;
-    dispatch(submitBattleThunk(trimmed));
+  const handleSubmit = async () => {
+    const problem = inputValue.trim();
+    if (!problem || isLoading) return;
+
+    dispatch(sendMessage(problem));
+
+    try {
+      const response = await axios.post(`${API_URL}/invoke`, {
+        input: problem,
+      });
+
+      dispatch(receiveBattleResult({
+        problem,
+        ...response.data.result,
+      }));
+    } catch (error) {
+      dispatch(receiveBattleError(
+        error.response?.data?.message || error.message || 'Unable to get a battle result from the backend.'
+      ));
+    }
   };
 
   return (
@@ -47,7 +67,7 @@ const ChatInput = () => {
             disabled={isLoading || !inputValue.trim()}
             className="nb-button bg-[var(--cyan-main)] text-black px-6 h-[44px] text-xs"
           >
-            {isLoading ? "Battling..." : "Send Battle ⚔️"}
+            {isLoading ? 'Battling...' : 'Send Battle ⚔️'}
           </button>
         </div>
       </div>
@@ -56,3 +76,4 @@ const ChatInput = () => {
 };
 
 export default ChatInput;
+

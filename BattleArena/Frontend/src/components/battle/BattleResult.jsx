@@ -6,7 +6,7 @@ import JudgeCard from './JudgeCard';
  * BattleResult — full battle display assembled from battleData
  */
 const BattleResult = ({ battleData }) => {
-  const { problem, solution_1, solution_2, judge } = battleData;
+  const { solution_1, solution_2, judge } = battleData;
 
   const winner1 = judge.solution_1_score >= judge.solution_2_score;
   const winner2 = judge.solution_2_score > judge.solution_1_score;

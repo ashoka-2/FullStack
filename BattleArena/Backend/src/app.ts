@@ -1,12 +1,26 @@
 import express from "express"
 import useGraph from "./services/graph.ai.service.js"
+import cors from "cors";
+
 const app = express()
 
+app.use(express.json())
 
-app.post("/",async (req,res)=>{
-    const result = await useGraph("Write a factorial function in JS")
 
-    res.json(result)
+app.use(cors({
+    origin:"http://localhost:5173",
+    methods:["GET","POST"],
+    credentials:true
+}))
+
+app.post("/invoke",async (req,res)=>{
+    const {input} = req.body
+    const result = await useGraph(input)
+    res.status(200).json({
+        message:"Graph executed successfully",
+        success:true,
+        result
+    })
 })
 
 

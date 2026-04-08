@@ -1,10 +1,12 @@
-import React, { useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
+﻿import React, { useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setInput } from '../../features/chat/chatSlice';
 import MessageBubble from './MessageBubble';
 import BattleResult from '../battle/BattleResult';
 import LoadingPulse from './LoadingPulse';
 
 const ChatArea = () => {
+  const dispatch = useDispatch();
   const { messages, isLoading } = useSelector((s) => s.chat);
   const bottomRef = useRef(null);
 
@@ -40,13 +42,7 @@ const ChatArea = () => {
                 <button
                   key={text}
                   className="nb-button bg-[var(--bg-main)] p-3 text-left border-[var(--bg-accent)] group"
-                  onClick={() => {
-                    const textarea = document.querySelector('textarea');
-                    const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
-                    setter.call(textarea, text);
-                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                    textarea.focus();
-                  }}
+                  onClick={() => dispatch(setInput(text))}
                 >
                   <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-dim)] group-hover:text-[var(--cyan-main)]">
                     {text}
@@ -62,6 +58,10 @@ const ChatArea = () => {
             <div key={msg.id}>
               {msg.role === 'user' ? (
                 <MessageBubble content={msg.content} />
+              ) : msg.role === 'error' ? (
+                <div className="nb-card bg-red-950/40 border-red-500 p-4 text-sm text-red-100">
+                  {msg.content}
+                </div>
               ) : (
                 <BattleResult battleData={msg.battleData} />
               )}
