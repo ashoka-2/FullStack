@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --bg-main: #020617;
+  --bg-card: #0f172a;
+  --bg-accent: #1e293b;
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+  --border-color: #000000;
+  --cyan-main: #22d3ee;
+  --sky-main: #38bdf8;
+  --shadow-color: rgba(0, 0, 0, 1);
+}
+
+.light {
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-accent: #f1f5f9;
+  --text-main: #020617;
+  --text-dim: #64748b;
+  --border-color: #000000;
+  --cyan-main: #0891b2;
+  --sky-main: #0284c7;
+  --shadow-color: rgba(0, 0, 0, 0.15);
+}
+
+body {
+  @apply bg-[var(--bg-main)] text-[var(--text-main)] antialiased font-['Inter'] transition-colors duration-300;
+  background-image: 
+    radial-gradient(circle at 1px 1px, var(--cyan-main) 0.5px, transparent 0);
+  background-size: 32px 32px;
+  background-opacity: 0.05;
+}
+
+/* ── Neubrutalism Utilities ── */
+
+.nb-card {
+  @apply border-2 border-black bg-[var(--bg-card)] transition-all duration-200 shadow-[4px_4px_0px_var(--shadow-color)];
+}
+
+.nb-card-cyan {
+  @apply border-2 border-black bg-[var(--bg-card)] transition-all duration-200 shadow-[4px_4px_0px_var(--cyan-main)];
+}
+
+.nb-button {
+  @apply inline-flex items-center justify-center border-2 border-black font-black uppercase tracking-wider transition-all duration-100 shadow-[3px_3px_0px_var(--shadow-color)];
+}
+
+.nb-button:hover {
+  @apply -translate-x-0.5 -translate-y-0.5 shadow-[5px_5px_0px_var(--shadow-color)];
+}
+
+.nb-button:active {
+  @apply translate-x-0.5 translate-y-0.5 shadow-none;
+}
+
+/* ── Typography ── */
+h1, h2, h3 { @apply font-['Space_Grotesk'] font-bold text-[var(--text-main)]; }
+
+.animate-entrance {
+  animation: entrance 0.4s ease-out forwards;
+}
+
+@keyframes entrance {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Custom Scrollbar ── */
+.custom-scrollbar::-webkit-scrollbar { width: 8px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: var(--bg-main); }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--bg-accent); border: 1px solid var(--border-color); }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--cyan-main); }
