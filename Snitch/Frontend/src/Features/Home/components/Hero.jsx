@@ -19,7 +19,7 @@ const SmallText = ({ text }) => {
 
 const HeroHeader = () => {
     return (
-        <div className="w-full max-w-[1350px] flex flex-col lg:flex-row justify-between items-center lg:items-end px-4 sm:px-8 z-20 relative mb-12 lg:mb-[-30px]">
+        <div className="w-full max-w-[1350px] flex flex justify-between items-center lg:items-end px-4 sm:px-8 z-20 relative mb-12 lg:mb-[-30px]">
 
             {/* Left Side: Own the EDGE */}
             <div className="flex flex-col transform lg:rotate-[-2deg] text-center lg:text-left z-20">
