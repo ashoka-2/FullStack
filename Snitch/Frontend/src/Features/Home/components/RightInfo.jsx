@@ -52,14 +52,14 @@ const RightInfo = ({
    
 }) => {
     return (
-        <div className="w-full flex flex-col text-white z-10 relative">
+        <div className="w-full flex flex-col lg:text-white text-foreground z-10 relative">
             <div className="flex justify-between md:justify-around mb-8 px-2">
                 {features.map((feature, idx) => (
                     <div key={idx} className="flex flex-col items-center gap-3 group cursor-pointer">
-                        <div className="bg-white/10 dark:bg-accent/10 p-3 lg:p-2 rounded-full group-hover:bg-white/20 transition-colors backdrop-blur-md shadow-sm border border-white/10 dark:border-accent/20 flex items-center justify-center">
-                            <i className={`${feature.iconClass} text-xl text-white dark:text-accent`}></i>
+                        <div className="lg:bg-white/10 bg-accent/10 dark:bg-accent/10 p-3 lg:p-2 rounded-full group-hover:bg-white/20 transition-colors backdrop-blur-md shadow-sm border border-border-theme flex items-center justify-center">
+                            <i className={`${feature.iconClass} text-xl lg:text-white text-accent dark:text-accent`}></i>
                         </div>
-                        <p className="text-[8px] text-center font-bold opacity-80 dark:text-gray-400 tracking-widest whitespace-pre-line uppercase">{feature.title}</p>
+                        <p className="text-[8px] text-center font-bold opacity-80 lg:text-white/80 dark:text-gray-400 tracking-widest whitespace-pre-line uppercase">{feature.title}</p>
                     </div>
                 ))}
             </div>

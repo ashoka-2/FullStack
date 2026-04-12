@@ -53,41 +53,47 @@ const Hero = () => {
             <div className="relative w-full max-w-[1300px] mx-auto min-h-[500px] lg:min-h-[550px] flex flex-col items-center justify-end px-2 sm:px-6 z-10 w-[98%]">
 
                 {/* 2. Main Colored Background Block */}
-                <div className="w-full h-full lg:h-[500px] bg-surface-brand rounded-[40px] lg:rounded-[64px] relative flex flex-col lg:flex-row shadow-xl lg:shadow-2xl z-0 overflow-hidden border border-border-theme">
+                <div className="w-full h-full lg:h-[500px] bg-surface-brand rounded-[40px] lg:rounded-[64px] relative flex flex-col lg:flex-row shadow-xl lg:shadow-2xl z-0 border border-border-theme overflow-visible lg:overflow-hidden">
 
                     {/* Decorative Circle underneath LeftInfo */}
                     <div className="absolute left-[-10%] top-[-10%] w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] bg-white/10 dark:bg-white/5 rounded-full z-0 opacity-60 blur-[30px] sm:blur-[60px]"></div>
 
-                    {/* Background SVG Pattern */}
-                    <div className="absolute bottom-[-50px] right-[-50px] opacity-[0.15] dark:opacity-20 pointer-events-none z-0 hidden sm:block">
-                        <svg width="400" height="400" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                            <path fill="currentColor" d="M60.4,-45C75,-25.6,81.4,-0.4,74.5,20.3C67.6,41,57.3,57,41.2,66.1C25,75.2,3,77.5,-16.9,71.7C-36.8,65.8,-54.6,51.8,-66,33.5C-77.4,15.1,-82.4,-7.6,-74.6,-25.3C-66.8,-42.9,-46.2,-55.5,-26.8,-59.4C-7.4,-63.3,11,-58.5,31,-53Z" transform="translate(100 100)" />
-                        </svg>
-                    </div>
-
                     {/* Left Info Column */}
-                    <div className="w-full lg:w-[45%] relative z-10 px-6 sm:px-12 lg:px-16 pt-[80px] pb-12 lg:py-0 flex flex-col justify-center h-full">
+                    <div className="w-full lg:w-[35%] relative z-10 px-6 sm:px-12 lg:px-16 pt-[80px] pb-12 lg:py-0 flex flex-col justify-center h-full">
                         <LeftInfo />
                     </div>
 
                     {/* Empty Gutter for Model */}
                     <div className="hidden lg:block lg:w-[30%] h-[350px] lg:h-full"></div>
 
-                    {/* Right Info Column */}
-                    <div className="w-full lg:w-[35%] relative z-10 px-6 sm:px-12 lg:px-12 flex flex-col lg:items-end justify-center pt-8 pb-[100px] lg:py-0 h-full">
+                    {/* Right Info Column (DESKTOP) */}
+                    <div className="hidden lg:flex lg:w-[35%] relative z-10 px-6 sm:px-12 lg:px-12 flex-col lg:items-end justify-center pt-8 pb-[100px] lg:py-0 h-full">
                         <RightInfo />
                     </div>
 
                 </div>
 
-                {/* 3. The Model - Anchored securely to the bottom center */}
-                <div className="absolute lg:bottom-[24px] left-1/2 -translate-x-1/2 w-[280px] sm:w-[380px] lg:w-[570px] xl:w-[580px] z-50 pointer-events-none flex justify-center">
+                {/* 3. The Model - Anchored securely with responsive assets */}
+                <div className="absolute bottom-[52%] md:bottom-[50%] lg:bottom-[24px] lg:left-1/2 right-[-30%] -translate-x-1/2 w-[280px] sm:w-[380px] lg:w-[570px] xl:w-[580px] z-50 pointer-events-none flex justify-center">
+                    {/* Desktop Model */}
                     <img
                         src="/model.png"
                         alt="Fashion Cutout"
-                        className="w-[110%] h-auto max-h-[850px] object-contain object-bottom translate-y-2 lg:translate-y-6"
+                        className="hidden lg:block w-[110%] h-auto max-h-[850px] object-contain object-bottom translate-y-6"
                         onError={() => setImgErr(true)}
                     />
+                    {/* Mobile Model */}
+                    <img
+                        src="/model-cutout.png"
+                        alt="Mobile Fashion Cutout"
+                        className="lg:hidden block w-[110%] h-auto max-h-[850px] object-contain object-bottom translate-y-2"
+                        onError={() => setImgErr(true)}
+                    />
+                </div>
+
+                {/* 4. Right Info Column (MOBILE) */}
+                <div className="lg:hidden w-full mt-24">
+                    <RightInfo />
                 </div>
 
             </div>
