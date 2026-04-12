@@ -57,3 +57,30 @@
   scrollbar-width: thin;
   scrollbar-color: var(--color-acc) var(--color-bg);
 }
+
+/* 
+  Cinematic View Transitions for Theme Toggling
+  Inspired by Perplexity UI / Skiper26 Logic
+*/
+::view-transition-group(root) {
+  animation-duration: 0.8s;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+::view-transition-new(root) {
+  animation-name: reveal-theme;
+}
+
+::view-transition-old(root) {
+  animation: none;
+  z-index: -1;
+}
+
+@keyframes reveal-theme {
+  from {
+    clip-path: circle(0% at var(--click-x, 50%) var(--click-y, 50%));
+  }
+  to {
+    clip-path: circle(150% at var(--click-x, 50%) var(--click-y, 50%));
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import Navbar from '../../Components/Navbar';
 import Hero from '../components/Hero';
 
@@ -20,7 +21,24 @@ const Home = () => {
         }
     }, [isDarkMode]);
 
-    const toggleTheme = () => setIsDarkMode(!isDarkMode);
+    const toggleTheme = (e) => {
+        if (!document.startViewTransition) {
+            setIsDarkMode(!isDarkMode);
+            return;
+        }
+
+        const x = e.clientX ?? window.innerWidth / 2;
+        const y = e.clientY ?? window.innerHeight / 2;
+
+        document.documentElement.style.setProperty('--click-x', `${x}px`);
+        document.documentElement.style.setProperty('--click-y', `${y}px`);
+
+        document.startViewTransition(() => {
+            flushSync(() => {
+                setIsDarkMode(!isDarkMode);
+            });
+        });
+    };
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans transition-colors duration-500 pb-16">
