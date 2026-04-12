@@ -53,9 +53,9 @@ const Hero = () => {
             <div className="relative w-full max-w-[1300px] mx-auto min-h-[500px] lg:min-h-[550px] flex flex-col items-center justify-end px-2 sm:px-6 z-10 w-[98%]">
 
                 {/* 2. Main Colored Background Block */}
-                <div className="w-full h-full lg:h-[500px] bg-surface-brand rounded-[40px] lg:rounded-[64px] relative flex flex-col lg:flex-row shadow-xl lg:shadow-2xl z-0 border border-border-theme overflow-visible lg:overflow-hidden">
+                <div className="w-full h-auto lg:h-[500px] bg-surface-brand rounded-[40px] lg:rounded-[64px] relative flex flex-col lg:flex-row shadow-xl lg:shadow-2xl z-0 border border-border-theme overflow-visible lg:overflow-hidden">
 
-                    {/* Decorative Circle underneath LeftInfo */}
+                    {/* Decorative Background Circle */}
                     <div className="absolute left-[-10%] top-[-10%] w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] bg-white/10 dark:bg-white/5 rounded-full z-0 opacity-60 blur-[30px] sm:blur-[60px]"></div>
 
                     {/* Left Info Column */}
@@ -63,30 +63,29 @@ const Hero = () => {
                         <LeftInfo />
                     </div>
 
-                    {/* Empty Gutter for Model */}
-                    <div className="hidden lg:block lg:w-[30%] h-[350px] lg:h-full"></div>
+                    {/* Empty Gutter for Model (Desktop) */}
+                    <div className="hidden lg:block lg:w-[30%] lg:h-full"></div>
 
                     {/* Right Info Column (DESKTOP) */}
                     <div className="hidden lg:flex lg:w-[35%] relative z-10 px-6 sm:px-12 lg:px-12 flex-col lg:items-end justify-center pt-8 pb-[100px] lg:py-0 h-full">
                         <RightInfo />
                     </div>
-
                 </div>
 
-                {/* 3. The Model - Anchored securely with responsive assets */}
-                <div className="absolute bottom-[52%] md:bottom-[50%] lg:bottom-[24px] lg:left-1/2 right-[-65%] sm:right-[-40%] md:right-[-40%] -translate-x-1/2 w-[580px] sm:w-[500px] md:w-[550px] lg:w-[570px] xl:w-[580px] z-50 pointer-events-none flex justify-center">
-                    {/* Desktop Model */}
+                {/* 3. The Responsive Model - Now outside the box AGAIN so it's not clipped at top/bottom */}
+                <div className="absolute bottom-[52%] md:bottom-[50%] lg:bottom-[24px] left-1/2 lg:left-1/2 -translate-x-[25%] lg:-translate-x-1/2 w-[500px] sm:w-[520px] md:w-[580px] lg:w-[570px] xl:w-[580px] z-100 pointer-events-none flex justify-center">
+                    {/* Desktop Asset */}
                     <img
                         src="/model.png"
                         alt="Fashion Cutout"
-                        className="hidden lg:block w-[110%] h-auto max-h-[850px] object-contain object-bottom translate-y-6"
+                        className="hidden lg:block w-full h-auto max-h-[850px] object-contain object-bottom translate-y-6"
                         onError={() => setImgErr(true)}
                     />
-                    {/* Mobile Model */}
+                    {/* Mobile/Tablet Asset */}
                     <img
                         src="/model-cutout.png"
                         alt="Mobile Fashion Cutout"
-                        className="lg:hidden block w-[110%] h-auto max-h-[850px] object-contain object-bottom translate-y-2"
+                        className="lg:hidden block w-full h-auto max-h-[850px] object-contain object-bottom"
                         onError={() => setImgErr(true)}
                     />
                 </div>
