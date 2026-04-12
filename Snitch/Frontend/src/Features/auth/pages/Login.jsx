@@ -1,0 +1,128 @@
+import React, { useState } from 'react';
+import { useAuth } from "../Hook/useAuth";
+import { useNavigate } from "react-router";
+import ContinueWithGoogle from '../components/ContinueWithGoogle.jsx';
+
+const Login = () => {
+    const { handleLogin } = useAuth();
+    const navigate = useNavigate();
+
+    const [formData, setFormData] = useState({
+        email: '',
+        password: ''
+    });
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await handleLogin({
+                email: formData.email,
+                password: formData.password
+            });
+            navigate("/");
+        } catch (error) {
+            console.error("Login failed", error);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-accent selection:text-accent-content flex flex-col lg:flex-row transition-colors duration-500">
+
+            {/* Split Screen - Left Image Section */}
+            <div className="hidden lg:flex lg:w-1/2 relative bg-surface items-center justify-center overflow-hidden border-r border-border-theme">
+                <img
+                    src="/snitch_editorial.png"
+                    alt="Snitch Fashion Editorial"
+                    className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity hover:scale-105 transition-transform duration-[20s] ease-out"
+                />
+
+                {/* Gradient overlays to merge image nicely into the background */}
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-90"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-background opacity-90"></div>
+
+                <div className="relative z-10 p-16 flex flex-col h-full justify-between w-full max-w-2xl">
+                    <h2 className="text-accent text-xl font-bold tracking-widest uppercase">Snitch.</h2>
+
+                    <div className="mt-auto">
+                        <p className="text-5xl lg:text-6xl font-bold tracking-tighter leading-[1.1] text-foreground mb-6">
+                            Welcome <br />
+                            <span className="text-accent">back.</span>
+                        </p>
+                        <p className="text-gray-500 dark:text-gray-400 max-w-md text-lg leading-relaxed">
+                            Sign in to explore the latest exclusive drops and manage your aesthetic.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Split Screen - Right Form Section */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-16 min-h-screen overflow-y-auto z-10 bg-background">
+                <div className="w-full max-w-md bg-surface lg:bg-transparent p-10 md:p-14 lg:p-6 rounded-2xl lg:rounded-none shadow-[0_24px_48px_-12px_rgba(0,0,0,0.1)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.5)] lg:shadow-none transition-shadow border border-border-theme lg:border-none">
+                    <div className="mb-12">
+                        <h2 className="text-sm uppercase tracking-widest text-accent font-medium mb-3">Sign in to Snitch</h2>
+                        <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-foreground">Enter the Vault</h1>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+                        {/* Email */}
+                        <div className="flex flex-col">
+                            <label className="text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium">Email Address</label>
+                            <input
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface"
+                                placeholder="hello@example.com"
+                            />
+                        </div>
+
+                        {/* Password */}
+                        <div className="flex flex-col">
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="text-sm text-gray-500 dark:text-gray-400 font-medium">Password</label>
+                                <a href="#" className="text-xs text-gray-400 hover:text-accent transition-colors">Forgot password?</a>
+                            </div>
+                            <input
+                                type="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface"
+                                placeholder="••••••••"
+                            />
+                        </div>
+
+                        {/* Submit Button */}
+                        <button
+                            type="submit"
+                            className="mt-6 w-full bg-accent text-accent-content font-bold tracking-wide py-4 px-8 rounded hover:shadow-[0_0_20px_rgba(250,106,101,0.3)] dark:hover:shadow-[0_0_20px_rgba(255,215,0,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
+                        >
+                            Sign In
+                        </button>
+
+                        <ContinueWithGoogle />
+
+                        <div className="text-center mt-6">
+                            <a href="/register" className="text-sm text-gray-400 hover:text-accent transition-colors border-b border-transparent hover:border-accent py-0.5">
+                                Don't have an account? Sign up
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Login;
