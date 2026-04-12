@@ -74,7 +74,7 @@ const Hero = () => {
                 </div>
 
                 {/* 3. The Model - Anchored securely with responsive assets */}
-                <div className="absolute bottom-[52%] md:bottom-[50%] lg:bottom-[24px] lg:left-1/2 right-[-30%] -translate-x-1/2 w-[280px] sm:w-[380px] lg:w-[570px] xl:w-[580px] z-50 pointer-events-none flex justify-center">
+                <div className="absolute bottom-[52%] md:bottom-[50%] lg:bottom-[24px] lg:left-1/2 right-[-65%] sm:right-[-40%] md:right-[-40%] -translate-x-1/2 w-[580px] sm:w-[500px] md:w-[550px] lg:w-[570px] xl:w-[580px] z-50 pointer-events-none flex justify-center">
                     {/* Desktop Model */}
                     <img
                         src="/model.png"
