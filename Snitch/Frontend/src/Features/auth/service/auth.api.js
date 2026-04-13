@@ -18,10 +18,20 @@ export async function register({ email, contact, password, fullname, isSeller })
     return response.data
 }
 
-export async function login({ email, password }) {
+export async function login({ identifier, password }) {
     const response = await authApiInstance.post("/login", {
-        email, password
+        identifier, password
     })
 
+    return response.data
+}
+
+export async function getMe() {
+    const response = await authApiInstance.get("/me")
+    return response.data
+}
+
+export async function logout() {
+    const response = await authApiInstance.post("/logout")
     return response.data
 }

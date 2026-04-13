@@ -3,10 +3,9 @@ import bcrypt from "bcryptjs";
 
 // Define the User interface
 export interface IUser extends Document {
-    username?: string; 
     fullname: string; 
     email: string; 
-    contact?: string; 
+    contact: string; 
     password?: string; 
     role: "buyer" | "seller"; 
     googleId?: string; 
@@ -18,12 +17,6 @@ export interface IUser extends Document {
 // Define the Schema
 const userSchema = new Schema<IUser>(
     {
-        username: {
-            type: String,
-            unique: true,
-            sparse: true, // Use sparse for optional unique fields
-            trim: true,
-        },
         fullname: {
             type: String,
             required: [true, "Full name is required"],
@@ -38,7 +31,9 @@ const userSchema = new Schema<IUser>(
         },
         contact: {
             type: String,
-            required: false,
+            unique: true,
+            required: [true, "Contact is required"],
+            trim: true,
         },
         password: {
             type: String,

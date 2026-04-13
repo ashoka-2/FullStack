@@ -1,4 +1,6 @@
 import { Request, Response } from "express";
+import { AuthRequest } from "../middlewares/auth.middleware.js";
+import redisClient from "../config/redis.js";
 import userModel, { IUser } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { config } from "../config/config.js";
@@ -29,6 +31,7 @@ async function sendTokenResponse(user: IUser, res: Response, message: string) {
             contact: user.contact,
             fullname: user.fullname,
             role: user.role,
+            profilePic: user.profilePic,
         },
     });
 }
@@ -61,13 +64,15 @@ export const register = async (req: Request, res: Response) => {
 };
 
 export const login = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
     try {
-        const user = await userModel.findOne({ email }).select("+password"); // Need to select password for comparison
+        const user = await userModel.findOne({
+            $or: [{ email: identifier }, { contact: identifier }],
+        }).select("+password"); // Need to select password for comparison
 
         if (!user) {
-            return res.status(400).json({ message: "Invalid email or password" });
+            return res.status(400).json({ message: "Invalid email/contact or password" });
         }
 
         const isMatch = await user.comparePassword(password);
@@ -101,6 +106,7 @@ export const googleCallback = async (req: Request, res: Response) => {
                 email,
                 googleId: id,
                 fullname: displayName,
+                contact: `G-${id}`.slice(0, 15), // Satisfy required/unique constraint
                 role: "buyer", // Default role
             });
         }
@@ -125,5 +131,51 @@ export const googleCallback = async (req: Request, res: Response) => {
     } catch (error) {
         console.log(error);
         res.redirect("http://localhost:5173/login?error=server_error");
+    }
+};
+
+
+
+
+export const getMe = async (req: AuthRequest, res: Response) => {
+    const userId = req.user.id;
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+        return res.status(400).json({
+            success: false,
+            message: "User not found",
+            err: "user not found",
+        });
+    }
+
+    res.status(200).json({
+        success: true,
+        user,
+    });
+};
+
+export const logout = async (req: Request, res: Response) => {
+    const token = req.cookies.token;
+
+    try {
+        if (token) {
+            // Blacklist the token in Redis for 7 days (matching JWT expiry)
+            await redisClient.set(`blacklist_${token}`, "true", "EX", 7 * 24 * 60 * 60);
+        }
+
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Logged out successfully",
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Server error during logout" });
     }
 };

@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useAuth } from "../Hook/useAuth"
 import { Link, useNavigate } from 'react-router';
 import ContinueWithGoogle from '../components/ContinueWithGoogle.jsx';
+import { useSelector } from 'react-redux';
 
 const Register = () => {
 
     const { handleRegister } = useAuth()
     const navigate = useNavigate()
+    const { loading } = useSelector((state) => state.auth);
 
     const [formData, setFormData] = useState({
         fullName: '',
@@ -15,6 +17,8 @@ const Register = () => {
         password: '',
         isSeller: false
     });
+
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -26,14 +30,18 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await handleRegister({
-            email: formData.email,
-            contact: formData.contactNumber,
-            password: formData.password,
-            isSeller: formData.isSeller,
-            fullname: formData.fullName
-        })
-        navigate("/")
+        try {
+            await handleRegister({
+                email: formData.email,
+                contact: formData.contactNumber,
+                password: formData.password,
+                isSeller: formData.isSeller,
+                fullname: formData.fullName
+            })
+            navigate("/")
+        } catch (error) {
+            console.error("Registration failed", error);
+        }
     };
 
     return (
@@ -84,7 +92,8 @@ const Register = () => {
                                 value={formData.fullName}
                                 onChange={handleChange}
                                 required
-                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface"
+                                disabled={loading}
+                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface disabled:opacity-50"
                                 placeholder="e.g. John Doe"
                             />
                         </div>
@@ -98,7 +107,8 @@ const Register = () => {
                                 value={formData.contactNumber}
                                 onChange={handleChange}
                                 required
-                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface"
+                                disabled={loading}
+                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface disabled:opacity-50"
                                 placeholder="+1 (555) 000-0000"
                             />
                         </div>
@@ -112,7 +122,8 @@ const Register = () => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 required
-                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface"
+                                disabled={loading}
+                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface disabled:opacity-50"
                                 placeholder="hello@example.com"
                             />
                         </div>
@@ -120,15 +131,25 @@ const Register = () => {
                         {/* Password */}
                         <div className="flex flex-col">
                             <label className="text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium">Password</label>
-                            <input
-                                type="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface"
-                                placeholder="••••••••"
-                            />
+                            <div className="relative group">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                    disabled={loading}
+                                    className="w-full bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface disabled:opacity-50"
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-accent transition-colors"
+                                >
+                                    <i className={showPassword ? "ri-eye-off-line" : "ri-eye-line"}></i>
+                                </button>
+                            </div>
                         </div>
 
                         {/* Is Seller Checkbox */}
@@ -140,7 +161,8 @@ const Register = () => {
                                     id="isSeller"
                                     checked={formData.isSeller}
                                     onChange={handleChange}
-                                    className="peer appearance-none w-6 h-6 border border-border-theme rounded bg-background checked:bg-accent checked:border-accent cursor-pointer transition-colors duration-300 group-hover:border-accent"
+                                    disabled={loading}
+                                    className="peer appearance-none w-6 h-6 border border-border-theme rounded bg-background checked:bg-accent checked:border-accent cursor-pointer transition-colors duration-300 group-hover:border-accent disabled:opacity-50"
                                 />
                                 <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none opacity-0 peer-checked:opacity-100 text-accent-content" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                     <polyline points="20 6 9 17 4 12"></polyline>
@@ -152,9 +174,11 @@ const Register = () => {
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="mt-6 w-full bg-accent text-accent-content font-bold tracking-wide py-4 px-8 rounded hover:shadow-[0_0_20px_rgba(250,106,101,0.3)] dark:hover:shadow-[0_0_20px_rgba(255,215,0,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
+                            disabled={loading}
+                            className="mt-6 w-full bg-accent text-accent-content font-bold tracking-wide py-4 px-8 rounded hover:shadow-[0_0_20px_rgba(250,106,101,0.3)] dark:hover:shadow-[0_0_20px_rgba(255,215,0,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            Sign Up
+                            {loading && <i className="ri-loader-4-line animate-spin"></i>}
+                            {loading ? "Creating Account..." : "Sign Up"}
                         </button>
 
                         <ContinueWithGoogle />

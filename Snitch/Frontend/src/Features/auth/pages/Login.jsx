@@ -2,15 +2,19 @@ import React, { useState } from 'react';
 import { useAuth } from "../Hook/useAuth";
 import { useNavigate } from "react-router";
 import ContinueWithGoogle from '../components/ContinueWithGoogle.jsx';
+import { useSelector } from 'react-redux';
 
 const Login = () => {
     const { handleLogin } = useAuth();
     const navigate = useNavigate();
+    const { loading } = useSelector((state) => state.auth);
 
     const [formData, setFormData] = useState({
-        email: '',
+        identifier: '',
         password: ''
     });
+
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -24,7 +28,7 @@ const Login = () => {
         e.preventDefault();
         try {
             await handleLogin({
-                email: formData.email,
+                identifier: formData.identifier,
                 password: formData.password
             });
             navigate("/");
@@ -72,17 +76,18 @@ const Login = () => {
                     </div>
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-                        {/* Email */}
+                        {/* Identifier (Email or Contact) */}
                         <div className="flex flex-col">
-                            <label className="text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium">Email Address</label>
+                            <label className="text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium">Email or Contact Number</label>
                             <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
+                                type="text"
+                                name="identifier"
+                                value={formData.identifier}
                                 onChange={handleChange}
                                 required
-                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface"
-                                placeholder="hello@example.com"
+                                disabled={loading}
+                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface disabled:opacity-50"
+                                placeholder="Email or Phone Number"
                             />
                         </div>
 
@@ -92,23 +97,35 @@ const Login = () => {
                                 <label className="text-sm text-gray-500 dark:text-gray-400 font-medium">Password</label>
                                 <a href="#" className="text-xs text-gray-400 hover:text-accent transition-colors">Forgot password?</a>
                             </div>
-                            <input
-                                type="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface"
-                                placeholder="••••••••"
-                            />
+                            <div className="relative group">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                    disabled={loading}
+                                    className="w-full bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface disabled:opacity-50"
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-accent transition-colors"
+                                >
+                                    <i className={showPassword ? "ri-eye-off-line" : "ri-eye-line"}></i>
+                                </button>
+                            </div>
                         </div>
 
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="mt-6 w-full bg-accent text-accent-content font-bold tracking-wide py-4 px-8 rounded hover:shadow-[0_0_20px_rgba(250,106,101,0.3)] dark:hover:shadow-[0_0_20px_rgba(255,215,0,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
+                            disabled={loading}
+                            className="mt-6 w-full bg-accent text-accent-content font-bold tracking-wide py-4 px-8 rounded hover:shadow-[0_0_20px_rgba(250,106,101,0.3)] dark:hover:shadow-[0_0_20px_rgba(255,215,0,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            Sign In
+                            {loading && <i className="ri-loader-4-line animate-spin"></i>}
+                            {loading ? "Authenticating..." : "Sign In"}
                         </button>
 
                         <ContinueWithGoogle />

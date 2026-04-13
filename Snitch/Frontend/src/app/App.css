@@ -58,6 +58,37 @@
   scrollbar-color: var(--color-acc) var(--color-bg);
 }
 
+@keyframes slide-in-right {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.animate-in {
+    animation-duration: 0.3s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: forwards;
+}
+
+.slide-in-from-right-10 {
+    animation-name: slide-in-right;
+}
+
+.fade-in {
+    opacity: 0;
+    animation: fade-in 0.3s forwards;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 /* 
   Cinematic View Transitions for Theme Toggling
   Inspired by Perplexity UI / Skiper26 Logic
