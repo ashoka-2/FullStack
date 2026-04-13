@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 import redisClient from "../config/redis.js";
+import { uploadFile } from "../services/imagekit.service.js";
 import userModel, { IUser } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { config } from "../config/config.js";
@@ -177,5 +178,75 @@ export const logout = async (req: Request, res: Response) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: "Server error during logout" });
+    }
+};
+
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+    const userId = req.user.id;
+    const { fullname, contact } = req.body;
+    const file = req.file;
+
+    try {
+        // Check if new contact is already taken by someone else
+        if (contact) {
+            const existingUser = await userModel.findOne({
+                _id: { $ne: userId },
+                contact: contact
+            });
+
+            if (existingUser) {
+                return res.status(400).json({ message: "Contact number already in use by another account" });
+            }
+        }
+
+        let profilePicUrl = undefined;
+        if (file) {
+            const uploadResponse = await uploadFile({
+                buffer: file.buffer,
+                filename: `profile-${userId}-${Date.now()}`,
+                folder: `/Snitch/profiles`
+            });
+            profilePicUrl = uploadResponse.url;
+        }
+
+        const updateData: any = {
+            ...(fullname && { fullname }),
+            ...(contact && { contact }),
+            ...(profilePicUrl && { profilePic: profilePicUrl })
+        };
+
+        // Only allow switching from buyer to seller
+        if (req.body.role === 'seller') {
+            const currentUser = await userModel.findById(userId);
+            if (currentUser && currentUser.role === 'buyer') {
+                updateData.role = 'seller';
+            }
+        }
+
+        const user = await userModel.findByIdAndUpdate(
+            userId,
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            user: {
+                id: user._id,
+                email: user.email,
+                contact: user.contact,
+                fullname: user.fullname,
+                role: user.role,
+                profilePic: user.profilePic,
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Server error during profile update" });
     }
 };

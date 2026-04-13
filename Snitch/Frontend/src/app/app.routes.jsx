@@ -2,11 +2,12 @@ import { createBrowserRouter } from "react-router";
 import Register from "../Features/auth/pages/Register.jsx";
 import Login from "../Features/auth/pages/Login.jsx";
 import Home from "../Features/Home/pages/Home.jsx";
+import Profile from "../Features/auth/pages/Profile.jsx";
 
 export const routes = createBrowserRouter([
     {
         path: "/",
-        element:<Home/>,
+        element: <Home />,
     },
     {
         path: "/register",
@@ -15,5 +16,9 @@ export const routes = createBrowserRouter([
     {
         path: "/login",
         element: <Login />,
+    },
+    {
+        path: "/profile",
+        element: <Profile />,
     }
 ])

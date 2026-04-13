@@ -27,8 +27,15 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            let identifier = formData.identifier;
+            
+            // If identifier is 10 digits, prepend +91
+            if (/^\d{10}$/.test(identifier)) {
+                identifier = `+91${identifier}`;
+            }
+
             await handleLogin({
-                identifier: formData.identifier,
+                identifier: identifier,
                 password: formData.password
             });
             navigate("/");

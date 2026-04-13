@@ -1,17 +1,22 @@
 import { Router } from "express";
 import { validateRegisterUser, validateLoginUser } from "../validator/auth.validator.js";
-import { googleCallback, login, register, getMe, logout } from "../controllers/auth.controller.js";
+import { googleCallback, login, register, getMe, logout, updateProfile } from "../controllers/auth.controller.js";
 import passport from "passport";
 import { config } from "../config/config.js";
 import { verifyToken } from "../middlewares/auth.middleware.js";
 
+import multer from "multer";
+
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.post("/register", validateRegisterUser, register);
 
 router.post("/login", validateLoginUser, login);
 
 router.post("/logout", logout);
+
+router.put("/update-profile", verifyToken, upload.single("profilePic"), updateProfile);
 
 router.get("/me", verifyToken, getMe);
 

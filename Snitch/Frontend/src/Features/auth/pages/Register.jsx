@@ -22,10 +22,18 @@ const Register = () => {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
+        if (name === 'contactNumber') {
+            const cleaned = value.replace(/\D/g, '').slice(0, 10);
+            setFormData(prev => ({
+                ...prev,
+                [name]: cleaned
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: type === 'checkbox' ? checked : value
+            }));
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -33,7 +41,7 @@ const Register = () => {
         try {
             await handleRegister({
                 email: formData.email,
-                contact: formData.contactNumber,
+                contact: `+91${formData.contactNumber}`,
                 password: formData.password,
                 isSeller: formData.isSeller,
                 fullname: formData.fullName
@@ -101,16 +109,23 @@ const Register = () => {
                         {/* Contact Number */}
                         <div className="flex flex-col">
                             <label className="text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium">Contact Number</label>
-                            <input
-                                type="tel"
-                                name="contactNumber"
-                                value={formData.contactNumber}
-                                onChange={handleChange}
-                                required
-                                disabled={loading}
-                                className="bg-background text-foreground border-b-2 border-border-theme focus:border-accent outline-none px-4 py-3 transition-colors duration-300 focus:bg-surface lg:focus:bg-surface disabled:opacity-50"
-                                placeholder="+1 (555) 000-0000"
-                            />
+                            <div className="flex items-center gap-3 border-b-2 border-border-theme focus-within:border-accent transition-colors duration-300">
+                                <div className="flex items-center gap-1.5 px-3 py-3 bg-surface/30 text-gray-400 min-w-[75px]">
+                                    <span className="text-lg">🇮🇳</span>
+                                    <span className="text-sm font-bold tracking-tighter cursor-default">+91</span>
+                                </div>
+                                <input
+                                    type="tel"
+                                    name="contactNumber"
+                                    value={formData.contactNumber}
+                                    onChange={handleChange}
+                                    required
+                                    disabled={loading}
+                                    className="w-full bg-transparent text-foreground outline-none py-3 disabled:opacity-50"
+                                    placeholder="98765 43210"
+                                />
+                            </div>
+                            <p className="mt-2 text-[10px] text-gray-400 uppercase tracking-widest font-bold">10 Digits Required</p>
                         </div>
 
                         {/* Email */}

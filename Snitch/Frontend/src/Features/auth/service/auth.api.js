@@ -35,3 +35,8 @@ export async function logout() {
     const response = await authApiInstance.post("/logout")
     return response.data
 }
+
+export async function updateProfile(profileData) {
+    const response = await authApiInstance.put("/update-profile", profileData)
+    return response.data
+}
