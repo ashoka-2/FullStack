@@ -51,7 +51,7 @@ const Hero = () => {
 
             {/* Master Hero Container - Colored box and floating Model */}
             <div className="relative w-full max-w-[1300px] mx-auto min-h-[500px] lg:min-h-[550px] flex flex-col items-center justify-end px-2 sm:px-6 z-10 w-[98%]">
-
+                
                 {/* 2. Main Colored Background Block */}
                 <div className="w-full h-auto lg:h-[500px] bg-surface-brand rounded-[40px] lg:rounded-[64px] relative flex flex-col lg:flex-row shadow-xl lg:shadow-2xl z-0 border border-border-theme overflow-visible lg:overflow-hidden">
 
@@ -59,7 +59,7 @@ const Hero = () => {
                     <div className="absolute left-[-10%] top-[-10%] w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] bg-white/10 dark:bg-white/5 rounded-full z-0 opacity-60 blur-[30px] sm:blur-[60px]"></div>
 
                     {/* Left Info Column */}
-                    <div className="w-full lg:w-[35%] relative z-10 px-6 sm:px-12 lg:px-16 pt-[80px] pb-12 lg:py-0 flex flex-col justify-center h-full">
+                    <div className="w-full lg:w-[35%] relative z-10 px-6 sm:px-12 lg:px-16 pt-[70px] pb-12 lg:py-0 flex flex-col justify-center h-full">
                         <LeftInfo />
                     </div>
 
@@ -72,31 +72,34 @@ const Hero = () => {
                     </div>
                 </div>
 
-                {/* 3. The Responsive Model - Now outside the box AGAIN so it's not clipped at top/bottom */}
-                <div className="absolute bottom-[52%] md:bottom-[50%] lg:bottom-[24px] left-1/2 lg:left-1/2 -translate-x-[25%] lg:-translate-x-1/2 w-[500px] sm:w-[520px] md:w-[580px] lg:w-[570px] xl:w-[580px] z-100 pointer-events-none flex justify-center">
-                    {/* Desktop Asset */}
-                    <img
-                        src="/model.png"
-                        alt="Fashion Cutout"
-                        className="hidden lg:block w-full h-auto max-h-[850px] object-contain object-bottom translate-y-6"
-                        onError={() => setImgErr(true)}
-                    />
-                    {/* Mobile/Tablet Asset */}
-                    <img
-                        src="/model-cutout.png"
-                        alt="Mobile Fashion Cutout"
-                        className="lg:hidden block w-full h-auto max-h-[850px] object-contain object-bottom"
-                        onError={() => setImgErr(true)}
-                    />
+                {/* Clipping Wrapper - Matches the Card width exactly to ensure the '0px' clip aligns with the card edge */}
+                <div 
+                    className="absolute inset-x-2 sm:inset-x-6 bottom-0 top-0 pointer-events-none z-100 lg:overflow-visible " 
+                    style={{ clipPath: 'inset(-1000px 0px -1000px -1000px)' }}
+                >
+                    {/* 3. The Responsive Model - Now back in original positioning context */}
+                    <div className="absolute bottom-[52%] md:bottom-[50%] lg:bottom-[24px] left-1/2 lg:left-1/2 -translate-x-[25%] lg:-translate-x-1/2 w-[500px] sm:w-[520px] md:w-[580px] lg:w-[570px] xl:w-[580px] flex justify-center ">
+                        {/* Desktop Asset */}
+                        <img
+                            src="/model.png"
+                            alt="Fashion Cutout"
+                            className="hidden lg:block w-full h-auto max-h-[850px] object-contain object-bottom translate-y-6"
+                            onError={() => setImgErr(true)}
+                        />
+                        {/* Mobile/Tablet Asset */}
+                        <img
+                            src="/model-cutout.png"
+                            alt="Mobile Fashion Cutout"
+                            className="lg:hidden block w-full h-auto max-h-[850px] object-contain object-bottom "
+                            onError={() => setImgErr(true)}
+                        />
+                    </div>
                 </div>
-
                 {/* 4. Right Info Column (MOBILE) */}
                 <div className="lg:hidden w-full mt-6">
                     <RightInfo />
                 </div>
-
             </div>
-
         </div>
     );
 };

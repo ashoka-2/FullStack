@@ -38,6 +38,11 @@
   width: 8px;
 }
 
+::selection {
+  background-color: var(--color-acc);
+  color: var(--color-acc-cont);
+}
+
 ::-webkit-scrollbar-track {
   background: var(--color-bg);
 }
@@ -113,5 +118,15 @@
   }
   to {
     clip-path: circle(150% at var(--click-x, 50%) var(--click-y, 50%));
+  }
+}
+/* Localized Right-Side Clip for Hero Model */
+.hero-mobile-right-clip {
+  clip-path: inset(-1000px 0px -1000px -1000px);
+}
+
+@media (min-width: 1024px) {
+  .hero-mobile-right-clip {
+    clip-path: none;
   }
 }
