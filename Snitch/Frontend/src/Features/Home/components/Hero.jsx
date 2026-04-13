@@ -91,7 +91,7 @@ const Hero = () => {
                 </div>
 
                 {/* 4. Right Info Column (MOBILE) */}
-                <div className="lg:hidden w-full mt-24">
+                <div className="lg:hidden w-full mt-6">
                     <RightInfo />
                 </div>
 

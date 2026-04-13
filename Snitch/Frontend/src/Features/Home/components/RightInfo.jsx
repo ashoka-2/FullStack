@@ -90,7 +90,7 @@ const FeatureCard = () => {
     return (
         <div className="flex flex-col items-center lg:items-end mt-auto relative z-20 pb-8 lg:pb-0 w-full overflow-hidden">
             <div className="w-full text-left lg:text-right px-6 lg:px-0 mb-3 lg:mb-2">
-                <p className="font-bold tracking-widest text-foreground/60 lg:text-white/50 dark:text-accent uppercase text-[10px] lg:mr-4">Featured Products</p>
+                <p className="font-black tracking-[0.1em] text-foreground/80 lg:text-white/50 dark:text-accent uppercase text-lg mt-5 lg:mt-0 lg:text-[10px] lg:mr-4">Featured Products</p>
             </div>
 
             {/* Desktop View: Auto-carousel with single card */}
