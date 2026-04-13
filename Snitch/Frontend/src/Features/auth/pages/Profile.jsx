@@ -4,6 +4,8 @@ import { useAuth } from '../Hook/useAuth';
 import { useNavigate } from 'react-router';
 import Modal from '../../Components/Modal';
 
+import { ProfileSkeleton } from '../../Components/Skeletons';
+
 const Profile = () => {
     const { user, loading } = useSelector((state) => state.auth);
     const { handleUpdateProfile } = useAuth();
@@ -75,8 +77,8 @@ const Profile = () => {
 
     if (!user && loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+            <div className="min-h-screen bg-background pt-24 px-4">
+                <ProfileSkeleton />
             </div>
         );
     }
