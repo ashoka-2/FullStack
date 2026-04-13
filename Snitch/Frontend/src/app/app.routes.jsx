@@ -3,11 +3,22 @@ import Register from "../Features/auth/pages/Register.jsx";
 import Login from "../Features/auth/pages/Login.jsx";
 import Home from "../Features/Home/pages/Home.jsx";
 import Profile from "../Features/auth/pages/Profile.jsx";
+import MainLayout from "../Features/Components/MainLayout.jsx";
 
 export const routes = createBrowserRouter([
     {
         path: "/",
-        element: <Home />,
+        element: <MainLayout />,
+        children: [
+            {
+                path: "",
+                element: <Home />,
+            },
+            {
+                path: "profile",
+                element: <Profile />,
+            }
+        ]
     },
     {
         path: "/register",
@@ -16,9 +27,5 @@ export const routes = createBrowserRouter([
     {
         path: "/login",
         element: <Login />,
-    },
-    {
-        path: "/profile",
-        element: <Profile />,
     }
 ])

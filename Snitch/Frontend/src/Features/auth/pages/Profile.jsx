@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useAuth } from '../Hook/useAuth';
 import { useNavigate } from 'react-router';
+import Modal from '../../Components/Modal';
 
 const Profile = () => {
     const { user, loading } = useSelector((state) => state.auth);
@@ -15,6 +16,7 @@ const Profile = () => {
     });
     const [profilePic, setProfilePic] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
+    const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -230,11 +232,7 @@ const Profile = () => {
                                     </p>
                                     
                                     <button
-                                        onClick={async () => {
-                                            if(window.confirm("Are you sure you want to become a seller? This action cannot be undone.")) {
-                                                await handleUpdateProfile({ role: 'seller' });
-                                            }
-                                        }}
+                                        onClick={() => setIsRoleModalOpen(true)}
                                         disabled={loading}
                                         className="inline-flex items-center gap-2 text-accent font-bold hover:gap-4 transition-all"
                                     >
@@ -247,6 +245,18 @@ const Profile = () => {
                     </div>
                 </div>
             </div>
+
+            <Modal 
+                isOpen={isRoleModalOpen}
+                onClose={() => setIsRoleModalOpen(false)}
+                onConfirm={async () => {
+                    await handleUpdateProfile({ role: 'seller' });
+                }}
+                title="Elevate to Seller?"
+                description="This will allow you to list products and manage your brand. This transformation is permanent and cannot be reversed."
+                confirmText="Become a Seller"
+                type="info"
+            />
         </div>
     );
 };
