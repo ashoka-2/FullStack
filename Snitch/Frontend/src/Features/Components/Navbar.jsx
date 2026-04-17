@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router';
-import { useAuth } from '../auth/Hook/useAuth';
+import { useAuth } from '../auth/Hooks/useAuth';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 

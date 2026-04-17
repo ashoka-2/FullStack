@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useAuth } from '../Hook/useAuth';
+import { useAuth } from '../Hooks/useAuth';
 import { useNavigate } from 'react-router';
 import Modal from '../../Components/Modal';
 

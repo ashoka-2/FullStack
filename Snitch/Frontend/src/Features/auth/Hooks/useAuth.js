@@ -1,5 +1,5 @@
-import { setError, setLoading, setUser } from "../state/auth.slice"
-import { register, login, getMe, logout, updateProfile } from "../service/auth.api"
+import { setError, setLoading, setUser } from "../State/auth.slice"
+import { register, login, getMe, logout, updateProfile } from "../Services/auth.api"
 import { useDispatch } from "react-redux"
 
 import { addToast } from "../../../app/toast.slice"

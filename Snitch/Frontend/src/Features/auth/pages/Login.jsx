@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from "../Hook/useAuth";
+import { useAuth } from "../Hooks/useAuth";
 import { useNavigate } from "react-router";
 import ContinueWithGoogle from '../components/ContinueWithGoogle.jsx';
 import { useSelector } from 'react-redux';
