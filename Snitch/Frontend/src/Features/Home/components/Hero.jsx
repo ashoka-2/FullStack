@@ -45,7 +45,7 @@ const Hero = () => {
     const [imgErr, setImgErr] = useState(false);
 
     return (
-        <div className="w-full pb-16 flex flex-col items-center overflow-x-hidden pt-4">
+        <div className="w-full pb-16 flex flex-col items-center pt-4">
 
             <HeroHeader />
 

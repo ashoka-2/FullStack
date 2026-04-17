@@ -66,9 +66,9 @@ export const useProduct = () =>{
     }
 
 
-    return (
+    return {
         handleCreateProduct,
         handleGetAllProducts,
         handleGetSellerProducts
-    )
+    };
 }

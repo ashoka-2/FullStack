@@ -41,8 +41,8 @@ const MainLayout = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground transition-colors duration-500">
-            <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-4 md:py-6 overflow-x-hidden">
+        <div className="min-h-screen bg-background text-foreground transition-colors duration-500 overflow-x-clip">
+            <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-4 md:py-6">
                 <Navbar toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
                 <main className="pt-16 md:pt-20 w-full relative z-10">
                     <Outlet />

@@ -59,39 +59,59 @@
 
 /* Firefox */
 * {
-  scrollbar-width: thin;
   scrollbar-color: var(--color-acc) var(--color-bg);
 }
 
+html, body {
+  scrollbar-width: thin;
+}
+
+
+/* Utility class for elements that need to hide their own scrollbar (e.g. sliders) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
 @keyframes slide-in-right {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .animate-in {
-    animation-duration: 0.3s;
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-    animation-fill-mode: forwards;
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
 }
 
 .slide-in-from-right-10 {
-    animation-name: slide-in-right;
+  animation-name: slide-in-right;
 }
 
 .fade-in {
-    opacity: 0;
-    animation: fade-in 0.3s forwards;
+  opacity: 0;
+  animation: fade-in 0.3s forwards;
 }
 
 @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* 
@@ -116,10 +136,12 @@
   from {
     clip-path: circle(0% at var(--click-x, 50%) var(--click-y, 50%));
   }
+
   to {
     clip-path: circle(150% at var(--click-x, 50%) var(--click-y, 50%));
   }
 }
+
 /* Localized Right-Side Clip for Hero Model */
 .hero-mobile-right-clip {
   clip-path: inset(-1000px 0px -1000px -1000px);
@@ -133,12 +155,10 @@
 
 /* Skeleton Shimmer Animation */
 .animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.05) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
 }
@@ -147,6 +167,7 @@
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }

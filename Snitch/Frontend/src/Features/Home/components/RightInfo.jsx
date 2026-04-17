@@ -110,12 +110,7 @@ const FeatureCard = () => {
             </div>
 
             {/* Mobile View: Horizontal Scroll */}
-            <div
-                className="flex lg:hidden w-[100vw] sm:w-full overflow-x-auto snap-x snap-mandatory gap-4 px-6 pb-6 pt-2"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-                {/* Embedded style to reliably hide scrollbar in WebKit (Safari/Chrome) without app.css modification */}
-                <style dangerouslySetInnerHTML={{ __html: `div::-webkit-scrollbar { display: none; }` }} />
+            <div className="flex lg:hidden w-full overflow-x-auto snap-x snap-mandatory gap-4 px-6 pb-6 pt-2 scrollbar-hide">
                 {products.map((product, idx) => (
                     <ProductCardItem key={idx} product={product} />
                 ))}
