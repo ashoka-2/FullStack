@@ -14,6 +14,7 @@ export const validateRegisterUser = [
     body("contact")
         .notEmpty()
         .withMessage("Contact is required")
+        .customSanitizer((value) => value.replace(/^(\+91|91|\+)/, ""))
         .matches(/^\d{10}$/)
         .withMessage("Contact must be a 10-digit number"),
     body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters long"),

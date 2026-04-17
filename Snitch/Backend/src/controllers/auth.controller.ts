@@ -10,6 +10,12 @@ async function sendTokenResponse(user: IUser, res: Response, message: string) {
     const token = jwt.sign(
         {
             id: user._id,
+            fullname: user.fullname,
+            email: user.email,
+            contact: user.contact,
+            role: user.role,
+            profilePic: user.profilePic,
+            verified: user.verified,
         },
         config.JWT_SECRET,
         {
@@ -115,6 +121,12 @@ export const googleCallback = async (req: Request, res: Response) => {
         const token = jwt.sign(
             {
                 id: user._id,
+                fullname: user.fullname,
+                email: user.email,
+                contact: user.contact,
+                role: user.role,
+                profilePic: user.profilePic,
+                verified: user.verified,
             },
             config.JWT_SECRET,
             {
@@ -139,7 +151,12 @@ export const googleCallback = async (req: Request, res: Response) => {
 
 
 export const getMe = async (req: AuthRequest, res: Response) => {
-    const userId = req.user.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+    }
+
     const user = await userModel.findById(userId);
 
     if (!user) {
@@ -182,7 +199,12 @@ export const logout = async (req: Request, res: Response) => {
 };
 
 export const updateProfile = async (req: AuthRequest, res: Response) => {
-    const userId = req.user.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+    }
+
     const { fullname, contact } = req.body;
     const file = req.file;
 
@@ -233,18 +255,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        res.status(200).json({
-            success: true,
-            message: "Profile updated successfully",
-            user: {
-                id: user._id,
-                email: user.email,
-                contact: user.contact,
-                fullname: user.fullname,
-                role: user.role,
-                profilePic: user.profilePic,
-            }
-        });
+        await sendTokenResponse(user, res, "Profile updated successfully");
     } catch (error) {
         console.log(error);
         return res.status(500).json({ message: "Server error during profile update" });
