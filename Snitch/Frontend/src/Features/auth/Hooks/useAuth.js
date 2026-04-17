@@ -39,12 +39,15 @@ export const useAuth = () => {
     }
 
     async function fetchMe() {
+        dispatch(setLoading(true))
         try {
             const data = await getMe()
             dispatch(setUser(data.user))
         } catch (error) {
             console.log("Not logged in");
             dispatch(setUser(null))
+        } finally {
+            dispatch(setLoading(false))
         }
     }
 

@@ -6,7 +6,7 @@ import { useAuth } from '../Features/auth/Hooks/useAuth'
 import { ToastContainer } from '../Features/Components/Toast'
 import Preloader from '../Features/Components/Preloader'
 import axios from 'axios'
-import { HomeSkeleton, NavbarSkeleton } from '../Features/Components/Skeletons'
+import { AuthSkeleton, HomeSkeleton, NavbarSkeleton, ProfileSkeleton } from '../Features/Components/Skeletons'
 
 function App() {
   const { fetchMe } = useAuth();
@@ -34,7 +34,7 @@ function App() {
       try {
         await axios.get('/api/auth/me');
         console.log("Server active.");
-        fetchMe();
+        await fetchMe();
         setIsServerReady(true);
         
         // If they've seen the preloader before, show the app immediately once server is ready
@@ -43,7 +43,7 @@ function App() {
         }
       } catch (error) {
         if (error.response) {
-            fetchMe();
+            await fetchMe();
             setIsServerReady(true);
             if (hasSeenPreloader) setShowApp(true);
         } else {
@@ -76,14 +76,25 @@ function App() {
       )}
 
       {/* 2. Show Skeletons ONLY on reloads when server isn't ready yet */}
-      {hasSeenPreloader && !showApp && (
-        <div className="min-h-screen bg-background text-foreground p-4 md:p-8">
-            <NavbarSkeleton />
-            <div className="pt-20">
-                <HomeSkeleton />
+      {hasSeenPreloader && !showApp && (() => {
+          const path = window.location.pathname;
+          const isAuthPage = path === '/login' || path === '/register';
+          
+          return (
+            <div className={`min-h-screen bg-background text-foreground ${isAuthPage ? '' : 'p-4 md:p-8'}`}>
+                {!isAuthPage && <NavbarSkeleton />}
+                <div className={isAuthPage ? '' : 'pt-20'}>
+                    {path === '/profile' ? (
+                        <ProfileSkeleton />
+                    ) : isAuthPage ? (
+                        <AuthSkeleton />
+                    ) : (
+                        <HomeSkeleton />
+                    )}
+                </div>
             </div>
-        </div>
-      )}
+          );
+      })()}
 
       {/* 3. Show actual App when ready */}
       {showApp && (

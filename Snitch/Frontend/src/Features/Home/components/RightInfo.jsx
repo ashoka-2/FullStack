@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../../app/toast.slice';
+import { motion, useAnimation } from 'framer-motion';
 
 const products = [
     {
@@ -40,32 +43,81 @@ const products = [
     }
 ];
 
-const ProductCardItem = ({ product, isDesktop }) => (
-    <div className={`bg-surface dark:bg-[#1C1C1E] text-foreground p-3 rounded-[2.5rem] w-[240px] shadow-md lg:shadow-2xl relative border border-white/10 dark:border-white/10 transition-colors flex-shrink-0 snap-center`}>
-        <div className="w-full h-auto rounded-[1.7rem] overflow-hidden mb-4 bg-background relative group">
-            <img
-                src={product.image}
-                alt={product.title}
-                className="w-full h-[180px] object-cover object-top transition-transform duration-700 group-hover:scale-105"
-                loading="lazy"
-            />
-            <div className="absolute top-3 left-3 bg-white/90 dark:bg-accent text-[#131313] dark:text-accent-content text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">{product.badge}</div>
-        </div>
-        <div className="px-2 pb-2 text-center">
-            <h4 className="font-bold text-sm mb-0.5 tracking-tight">{product.title}</h4>
-            <p className="text-[10px] text-gray-500 font-serif italic mb-4">{product.subtitle}</p>
+const ProductCardItem = ({ product }) => {
+    const dispatch = useDispatch();
+    const dragContainerRef = useRef(null);
+    const [isDragged, setIsDragged] = useState(false);
+    const controls = useAnimation();
 
-            <div className="border border-accent/20 rounded-full p-1 flex justify-between items-center w-full hover:bg-accent/5 cursor-pointer transition-all shadow-sm relative overflow-hidden group">
-                <div className="absolute inset-0 bg-accent/10 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300"></div>
+    const handleAddToCart = () => {
+        if (!isDragged) {
+            setIsDragged(true);
+            dispatch(addToast({
+                message: "Cart functionality not implemented yet",
+                type: "info"
+            }));
+            setTimeout(() => {
+                setIsDragged(false);
+                controls.start({ x: 0, transition: { type: "spring", stiffness: 300, damping: 20 } });
+            }, 2000);
+        }
+    };
 
-                <div className="bg-accent text-accent-content p-2 rounded-full shadow-md z-10 flex items-center justify-center">
-                    <i className="ri-shopping-bag-3-fill text-xs"></i>
+    const handleDragEnd = (event, info) => {
+        if (info.offset.x > 100) {
+            handleAddToCart();
+            controls.start({ x: dragContainerRef.current.clientWidth - 40 });
+        } else {
+            controls.start({ x: 0, transition: { type: "spring", stiffness: 400, damping: 25 } });
+        }
+    };
+
+    return (
+        <div className={`bg-surface dark:bg-[#1C1C1E] text-foreground p-3 rounded-[2.5rem] w-[240px] shadow-md lg:shadow-2xl relative border border-white/10 dark:border-white/10 transition-colors flex-shrink-0 snap-center`}>
+            <div className="w-full h-auto rounded-[1.7rem] overflow-hidden mb-4 bg-background relative group">
+                <img
+                    src={product.image}
+                    alt={product.title}
+                    className="w-full h-[180px] object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                    loading="lazy"
+                />
+                <div className="absolute top-3 left-3 bg-white/90 dark:bg-accent text-[#131313] dark:text-accent-content text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">{product.badge}</div>
+            </div>
+            <div className="px-2 pb-2 text-center">
+                <h4 className="font-bold text-sm mb-0.5 tracking-tight">{product.title}</h4>
+                <p className="text-[10px] text-gray-500 font-serif italic mb-4">{product.subtitle}</p>
+
+                {/* Draggable Slide-to-Cart Button */}
+                <div
+                    ref={dragContainerRef}
+                    className="relative border border-accent/20 rounded-full flex items-center w-full shadow-sm overflow-hidden h-10 touch-none"
+                    style={{ backgroundColor: isDragged ? 'var(--color-acc)' : 'transparent', transition: 'background-color 0.3s' }}
+                >
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        {isDragged ? (
+                            <span className="font-black text-xs text-accent-content tracking-widest uppercase animate-pulse">Added</span>
+                        ) : (
+                            <span className="font-black text-xs text-accent/50 tracking-widest pointer-events-none ml-6">
+                                SLIDE • {product.price}
+                            </span>
+                        )}
+                    </div>
+                    <motion.div
+                        drag={isDragged ? false : "x"}
+                        dragConstraints={dragContainerRef}
+                        dragElastic={0}
+                        dragMomentum={false}
+                        onDragEnd={handleDragEnd}
+                        animate={controls}
+                        className="h-full aspect-square bg-accent text-accent-content rounded-full shadow-md z-10 flex items-center justify-center cursor-grab active:cursor-grabbing absolute left-0"
+                    >
+                        <i className={isDragged ? "ri-check-line text-lg font-black" : "ri-arrow-right-s-line text-lg pointer-events-none"}></i>
+                    </motion.div>
                 </div>
-                <span className="font-black text-xs px-6 text-accent whitespace-nowrap z-10 transition-colors">{product.price}</span>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 const FeatureCard = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
