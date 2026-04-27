@@ -8,15 +8,18 @@ const client = new ImageKit({
     privateKey: config.IMAGEKIT_PRIVATE_KEY
 });
 
-// Nayi file upload karne ke liye function
-export async function uploadFile({ buffer, filename, folder = "" }: { buffer: Buffer; filename: string; folder?: string }): Promise<any> {
+/**
+ * Uploads a file to ImageKit.
+ * @param file - Buffer or URL string or Base64 string
+ */
+export async function uploadFile({ file, filename, folder = "" }: { file: Buffer | string; filename: string; folder?: string }): Promise<any> {
     try {
-        const file = await client.upload({
-            file: buffer,
+        const response = await client.upload({
+            file: file,
             fileName: filename,
             folder: folder
         });
-        return file;
+        return response;
     } catch (error) {
         console.error("ImageKit upload error:", error);
         throw error;

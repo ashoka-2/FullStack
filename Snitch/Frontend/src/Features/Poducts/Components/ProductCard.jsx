@@ -1,6 +1,7 @@
-import React, { useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useRef, useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { addToast } from '../../../app/toast.slice';
+import { useNavigate } from 'react-router';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -10,12 +11,19 @@ gsap.registerPlugin(ScrollTrigger);
 
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector(state => state.auth.user);
   const cardRef = useRef(null);
   const dragContainerRef = useRef(null);
   
   // States for the Draggable Cart
   const [isDragged, setIsDragged] = useState(false);
   const controls = useAnimation();
+
+  // Ensure arrow starts at left: 0 on mount
+  useEffect(() => {
+    controls.set({ x: 0 });
+  }, [controls]);
 
   useGSAP(() => {
     if (cardRef.current) {
@@ -38,6 +46,11 @@ const ProductCard = ({ product }) => {
   }, { scope: cardRef });
 
   const handleAddToCart = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
     if(!isDragged) {
       setIsDragged(true);
       dispatch(addToast({
@@ -82,54 +95,102 @@ const ProductCard = ({ product }) => {
     }).format(amount);
   };
 
+
+
   return (
     <div 
       ref={cardRef}
-      className={`bg-surface dark:bg-[#1C1C1E] text-foreground p-3 rounded-[2.5rem] w-full max-w-[280px] mx-auto shadow-md lg:shadow-2xl relative border border-white/10 dark:border-white/10 transition-colors flex-shrink-0 cursor-pointer`}
+      className="group relative bg-surface dark:bg-[#121212] border border-border-theme/30 rounded-[2.2rem] w-full max-w-[240px] mx-auto shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex-shrink-0 cursor-pointer p-2.5"
     >
-      <div className="w-full h-auto rounded-[1.7rem] overflow-hidden mb-4 bg-background relative group">
+      {/* Image Container with Inset Padding */}
+      <div className="relative w-full aspect-[4/5] rounded-[1.6rem] overflow-hidden bg-background-alt">
         <img
             src={image}
             alt={title}
-            className="w-full h-[220px] object-cover object-top transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover object-center transition-transform duration-1000 group-hover:scale-105"
             loading="lazy"
         />
-        {isNew && (
-            <div className="absolute top-3 left-3 bg-white/90 dark:bg-accent text-[#131313] dark:text-accent-content text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
-                NEW
+        
+        {/* Top Badges */}
+        <div className="absolute top-3 left-3">
+            <div className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-[0.2em] backdrop-blur-md border ${product?.stock > 0 ? 'bg-green-500/10 text-green-500 border-green-500/10' : 'bg-red-500/10 text-red-500 border-red-500/10'}`}>
+                {product?.stock > 0 ? `${product.stock} IN STOCK` : 'OUT OF STOCK'}
             </div>
-        )}
+        </div>
       </div>
 
-      <div className="px-2 pb-2 text-center">
-          <h4 className="font-bold text-sm mb-0.5 tracking-tight truncate">{title}</h4>
-          <p className="text-[10px] text-gray-500 font-serif italic mb-4 truncate">{desc}</p>
+      <div className="px-2 pt-3 pb-1">
+          <div className="flex flex-col mb-3">
+              <h4 className="font-bold text-[11px] mb-0.5 tracking-tight truncate uppercase leading-none">{title}</h4>
+              <p className="text-[8px] text-accent font-bold tracking-[0.25em] uppercase truncate h-3">
+                  {product?.category?.name || "Premium Collection"}
+              </p>
+          </div>
 
+          {/* Original Style Refined Slide to Cart */}
           <div 
              ref={dragContainerRef}
-             className="relative border border-accent/20 rounded-full flex items-center w-full shadow-sm overflow-hidden h-10 touch-none"
-             style={{ backgroundColor: isDragged ? 'var(--color-acc)' : 'transparent', transition: 'background-color 0.3s' }} 
+             className="relative bg-background border border-border-theme/40 rounded-full flex items-center w-full shadow-sm overflow-hidden h-9 touch-none"
+             style={{ transition: 'background-color 0.3s' }} 
           >
-              {/* Text Background */}
+              <div className={`absolute inset-0 bg-accent transition-opacity duration-300 ${isDragged ? 'opacity-100' : 'opacity-0'}`} />
+
+              {/* Text Background (Price Refresh) */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                  {isDragged ? (
-                    <span className="font-black text-xs text-accent-content tracking-widest uppercase animate-pulse">Added</span>
+                    <span className="font-bold text-[8px] text-accent-content tracking-[0.3em] uppercase animate-pulse">Added to Bag</span>
                  ) : (
-                    <span className="font-black text-xs text-accent/50 tracking-widest pointer-events-none ml-6">SLIDE TO CART • {formatPrice(amount, currency)}</span>
+                    <div className="ml-10 flex items-center gap-2 overflow-hidden px-2 w-full justify-center">
+                        {/* Desktop: Dynamic Reveal */}
+                        <div className="hidden lg:flex items-center gap-2 transition-all duration-500">
+                             {!product?.price?.saleAmount ? (
+                                <span className="font-bold text-[8px] text-foreground/25 tracking-[0.25em] uppercase whitespace-nowrap">
+                                    Slide to Bag • {formatPrice(amount, currency)}
+                                </span>
+                             ) : (
+                                <div className="relative h-4 overflow-hidden flex items-center justify-center min-w-[100px]">
+                                    {/* Default State: Just Sale Price */}
+                                    <span className="absolute inset-0 flex items-center justify-center font-bold text-[8px] tracking-[0.25em] transition-all duration-500 uppercase group-hover:translate-y-[-100%] group-hover:opacity-0">
+                                        Sale • {formatPrice(product.price.saleAmount, currency)}
+                                    </span>
+                                    {/* Hover State: Struck MRP + Sale Price */}
+                                    <div className="absolute inset-0 flex items-center justify-center translate-y-[100%] group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500">
+                                        <span className="text-foreground/20 line-through text-[7px] mr-1 uppercase">{formatPrice(amount, currency)}</span>
+                                        <span className="text-foreground/80 font-black text-[8px] tracking-widest uppercase">{formatPrice(product.price.saleAmount, currency)}</span>
+                                    </div>
+                                </div>
+                             )}
+                        </div>
+
+                        {/* Mobile/Tablet: Static Direct Price */}
+                        <div className="lg:hidden flex items-center gap-2">
+                            {product?.price?.saleAmount ? (
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-foreground/20 line-through text-[7px] font-bold uppercase">{formatPrice(amount, currency)}</span>
+                                    <span className="text-foreground/80 font-black text-[8px] tracking-[0.25em] uppercase">{formatPrice(product.price.saleAmount, currency)}</span>
+                                </div>
+                            ) : (
+                                <span className="font-bold text-[8px] text-foreground/25 tracking-[0.25em] uppercase">
+                                    {formatPrice(amount, currency)}
+                                </span>
+                            )}
+                        </div>
+                    </div>
                  )}
               </div>
 
-              {/* Draggable Bag Icon */}
+              {/* Draggable Circle */}
               <motion.div 
                   drag={isDragged ? false : "x"}
+                  initial={{ x: 0 }}
                   dragConstraints={dragContainerRef} 
                   dragElastic={0}
                   dragMomentum={false}
                   onDragEnd={handleDragEnd}
                   animate={controls}
-                  className={`h-full aspect-square bg-accent text-accent-content rounded-full shadow-md z-10 flex items-center justify-center cursor-grab active:cursor-grabbing absolute left-0`}
+                  className="h-full aspect-square bg-accent text-accent-content rounded-full shadow-md z-10 flex items-center justify-center cursor-grab active:cursor-grabbing absolute left-0"
               >
-                  <i className={isDragged ? "ri-check-line text-lg font-black" : "ri-arrow-right-s-line text-lg pointer-events-none"}></i>
+                  <i className={isDragged ? "ri-check-line text-lg font-black" : "ri-arrow-right-s-line text-lg font-bold pointer-events-none"}></i>
               </motion.div>
           </div>
       </div>

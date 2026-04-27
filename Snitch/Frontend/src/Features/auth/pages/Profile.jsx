@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useAuth } from '../Hooks/useAuth';
+import { useProduct } from '../../Poducts/Hooks/useProduct';
 import { useNavigate } from 'react-router';
 import Modal from '../../Components/Modal';
-
+import SellerProductCard from '../../Poducts/Components/SellerProductCard';
 import { ProfileSkeleton } from '../../Components/Skeletons';
+import PageLoader from '../../Components/PageLoader';
+import { PrimaryBtn, SecondaryBtn, TertiaryBtn } from '../../Components/Buttons';
 
 const Profile = () => {
-    const { user, loading } = useSelector((state) => state.auth);
+    const { user, loading: authLoading } = useSelector((state) => state.auth);
+    const { sellerProducts, sellerLoading: productsLoading } = useSelector((state) => state.product);
     const { handleUpdateProfile } = useAuth();
+    const { handleGetSellerProducts, handlePublish } = useProduct();
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
@@ -19,6 +24,9 @@ const Profile = () => {
     const [profilePic, setProfilePic] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+    const [deleteModal, setDeleteModal] = useState({ open: false, productId: null });
+
+    const { handleDeleteProduct } = useProduct();
 
     useEffect(() => {
         if (user) {
@@ -33,10 +41,28 @@ const Profile = () => {
                 contact: displayContact
             });
             setPreviewUrl(user.profilePic || '');
-        } else if (!loading) {
+
+            // Fetch seller products if applicable
+            if (user.role === 'seller') {
+                handleGetSellerProducts();
+            }
+        } else if (!authLoading) {
             navigate('/login');
         }
-    }, [user, loading, navigate]);
+    }, [user, authLoading, navigate]);
+
+    // Deletion Flow
+    const confirmDelete = (id) => setDeleteModal({ open: true, productId: id });
+    const runDelete = async () => {
+        if (deleteModal.productId) {
+            await handleDeleteProduct(deleteModal.productId);
+            setDeleteModal({ open: false, productId: null });
+        }
+    };
+
+    const handleEdit = (product) => {
+        navigate(`/products/edit/${product._id}`);
+    };
 
     const handleChange = (e) => {
         const { name, value, files } = e.target;
@@ -75,16 +101,27 @@ const Profile = () => {
         }
     };
 
-    if (!user && loading) {
+    if (authLoading) {
         return (
             <div className="min-h-screen bg-background pt-24 px-4">
-                <ProfileSkeleton />
+                <PageLoader skeleton={ProfileSkeleton} />
             </div>
         );
     }
 
     return (
         <div className="min-h-screen bg-background text-foreground selection:bg-accent selection:text-accent-content pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+            {/* Modal for Deleting Products */}
+            <Modal 
+                isOpen={deleteModal.open}
+                onClose={() => setDeleteModal({ open: false, productId: null })}
+                onConfirm={runDelete}
+                title="Remove Product?"
+                description="This action is permanent. This product will be removed from your catalog and any active customers will no longer see it."
+                confirmText="Delete Permanently"
+                type="danger"
+            />
+
             <div className="max-w-4xl mx-auto">
                 <div className="mb-12">
                     <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-foreground mb-4">Your Identity</h1>
@@ -150,7 +187,7 @@ const Profile = () => {
                                             value={formData.fullname}
                                             onChange={handleChange}
                                             required
-                                            disabled={loading}
+                                            disabled={authLoading}
                                             className="w-full bg-background border border-border-theme focus:border-accent rounded-xl px-4 py-3 outline-none transition-all focus:ring-4 focus:ring-accent/10 disabled:opacity-50"
                                             placeholder="Enter your full name"
                                         />
@@ -191,7 +228,7 @@ const Profile = () => {
                                             value={formData.contact}
                                             onChange={handleChange}
                                             required
-                                            disabled={loading}
+                                            disabled={authLoading}
                                             className="w-full bg-background border border-border-theme focus:border-accent rounded-r-xl px-4 py-3 outline-none transition-all focus:ring-4 focus:ring-accent/10 disabled:opacity-50"
                                             placeholder="98765 43210"
                                         />
@@ -201,19 +238,25 @@ const Profile = () => {
 
                                 </div>
 
-                            <div className="mt-12 flex justify-end">
-                                <button
+                            <div className="mt-12 flex justify-end gap-3">
+                                {user?.role === 'admin' && (
+                                    <SecondaryBtn
+                                        type="button"
+                                        onClick={() => navigate('/admin')}
+                                        icon="ri-dashboard-fill"
+                                        size="lg"
+                                    >
+                                        Admin Dashboard
+                                    </SecondaryBtn>
+                                )}
+                                <PrimaryBtn
                                     type="submit"
-                                    disabled={loading}
-                                    className="bg-accent text-accent-content font-bold px-10 py-4 rounded-xl shadow-lg hover:shadow-accent/40 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-3 group"
+                                    loading={authLoading}
+                                    icon="ri-save-3-line"
+                                    size="lg"
                                 >
-                                    {loading ? (
-                                        <i className="ri-loader-4-line animate-spin text-xl"></i>
-                                    ) : (
-                                        <i className="ri-save-3-line text-xl group-hover:rotate-12 transition-transform"></i>
-                                    )}
-                                    {loading ? "Updating Identity..." : "Save Changes"}
-                                </button>
+                                    {authLoading ? 'Updating Identity...' : 'Save Changes'}
+                                </PrimaryBtn>
                             </div>
                         </form>
 
@@ -233,20 +276,105 @@ const Profile = () => {
                                         Take your brand to the next level. Start listing products, managing orders, and reaching thousands of style-conscious shoppers.
                                     </p>
                                     
-                                    <button
+                                    <TertiaryBtn
                                         onClick={() => setIsRoleModalOpen(true)}
-                                        disabled={loading}
-                                        className="inline-flex items-center gap-2 text-accent font-bold hover:gap-4 transition-all"
+                                        disabled={authLoading}
+                                        trailingIcon="ri-arrow-right-line"
+                                        size="md"
                                     >
                                         Upgrade to Seller Account
-                                        <i className="ri-arrow-right-line"></i>
-                                    </button>
+                                    </TertiaryBtn>
                                 </div>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
+
+            {/* Seller Products Section — wider than max-w-4xl */}
+            {user?.role === 'seller' && (
+                <div className="max-w-7xl mx-auto mt-20 border-t border-border-theme pt-16 px-0">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+                        <div>
+                            <span className="text-[10px] font-black tracking-[0.4em] uppercase text-accent mb-1 block">Your Store</span>
+                            <h3 className="text-3xl font-black tracking-tighter mb-2">My Products</h3>
+                            <p className="text-gray-500 text-sm italic font-serif">Manage and curate your listed products.</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <PrimaryBtn
+                                icon="ri-add-line"
+                                onClick={() => navigate('/products/create')}
+                                size="md"
+                            >
+                                New Product
+                            </PrimaryBtn>
+                        </div>
+                    </div>
+
+                    {user?.role === 'admin' && (
+                        <div className="mb-10 p-6 rounded-3xl bg-accent/5 border border-accent/10 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-700">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center text-accent shadow-inner">
+                                    <i className="ri-shield-flash-line text-2xl" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-black tracking-[0.3em] text-accent uppercase">System Authority</p>
+                                    <p className="text-lg font-bold text-foreground">You are currently in Admin Mode</p>
+                                </div>
+                            </div>
+                            <SecondaryBtn onClick={() => navigate('/admin')} size="md" icon="ri-settings-4-line">Access Dashboard</SecondaryBtn>
+                        </div>
+                    )}
+
+                    {productsLoading ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                            {[...Array(5)].map((_, i) => (
+                                <div key={i} className="bg-surface/50 border border-border-theme/50 rounded-3xl aspect-[4/5] overflow-hidden animate-pulse">
+                                    <div className="w-full h-2/3 bg-foreground/5" />
+                                    <div className="p-4 space-y-3">
+                                        <div className="h-3 bg-foreground/10 rounded-full w-3/4" />
+                                        <div className="h-2 bg-foreground/5 rounded-full w-1/2" />
+                                        <div className="flex justify-between pt-2">
+                                            <div className="h-6 w-12 bg-foreground/10 rounded-lg" />
+                                            <div className="h-6 w-6 bg-foreground/10 rounded-full" />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : sellerProducts?.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                            {sellerProducts.map((product) => (
+                                <SellerProductCard
+                                    key={product._id}
+                                    product={product}
+                                    onEdit={handleEdit}
+                                    onDelete={confirmDelete}
+                                    onPublish={handlePublish}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-surface border-2 border-dashed border-border-theme rounded-3xl p-16 text-center flex flex-col items-center gap-4">
+                            <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center text-accent">
+                                <i className="ri-archive-line text-4xl"></i>
+                            </div>
+                            <div>
+                                <h4 className="text-xl font-bold mb-1">No products listed yet</h4>
+                                <p className="text-gray-500 text-sm">Start your selling journey by adding your first masterpiece.</p>
+                            </div>
+                            <PrimaryBtn
+                                icon="ri-rocket-line"
+                                onClick={() => navigate('/products/create')}
+                                size="md"
+                                className="mt-2"
+                            >
+                                List First Product
+                              </PrimaryBtn>
+                        </div>
+                    )}
+                </div>
+            )}
 
             <Modal 
                 isOpen={isRoleModalOpen}

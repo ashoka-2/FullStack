@@ -49,6 +49,11 @@ const ProductCardItem = ({ product }) => {
     const [isDragged, setIsDragged] = useState(false);
     const controls = useAnimation();
 
+    // Lock arrow to left: 0 on mount
+    useEffect(() => {
+        controls.set({ x: 0 });
+    }, [controls, product]); // Re-run when product changes in carousel
+
     const handleAddToCart = () => {
         if (!isDragged) {
             setIsDragged(true);
@@ -104,6 +109,7 @@ const ProductCardItem = ({ product }) => {
                     </div>
                     <motion.div
                         drag={isDragged ? false : "x"}
+                        initial={{ x: 0 }}
                         dragConstraints={dragContainerRef}
                         dragElastic={0}
                         dragMomentum={false}

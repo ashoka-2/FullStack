@@ -24,7 +24,7 @@ async function sendTokenResponse(user: IUser, res: Response, message: string) {
     );
 
     res.cookie("token", token, {
-        httpOnly: true, // Recommended for security
+        httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
     });
@@ -147,8 +147,19 @@ export const googleCallback = async (req: Request, res: Response) => {
     }
 };
 
+export const checkAuth = async (req: AuthRequest, res: Response) => {
+    try {
+        const user = await userModel.findById(req.user?.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
 
-
+        return res.status(200).json({ success: true, user });
+    } catch (err) {
+        console.error("Check Auth Error:", err);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+};
 
 export const getMe = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;

@@ -7,6 +7,7 @@ import { ToastContainer } from '../Features/Components/Toast'
 import Preloader from '../Features/Components/Preloader'
 import axios from 'axios'
 import { AuthSkeleton, HomeSkeleton, NavbarSkeleton, ProfileSkeleton } from '../Features/Components/Skeletons'
+import PageLoader from '../Features/Components/PageLoader'
 
 function App() {
   const { fetchMe } = useAuth();
@@ -85,11 +86,11 @@ function App() {
                 {!isAuthPage && <NavbarSkeleton />}
                 <div className={isAuthPage ? '' : 'pt-20'}>
                     {path === '/profile' ? (
-                        <ProfileSkeleton />
+                        <PageLoader skeleton={ProfileSkeleton} />
                     ) : isAuthPage ? (
-                        <AuthSkeleton />
+                        <PageLoader skeleton={AuthSkeleton} />
                     ) : (
-                        <HomeSkeleton />
+                        <PageLoader skeleton={HomeSkeleton} />
                     )}
                 </div>
             </div>

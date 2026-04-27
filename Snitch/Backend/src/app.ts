@@ -5,6 +5,7 @@ import morgan from "morgan";
 
 import authRouter from "./routes/auth.routes.js";
 import productRouter from "./routes/product.routes.js";
+import adminRouter from "./routes/admin.routes.js";
 
 
 import cors from "cors";
@@ -48,10 +49,9 @@ app.get("/", (_req, res) => {
     res.status(200).json({ message: "Server is running" });
 });
 
-app.use("/api/auth", authRouter);
-
-
+app.use("/api/auth",     authRouter);
 app.use("/api/products", productRouter);
+app.use("/api/admin",    adminRouter);
 
 
 export default app;

@@ -3,14 +3,15 @@ import bcrypt from "bcryptjs";
 
 // Define the User interface
 export interface IUser extends Document {
-    fullname: string; 
-    email: string; 
-    contact: string; 
-    password?: string; 
-    role: "buyer" | "seller"; 
-    googleId?: string; 
-    profilePic: string; 
-    verified: boolean; 
+    fullname: string;
+    email: string;
+    contact: string;
+    password?: string;
+    role: "buyer" | "seller" | "admin";
+    isAdmin: boolean;        
+    googleId?: string;
+    profilePic: string;
+    verified: boolean;
     comparePassword(password: string): Promise<boolean>;
 }
 
@@ -44,8 +45,12 @@ const userSchema = new Schema<IUser>(
         },
         role: {
             type: String,
-            enum: ["buyer", "seller"],
+            enum: ["buyer", "seller", "admin"],
             default: "buyer",
+        },
+        isAdmin: {
+            type: Boolean,
+            default: false,  // Sync with role === 'admin'
         },
         googleId: {
             type: String,

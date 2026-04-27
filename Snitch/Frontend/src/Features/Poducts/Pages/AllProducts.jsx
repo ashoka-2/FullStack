@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useProduct } from '../Hooks/useProduct';
 import ProductCard from '../Components/ProductCard';
+import PageLoader from '../../Components/PageLoader';
 import { ProductSectionSkeleton } from '../../Components/Skeletons';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -58,9 +59,10 @@ const ProductSection = ({ title, subtitle, badge, products, emptyMessage }) => {
             </div>
 
             {/* Horizontal scroll on mobile, grid on desktop */}
-            <div className="flex gap-5 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:overflow-visible sm:pb-0">
+            {/* Horizontal scroll on mobile, grid on desktop with tight gaps */}
+            <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 sm:overflow-visible sm:pb-0 sm:gap-2">
                 {products.map((product, idx) => (
-                    <div key={product._id || idx} className="snap-start flex-shrink-0 w-[240px] sm:w-auto">
+                    <div key={product._id || idx} className="snap-start flex-shrink-0 w-[200px] sm:w-auto">
                         <ProductCard product={product} />
                     </div>
                 ))}
@@ -85,8 +87,8 @@ const AllProducts = () => {
     if (loading) {
         return (
             <section className="w-full py-16 px-2">
-                <ProductSectionSkeleton />
-                <ProductSectionSkeleton />
+                <PageLoader skeleton={ProductSectionSkeleton} />
+                <PageLoader skeleton={ProductSectionSkeleton} />
             </section>
         );
     }
@@ -117,20 +119,30 @@ const AllProducts = () => {
             </div>
 
             {/* 1. All Products */}
-            <ProductSection
-                badge="The Full Edit"
-                title="All Products"
-                subtitle="Everything we've got. Your next obsession is here."
-                products={allProducts}
-            />
+            {allProducts?.length > 0 ? (
+                <ProductSection
+                    badge="The Full Edit"
+                    title="All Products"
+                    subtitle="Everything we've got. Your next obsession is here."
+                    products={allProducts}
+                />
+            ) : (
+                <div className="bg-surface/50 border border-dash border-border-theme rounded-3xl p-20 text-center mb-10">
+                    <i className="ri-shopping-bag-line text-5xl text-accent/20 mb-4 block"></i>
+                    <h3 className="text-xl font-bold">No products found</h3>
+                    <p className="text-sm text-foreground/40 mt-1">Check back later or try refreshing.</p>
+                </div>
+            )}
 
             {/* 2. New Arrivals */}
-            <ProductSection
-                badge="Just Dropped"
-                title="New Arrivals"
-                subtitle="Fresh threads, straight from the workshop."
-                products={newProducts}
-            />
+            {newProducts?.length > 0 && (
+                <ProductSection
+                    badge="Just Dropped"
+                    title="New Arrivals"
+                    subtitle="Fresh threads, straight from the workshop."
+                    products={newProducts}
+                />
+            )}
 
             {/* 3. Recently Visited
             <ProductSection

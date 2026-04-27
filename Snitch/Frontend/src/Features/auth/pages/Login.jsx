@@ -3,6 +3,7 @@ import { useAuth } from "../Hooks/useAuth";
 import { useNavigate } from "react-router";
 import ContinueWithGoogle from '../components/ContinueWithGoogle.jsx';
 import { useSelector } from 'react-redux';
+import { PrimaryBtn, TertiaryBtn } from '../../Components/Buttons';
 
 const Login = () => {
     const { handleLogin } = useAuth();
@@ -126,14 +127,15 @@ const Login = () => {
                         </div>
 
                         {/* Submit Button */}
-                        <button
+                        <PrimaryBtn
                             type="submit"
-                            disabled={loading}
-                            className="mt-6 w-full bg-accent text-accent-content font-bold tracking-wide py-4 px-8 rounded hover:shadow-[0_0_20px_rgba(250,106,101,0.3)] dark:hover:shadow-[0_0_20px_rgba(255,215,0,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            loading={loading}
+                            fullWidth
+                            size="lg"
+                            className="mt-6"
                         >
-                            {loading && <i className="ri-loader-4-line animate-spin"></i>}
-                            {loading ? "Authenticating..." : "Sign In"}
-                        </button>
+                            {loading ? 'Authenticating...' : 'Sign In'}
+                        </PrimaryBtn>
 
                         <ContinueWithGoogle />
 
