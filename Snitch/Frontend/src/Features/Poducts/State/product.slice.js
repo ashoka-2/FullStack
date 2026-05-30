@@ -15,8 +15,11 @@ const productSlice = createSlice({
         recentlyBought: [],
         // Products frequently bought (can be based on global order count)
         frequentlyBought: [],
+        // Currently viewed single product
+        currentProduct: null,
         loading: false,
         sellerLoading: false,
+        currentLoading: false,   // dedicated loading for single product fetch
         creating: false,    // dedicated state for create product action
         error: null,
     },
@@ -50,6 +53,12 @@ const productSlice = createSlice({
             if (!exists) {
                 state.recentlyVisited = [product, ...state.recentlyVisited].slice(0, 10);
             }
+        },
+        setCurrentLoading: (state, action) => {
+            state.currentLoading = action.payload;
+        },
+        setCurrentProduct: (state, action) => {
+            state.currentProduct = action.payload;
         },
         setLoading: (state, action) => {
             state.loading = action.payload;
@@ -86,6 +95,8 @@ export const {
     setLoading,
     setSellerLoading,
     setCreating,
+    setCurrentProduct,
+    setCurrentLoading,
     updateProductInList,
     removeProductFromList,
     setError,

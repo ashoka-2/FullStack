@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 import productModel from "../models/product.model.js";
 import { uploadFile } from "../services/imagekit.service.js";
@@ -167,6 +168,9 @@ export const getSellersAllProducts = async (req: AuthRequest, res: Response) => 
 export const getProductById = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
+        if (!id || !mongoose.Types.ObjectId.isValid(id as string)) {
+            return res.status(400).json({ success: false, message: "Invalid product ID" });
+        }
         const product = await productModel.findById(id).populate(POPULATE);
         if (!product) return res.status(404).json({ success: false, message: "Product not found" });
 

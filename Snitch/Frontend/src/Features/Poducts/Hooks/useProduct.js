@@ -7,6 +7,9 @@ import {
     setLoading, 
     setSellerLoading, 
     setCreating, 
+    setCurrentProduct,
+    setCurrentLoading,
+    addRecentlyVisited,
     updateProductInList, 
     removeProductFromList, 
     setError 
@@ -15,6 +18,7 @@ import {
     createProduct, 
     getAllProducts, 
     getSellerProducts, 
+    getProductById,
     updateProduct, 
     deleteProduct 
 } from "../Services/product.api";
@@ -43,6 +47,26 @@ export const useProduct = () => {
             throw error;
         } finally {
             dispatch(setCreating(false));
+        }
+    };
+
+    // ─── Fetch Single Product By ID ───────────────────────────────────────
+    const handleGetProductById = async (id) => {
+        dispatch(setCurrentLoading(true));
+        dispatch(setCurrentProduct(null)); // clear previous
+        try {
+            const data = await getProductById(id);
+            if (data?.product) {
+                dispatch(setCurrentProduct(data.product));
+                dispatch(addRecentlyVisited(data.product));
+            }
+            return data;
+        } catch (error) {
+            const message = error.response?.data?.message || "Failed to load product.";
+            dispatch(addToast({ message, type: "error" }));
+            throw error;
+        } finally {
+            dispatch(setCurrentLoading(false));
         }
     };
 
@@ -131,6 +155,7 @@ export const useProduct = () => {
     // Return all actions in a single coherent object
     return {
         handleCreateProduct,
+        handleGetProductById,
         handleGetAllProducts,
         handleGetSellerProducts,
         handleUpdateProduct,

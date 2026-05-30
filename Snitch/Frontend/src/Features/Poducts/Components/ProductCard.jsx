@@ -2,6 +2,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToast } from '../../../app/toast.slice';
 import { useNavigate } from 'react-router';
+import { useCart } from '../../Cart/Hooks/useCart';
+import { useWishlist } from '../../Wishlist/Hooks/useWishlist';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -19,6 +21,12 @@ const ProductCard = ({ product }) => {
   // States for the Draggable Cart
   const [isDragged, setIsDragged] = useState(false);
   const controls = useAnimation();
+
+  const { addToCart } = useCart();
+  const { toggleWishlist } = useWishlist();
+  const wishlist = useSelector(state => state.wishlist.wishlist);
+  
+  const isWishlisted = wishlist?.products?.some(p => (p._id || p) === product._id);
 
   // Ensure arrow starts at left: 0 on mount
   useEffect(() => {
@@ -45,7 +53,7 @@ const ProductCard = ({ product }) => {
     }
   }, { scope: cardRef });
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!user) {
       navigate('/login');
       return;
@@ -53,10 +61,13 @@ const ProductCard = ({ product }) => {
 
     if(!isDragged) {
       setIsDragged(true);
-      dispatch(addToast({
-        message: "Cart functionality not implemented yet",
-        type: "info"
-      }));
+      try {
+        const sizeId = product.sizes?.[0]?._id || product.sizes?.[0] || null;
+        const colorId = product.colors?.[0]?._id || product.colors?.[0] || null;
+        await addToCart(product._id, sizeId, colorId, 1);
+      } catch (error) {
+        console.error("Cart error", error);
+      }
       
       // Reset after 2 seconds
       setTimeout(() => {
@@ -64,6 +75,15 @@ const ProductCard = ({ product }) => {
         controls.start({ x: 0, transition: { type: "spring", stiffness: 300, damping: 20 } }); 
       }, 2000);
     }
+  };
+
+  const handleToggleWishlist = (e) => {
+    e.stopPropagation();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    toggleWishlist(product._id);
   };
 
   const handleDragEnd = (event, info) => {
@@ -100,6 +120,7 @@ const ProductCard = ({ product }) => {
   return (
     <div 
       ref={cardRef}
+      onClick={() => navigate(`/products/${product._id}`)}
       className="group relative bg-surface dark:bg-[#121212] border border-border-theme/30 rounded-[2.2rem] w-full max-w-[240px] mx-auto shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex-shrink-0 cursor-pointer p-2.5"
     >
       {/* Image Container with Inset Padding */}
@@ -111,11 +132,18 @@ const ProductCard = ({ product }) => {
             loading="lazy"
         />
         
-        {/* Top Badges */}
-        <div className="absolute top-3 left-3">
+        {/* Top Badges & Wishlist Heart */}
+        <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-20">
             <div className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-[0.2em] backdrop-blur-md border ${product?.stock > 0 ? 'bg-green-500/10 text-green-500 border-green-500/10' : 'bg-red-500/10 text-red-500 border-red-500/10'}`}>
                 {product?.stock > 0 ? `${product.stock} IN STOCK` : 'OUT OF STOCK'}
             </div>
+            
+            <button 
+                onClick={handleToggleWishlist}
+                className="w-7 h-7 rounded-full bg-background/80 hover:bg-background backdrop-blur-md flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all text-red-500"
+            >
+                <i className={isWishlisted ? "ri-heart-fill text-xs" : "ri-heart-line text-xs text-foreground/45"} />
+            </button>
         </div>
       </div>
 
@@ -130,6 +158,7 @@ const ProductCard = ({ product }) => {
           {/* Original Style Refined Slide to Cart */}
           <div 
              ref={dragContainerRef}
+             onClick={(e) => e.stopPropagation()}
              className="relative bg-background border border-border-theme/40 rounded-full flex items-center w-full shadow-sm overflow-hidden h-9 touch-none"
              style={{ transition: 'background-color 0.3s' }} 
           >

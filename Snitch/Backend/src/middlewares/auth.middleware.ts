@@ -9,7 +9,7 @@ export interface UserPayload {
     fullname: string;
     email: string;
     contact: string;
-    role: "buyer" | "seller";
+    role: "buyer" | "seller" | "admin";
     isAdmin: boolean;
     profilePic: string;
     verified: boolean;

@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
-import orderModel from "../models/order.model.js";
+import orderModel, { IOrderItem } from "../models/order.model.js";
 import cartModel from "../models/cart.model.js";
 import productModel from "../models/product.model.js";
 import placeModel from "../models/place.model.js";
@@ -15,7 +15,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     const { shippingAddress, contactNumber, items: customItems } = req.body;
 
     try {
-        let orderItems = [];
+        const orderItems: IOrderItem[] = [];
         let totalAmount = 0;
 
         // Fetch address from User's Place model if not provided
@@ -54,11 +54,11 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
                 const price = productObj.price.saleAmount || productObj.price.amount;
                 orderItems.push({
                     product: item.product,
-                    size: item.size || null,
-                    color: item.color || null,
+                    size: item.size || undefined,
+                    color: item.color || undefined,
                     quantity: item.quantity,
                     price: price
-                });
+                } as any);
                 totalAmount += price * item.quantity;
             }
         } else {
@@ -78,11 +78,11 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
                 const price = productObj.price.saleAmount || productObj.price.amount;
                 orderItems.push({
                     product: productObj._id,
-                    size: item.size || null,
-                    color: item.color || null,
+                    size: item.size || undefined,
+                    color: item.color || undefined,
                     quantity: item.quantity,
                     price: price
-                });
+                } as any);
                 totalAmount += price * item.quantity;
             }
         }

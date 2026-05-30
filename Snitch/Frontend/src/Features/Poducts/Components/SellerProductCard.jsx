@@ -1,8 +1,10 @@
 import React, { useRef } from 'react';
+import { useNavigate } from 'react-router';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
 const SellerProductCard = ({ product, onEdit, onDelete, onPublish }) => {
+    const navigate = useNavigate();
     const cardRef = useRef(null);
     const contentRef = useRef(null);
 
@@ -28,6 +30,9 @@ const SellerProductCard = ({ product, onEdit, onDelete, onPublish }) => {
             duration: 0.4,
             ease: "elastic.out(1, 0.3)"
         });
+        setTimeout(() => {
+            navigate(`/products/${product._id}`);
+        }, 150);
     };
 
     const formatPrice = (amount, currencyCode = 'INR') => {

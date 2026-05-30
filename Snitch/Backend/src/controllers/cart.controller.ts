@@ -65,7 +65,10 @@ export const addToCart = async (req: AuthRequest, res: Response) => {
         });
 
         if (itemIndex > -1) {
-            cart.items[itemIndex].quantity += Number(quantity);
+            const item = cart.items[itemIndex];
+            if (item) {
+                item.quantity += Number(quantity);
+            }
         } else {
             cart.items.push({
                 product: productId,
@@ -124,7 +127,10 @@ export const updateCartItem = async (req: AuthRequest, res: Response) => {
         const itemIndex = cart.items.findIndex(item => item._id?.toString() === itemId);
 
         if (itemIndex > -1) {
-            cart.items[itemIndex].quantity = Number(quantity);
+            const item = cart.items[itemIndex];
+            if (item) {
+                item.quantity = Number(quantity);
+            }
             await cart.save();
         } else {
             return res.status(404).json({ message: "Item not found in cart" });
