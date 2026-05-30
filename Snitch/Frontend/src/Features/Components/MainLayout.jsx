@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar';
-import { Outlet } from 'react-router';
+import { Outlet, useNavigate } from 'react-router';
 import { flushSync } from 'react-dom';
+import { useSelector } from 'react-redux';
+import CartDrawer from './CartDrawer';
+import CheckoutModal from './CheckoutModal';
 
 const MainLayout = () => {
+    const { user } = useSelector(state => state.auth);
+    const navigate = useNavigate();
+
     // Use localStorage to persist theme. Default to dark mode given the Snitch branding.
     const [isDarkMode, setIsDarkMode] = useState(() => {
         const saved = localStorage.getItem('theme');
         if (saved) return saved === 'dark';
         return true; // Default to dark mode
     });
+    
+    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+    useEffect(() => {
+        if (user?.role === 'admin') {
+            navigate('/admin');
+        }
+    }, [user, navigate]);
 
     useEffect(() => {
         if (isDarkMode) {
@@ -48,6 +62,10 @@ const MainLayout = () => {
                     <Outlet />
                 </main>
             </div>
+            
+            {/* Global E-commerce Overlays */}
+            <CartDrawer onCheckout={() => setIsCheckoutOpen(true)} />
+            <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} />
         </div>
     );
 };
