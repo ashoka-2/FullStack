@@ -10,7 +10,6 @@ export interface UserPayload {
     email: string;
     contact: string;
     role: "buyer" | "seller" | "admin";
-    isAdmin: boolean;
     profilePic: string;
     verified: boolean;
 }

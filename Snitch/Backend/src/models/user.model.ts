@@ -8,7 +8,6 @@ export interface IUser extends Document {
     contact: string;
     password?: string;
     role: "buyer" | "seller" | "admin";
-    isAdmin: boolean;        
     googleId?: string;
     profilePic: string;
     verified: boolean;
@@ -48,10 +47,6 @@ const userSchema = new Schema<IUser>(
             type: String,
             enum: ["buyer", "seller", "admin"],
             default: "buyer",
-        },
-        isAdmin: {
-            type: Boolean,
-            default: false,  // Sync with role === 'admin'
         },
         googleId: {
             type: String,
