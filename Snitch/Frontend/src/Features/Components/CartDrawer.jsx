@@ -136,10 +136,20 @@ const CartDrawer = ({ onCheckout }) => {
                                     );
                                 })
                             ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-center text-foreground/30">
+                                <div className="h-full flex flex-col items-center justify-center text-center text-foreground/30 px-4">
                                     <i className="ri-shopping-bag-line text-5xl text-accent/15 mb-4 block" />
-                                    <p className="font-bold text-sm">Your shopping bag is empty.</p>
-                                    <p className="text-[10px] uppercase font-bold tracking-widest mt-1 text-foreground/20">Slide to bag items from catalog</p>
+                                    <p className="font-bold text-sm text-foreground/70">Your shopping bag is empty.</p>
+                                    <p className="text-[10px] uppercase font-bold tracking-widest mt-1 text-foreground/40 mb-6">Explore our premium catalog</p>
+                                    <PrimaryBtn 
+                                        onClick={() => {
+                                            setDrawerOpen(false);
+                                            navigate("/");
+                                        }}
+                                        icon="ri-arrow-right-line"
+                                        className="!w-auto px-6 py-3 font-semibold text-xs tracking-wider"
+                                    >
+                                        Continue Shopping
+                                    </PrimaryBtn>
                                 </div>
                             )}
                         </div>

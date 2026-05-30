@@ -44,13 +44,51 @@ export const useUsers = () => {
 
     // ── Toggle ban/unban on a user ─────────────────────────────────────────
     const handleToggleBanUser = async (userId) => {
+        let originalSelectedUser = null;
+        let originalAllUsers = [];
+
+        dispatch((_, getState) => {
+            originalSelectedUser = getState().users.selectedUser;
+            originalAllUsers = [...getState().users.allUsers];
+        });
+
+        // 1. Compute optimistic state
+        const nextBannedState = originalSelectedUser ? !originalSelectedUser.isBanned : true;
+        
+        if (originalSelectedUser && originalSelectedUser._id === userId) {
+            dispatch(setSelectedUser({ ...originalSelectedUser, isBanned: nextBannedState }));
+        }
+
+        const nextAllUsers = originalAllUsers.map(u => {
+            if (u._id === userId) {
+                return { ...u, isBanned: nextBannedState };
+            }
+            return u;
+        });
+        dispatch(setAllUsers(nextAllUsers));
+
+        toast(nextBannedState ? "User banned successfully." : "User unbanned successfully.");
+
         try {
             const data = await api.toggleBanUser(userId);
-            toast(data.message || "User status updated");
-            // Refresh user details
-            await handleFetchUserDetail(userId);
+            // Sync with final backend state returning
+            if (originalSelectedUser && originalSelectedUser._id === userId) {
+                dispatch(setSelectedUser({ ...originalSelectedUser, isBanned: data.user?.isBanned ?? nextBannedState }));
+            }
+            const syncedAllUsers = originalAllUsers.map(u => {
+                if (u._id === userId) {
+                    return { ...u, isBanned: data.user?.isBanned ?? nextBannedState };
+                }
+                return u;
+            });
+            dispatch(setAllUsers(syncedAllUsers));
             return data;
         } catch (e) {
+            // Rollback on failure
+            if (originalSelectedUser && originalSelectedUser._id === userId) {
+                dispatch(setSelectedUser(originalSelectedUser));
+            }
+            dispatch(setAllUsers(originalAllUsers));
             toast(errMsg(e), "error");
         }
     };

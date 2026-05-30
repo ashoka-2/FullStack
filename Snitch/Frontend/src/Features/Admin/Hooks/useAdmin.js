@@ -53,14 +53,20 @@ export const useAdmin = () => {
         } catch (e) { toast(errMsg(e), "error"); throw e; }
     };
     const handleDeleteCategory = async (id) => {
+        let original = [];
+        dispatch((_, getState) => { original = [...getState().admin.categories]; });
+        dispatch(removeCategoryFromList(id));
+        toast("Category deleted");
         try {
             await api.deleteCategory(id);
-            dispatch(removeCategoryFromList(id));
-            toast("Category deleted");
-        } catch (e) { toast(errMsg(e), "error"); throw e; }
+        } catch (e) {
+            dispatch(setCategories(original));
+            toast(errMsg(e), "error");
+            throw e;
+        }
     };
 
-    // ══ UNITS ═════════════════════════════════════════════════════════════
+    // ── UNITS ═════════════════════════════════════════════════════════════
     const handleCreateUnit = async (data) => {
         try {
             const res = await api.createUnit(data);
@@ -77,14 +83,20 @@ export const useAdmin = () => {
         } catch (e) { toast(errMsg(e), "error"); throw e; }
     };
     const handleDeleteUnit = async (id) => {
+        let original = [];
+        dispatch((_, getState) => { original = [...getState().admin.units]; });
+        dispatch(removeUnitFromList(id));
+        toast("Unit deleted");
         try {
             await api.deleteUnit(id);
-            dispatch(removeUnitFromList(id));
-            toast("Unit deleted");
-        } catch (e) { toast(errMsg(e), "error"); throw e; }
+        } catch (e) {
+            dispatch(setUnits(original));
+            toast(errMsg(e), "error");
+            throw e;
+        }
     };
 
-    // ══ SIZES ═════════════════════════════════════════════════════════════
+    // ── SIZES ═════════════════════════════════════════════════════════════
     const handleCreateSize = async (data) => {
         try {
             const res = await api.createSize(data);
@@ -101,14 +113,20 @@ export const useAdmin = () => {
         } catch (e) { toast(errMsg(e), "error"); throw e; }
     };
     const handleDeleteSize = async (id) => {
+        let original = [];
+        dispatch((_, getState) => { original = [...getState().admin.sizes]; });
+        dispatch(removeSizeFromList(id));
+        toast("Size deleted");
         try {
             await api.deleteSize(id);
-            dispatch(removeSizeFromList(id));
-            toast("Size deleted");
-        } catch (e) { toast(errMsg(e), "error"); throw e; }
+        } catch (e) {
+            dispatch(setSizes(original));
+            toast(errMsg(e), "error");
+            throw e;
+        }
     };
 
-    // ══ COLORS ════════════════════════════════════════════════════════════
+    // ── COLORS ════════════════════════════════════════════════════════════
     const handleCreateColor = async (data) => {
         try {
             const res = await api.createColor(data);
@@ -125,14 +143,20 @@ export const useAdmin = () => {
         } catch (e) { toast(errMsg(e), "error"); throw e; }
     };
     const handleDeleteColor = async (id) => {
+        let original = [];
+        dispatch((_, getState) => { original = [...getState().admin.colors]; });
+        dispatch(removeColorFromList(id));
+        toast("Color deleted");
         try {
             await api.deleteColor(id);
-            dispatch(removeColorFromList(id));
-            toast("Color deleted");
-        } catch (e) { toast(errMsg(e), "error"); throw e; }
+        } catch (e) {
+            dispatch(setColors(original));
+            toast(errMsg(e), "error");
+            throw e;
+        }
     };
 
-    // ══ BRANDS ════════════════════════════════════════════════════════════
+    // ── BRANDS ════════════════════════════════════════════════════════════
     const handleCreateBrand = async (data) => {
         try {
             const res = await api.createBrand(data);
@@ -149,11 +173,17 @@ export const useAdmin = () => {
         } catch (e) { toast(errMsg(e), "error"); throw e; }
     };
     const handleDeleteBrand = async (id) => {
+        let original = [];
+        dispatch((_, getState) => { original = [...getState().admin.brands]; });
+        dispatch(removeBrandFromList(id));
+        toast("Brand deleted");
         try {
             await api.deleteBrand(id);
-            dispatch(removeBrandFromList(id));
-            toast("Brand deleted");
-        } catch (e) { toast(errMsg(e), "error"); throw e; }
+        } catch (e) {
+            dispatch(setBrands(original));
+            toast(errMsg(e), "error");
+            throw e;
+        }
     };
 
     return {

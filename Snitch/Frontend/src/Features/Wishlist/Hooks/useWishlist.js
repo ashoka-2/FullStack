@@ -29,21 +29,40 @@ export const useWishlist = () => {
             toast("Please login to wishlist products.", "info");
             return;
         }
-        dispatch(setLoading(true));
+
+        // --- Optimistic Update ---
+        let originalProducts = [];
+        let currentWishlist = null;
+        
+        dispatch((_, getState) => {
+            currentWishlist = getState().wishlist.wishlist;
+            originalProducts = currentWishlist ? [...(currentWishlist.products || [])] : [];
+        });
+
+        const isCurrentlyListed = originalProducts.some(p => (p._id || p) === productId);
+
+        // Optimistically generate new products array
+        let nextProducts;
+        if (isCurrentlyListed) {
+            nextProducts = originalProducts.filter(p => (p._id || p) !== productId);
+            toast("Removed from wishlist.");
+        } else {
+            // Add simple placeholder object or ID representing the product
+            nextProducts = [...originalProducts, productId];
+            toast("Added to wishlist! ❤️");
+        }
+
+        dispatch(setWishlist({ ...currentWishlist, products: nextProducts }));
+
         try {
             const data = await api.toggleItemInWishlist(productId);
             dispatch(setWishlist(data.wishlist));
-            if (data.action === "added") {
-                toast("Added to wishlist! ❤️");
-            } else {
-                toast("Removed from wishlist.");
-            }
             return data.wishlist;
         } catch (e) {
+            // Rollback on failure
+            dispatch(setWishlist({ ...currentWishlist, products: originalProducts }));
             toast(errMsg(e), "error");
             throw e;
-        } finally {
-            dispatch(setLoading(false));
         }
     };
 

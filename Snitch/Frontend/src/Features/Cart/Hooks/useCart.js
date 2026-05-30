@@ -44,31 +44,59 @@ export const useCart = () => {
     };
 
     const updateQuantity = async (itemId, quantity) => {
-        dispatch(setLoading(true));
+        let originalItems = [];
+        let currentCart = null;
+
+        dispatch((_, getState) => {
+            currentCart = getState().cart.cart;
+            originalItems = currentCart ? [...(currentCart.items || [])] : [];
+        });
+
+        // Optimistic state calculation
+        const nextItems = originalItems.map(item => {
+            if (item._id === itemId) {
+                return { ...item, quantity };
+            }
+            return item;
+        });
+
+        dispatch(setCart({ ...currentCart, items: nextItems }));
+
         try {
             const data = await api.updateItemQuantity(itemId, quantity);
             dispatch(setCart(data.cart));
             return data.cart;
         } catch (e) {
+            // Rollback
+            dispatch(setCart({ ...currentCart, items: originalItems }));
             toast(errMsg(e), "error");
             throw e;
-        } finally {
-            dispatch(setLoading(false));
         }
     };
-
+ 
     const removeFromCart = async (itemId) => {
-        dispatch(setLoading(true));
+        let originalItems = [];
+        let currentCart = null;
+
+        dispatch((_, getState) => {
+            currentCart = getState().cart.cart;
+            originalItems = currentCart ? [...(currentCart.items || [])] : [];
+        });
+
+        // Optimistic state calculation
+        const nextItems = originalItems.filter(item => item._id !== itemId);
+        dispatch(setCart({ ...currentCart, items: nextItems }));
+        toast("Item removed from bag.");
+
         try {
             const data = await api.deleteItemFromCart(itemId);
             dispatch(setCart(data.cart));
-            toast("Item removed from bag.");
             return data.cart;
         } catch (e) {
+            // Rollback
+            dispatch(setCart({ ...currentCart, items: originalItems }));
             toast(errMsg(e), "error");
             throw e;
-        } finally {
-            dispatch(setLoading(false));
         }
     };
 
