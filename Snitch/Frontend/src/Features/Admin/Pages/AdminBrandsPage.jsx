@@ -5,6 +5,7 @@ import { PrimaryBtn, SecondaryBtn } from '../../Components/Buttons';
 import Modal from '../../Components/Modal';
 import PageLoader from '../../Components/PageLoader';
 import { AdminTaxonomySkeleton } from '../../Components/Skeletons';
+import useDebounceThrottle from '../../../utils/useDebounceThrottle';
 
 const AdminBrandsPage = () => {
     const { brands, loading } = useSelector(state => state.admin);
@@ -15,12 +16,20 @@ const AdminBrandsPage = () => {
     const [formData, setFormData] = useState({});
     const [imageFile, setImageFile] = useState(null);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
+    const [searchVal, setSearchVal] = useState('');
+    const debouncedSearch = useDebounceThrottle(searchVal);
 
     useEffect(() => {
         fetchAll();
     }, []);
 
     if (loading) return <PageLoader skeleton={AdminTaxonomySkeleton} />;
+
+    const filteredBrands = brands.filter(b => {
+        if (!debouncedSearch) return true;
+        const q = debouncedSearch.toLowerCase();
+        return b.name?.toLowerCase().includes(q) || b.description?.toLowerCase().includes(q) || b.website?.toLowerCase().includes(q);
+    });
 
     const resetForm = () => {
         setFormData({});
@@ -84,6 +93,17 @@ const AdminBrandsPage = () => {
                 <PrimaryBtn icon="ri-add-line" onClick={() => setShowForm(true)}>Add Brand</PrimaryBtn>
             </header>
 
+            {/* Search bar */}
+            <div className="relative">
+                <i className="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-foreground/30" />
+                <input
+                    value={searchVal}
+                    onChange={e => setSearchVal(e.target.value)}
+                    placeholder="Search brands by name, description or website…"
+                    className="w-full pl-10 pr-4 py-3 bg-surface/50 border border-border-theme/50 rounded-2xl text-sm outline-none focus:border-accent/50 transition-colors placeholder:text-foreground/25 font-medium"
+                />
+            </div>
+
             {/* Form Overlay */}
             {showForm && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-xl p-4">
@@ -137,7 +157,7 @@ const AdminBrandsPage = () => {
 
             {/* Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {brands.map(item => (
+                {filteredBrands.map(item => (
                     <div key={item._id} className="group bg-surface/40 hover:bg-surface border border-border-theme rounded-3xl p-6 transition-all relative overflow-hidden flex flex-col justify-between h-40">
                         {item.logo && (
                             <img src={item.logo} className="absolute inset-0 w-full h-full object-cover opacity-[0.03] grayscale blur-sm pointer-events-none group-hover:opacity-[0.08] transition-opacity" />
@@ -174,10 +194,10 @@ const AdminBrandsPage = () => {
                         </div>
                     </div>
                 ))}
-                {brands.length === 0 && (
+                {filteredBrands.length === 0 && (
                     <div className="col-span-full py-20 flex flex-col items-center justify-center gap-3 text-foreground/25 border border-dashed border-border-theme/40 rounded-3xl bg-surface/10">
                         <i className="ri-award-line text-4xl" />
-                        <p className="text-sm font-black uppercase tracking-widest">No brands listed</p>
+                        <p className="text-sm font-black uppercase tracking-widest">No brands found</p>
                     </div>
                 )}
             </div>

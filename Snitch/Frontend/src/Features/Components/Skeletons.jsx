@@ -401,6 +401,10 @@ export const AdminTaxonomySkeleton = () => (
             </div>
             <SkeletonBase className="w-36 h-12 rounded-xl" />
         </div>
+
+        {/* Search Bar Skeleton */}
+        <SkeletonBase className="w-full h-12 rounded-2xl" />
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
                 <SkeletonBase key={i} className="h-40 border border-border-theme/80 dark:border-border-theme/40" />

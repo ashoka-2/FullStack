@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router';
 import { useUsers } from '../../Users/Hooks/useUsers';
 import PageLoader from '../../Components/PageLoader';
 import { AdminUsersSkeleton } from '../../Components/Skeletons';
+import useDebounceThrottle from '../../../utils/useDebounceThrottle';
 
 const AdminUsersPage = () => {
     const navigate = useNavigate();
     const { allUsers, loading } = useSelector(state => state.users);
     const { handleFetchAllUsers } = useUsers();
     const [userSearch, setUserSearch] = useState('');
+    const debouncedSearch = useDebounceThrottle(userSearch);
 
     useEffect(() => {
         handleFetchAllUsers();
@@ -18,8 +20,8 @@ const AdminUsersPage = () => {
     if (loading) return <PageLoader skeleton={AdminUsersSkeleton} />;
 
     const filteredUsers = allUsers.filter(u => {
-        if (!userSearch) return true;
-        const q = userSearch.toLowerCase();
+        if (!debouncedSearch) return true;
+        const q = debouncedSearch.toLowerCase();
         return u.fullname?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.role?.toLowerCase().includes(q);
     });
 
