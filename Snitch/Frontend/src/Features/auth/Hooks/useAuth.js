@@ -29,6 +29,7 @@ export const useAuth = () => {
             const data = await login({ identifier, password })
             dispatch(setUser(data.user))
             dispatch(addToast({ message: "Welcome back! Login successful.", type: "success" }))
+            return data.user;
         } catch (error) {
             const message = error.response?.data?.message || "Invalid credentials. Please check your email/contact and password."
             dispatch(addToast({ message, type: "error" }))

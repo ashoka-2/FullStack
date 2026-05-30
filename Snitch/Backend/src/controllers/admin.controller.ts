@@ -24,7 +24,7 @@ export const createCategory = async (req: AuthRequest, res: Response) => {
         let image: string | undefined;
         if (file) {
             const uploaded = await uploadFile({
-                buffer: file.buffer,
+                file: file.buffer,
                 filename: file.originalname,
                 folder: "/snitch/categories",
             });
@@ -55,7 +55,7 @@ export const updateCategory = async (req: AuthRequest, res: Response) => {
         const update: any = { ...(name && { name }), ...(description !== undefined && { description }), ...(isActive !== undefined && { isActive }) };
 
         if (file) {
-            const uploaded = await uploadFile({ buffer: file.buffer, filename: file.originalname, folder: "/snitch/categories" });
+            const uploaded = await uploadFile({ file: file.buffer, filename: file.originalname, folder: "/snitch/categories" });
             update.image = uploaded.url;
         }
 
@@ -192,7 +192,7 @@ export const createBrand = async (req: AuthRequest, res: Response) => {
 
         let logo: string | undefined;
         if (file) {
-            const uploaded = await uploadFile({ buffer: file.buffer, filename: file.originalname, folder: "/snitch/brands" });
+            const uploaded = await uploadFile({ file: file.buffer, filename: file.originalname, folder: "/snitch/brands" });
             logo = uploaded.url;
         }
 
@@ -219,7 +219,7 @@ export const updateBrand = async (req: AuthRequest, res: Response) => {
         const update: any = { name, description, website, isActive };
 
         if (file) {
-            const uploaded = await uploadFile({ buffer: file.buffer, filename: file.originalname, folder: "/snitch/brands" });
+            const uploaded = await uploadFile({ file: file.buffer, filename: file.originalname, folder: "/snitch/brands" });
             update.logo = uploaded.url;
         }
 

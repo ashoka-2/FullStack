@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useAdmin } from '../Hooks/useAdmin';
+import { useUsers } from '../../Users/Hooks/useUsers';
+import UserDetailPanel from '../../Users/Pages/UserDetailPanel';
 import { PrimaryBtn, SecondaryBtn, TertiaryBtn } from '../../Components/Buttons';
 import PageLoader from '../../Components/PageLoader';
 import Modal from '../../Components/Modal';
@@ -9,6 +11,7 @@ import { AdminDashboardSkeleton } from '../../Components/Skeletons';
 const AdminDashboard = () => {
     const { user } = useSelector(state => state.auth);
     const { categories, units, sizes, colors, brands, loading } = useSelector(state => state.admin);
+    const { allUsers, loading: usersLoading } = useSelector(state => state.users);
     const { fetchAll, 
         handleCreateCategory, handleUpdateCategory, handleDeleteCategory,
         handleCreateUnit, handleUpdateUnit, handleDeleteUnit,
@@ -16,10 +19,13 @@ const AdminDashboard = () => {
         handleCreateColor, handleUpdateColor, handleDeleteColor,
         handleCreateBrand, handleUpdateBrand, handleDeleteBrand 
     } = useAdmin();
+    const { handleFetchAllUsers } = useUsers();
 
     const [activeTab, setActiveTab] = useState('categories');
     const [showForm, setShowForm] = useState(false);
     const [editItem, setEditItem] = useState(null);
+    const [selectedUserId, setSelectedUserId] = useState(null);
+    const [userSearch, setUserSearch] = useState('');
 
     // Form states
     const [formData, setFormData] = useState({});
@@ -30,6 +36,7 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         fetchAll();
+        handleFetchAllUsers();
     }, []);
 
     if (loading) return <PageLoader skeleton={AdminDashboardSkeleton} />;
@@ -51,6 +58,7 @@ const AdminDashboard = () => {
         { id: 'units',      label: 'Units',      icon: 'ri-scales-line' },
         { id: 'sizes',      label: 'Sizes',      icon: 'ri-ruler-line' },
         { id: 'colors',     label: 'Colors',     icon: 'ri-palette-line' },
+        { id: 'users',      label: 'Users',      icon: 'ri-team-line' },
     ];
 
     const resetForm = () => {
@@ -146,6 +154,10 @@ const AdminDashboard = () => {
                 type="danger"
             />
             <div className="max-w-7xl mx-auto">
+                {/* UserDetailPanel */}
+                {selectedUserId && (
+                    <UserDetailPanel userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
+                )}
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                     <div>
                         <span className="text-[10px] font-black tracking-widest text-accent uppercase">System Control</span>
@@ -168,6 +180,9 @@ const AdminDashboard = () => {
                         >
                             <i className={tab.icon} />
                             {tab.label}
+                            {tab.id === 'users' && allUsers.length > 0 && (
+                                <span className="text-[9px] bg-accent-content/20 px-1.5 py-0.5 rounded-full">{allUsers.length}</span>
+                            )}
                         </button>
                     ))}
                 </div>
@@ -280,7 +295,8 @@ const AdminDashboard = () => {
                     </div>
                 )}
 
-                {/* Data Grid */}
+                {/* Data Grid — catalog items */}
+                {activeTab !== 'users' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {loading ? (
                         [1,2,3,4].map(i => <div key={i} className="h-32 bg-surface animate-pulse rounded-2xl border border-border-theme" />)
@@ -341,6 +357,77 @@ const AdminDashboard = () => {
                         </div>
                     ))}
                 </div>
+                )}
+
+                {/* Users Table */}
+                {activeTab === 'users' && (
+                    <div className="space-y-4">
+                        {/* Search bar */}
+                        <div className="relative">
+                            <i className="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-foreground/30" />
+                            <input
+                                value={userSearch}
+                                onChange={e => setUserSearch(e.target.value)}
+                                placeholder="Search by name, email or role…"
+                                className="w-full pl-10 pr-4 py-3 bg-surface/50 border border-border-theme/50 rounded-2xl text-sm outline-none focus:border-accent/50 transition-colors placeholder:text-foreground/25 font-medium"
+                            />
+                        </div>
+
+                        {usersLoading ? (
+                            <div className="space-y-2">
+                                {[1,2,3,4,5].map(i => <div key={i} className="h-16 bg-surface animate-pulse rounded-2xl border border-border-theme" />)}
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {allUsers
+                                    .filter(u => {
+                                        if (!userSearch) return true;
+                                        const q = userSearch.toLowerCase();
+                                        return u.fullname?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.role?.toLowerCase().includes(q);
+                                    })
+                                    .map(u => {
+                                        const roleColors = { admin: 'text-violet-400', seller: 'text-accent', buyer: 'text-sky-400' };
+                                        const roleIcons  = { admin: 'ri-shield-star-line', seller: 'ri-store-2-line', buyer: 'ri-user-line' };
+                                        return (
+                                            <div
+                                                key={u._id}
+                                                onClick={() => setSelectedUserId(u._id)}
+                                                className="flex items-center gap-4 p-4 bg-surface/40 hover:bg-surface border border-border-theme/40 hover:border-accent/30 rounded-2xl cursor-pointer transition-all group"
+                                            >
+                                                {/* Avatar */}
+                                                <div className="w-10 h-10 rounded-xl overflow-hidden bg-background flex-shrink-0 border border-border-theme/40">
+                                                    {u.profilePic
+                                                        ? <img src={u.profilePic} alt={u.fullname} className="w-full h-full object-cover" />
+                                                        : <div className="w-full h-full flex items-center justify-center"><i className="ri-user-3-line text-foreground/30" /></div>}
+                                                </div>
+                                                {/* Info */}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-black text-sm truncate">{u.fullname}</p>
+                                                    <p className="text-[10px] text-foreground/40 truncate">{u.email}</p>
+                                                </div>
+                                                {/* Role */}
+                                                <div className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest flex-shrink-0 ${roleColors[u.role] || 'text-foreground/40'}`}>
+                                                    <i className={roleIcons[u.role] || 'ri-user-line'} />
+                                                    {u.role}
+                                                </div>
+                                                {/* Address */}
+                                                {u.place && <p className="text-[9px] text-foreground/25 hidden xl:block max-w-[140px] truncate">{u.place}</p>}
+                                                {/* Arrow */}
+                                                <i className="ri-arrow-right-s-line text-foreground/20 group-hover:text-accent transition-colors flex-shrink-0" />
+                                            </div>
+                                        );
+                                    })
+                                }
+                                {allUsers.length === 0 && (
+                                    <div className="py-20 flex flex-col items-center gap-3 text-foreground/25">
+                                        <i className="ri-team-line text-4xl" />
+                                        <p className="text-sm font-black uppercase tracking-widest">No users found</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { validateRegisterUser, validateLoginUser } from "../validator/auth.validator.js";
-import { googleCallback, login, register, getMe, logout, updateProfile } from "../controllers/auth.controller.js";
+import { googleCallback, login, register, getMe, logout, updateProfile, getAllUsers, getUserById, getUserDetail } from "../controllers/auth.controller.js";
 import passport from "passport";
 import { config } from "../config/config.js";
-import { verifyToken } from "../middlewares/auth.middleware.js";
+import { verifyToken, authenticateSeller } from "../middlewares/auth.middleware.js";
 
 import multer from "multer";
 
@@ -16,9 +16,13 @@ router.post("/login", validateLoginUser, login);
 
 router.post("/logout", logout);
 
-router.put("/update-profile", verifyToken, upload.single("profilePic"), updateProfile);
+router.put("/update-profile", verifyToken as any, upload.single("profilePic"), updateProfile as any);
 
-router.get("/me", verifyToken, getMe);
+router.get("/me", verifyToken as any, getMe as any);
+
+router.get("/users", verifyToken as any, authenticateSeller as any, getAllUsers as any);
+router.get("/users/:id/detail", verifyToken as any, authenticateSeller as any, getUserDetail as any);
+router.get("/users/:id", verifyToken as any, authenticateSeller as any, getUserById as any);
 
 // /api/auth/google
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
