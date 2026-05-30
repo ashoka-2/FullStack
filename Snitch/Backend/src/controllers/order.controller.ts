@@ -1,4 +1,5 @@
 import { Response } from "express";
+import mongoose from "mongoose";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 import orderModel from "../models/order.model.js";
 import orderSubModel from "../models/orderSub.model.js";
@@ -33,7 +34,7 @@ const getPopulatedOrder = async (orderId: string) => {
     return orderObj;
 };
 
-// Place order
+// Place order — wrapped in a MongoDB transaction to prevent race conditions
 export const createOrder = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id;
     if (!userId) {
@@ -42,6 +43,10 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
 
     const { shippingAddress, contactNumber, items: customItems } = req.body;
 
+    // Start a Mongoose session for atomic transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
         const orderItems: any[] = [];
         let totalAmount = 0;
@@ -49,8 +54,10 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
         // Fetch address from User's Place model if not provided
         let resolvedAddress = shippingAddress;
         if (!resolvedAddress) {
-            const userPlace = await placeModel.findOne({ user: userId });
+            const userPlace = await placeModel.findOne({ user: userId }).session(session);
             if (!userPlace) {
+                await session.abortTransaction();
+                session.endSession();
                 return res.status(400).json({ message: "No shipping address provided or found on profile" });
             }
             resolvedAddress = {
@@ -68,96 +75,131 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
             resolvedContact = req.user?.contact;
         }
 
-        if (customItems && customItems.length > 0) {
-            for (const item of customItems) {
-                const productObj = await productModel.findById(item.product);
-                if (!productObj) {
-                    return res.status(404).json({ message: `Product ${item.product} not found` });
-                }
-                if (productObj.stock < item.quantity) {
-                    return res.status(400).json({ message: `Insufficient stock for ${productObj.title}` });
+        const itemsToProcess = customItems && customItems.length > 0
+            ? customItems
+            : (() => {
+                // Handled below via cart fetch
+                return null;
+            })();
+
+        if (itemsToProcess) {
+            // Process custom items (buy-now flow)
+            for (const item of itemsToProcess) {
+                // ── Atomic stock deduction ──────────────────────────────────────
+                // findOneAndUpdate with $gte filter: only succeeds if stock >= quantity
+                // This is race-condition safe — no separate read-then-write
+                const updatedProduct = await productModel.findOneAndUpdate(
+                    { _id: item.product, stock: { $gte: item.quantity } },
+                    { $inc: { stock: -item.quantity } },
+                    { new: true, session }
+                );
+
+                if (!updatedProduct) {
+                    // Stock was insufficient (either 0 or another request grabbed it first)
+                    await session.abortTransaction();
+                    session.endSession();
+                    return res.status(400).json({
+                        message: `Insufficient stock for product. Someone else may have just purchased it.`
+                    });
                 }
 
-                const price = productObj.price.saleAmount || productObj.price.amount;
+                const price = updatedProduct.price.saleAmount || updatedProduct.price.amount;
                 orderItems.push({
                     product: item.product,
                     size: item.size || null,
                     color: item.color || null,
                     quantity: item.quantity,
-                    price: price
+                    price
                 });
                 totalAmount += price * item.quantity;
             }
         } else {
             // Check out using Cart
-            const cart = await cartModel.findOne({ user: userId }).populate("items.product");
+            const cart = await cartModel.findOne({ user: userId }).populate("items.product").session(session);
             if (!cart || cart.items.length === 0) {
+                await session.abortTransaction();
+                session.endSession();
                 return res.status(400).json({ message: "Your cart is empty" });
             }
 
             for (const item of cart.items) {
                 const productObj = item.product as any;
                 if (!productObj) continue;
-                if (productObj.stock < item.quantity) {
-                    return res.status(400).json({ message: `Insufficient stock for ${productObj.title}` });
+
+                // ── Atomic stock deduction ──────────────────────────────────────
+                const updatedProduct = await productModel.findOneAndUpdate(
+                    { _id: productObj._id, stock: { $gte: item.quantity } },
+                    { $inc: { stock: -item.quantity } },
+                    { new: true, session }
+                );
+
+                if (!updatedProduct) {
+                    await session.abortTransaction();
+                    session.endSession();
+                    return res.status(400).json({
+                        message: `Insufficient stock for "${productObj.title}". Someone else may have just purchased it.`
+                    });
                 }
 
-                const price = productObj.price.saleAmount || productObj.price.amount;
+                const price = updatedProduct.price.saleAmount || updatedProduct.price.amount;
                 orderItems.push({
                     product: productObj._id,
                     size: item.size || null,
                     color: item.color || null,
                     quantity: item.quantity,
-                    price: price
+                    price
                 });
                 totalAmount += price * item.quantity;
             }
         }
 
         if (orderItems.length === 0) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(400).json({ message: "No items to order" });
         }
 
-        // Deduct stocks
-        for (const item of orderItems) {
-            await productModel.findByIdAndUpdate(item.product, {
-                $inc: { stock: -item.quantity }
-            });
-        }
-
-        // Create the parent metadata Order table record
-        const newOrder = await orderModel.create({
+        // Create the parent metadata Order record (inside transaction)
+        const [newOrder] = await orderModel.create([{
             buyer: userId,
             totalAmount,
             shippingAddress: resolvedAddress,
             contactNumber: resolvedContact,
             status: "pending",
             paymentStatus: "paid",
-        });
+        }], { session });
 
-        // Create normalized children OrderSub table records
+        // Create normalized children OrderSub records (inside transaction)
+        const createdOrder = newOrder as any;
         const subItems = orderItems.map(item => ({
-            order: newOrder._id,
+            order: createdOrder._id,
             product: item.product,
             size: item.size,
             color: item.color,
             quantity: item.quantity,
             price: item.price
         }));
-        await orderSubModel.insertMany(subItems);
+        await orderSubModel.insertMany(subItems, { session });
 
-        // Clear cart if ordered from cart
+        // Clear cart if ordered from cart (inside transaction)
         if (!customItems || customItems.length === 0) {
-            await cartModel.findOneAndUpdate({ user: userId }, { items: [] });
+            await cartModel.findOneAndUpdate({ user: userId }, { items: [] }, { session });
         }
+
+        // ── Commit transaction — all-or-nothing ─────────────────────────────
+        await session.commitTransaction();
+        session.endSession();
 
         broadcastUpdate("order_update");
         broadcastUpdate("cart_update");
 
-        const populatedOrder = await getPopulatedOrder(newOrder._id.toString());
+        const populatedOrder = await getPopulatedOrder((newOrder as any)._id.toString());
 
         return res.status(201).json({ success: true, message: "Order placed successfully", order: populatedOrder });
     } catch (error) {
+        // Rollback everything if any step fails
+        await session.abortTransaction();
+        session.endSession();
         console.error("Create order error:", error);
         return res.status(500).json({ message: "Server error placing order" });
     }
@@ -259,7 +301,7 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ message: "Order not found" });
         }
 
-        // If transitioning to cancelled, add back stock
+        // If transitioning to cancelled, add back stock atomically
         if (status === "cancelled" && order.status !== "cancelled") {
             const subItems = await orderSubModel.find({ order: id as any });
             for (const item of subItems) {
@@ -308,7 +350,6 @@ export const cancelOrReturnOrder = async (req: AuthRequest, res: Response) => {
             if (order.status !== "pending" && order.status !== "processing") {
                 return res.status(400).json({ message: "Order can only be cancelled when pending or processing" });
             }
-            // Add back stock
             for (const item of subItems) {
                 await productModel.findByIdAndUpdate(item.product, {
                     $inc: { stock: item.quantity }
@@ -319,7 +360,6 @@ export const cancelOrReturnOrder = async (req: AuthRequest, res: Response) => {
             if (order.status !== "shipped" && order.status !== "delivered") {
                 return res.status(400).json({ message: "Order can only be returned when shipped or delivered" });
             }
-            // Add back stock
             for (const item of subItems) {
                 await productModel.findByIdAndUpdate(item.product, {
                     $inc: { stock: item.quantity }

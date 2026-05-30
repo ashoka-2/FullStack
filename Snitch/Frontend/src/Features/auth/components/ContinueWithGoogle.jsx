@@ -1,8 +1,10 @@
 import React from 'react'
+import axios from '../../../utils/axios'
 
 const ContinueWithGoogle = () => {
+    const googleHref = (axios.defaults.baseURL || "") + "/api/auth/google";
     return (
-        <a href="/api/auth/google"
+        <a href={googleHref}
             className="flex items-center justify-center w-full bg-transparent border border-[#2a2a2a] text-[#d4d4d4] px-4 py-4 text-[10px] font-sans uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all duration-500 group"
         >
             <svg className="w-5 h-5 mr-3" viewBox="0 0 48 48">

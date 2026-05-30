@@ -8,6 +8,7 @@ import brandModel from "../models/brand.model.js";
 import sizeModel from "../models/size.model.js";
 import colorModel from "../models/color.model.js";
 import unitModel from "../models/unit.model.js";
+import redisClient from "../config/redis.js";
 
 // Reusable populate config
 const POPULATE = [
@@ -18,8 +19,34 @@ const POPULATE = [
     { path: "unit", select: "name abbreviation" },
 ];
 
+// ─── Cache TTLs ─────────────────────────────────────────────────────────────
+const TTL_PRODUCTS_ALL  = 5 * 60;   // 5 minutes  — product catalog
+const TTL_PRODUCT_ONE   = 5 * 60;   // 5 minutes  — single product
+const TTL_METADATA      = 30 * 60;  // 30 minutes — categories/brands/sizes (rarely change)
+
+// ─── Cache Key Helpers ───────────────────────────────────────────────────────
+const KEY_ALL       = "products:all";
+const KEY_METADATA  = "products:metadata";
+const keyOne = (id: string) => `products:${id}`;
+
+// ─── Cache Invalidation ──────────────────────────────────────────────────────
+// Called whenever a product is created, updated, or deleted
+const bustProductCache = async (id?: string) => {
+    const keys = [KEY_ALL];
+    if (id) keys.push(keyOne(id));
+    await redisClient.del(...keys);
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const getProductMetadata = async (_req: Request, res: Response) => {
     try {
+        // Try cache first
+        const cached = await redisClient.get(KEY_METADATA);
+        if (cached) {
+            return res.status(200).json(JSON.parse(cached));
+        }
+
         const filter = { isActive: { $ne: false } };
         const [categories, brands, sizes, colors, units] = await Promise.all([
             categoryModel.find(filter).sort({ name: 1 }),
@@ -29,14 +56,10 @@ export const getProductMetadata = async (_req: Request, res: Response) => {
             unitModel.find(filter).sort({ name: 1 }),
         ]);
 
-        return res.status(200).json({
-            success: true,
-            categories,
-            brands,
-            sizes,
-            colors,
-            units,
-        });
+        const payload = { success: true, categories, brands, sizes, colors, units };
+        await redisClient.setex(KEY_METADATA, TTL_METADATA, JSON.stringify(payload));
+
+        return res.status(200).json(payload);
     } catch (err) {
         console.error("Get Metadata Error:", err);
         return res.status(500).json({ success: false, message: "Server error" });
@@ -122,6 +145,9 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
         // Populate before returning so the frontend gets full objects
         await product.populate(POPULATE);
 
+        // Bust catalog cache — new product should appear immediately
+        await bustProductCache();
+
         return res.status(201).json({ success: true, message: "Product created successfully", product });
     } catch (err) {
         console.error("Create Product Error:", err);
@@ -132,12 +158,21 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
 
 export const getAllProducts = async (_req: Request, res: Response) => {
     try {
+        // Try cache first
+        const cached = await redisClient.get(KEY_ALL);
+        if (cached) {
+            return res.status(200).json(JSON.parse(cached));
+        }
+
         const products = await productModel
             .find({ status: "active" })
             .populate(POPULATE)
             .sort({ createdAt: -1 });
 
-        return res.status(200).json({ success: true, products });
+        const payload = { success: true, products };
+        await redisClient.setex(KEY_ALL, TTL_PRODUCTS_ALL, JSON.stringify(payload));
+
+        return res.status(200).json(payload);
     } catch (err) {
         console.error("Get All Products Error:", err);
         return res.status(500).json({ success: false, message: "Server error" });
@@ -152,7 +187,7 @@ export const getSellersAllProducts = async (req: AuthRequest, res: Response) => 
             return res.status(401).json({ success: false, message: "Not authenticated" });
         }
 
-        // Sellers see all their products (draft + active)
+        // Sellers see all their products (draft + active) — not cached (seller-specific & low traffic)
         const products = await productModel
             .find({ seller: sellerId })
             .populate(POPULATE)
@@ -171,10 +206,21 @@ export const getProductById = async (req: Request, res: Response) => {
         if (!id || !mongoose.Types.ObjectId.isValid(id as string)) {
             return res.status(400).json({ success: false, message: "Invalid product ID" });
         }
+
+        // Try cache first
+        const cacheKey = keyOne(id as string);
+        const cached = await redisClient.get(cacheKey);
+        if (cached) {
+            return res.status(200).json(JSON.parse(cached));
+        }
+
         const product = await productModel.findById(id).populate(POPULATE);
         if (!product) return res.status(404).json({ success: false, message: "Product not found" });
 
-        return res.status(200).json({ success: true, product });
+        const payload = { success: true, product };
+        await redisClient.setex(cacheKey, TTL_PRODUCT_ONE, JSON.stringify(payload));
+
+        return res.status(200).json(payload);
     } catch (err) {
         console.error("Get Product By ID Error:", err);
         return res.status(500).json({ success: false, message: "Server error" });
@@ -246,6 +292,9 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
             { new: true, runValidators: true }
         ).populate(POPULATE);
 
+        // Bust both the catalog cache and this product's individual cache
+        await bustProductCache(id as string);
+
         return res.status(200).json({ success: true, message: "Product updated", product: updatedProduct });
     } catch (err) {
         console.error("Update Product Error:", err);
@@ -266,6 +315,10 @@ export const deleteProduct = async (req: AuthRequest, res: Response) => {
         }
 
         await productModel.findByIdAndDelete(id);
+
+        // Bust both catalog + individual product cache
+        await bustProductCache(id as string);
+
         return res.status(200).json({ success: true, message: "Product deleted successfully" });
     } catch (err) {
         console.error("Delete Product Error:", err);

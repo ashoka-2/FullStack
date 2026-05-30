@@ -51,5 +51,10 @@ const orderSchema = new Schema<IOrder>(
     { timestamps: true }
 );
 
+// ─── Indexes ──────────────────────────────────────────────────────────────────
+// getMyOrders: filter by buyer sorted newest; admin/seller listing by status
+orderSchema.index({ buyer: 1, createdAt: -1 });
+orderSchema.index({ status: 1, createdAt: -1 });
+
 const orderModel: Model<IOrder> = mongoose.model<IOrder>("Order", orderSchema);
 export default orderModel;

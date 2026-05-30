@@ -1,8 +1,7 @@
-import axios from "axios";
+import axios from "../../../utils/axios";
 
 const adminApi = axios.create({
-    baseURL: "/api/admin",
-    withCredentials: true,
+    baseURL: axios.defaults.baseURL + "/api/admin",
 });
 
 // ── Categories ──────────────────────────────────────────────────────────────

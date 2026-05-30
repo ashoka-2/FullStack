@@ -44,5 +44,9 @@ const orderSubSchema = new Schema<IOrderSub>(
     { timestamps: true }
 );
 
+// ─── Indexes ──────────────────────────────────────────────────────────────────
+// The most critical index: every order detail fetch does find({ order: { $in: ids } })
+orderSubSchema.index({ order: 1 });
+
 const orderSubModel: Model<IOrderSub> = mongoose.model<IOrderSub>("OrderSub", orderSubSchema);
 export default orderSubModel;

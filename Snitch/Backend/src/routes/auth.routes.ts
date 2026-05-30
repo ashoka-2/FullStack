@@ -4,15 +4,16 @@ import { googleCallback, login, register, getMe, logout, updateProfile, getAllUs
 import passport from "passport";
 import { config } from "../config/config.js";
 import { verifyToken, authenticateSeller, authenticateAdmin } from "../middlewares/auth.middleware.js";
+import { registerLimiter, authLimiter } from "../middlewares/rateLimiter.middleware.js";
 
 import multer from "multer";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post("/register", validateRegisterUser, register);
+router.post("/register", registerLimiter, validateRegisterUser, register);
 
-router.post("/login", validateLoginUser, login);
+router.post("/login", authLimiter, validateLoginUser, login);
 
 router.post("/logout", logout);
 

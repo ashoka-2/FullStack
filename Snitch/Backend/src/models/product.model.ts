@@ -111,6 +111,13 @@ const productSchema = new Schema<IProduct>(
     { timestamps: true }
 );
 
+// ─── Indexes ──────────────────────────────────────────────────────────────────
+// Most common read patterns: browse by seller, filter by category+status, sort newest
+productSchema.index({ seller: 1, status: 1 });
+productSchema.index({ category: 1, status: 1 });
+productSchema.index({ status: 1, createdAt: -1 });
+productSchema.index({ createdAt: -1 });
+
 const productModel: Model<IProduct> = mongoose.model<IProduct>("Product", productSchema);
 
 export default productModel;

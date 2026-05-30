@@ -1,8 +1,7 @@
-import axios from "axios";
+import axios from "../../../utils/axios";
 
 const orderApiInstance = axios.create({
-    baseURL: "/api/orders",
-    withCredentials: true,
+    baseURL: axios.defaults.baseURL + "/api/orders",
 });
 
 export async function placeOrder(shippingAddress, contactNumber, items = null) {

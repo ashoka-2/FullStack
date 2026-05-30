@@ -82,6 +82,10 @@ userSchema.methods.comparePassword = async function (password: string): Promise<
     return await bcrypt.compare(password, this.password);
 };
 
+// ─── Indexes ──────────────────────────────────────────────────────────────────
+// email & contact already indexed via unique:true. Adding role for admin/seller filters.
+userSchema.index({ role: 1 });
+
 // Create the model
 const userModel: Model<IUser> = mongoose.model<IUser>("User", userSchema);
 

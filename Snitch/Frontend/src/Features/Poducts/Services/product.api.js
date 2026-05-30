@@ -1,8 +1,7 @@
-import axios from "axios";
+import axios from "../../../utils/axios";
 
 const productApiInstance = axios.create({
-    baseURL:"/api/products",
-    withCredentials:true,
+    baseURL: axios.defaults.baseURL + "/api/products",
 })
 
 

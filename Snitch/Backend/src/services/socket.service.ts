@@ -1,12 +1,13 @@
 import { Server } from "socket.io";
 import { Server as HttpServer } from "http";
+import { config } from "../config/config.js";
 
 let io: Server | null = null;
 
 export const setupSocket = (httpServer: HttpServer) => {
     io = new Server(httpServer, {
         cors: {
-            origin: "http://localhost:5173",
+            origin: config.FRONTEND_URL,
             methods: ["GET", "POST", "PUT", "DELETE"],
             credentials: true
         }

@@ -109,7 +109,7 @@ export const login = async (req: Request, res: Response) => {
 export const googleCallback = async (req: Request, res: Response) => {
     const passportUser = req.user as any;
     if (!passportUser) {
-        return res.redirect("http://localhost:5173/login?error=auth_failed");
+        return res.redirect(`${config.FRONTEND_URL}/login?error=auth_failed`);
     }
 
     const { id, displayName, emails, photos } = passportUser;
@@ -151,10 +151,10 @@ export const googleCallback = async (req: Request, res: Response) => {
             sameSite: "strict",
         });
 
-        res.redirect("http://localhost:5173/");
+        res.redirect(config.FRONTEND_URL);
     } catch (error) {
         console.log(error);
-        res.redirect("http://localhost:5173/login?error=server_error");
+        res.redirect(`${config.FRONTEND_URL}/login?error=server_error`);
     }
 };
 

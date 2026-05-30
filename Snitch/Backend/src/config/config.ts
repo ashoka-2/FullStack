@@ -38,4 +38,9 @@ export const config = {
     IMAGEKIT_PRIVATE_KEY: process.env.IMAGEKIT_PRIVATE_KEY,
     IMAGEKIT_URL_ENDPOINT: process.env.IMAGEKIT_URL_ENDPOINT,
     NODE_ENV: process.env.NODE_ENV || "development",
+    // ── Deployment URLs ─────────────────────────────────────────────────────
+    // Set FRONTEND_URL in Render env vars to your Vercel URL e.g. https://snitch.vercel.app
+    FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:5173",
+    // Set BACKEND_URL in Render env vars to your Render URL e.g. https://snitch-api.onrender.com
+    BACKEND_URL: process.env.BACKEND_URL || "http://localhost:3000",
 };
