@@ -10,7 +10,16 @@ const Orders = () => {
     const navigate = useNavigate();
     const { user } = useSelector(state => state.auth);
     const { orders, loading } = useSelector(state => state.order);
-    const { getMyOrders } = useOrder();
+    const { getMyOrders, handleCancelOrReturnOrder } = useOrder();
+
+    const handleAction = async (orderId, action) => {
+        const text = action === 'cancel' 
+            ? 'Are you sure you want to cancel this order? This will release the items back to stock.' 
+            : 'Are you sure you want to return this order?';
+        if (window.confirm(text)) {
+            await handleCancelOrReturnOrder(orderId, action);
+        }
+    };
 
     useEffect(() => {
         if (!user) {
@@ -60,6 +69,7 @@ const Orders = () => {
                                             'text-[8px] font-black tracking-widest uppercase px-3 py-1.5 rounded-lg border ml-2',
                                             order.status === 'delivered' ? 'bg-green-500/10 border-green-500/20 text-green-500' :
                                             order.status === 'cancelled' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                                            order.status === 'returned' ? 'bg-orange-500/10 border-orange-500/20 text-orange-500' :
                                             order.status === 'shipped' ? 'bg-blue-500/10 border-blue-500/20 text-blue-500' :
                                             'bg-amber-500/10 border-amber-500/20 text-amber-500'
                                         ].join(' ')}>
@@ -104,6 +114,27 @@ const Orders = () => {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Actions Footer */}
+                                {['pending', 'processing', 'shipped', 'delivered'].includes(order.status) && (
+                                    <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-border-theme/40">
+                                        {['pending', 'processing'].includes(order.status) ? (
+                                            <button
+                                                onClick={() => handleAction(order._id, 'cancel')}
+                                                className="px-5 py-2.5 rounded-xl border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white transition-all text-xs font-black uppercase tracking-wider cursor-pointer active:scale-95"
+                                            >
+                                                Cancel Order
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleAction(order._id, 'return')}
+                                                className="px-5 py-2.5 rounded-xl border border-accent/30 text-accent hover:bg-accent hover:text-accent-content transition-all text-xs font-black uppercase tracking-wider cursor-pointer active:scale-95"
+                                            >
+                                                Return Order
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

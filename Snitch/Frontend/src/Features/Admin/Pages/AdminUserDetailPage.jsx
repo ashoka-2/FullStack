@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, useLocation } from 'react-router';
 import { useUsers } from '../../Users/Hooks/useUsers';
 import { PrimaryBtn, SecondaryBtn } from '../../Components/Buttons';
 import PageLoader from '../../Components/PageLoader';
@@ -24,11 +24,13 @@ const RoleBadge = ({ role }) => {
 // Product Mini-card
 const ProductChip = ({ product }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const isSellerMode = location.pathname.startsWith('/seller');
     const img = product?.images?.[0]?.url;
     const price = product?.price?.saleAmount || product?.price?.amount;
     return (
         <div
-            onClick={() => product?._id && navigate(`/admin/products/${product._id}`)}
+            onClick={() => product?._id && navigate(isSellerMode ? `/products/${product._id}` : `/admin/products/${product._id}`)}
             className="flex items-center gap-3 p-3 rounded-2xl bg-background/50 border border-border-theme/30 hover:border-accent/30 transition-colors cursor-pointer hover:bg-surface/10 hover:shadow-sm"
         >
             <div className="w-11 h-11 rounded-xl overflow-hidden bg-surface flex-shrink-0">
@@ -50,10 +52,12 @@ const ProductChip = ({ product }) => {
 // Cart Item Row
 const CartItem = ({ item }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const isSellerMode = location.pathname.startsWith('/seller');
     const img = item?.product?.images?.[0]?.url;
     return (
         <div
-            onClick={() => item?.product?._id && navigate(`/admin/products/${item.product._id}`)}
+            onClick={() => item?.product?._id && navigate(isSellerMode ? `/products/${item.product._id}` : `/admin/products/${item.product._id}`)}
             className="flex items-center gap-3 p-3 rounded-2xl bg-background/50 border border-border-theme/30 hover:border-accent/30 transition-colors cursor-pointer hover:bg-surface/10 hover:shadow-sm"
         >
             <div className="w-11 h-11 rounded-xl overflow-hidden bg-surface flex-shrink-0">
@@ -89,6 +93,8 @@ const statusMap = {
 
 const OrderRow = ({ order }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const isSellerMode = location.pathname.startsWith('/seller');
     const { cls } = statusMap[order.status] || statusMap.pending;
     const date = new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
     return (
@@ -106,7 +112,7 @@ const OrderRow = ({ order }) => {
                 {order.items?.map((item, idx) => (
                     <div
                         key={idx}
-                        onClick={() => item.product?._id && navigate(`/admin/products/${item.product._id}`)}
+                        onClick={() => item.product?._id && navigate(isSellerMode ? `/products/${item.product._id}` : `/admin/products/${item.product._id}`)}
                         className="flex items-center gap-2 hover:bg-foreground/5 p-1 rounded-xl cursor-pointer transition-colors group"
                     >
                         <div className="w-7 h-7 rounded-lg overflow-hidden bg-surface flex-shrink-0">
@@ -136,6 +142,8 @@ const EmptyTabState = ({ icon, label }) => (
 const AdminUserDetailPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    const isSellerMode = location.pathname.startsWith('/seller');
     const { handleFetchUserDetail, clearSelectedUser, handleToggleBanUser } = useUsers();
     const { selectedUser: user, detailLoading } = useSelector(state => state.users);
     const [tab, setTab] = useState("wishlist");
@@ -152,7 +160,7 @@ const AdminUserDetailPage = () => {
             <div className="h-[60vh] flex flex-col items-center justify-center gap-4 text-center">
                 <i className="ri-user-unfollow-line text-6xl text-foreground/25" />
                 <h2 className="text-2xl font-black">User Not Found</h2>
-                <SecondaryBtn onClick={() => navigate('/admin/users')}>Back to Users</SecondaryBtn>
+                <SecondaryBtn onClick={() => navigate(isSellerMode ? '/seller/users' : '/admin/users')}>Back to Users</SecondaryBtn>
             </div>
         );
     }
@@ -169,13 +177,13 @@ const AdminUserDetailPage = () => {
             {/* Header / Navigation */}
             <div className="flex items-center gap-4">
                 <button
-                    onClick={() => navigate('/admin/users')}
+                    onClick={() => navigate(isSellerMode ? '/seller/users' : '/admin/users')}
                     className="w-10 h-10 rounded-xl border border-border-theme flex items-center justify-center hover:bg-white/5 hover:text-accent hover:border-accent/40 active:scale-95 transition-all cursor-pointer text-foreground/60"
                 >
                     <i className="ri-arrow-left-line text-lg" />
                 </button>
                 <div>
-                    <span className="text-[10px] font-black tracking-widest text-accent uppercase">Users Registry</span>
+                    <span className="text-[10px] font-black tracking-widest text-accent uppercase">{isSellerMode ? "Seller Partners" : "Users Registry"}</span>
                     <h1 className="text-3xl font-black tracking-tighter text-foreground mt-0.5">User Profile Details</h1>
                 </div>
             </div>
@@ -230,20 +238,22 @@ const AdminUserDetailPage = () => {
                             </div>
                         </div>
 
-                        {/* Ban / Unban actions */}
-                        <div className="pt-2">
-                            <button
-                                onClick={() => handleToggleBanUser(user._id)}
-                                className={`w-full py-3 rounded-2xl text-xs font-black tracking-widest uppercase transition-all duration-300 shadow-md cursor-pointer border ${
-                                    user.isBanned
-                                        ? 'bg-emerald-500 text-white border-emerald-600 hover:bg-emerald-600'
-                                        : 'bg-red-500/10 text-red-500 border-red-500/25 hover:bg-red-500 hover:text-white'
-                                }`}
-                            >
-                                <i className={user.isBanned ? 'ri-user-shared-line mr-1.5' : 'ri-user-forbid-line mr-1.5'} />
-                                {user.isBanned ? 'Unban Account' : 'Ban Account'}
-                            </button>
-                        </div>
+                        {/* Ban / Unban actions (only show in Admin mode) */}
+                        {!isSellerMode && (
+                            <div className="pt-2">
+                                <button
+                                    onClick={() => handleToggleBanUser(user._id)}
+                                    className={`w-full py-3 rounded-2xl text-xs font-black tracking-widest uppercase transition-all duration-300 shadow-md cursor-pointer border ${
+                                        user.isBanned
+                                            ? 'bg-emerald-500 text-white border-emerald-600 hover:bg-emerald-600'
+                                            : 'bg-red-500/10 text-red-500 border-red-500/25 hover:bg-red-500 hover:text-white'
+                                    }`}
+                                >
+                                    <i className={user.isBanned ? 'ri-user-shared-line mr-1.5' : 'ri-user-forbid-line mr-1.5'} />
+                                    {user.isBanned ? 'Unban Account' : 'Ban Account'}
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Address details */}

@@ -8,6 +8,7 @@ import placeModel from "../models/place.model.js";
 import wishlistModel from "../models/wishlist.model.js";
 import cartModel from "../models/cart.model.js";
 import orderModel from "../models/order.model.js";
+import orderSubModel from "../models/orderSub.model.js";
 import productModel from "../models/product.model.js";
 import jwt from "jsonwebtoken";
 import { config } from "../config/config.js";
@@ -347,7 +348,7 @@ export const getUserDetail = async (req: AuthRequest, res: Response) => {
     }
 
     try {
-        const [user, place, wishlist, cart, orders] = await Promise.all([
+        const [user, place, wishlist, cart, rawOrders] = await Promise.all([
             userModel.findById(userId).select("-password"),
             placeModel.findOne({ user: userId }),
             wishlistModel.findOne({ user: userId }).populate({
@@ -358,23 +359,40 @@ export const getUserDetail = async (req: AuthRequest, res: Response) => {
                 .populate({ path: "items.product", select: "title price images stock category brand" })
                 .populate({ path: "items.size", select: "name" })
                 .populate({ path: "items.color", select: "name hexCode" }),
-            orderModel.find({ buyer: userId })
-                .populate({ path: "items.product", select: "title price images description seller" })
-                .populate({ path: "items.size", select: "name" })
-                .populate({ path: "items.color", select: "name hexCode" })
-                .sort({ createdAt: -1 }),
+            orderModel.find({ buyer: userId }).sort({ createdAt: -1 }),
         ]);
 
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
+        // Fetch OrderSub child rows for all user's orders
+        const orderIds = rawOrders.map(o => o._id);
+        const allSubs = await orderSubModel.find({ order: { $in: orderIds } })
+            .populate({
+                path: "product",
+                select: "title price images description seller",
+                populate: [
+                    { path: "category", select: "name" },
+                    { path: "brand", select: "name" },
+                    { path: "seller", select: "fullname email" }
+                ]
+            })
+            .populate({ path: "size", select: "name" })
+            .populate({ path: "color", select: "name hexCode" });
+
+        const enrichedOrders = rawOrders.map(o => {
+            const orderObj = o.toObject() as any;
+            orderObj.items = allSubs.filter(sub => sub.order.toString() === orderObj._id.toString());
+            return orderObj;
+        });
+
         const userObj = user.toObject() as any;
         userObj.addressDetails = place || null;
         userObj.place = place ? `${place.place}, ${place.city}, ${place.state}` : "";
         userObj.wishlist = wishlist || { products: [] };
         userObj.cart = cart || { items: [] };
-        userObj.orders = orders || [];
+        userObj.orders = enrichedOrders;
 
         // If the user is a seller, also fetch their listed products
         if (user.role === "seller") {

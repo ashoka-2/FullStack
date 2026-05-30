@@ -2,6 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 import wishlistModel from "../models/wishlist.model.js";
 import placeModel from "../models/place.model.js";
+import { broadcastUpdate } from "../services/socket.service.js";
 
 // Get user's wishlist
 export const getWishlist = async (req: AuthRequest, res: Response) => {
@@ -60,6 +61,7 @@ export const toggleWishlist = async (req: AuthRequest, res: Response) => {
         }
 
         await wishlist.save();
+        broadcastUpdate("wishlist_update");
 
         const populatedWishlist = await wishlistModel.findById(wishlist._id).populate({
             path: "products",

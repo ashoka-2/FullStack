@@ -1,16 +1,7 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-export interface IOrderItem {
-    product: mongoose.Types.ObjectId;
-    size?: mongoose.Types.ObjectId;
-    color?: mongoose.Types.ObjectId;
-    quantity: number;
-    price: number; // Historical price at checkout
-}
-
 export interface IOrder extends Document {
     buyer: mongoose.Types.ObjectId;
-    items: IOrderItem[];
     totalAmount: number;
     shippingAddress: {
         pincode: string;
@@ -20,7 +11,7 @@ export interface IOrder extends Document {
         state: string;
     };
     contactNumber: string;
-    status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+    status: "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "returned";
     paymentStatus: "pending" | "paid" | "failed";
 }
 
@@ -31,34 +22,6 @@ const orderSchema = new Schema<IOrder>(
             ref: "User",
             required: [true, "Buyer is required"],
         },
-        items: [
-            {
-                product: {
-                    type: Schema.Types.ObjectId,
-                    ref: "Product",
-                    required: [true, "Product is required"],
-                },
-                size: {
-                    type: Schema.Types.ObjectId,
-                    ref: "Size",
-                    default: null,
-                },
-                color: {
-                    type: Schema.Types.ObjectId,
-                    ref: "Color",
-                    default: null,
-                },
-                quantity: {
-                    type: Number,
-                    required: [true, "Quantity is required"],
-                    min: [1, "Quantity cannot be less than 1"],
-                },
-                price: {
-                    type: Number,
-                    required: [true, "Historical price is required"],
-                },
-            },
-        ],
         totalAmount: {
             type: Number,
             required: [true, "Total amount is required"],
@@ -76,7 +39,7 @@ const orderSchema = new Schema<IOrder>(
         },
         status: {
             type: String,
-            enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
+            enum: ["pending", "processing", "shipped", "delivered", "cancelled", "returned"],
             default: "pending",
         },
         paymentStatus: {

@@ -5,10 +5,17 @@ import { flushSync } from 'react-dom';
 import { useSelector } from 'react-redux';
 import CartDrawer from './CartDrawer';
 import CheckoutModal from './CheckoutModal';
+import { useCart } from '../Cart/Hooks/useCart';
+import { useWishlist } from '../Wishlist/Hooks/useWishlist';
+import { useOrder } from '../Orders/Hooks/useOrder';
+import socket from '../../utils/socket';
 
 const MainLayout = () => {
     const { user } = useSelector(state => state.auth);
     const navigate = useNavigate();
+    const { getCart } = useCart();
+    const { getWishlist } = useWishlist();
+    const { getMyOrders } = useOrder();
 
     // Use localStorage to persist theme. Default to dark mode given the Snitch branding.
     const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -24,6 +31,27 @@ const MainLayout = () => {
             navigate('/admin');
         }
     }, [user, navigate]);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const handleRealtimeUpdate = (payload) => {
+            console.log("Socket.io update message received (buyer):", payload.type);
+            if (payload.type === "cart_update") {
+                getCart();
+            } else if (payload.type === "wishlist_update") {
+                getWishlist();
+            } else if (payload.type === "order_update") {
+                getMyOrders();
+            }
+        };
+
+        socket.on("realtime_update", handleRealtimeUpdate);
+
+        return () => {
+            socket.off("realtime_update", handleRealtimeUpdate);
+        };
+    }, [user, getCart, getWishlist, getMyOrders]);
 
     useEffect(() => {
         if (isDarkMode) {

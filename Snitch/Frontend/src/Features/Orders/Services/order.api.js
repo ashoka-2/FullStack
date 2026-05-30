@@ -14,3 +14,8 @@ export async function fetchMyOrders() {
     const response = await orderApiInstance.get("/my");
     return response.data;
 }
+
+export async function cancelOrReturnOrder(orderId, action) {
+    const response = await orderApiInstance.put(`/cancel-return/${orderId}`, { action });
+    return response.data;
+}

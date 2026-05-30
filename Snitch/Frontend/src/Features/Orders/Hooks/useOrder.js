@@ -42,5 +42,20 @@ export const useOrder = () => {
         }
     };
 
-    return { handlePlaceOrder, getMyOrders };
+    const handleCancelOrReturnOrder = async (orderId, action) => {
+        dispatch(setLoading(true));
+        try {
+            const data = await api.cancelOrReturnOrder(orderId, action);
+            toast(`Order ${action === "cancel" ? "cancelled" : "returned"} successfully!`);
+            await getMyOrders();
+            return data.order;
+        } catch (e) {
+            toast(errMsg(e), "error");
+            throw e;
+        } finally {
+            dispatch(setLoading(false));
+        }
+    };
+
+    return { handlePlaceOrder, getMyOrders, handleCancelOrReturnOrder };
 };

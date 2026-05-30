@@ -2,6 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 import cartModel from "../models/cart.model.js";
 import placeModel from "../models/place.model.js";
+import { broadcastUpdate } from "../services/socket.service.js";
 
 // Get user's cart
 export const getCart = async (req: AuthRequest, res: Response) => {
@@ -79,6 +80,7 @@ export const addToCart = async (req: AuthRequest, res: Response) => {
         }
 
         await cart.save();
+        broadcastUpdate("cart_update");
 
         const populatedCart = await cartModel.findById(cart._id)
             .populate({
@@ -132,6 +134,7 @@ export const updateCartItem = async (req: AuthRequest, res: Response) => {
                 item.quantity = Number(quantity);
             }
             await cart.save();
+            broadcastUpdate("cart_update");
         } else {
             return res.status(404).json({ message: "Item not found in cart" });
         }
@@ -174,6 +177,7 @@ export const removeFromCart = async (req: AuthRequest, res: Response) => {
 
         cart.items = cart.items.filter(item => item._id?.toString() !== itemId);
         await cart.save();
+        broadcastUpdate("cart_update");
 
         const populatedCart = await cartModel.findById(cart._id)
             .populate({
@@ -208,6 +212,7 @@ export const clearCart = async (req: AuthRequest, res: Response) => {
         if (cart) {
             cart.items = [];
             await cart.save();
+            broadcastUpdate("cart_update");
         }
         return res.status(200).json({ success: true, message: "Cart cleared", cart });
     } catch (error) {
