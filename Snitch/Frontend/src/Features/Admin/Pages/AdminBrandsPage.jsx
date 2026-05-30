@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux';
 import { useAdmin } from '../Hooks/useAdmin';
 import { PrimaryBtn, SecondaryBtn } from '../../Components/Buttons';
 import Modal from '../../Components/Modal';
+import PageLoader from '../../Components/PageLoader';
+import { AdminTaxonomySkeleton } from '../../Components/Skeletons';
 
 const AdminBrandsPage = () => {
     const { brands, loading } = useSelector(state => state.admin);
@@ -17,6 +19,8 @@ const AdminBrandsPage = () => {
     useEffect(() => {
         fetchAll();
     }, []);
+
+    if (loading) return <PageLoader skeleton={AdminTaxonomySkeleton} />;
 
     const resetForm = () => {
         setFormData({});

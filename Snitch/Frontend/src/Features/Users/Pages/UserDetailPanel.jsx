@@ -160,15 +160,15 @@ const UserDetailPanel = ({ userId, onClose }) => {
                     {detailLoading ? (
                         <div className="p-6 space-y-4 animate-pulse">
                             <div className="flex gap-4">
-                                <div className="w-16 h-16 rounded-2xl bg-surface/70" />
+                                <div className="w-16 h-16 rounded-2xl bg-foreground/[0.08] dark:bg-surface/70" />
                                 <div className="flex-1 space-y-2 pt-1">
-                                    <div className="h-4 bg-surface/70 rounded-lg w-3/4" />
-                                    <div className="h-3 bg-surface/50 rounded-lg w-1/2" />
-                                    <div className="h-3 bg-surface/50 rounded-lg w-1/3" />
+                                    <div className="h-4 bg-foreground/[0.08] dark:bg-surface/70 rounded-lg w-3/4" />
+                                    <div className="h-3 bg-foreground/[0.05] dark:bg-surface/50 rounded-lg w-1/2" />
+                                    <div className="h-3 bg-foreground/[0.05] dark:bg-surface/50 rounded-lg w-1/3" />
                                 </div>
                             </div>
-                            <div className="h-24 bg-surface/50 rounded-2xl" />
-                            <div className="h-32 bg-surface/50 rounded-2xl" />
+                            <div className="h-24 bg-foreground/[0.05] dark:bg-surface/50 rounded-2xl" />
+                            <div className="h-32 bg-foreground/[0.05] dark:bg-surface/50 rounded-2xl" />
                         </div>
                     ) : !user ? (
                         <div className="flex flex-col items-center justify-center h-64 gap-3 text-foreground/30">

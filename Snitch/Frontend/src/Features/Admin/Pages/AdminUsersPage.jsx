@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 import { useUsers } from '../../Users/Hooks/useUsers';
 import PageLoader from '../../Components/PageLoader';
+import { AdminUsersSkeleton } from '../../Components/Skeletons';
 
 const AdminUsersPage = () => {
     const navigate = useNavigate();
@@ -14,16 +15,7 @@ const AdminUsersPage = () => {
         handleFetchAllUsers();
     }, []);
 
-    if (loading) {
-        return (
-            <div className="space-y-4">
-                <div className="h-10 w-48 bg-surface animate-pulse rounded-lg" />
-                <div className="space-y-2">
-                    {[1,2,3,4,5].map(i => <div key={i} className="h-16 bg-surface animate-pulse rounded-2xl border border-border-theme" />)}
-                </div>
-            </div>
-        );
-    }
+    if (loading) return <PageLoader skeleton={AdminUsersSkeleton} />;
 
     const filteredUsers = allUsers.filter(u => {
         if (!userSearch) return true;

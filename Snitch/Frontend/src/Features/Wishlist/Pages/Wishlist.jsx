@@ -4,6 +4,8 @@ import { useWishlist } from '../Hooks/useWishlist';
 import { useCart } from '../../Cart/Hooks/useCart';
 import { useNavigate } from 'react-router';
 import { PrimaryBtn, SecondaryBtn } from '../../Components/Buttons';
+import PageLoader from '../../Components/PageLoader';
+import { WishlistSkeleton } from '../../Components/Skeletons';
 
 const Wishlist = () => {
     const navigate = useNavigate();
@@ -38,14 +40,7 @@ const Wishlist = () => {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-10">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-[10px] font-black tracking-widest uppercase text-accent animate-pulse">Retrieving Wishlist...</span>
-                </div>
-            </div>
-        );
+        return <PageLoader skeleton={WishlistSkeleton} />;
     }
 
     return (

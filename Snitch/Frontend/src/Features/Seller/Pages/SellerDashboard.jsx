@@ -8,6 +8,7 @@ import Modal from '../../Components/Modal';
 import UserDetailPanel from '../../Users/Pages/UserDetailPanel';
 import SellerProductCard from '../../Poducts/Components/SellerProductCard';
 import PageLoader from '../../Components/PageLoader';
+import { SellerDashboardSkeleton } from '../../Components/Skeletons';
 import { PrimaryBtn, SecondaryBtn, TertiaryBtn } from '../../Components/Buttons';
 
 const SellerDashboard = () => {
@@ -90,14 +91,7 @@ const SellerDashboard = () => {
     ];
 
     if (sellerLoading || productsLoading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-10">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-[10px] font-black tracking-widest uppercase text-accent animate-pulse">Loading Seller Console...</span>
-                </div>
-            </div>
-        );
+        return <PageLoader skeleton={SellerDashboardSkeleton} />;
     }
 
     return (

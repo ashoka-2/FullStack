@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux';
 import { useOrder } from '../Hooks/useOrder';
 import { useNavigate } from 'react-router';
 import { PrimaryBtn } from '../../Components/Buttons';
+import PageLoader from '../../Components/PageLoader';
+import { OrdersSkeleton } from '../../Components/Skeletons';
 
 const Orders = () => {
     const navigate = useNavigate();
@@ -27,14 +29,7 @@ const Orders = () => {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-10">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-[10px] font-black tracking-widest uppercase text-accent animate-pulse">Retrieving Orders...</span>
-                </div>
-            </div>
-        );
+        return <PageLoader skeleton={OrdersSkeleton} />;
     }
 
     return (

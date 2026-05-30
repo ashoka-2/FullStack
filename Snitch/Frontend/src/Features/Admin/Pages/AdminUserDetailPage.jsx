@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router';
 import { useUsers } from '../../Users/Hooks/useUsers';
 import { PrimaryBtn, SecondaryBtn } from '../../Components/Buttons';
 import PageLoader from '../../Components/PageLoader';
+import { AdminUserDetailSkeleton } from '../../Components/Skeletons';
 
 // Role Badge
 const RoleBadge = ({ role }) => {
@@ -131,7 +132,7 @@ const AdminUserDetailPage = () => {
         return () => clearSelectedUser();
     }, [id]);
 
-    if (detailLoading) return <PageLoader />;
+    if (detailLoading) return <PageLoader skeleton={AdminUserDetailSkeleton} />;
 
     if (!user) {
         return (
