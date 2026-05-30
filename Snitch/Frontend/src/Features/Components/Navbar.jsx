@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router';
 import { useAuth } from '../auth/Hooks/useAuth';
+import { useCart } from '../Cart/Hooks/useCart';
+import { useWishlist } from '../Wishlist/Hooks/useWishlist';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -19,8 +21,18 @@ const Navbar = ({ toggleTheme, isDarkMode }) => {
 
   const { user } = useSelector((state) => state.auth);
   const { handleLogout } = useAuth();
+  const { cart } = useSelector((state) => state.cart);
+  const { getCart, toggleDrawer } = useCart();
+  const { getWishlist } = useWishlist();
 
   const tl = useRef();
+
+  useEffect(() => {
+    if (user) {
+      getCart();
+      getWishlist();
+    }
+  }, [user]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -202,6 +214,16 @@ const Navbar = ({ toggleTheme, isDarkMode }) => {
                     </div>
                     <i className="ri-arrow-right-s-line text-gray-400 group-hover:text-accent group-hover:translate-x-1 transition-all"></i>
                   </Link>
+
+                  <Link to="/wishlist" onClick={() => setProfileMenuOpen(false)} className="group flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-accent/10 transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-surface-variant/30 flex items-center justify-center group-hover:bg-accent group-hover:text-accent-content transition-all">
+                        <i className="ri-heart-line text-lg"></i>
+                      </div>
+                      <span className="font-bold text-sm group-hover:text-accent transition-all">My Wishlist</span>
+                    </div>
+                    <i className="ri-arrow-right-s-line text-gray-400 group-hover:text-accent group-hover:translate-x-1 transition-all"></i>
+                  </Link>
                   
                   <Link to="/orders" onClick={() => setProfileMenuOpen(false)} className="group flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-accent/10 transition-all">
                     <div className="flex items-center gap-3">
@@ -212,6 +234,30 @@ const Navbar = ({ toggleTheme, isDarkMode }) => {
                     </div>
                     <i className="ri-arrow-right-s-line text-gray-400 group-hover:text-accent group-hover:translate-x-1 transition-all"></i>
                   </Link>
+
+                  {(user?.role === 'seller' || user?.role === 'admin') && (
+                    <Link to="/seller/dashboard" onClick={() => setProfileMenuOpen(false)} className="group flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-accent/10 transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-surface-variant/30 flex items-center justify-center group-hover:bg-accent group-hover:text-accent-content transition-all">
+                          <i className="ri-store-2-line text-lg"></i>
+                        </div>
+                        <span className="font-bold text-sm group-hover:text-accent transition-all">Seller Panel</span>
+                      </div>
+                      <i className="ri-arrow-right-s-line text-gray-400 group-hover:text-accent group-hover:translate-x-1 transition-all"></i>
+                    </Link>
+                  )}
+
+                  {user?.role === 'admin' && (
+                    <Link to="/admin" onClick={() => setProfileMenuOpen(false)} className="group flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-accent/10 transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-surface-variant/30 flex items-center justify-center group-hover:bg-accent group-hover:text-accent-content transition-all">
+                          <i className="ri-shield-flash-line text-lg"></i>
+                        </div>
+                        <span className="font-bold text-sm group-hover:text-accent transition-all">Admin Control</span>
+                      </div>
+                      <i className="ri-arrow-right-s-line text-gray-400 group-hover:text-accent group-hover:translate-x-1 transition-all"></i>
+                    </Link>
+                  )}
                 </div>
 
                 <div className="px-3 mt-4 pt-3 border-t border-border-theme/20">
@@ -233,9 +279,14 @@ const Navbar = ({ toggleTheme, isDarkMode }) => {
             <Link to="/login" className="hidden md:flex items-center gap-2 px-8 py-2.5 bg-foreground text-background dark:bg-accent dark:text-accent-content rounded-full font-black hover:scale-105 active:scale-95 transition-all text-[10px] tracking-[0.3em] shadow-xl">LOGIN</Link>
           )}
 
-          <button className="flex items-center gap-2 border-2 border-accent text-accent dark:text-accent-content bg-accent/5 dark:bg-accent rounded-full pl-2 pr-5 py-2 hover:bg-accent hover:text-accent-content transition-all group font-black shadow-lg">
+          <button 
+            onClick={toggleDrawer}
+            className="flex items-center gap-2 border-2 border-accent text-accent dark:text-accent-content bg-accent/5 dark:bg-accent rounded-full pl-2 pr-5 py-2 hover:bg-accent hover:text-accent-content transition-all group font-black shadow-lg"
+          >
             <i className="ri-shopping-bag-3-fill text-sm"></i>
-            <span className="text-xs tracking-widest leading-none">01</span>
+            <span className="text-xs tracking-widest leading-none">
+              {String(cart?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0).padStart(2, '0')}
+            </span>
           </button>
         </div>
 
