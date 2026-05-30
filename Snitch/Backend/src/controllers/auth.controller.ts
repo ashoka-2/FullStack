@@ -88,6 +88,10 @@ export const login = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Invalid email/contact or password" });
         }
 
+        if (user.isBanned) {
+            return res.status(403).json({ message: "Your account is banned" });
+        }
+
         const isMatch = await user.comparePassword(password);
 
         if (!isMatch) {
@@ -296,7 +300,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
 
 export const getAllUsers = async (req: AuthRequest, res: Response) => {
     try {
-        const users = await userModel.find().select("-password");
+        const users = await userModel.find({ role: { $ne: "admin" } }).select("-password");
         const places = await placeModel.find();
         
         const enrichedUsers = users.map(u => {
@@ -387,6 +391,30 @@ export const getUserDetail = async (req: AuthRequest, res: Response) => {
         return res.status(200).json({ success: true, user: userObj });
     } catch (error) {
         console.error("Get user detail error:", error);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// ─── Toggle Ban User ──────────────────────────────────────────────────────────
+export const toggleBanUser = async (req: AuthRequest, res: Response) => {
+    const userId = req.params.id as any;
+    try {
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        if (user.role === "admin") {
+            return res.status(400).json({ success: false, message: "Admin users cannot be banned" });
+        }
+        user.isBanned = !user.isBanned;
+        await user.save();
+        return res.status(200).json({ 
+            success: true, 
+            message: `User has been ${user.isBanned ? 'banned' : 'unbanned'}`, 
+            isBanned: user.isBanned 
+        });
+    } catch (error) {
+        console.error("Toggle ban error:", error);
         return res.status(500).json({ success: false, message: "Server error" });
     }
 };

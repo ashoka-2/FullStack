@@ -36,6 +36,11 @@ export const verifyToken = async (req: AuthRequest, res: Response, next: NextFun
         }
 
         const decoded = jwt.verify(token, config.JWT_SECRET) as UserPayload;
+        const user = await userModel.findById(decoded.id);
+        if (!user || user.isBanned) {
+            return res.status(401).json({ message: "Not authenticated or account is banned" });
+        }
+
         req.user = decoded;
         next();
     } catch (error) {
@@ -54,7 +59,7 @@ export const authenticateAdmin = async (req: AuthRequest, res: Response, next: N
         const decoded = jwt.verify(token, config.JWT_SECRET) as UserPayload;
         const user = await userModel.findById(decoded.id);
 
-        if (!user || user.role !== "admin") {
+        if (!user || user.role !== "admin" || user.isBanned) {
             return res.status(403).json({ success: false, message: "Admin access required" });
         }
 
@@ -76,7 +81,7 @@ export const authenticateSeller = async (req: AuthRequest, res: Response, next: 
         const user = await userModel.findById(decoded.id);
 
         // Admins can also perform seller actions for management purposes
-        if (!user || (user.role !== "seller" && user.role !== "admin")) {
+        if (!user || (user.role !== "seller" && user.role !== "admin") || user.isBanned) {
             return res.status(403).json({ success: false, message: "Seller or Admin access required" });
         }
 

@@ -42,5 +42,18 @@ export const useUsers = () => {
     // ── Clear the selected user (close panel) ─────────────────────────────
     const clearSelectedUser = () => dispatch(setSelectedUser(null));
 
-    return { handleFetchAllUsers, handleFetchUserDetail, clearSelectedUser };
+    // ── Toggle ban/unban on a user ─────────────────────────────────────────
+    const handleToggleBanUser = async (userId) => {
+        try {
+            const data = await api.toggleBanUser(userId);
+            toast(data.message || "User status updated");
+            // Refresh user details
+            await handleFetchUserDetail(userId);
+            return data;
+        } catch (e) {
+            toast(errMsg(e), "error");
+        }
+    };
+
+    return { handleFetchAllUsers, handleFetchUserDetail, clearSelectedUser, handleToggleBanUser };
 };

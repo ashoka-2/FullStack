@@ -1,45 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router';
 import { useAdmin } from '../Hooks/useAdmin';
 import { useUsers } from '../../Users/Hooks/useUsers';
-import UserDetailPanel from '../../Users/Pages/UserDetailPanel';
-import { PrimaryBtn, SecondaryBtn, TertiaryBtn } from '../../Components/Buttons';
-import PageLoader from '../../Components/PageLoader';
-import Modal from '../../Components/Modal';
 import { AdminDashboardSkeleton } from '../../Components/Skeletons';
+import PageLoader from '../../Components/PageLoader';
 
 const AdminDashboard = () => {
     const { user } = useSelector(state => state.auth);
     const { categories, units, sizes, colors, brands, loading } = useSelector(state => state.admin);
     const { allUsers, loading: usersLoading } = useSelector(state => state.users);
-    const { fetchAll, 
-        handleCreateCategory, handleUpdateCategory, handleDeleteCategory,
-        handleCreateUnit, handleUpdateUnit, handleDeleteUnit,
-        handleCreateSize, handleUpdateSize, handleDeleteSize,
-        handleCreateColor, handleUpdateColor, handleDeleteColor,
-        handleCreateBrand, handleUpdateBrand, handleDeleteBrand 
-    } = useAdmin();
+    const { fetchAll } = useAdmin();
     const { handleFetchAllUsers } = useUsers();
-
-    const [activeTab, setActiveTab] = useState('categories');
-    const [showForm, setShowForm] = useState(false);
-    const [editItem, setEditItem] = useState(null);
-    const [selectedUserId, setSelectedUserId] = useState(null);
-    const [userSearch, setUserSearch] = useState('');
-
-    // Form states
-    const [formData, setFormData] = useState({});
-    const [imageFile, setImageFile] = useState(null);
-
-    // Delete Modal state
-    const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
     useEffect(() => {
         fetchAll();
         handleFetchAllUsers();
     }, []);
 
-    if (loading) return <PageLoader skeleton={AdminDashboardSkeleton} />;
+    if (loading || usersLoading) return <PageLoader skeleton={AdminDashboardSkeleton} />;
 
     if (user?.role !== 'admin') {
         return (
@@ -47,387 +26,59 @@ const AdminDashboard = () => {
                 <i className="ri-lock-2-line text-6xl text-accent mb-4 animate-bounce" />
                 <h1 className="text-4xl font-black text-foreground">Access Denied</h1>
                 <p className="text-foreground/40 mt-2">Only platform admins can access this area.</p>
-                <TertiaryBtn onClick={() => window.location.href = '/'} className="mt-8">Return Home</TertiaryBtn>
             </div>
         );
     }
 
-    const tabs = [
-        { id: 'categories', label: 'Categories', icon: 'ri-apps-2-line' },
-        { id: 'brands',     label: 'Brands',     icon: 'ri-award-line' },
-        { id: 'units',      label: 'Units',      icon: 'ri-scales-line' },
-        { id: 'sizes',      label: 'Sizes',      icon: 'ri-ruler-line' },
-        { id: 'colors',     label: 'Colors',     icon: 'ri-palette-line' },
-        { id: 'users',      label: 'Users',      icon: 'ri-team-line' },
+    const stats = [
+        { label: 'Registered Users', count: allUsers.length, icon: 'ri-team-line', path: '/admin/users', color: 'from-blue-500/10 to-indigo-500/10', border: 'border-blue-500/20', text: 'text-blue-400' },
+        { label: 'Categories', count: categories.length, icon: 'ri-apps-2-line', path: '/admin/categories', color: 'from-emerald-500/10 to-teal-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+        { label: 'Brands', count: brands.length, icon: 'ri-award-line', path: '/admin/brands', color: 'from-amber-500/10 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
+        { label: 'System Colors', count: colors.length, icon: 'ri-palette-line', path: '/admin/colors', color: 'from-rose-500/10 to-pink-500/10', border: 'border-rose-500/20', text: 'text-rose-400' },
+        { label: 'System Sizes', count: sizes.length, icon: 'ri-ruler-line', path: '/admin/sizes', color: 'from-purple-500/10 to-violet-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
+        { label: 'Measurement Units', count: units.length, icon: 'ri-scales-line', path: '/admin/units', color: 'from-cyan-500/10 to-sky-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
     ];
 
-    const resetForm = () => {
-        setFormData({});
-        setImageFile(null);
-        setEditItem(null);
-        setShowForm(false);
-    };
-
-    const startEdit = (item) => {
-        setEditItem(item);
-        if (activeTab === 'categories') {
-            setFormData({ name: item.name, description: item.description });
-        } else if (activeTab === 'brands') {
-            setFormData({ name: item.name, description: item.description, website: item.website });
-        } else if (activeTab === 'units') {
-            setFormData({ name: item.name, abbreviation: item.abbreviation, description: item.description, isActive: item.isActive });
-        } else if (activeTab === 'sizes') {
-            setFormData({ name: item.name, category: item.category?._id || item.category, sortOrder: item.sortOrder, isActive: item.isActive });
-        } else if (activeTab === 'colors') {
-            setFormData({ name: item.name, hexCode: item.hexCode, isActive: item.isActive });
-        }
-        // Ensure isActive is handled for edit
-        if (item.isActive === undefined) setFormData(prev => ({ ...prev, isActive: true }));
-        else setFormData(prev => ({ ...prev, isActive: item.isActive }));
-        setShowForm(true);
-    };
-
-    const handleAction = async (e) => {
-        e.preventDefault();
-        try {
-            if (activeTab === 'categories') {
-                const data = new FormData();
-                data.append('name', formData.name);
-                data.append('description', formData.description || '');
-                if (imageFile) data.append('image', imageFile);
-                
-                if (editItem) await handleUpdateCategory(editItem._id, data);
-                else await handleCreateCategory(data);
-
-            } else if (activeTab === 'brands') {
-                const data = new FormData();
-                data.append('name', formData.name);
-                data.append('description', formData.description || '');
-                data.append('website', formData.website || '');
-                if (imageFile) data.append('logo', imageFile);
-
-                if (editItem) await handleUpdateBrand(editItem._id, data);
-                else await handleCreateBrand(data);
-
-            } else if (activeTab === 'units') {
-                if (editItem) await handleUpdateUnit(editItem._id, formData);
-                else await handleCreateUnit(formData);
-
-            } else if (activeTab === 'sizes') {
-                if (editItem) await handleUpdateSize(editItem._id, formData);
-                else await handleCreateSize(formData);
-
-            } else if (activeTab === 'colors') {
-                if (editItem) await handleUpdateColor(editItem._id, formData);
-                else await handleCreateColor(formData);
-            }
-            resetForm();
-        } catch (err) { console.error(err); }
-    };
-
-    const handleDelete = (id) => {
-        setDeleteModal({ isOpen: true, id });
-    };
-
-    const confirmDelete = () => {
-        const { id } = deleteModal;
-        if (!id) return;
-        if (activeTab === 'categories') handleDeleteCategory(id);
-        else if (activeTab === 'brands') handleDeleteBrand(id);
-        else if (activeTab === 'units') handleDeleteUnit(id);
-        else if (activeTab === 'sizes') handleDeleteSize(id);
-        else if (activeTab === 'colors') handleDeleteColor(id);
-        setDeleteModal({ isOpen: false, id: null });
-    };
-
-    const inputCls = "w-full bg-background border border-border-theme focus:border-accent rounded-xl px-4 py-3 text-sm outline-none transition-all";
-
     return (
-        <div className="min-h-screen bg-background pt-24 pb-20 px-4 md:px-10">
-            <Modal 
-                isOpen={deleteModal.isOpen}
-                onClose={() => setDeleteModal({ isOpen: false, id: null })}
-                onConfirm={confirmDelete}
-                title={`Delete ${activeTab.slice(0, -1)}?`}
-                description="Are you sure you want to remove this item? This action is permanent and cannot be undone."
-                confirmText="Delete Now"
-                type="danger"
-            />
-            <div className="max-w-7xl mx-auto">
-                {/* UserDetailPanel */}
-                {selectedUserId && (
-                    <UserDetailPanel userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
-                )}
-                <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-                    <div>
-                        <span className="text-[10px] font-black tracking-widest text-accent uppercase">System Control</span>
-                        <h1 className="text-5xl font-black tracking-tighter text-foreground mt-1">Admin Dashboard</h1>
-                        <p className="text-foreground/40 mt-2">Manage the global design system, taxonomy, and units.</p>
-                    </div>
-                    <PrimaryBtn icon="ri-add-line" onClick={() => setShowForm(true)}>Add {activeTab.slice(0, -1)}</PrimaryBtn>
-                </header>
+        <div className="space-y-10 animate-in fade-in duration-500">
+            <div>
+                <span className="text-[10px] font-black tracking-widest text-accent uppercase">Platform Control</span>
+                <h1 className="text-5xl font-black tracking-tighter text-foreground mt-1">Admin Dashboard</h1>
+                <p className="text-foreground/40 mt-2">Platform status overview and catalog statistics.</p>
+            </div>
 
-                {/* Tab Navigation */}
-                <div className="flex flex-wrap gap-2 mb-10 bg-surface/50 p-1.5 rounded-2xl border border-border-theme backdrop-blur-md">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => { setActiveTab(tab.id); setShowForm(false); }}
-                            className={[
-                                'flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black tracking-widest uppercase transition-all',
-                                activeTab === tab.id ? 'bg-accent text-accent-content shadow-lg shadow-accent/20' : 'text-foreground/30 hover:text-foreground/60 hover:bg-white/5'
-                            ].join(' ')}
-                        >
-                            <i className={tab.icon} />
-                            {tab.label}
-                            {tab.id === 'users' && allUsers.length > 0 && (
-                                <span className="text-[9px] bg-accent-content/20 px-1.5 py-0.5 rounded-full">{allUsers.length}</span>
-                            )}
-                        </button>
-                    ))}
-                </div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {stats.map((stat, idx) => (
+                    <Link
+                        key={idx}
+                        to={stat.path}
+                        className={`group p-8 rounded-3xl bg-gradient-to-br ${stat.color} border ${stat.border} hover:scale-[1.02] active:scale-[0.98] transition-all flex flex-col justify-between h-56 relative overflow-hidden`}
+                    >
+                        {/* Huge background icon */}
+                        <i className={`${stat.icon} absolute right-4 bottom-4 text-9xl opacity-[0.03] group-hover:opacity-[0.07] group-hover:scale-110 transition-all`} />
 
-                {/* Form Overlay */}
-                {showForm && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-xl p-4">
-                        <div className="bg-surface border border-border-theme rounded-3xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300">
-                            <h2 className="text-2xl font-black mb-6">
-                                {editItem ? 'Edit' : 'New'} {activeTab.slice(0, -1)}
-                            </h2>
-                            <form onSubmit={handleAction} className="space-y-4">
-                                <div>
-                                    <label className="text-[10px] font-black uppercase text-foreground/40 ml-1">Name</label>
-                                    <input required value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className={inputCls} placeholder="e.g. Oversized" />
-                                </div>
-
-                                {activeTab === 'categories' && (
-                                    <>
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase text-foreground/40 ml-1">Description</label>
-                                            <textarea value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} className={inputCls} />
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase text-foreground/40 ml-1">Thumbnail</label>
-                                            <input type="file" onChange={e => setImageFile(e.target.files[0])} className={inputCls} />
-                                        </div>
-                                    </>
-                                )}
-
-                                {activeTab === 'brands' && (
-                                    <>
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase text-foreground/40 ml-1">Description</label>
-                                            <textarea value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} className={inputCls} />
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase text-foreground/40 ml-1">Website URL</label>
-                                            <input value={formData.website || ''} onChange={e => setFormData({...formData, website: e.target.value})} className={inputCls} placeholder="https://..." />
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase text-foreground/40 ml-1">Logo</label>
-                                            <input type="file" onChange={e => setImageFile(e.target.files[0])} className={inputCls} />
-                                        </div>
-                                    </>
-                                )}
-
-                                {activeTab === 'units' && (
-                                    <>
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase text-foreground/40 ml-1">Abbreviation</label>
-                                            <input required value={formData.abbreviation || ''} onChange={e => setFormData({...formData, abbreviation: e.target.value})} className={inputCls} placeholder="pc" />
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase text-foreground/40 ml-1">Description</label>
-                                            <textarea value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} className={inputCls} placeholder="Unit details..." />
-                                        </div>
-                                    </>
-                                )}
-
-                                {activeTab === 'colors' && (
-                                    <div>
-                                        <label className="text-[10px] font-black uppercase text-foreground/40 ml-1">Hex Code</label>
-                                        <div className="flex gap-2">
-                                            <input type="color" value={formData.hexCode || '#000000'} onChange={e => setFormData({...formData, hexCode: e.target.value})} className="w-12 h-11 bg-transparent cursor-pointer" />
-                                            <input required value={formData.hexCode || ''} onChange={e => setFormData({...formData, hexCode: e.target.value})} className={inputCls} placeholder="#000000" />
-                                        </div>
-                                    </div>
-                                )}
-
-                                {activeTab === 'sizes' && (
-                                    <>
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase text-foreground/40 ml-1">Category (Optional ID)</label>
-                                            <select value={formData.category || ''} onChange={e => setFormData({...formData, category: e.target.value})} className={inputCls}>
-                                                <option value="">Apply to All</option>
-                                                {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase text-foreground/40 ml-1">Sort Order</label>
-                                            <input type="number" value={formData.sortOrder || 0} onChange={e => setFormData({...formData, sortOrder: parseInt(e.target.value)})} className={inputCls} />
-                                        </div>
-                                    </>
-                                )}
-
-                                {editItem && (
-                                    <div className="flex items-center gap-3 p-4 bg-background/50 rounded-2xl border border-border-theme mt-6">
-                                        <input 
-                                            type="checkbox" 
-                                            id="isActive-toggle"
-                                            checked={formData.isActive !== false} 
-                                            onChange={e => setFormData({...formData, isActive: e.target.checked})}
-                                            className="w-5 h-5 accent-accent cursor-pointer"
-                                        />
-                                        <label htmlFor="isActive-toggle" className="text-sm font-bold cursor-pointer select-none">
-                                            Item is Active and Publicly Visible
-                                        </label>
-                                    </div>
-                                )}
-
-                                <div className="flex gap-3 pt-4">
-                                    <SecondaryBtn type="button" onClick={resetForm} className="flex-1">Cancel</SecondaryBtn>
-                                    <PrimaryBtn type="submit" className="flex-1">
-                                        {editItem ? 'Update' : 'Create'}
-                                    </PrimaryBtn>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
-
-                {/* Data Grid — catalog items */}
-                {activeTab !== 'users' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {loading ? (
-                        [1,2,3,4].map(i => <div key={i} className="h-32 bg-surface animate-pulse rounded-2xl border border-border-theme" />)
-                    ) : (activeTab === 'categories' ? categories : activeTab === 'brands' ? brands : activeTab === 'units' ? units : activeTab === 'sizes' ? sizes : colors).map(item => (
-                        <div key={item._id} className="group bg-surface/40 hover:bg-surface border border-border-theme rounded-3xl p-6 transition-all relative overflow-hidden flex flex-col justify-between h-40">
-                            {/* Background Image / Logo for Brands/Categories */}
-                            {(item.image || item.logo) && (
-                                <img src={item.image || item.logo} className="absolute inset-0 w-full h-full object-cover opacity-[0.03] grayscale blur-sm pointer-events-none group-hover:opacity-[0.08] transition-opacity" />
-                            )}
-                            
-                            <div className="relative z-10">
-                                <div className="flex justify-between items-start gap-4">
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-black text-xl text-foreground truncate mb-1" title={item.name}>
-                                            {item.name}
-                                        </h3>
-                                        <p className="text-[10px] text-foreground/40 font-black tracking-widest uppercase truncate">
-                                            {activeTab === 'colors' ? item.hexCode : 
-                                             activeTab === 'units' ? item.abbreviation : 
-                                             activeTab === 'sizes' ? `Order: ${item.sortOrder}` : 
-                                             activeTab === 'brands' ? (item.website || 'No Website') :
-                                             (item.description || 'No description')}
-                                        </p>
-                                    </div>
-                                    
-                                    <div className="flex gap-2 flex-shrink-0">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${item.isActive !== false ? 'border-accent/20 bg-accent/5 text-accent' : 'border-red-500/20 bg-red-500/5 text-red-500'}`} title={item.isActive !== false ? 'Active' : 'Inactive'}>
-                                            <i className={item.isActive !== false ? 'ri-checkbox-circle-line' : 'ri-eye-off-line'} />
-                                        </div>
-                                        <button onClick={() => startEdit(item)} className="w-8 h-8 rounded-full flex items-center justify-center bg-foreground/5 text-foreground/30 hover:bg-accent hover:text-accent-content transition-all shadow-sm">
-                                            <i className="ri-edit-line text-sm" />
-                                        </button>
-                                        <button onClick={() => handleDelete(item._id)} className="w-8 h-8 rounded-full flex items-center justify-center bg-foreground/5 text-foreground/30 hover:bg-red-500 hover:text-white transition-all shadow-sm">
-                                            <i className="ri-delete-bin-line text-sm" />
-                                        </button>
-                                    </div>
-                                </div>
+                        <div className="flex justify-between items-start">
+                            <div className="p-3.5 rounded-2xl bg-surface/50 border border-border-theme/45">
+                                <i className={`${stat.icon} text-2xl ${stat.text}`} />
                             </div>
-
-                            <div className="relative z-10 flex items-center justify-between mt-auto">
-                                {activeTab === 'colors' && (
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-6 h-6 rounded-full border border-white/20 shadow-inner" style={{ backgroundColor: item.hexCode }} />
-                                        <span className="text-[10px] font-bold text-foreground/20">{item.hexCode}</span>
-                                    </div>
-                                )}
-                                {activeTab === 'brands' && item.logo && (
-                                    <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 p-2 overflow-hidden shadow-inner">
-                                        <img src={item.logo} alt={item.name} className="w-full h-full object-contain" />
-                                    </div>
-                                )}
-                                {activeTab === 'categories' && item.image && (
-                                    <div className="px-3 py-1 bg-accent/10 border border-accent/20 rounded-full">
-                                        <span className="text-[10px] font-bold text-accent uppercase tracking-tighter">Category Icon</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                )}
-
-                {/* Users Table */}
-                {activeTab === 'users' && (
-                    <div className="space-y-4">
-                        {/* Search bar */}
-                        <div className="relative">
-                            <i className="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-foreground/30" />
-                            <input
-                                value={userSearch}
-                                onChange={e => setUserSearch(e.target.value)}
-                                placeholder="Search by name, email or role…"
-                                className="w-full pl-10 pr-4 py-3 bg-surface/50 border border-border-theme/50 rounded-2xl text-sm outline-none focus:border-accent/50 transition-colors placeholder:text-foreground/25 font-medium"
-                            />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-foreground/45 group-hover:text-accent transition-colors flex items-center gap-1">
+                                Manage <i className="ri-arrow-right-line" />
+                            </span>
                         </div>
 
-                        {usersLoading ? (
-                            <div className="space-y-2">
-                                {[1,2,3,4,5].map(i => <div key={i} className="h-16 bg-surface animate-pulse rounded-2xl border border-border-theme" />)}
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                {allUsers
-                                    .filter(u => {
-                                        if (!userSearch) return true;
-                                        const q = userSearch.toLowerCase();
-                                        return u.fullname?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.role?.toLowerCase().includes(q);
-                                    })
-                                    .map(u => {
-                                        const roleColors = { admin: 'text-violet-400', seller: 'text-accent', buyer: 'text-sky-400' };
-                                        const roleIcons  = { admin: 'ri-shield-star-line', seller: 'ri-store-2-line', buyer: 'ri-user-line' };
-                                        return (
-                                            <div
-                                                key={u._id}
-                                                onClick={() => setSelectedUserId(u._id)}
-                                                className="flex items-center gap-4 p-4 bg-surface/40 hover:bg-surface border border-border-theme/40 hover:border-accent/30 rounded-2xl cursor-pointer transition-all group"
-                                            >
-                                                {/* Avatar */}
-                                                <div className="w-10 h-10 rounded-xl overflow-hidden bg-background flex-shrink-0 border border-border-theme/40">
-                                                    {u.profilePic
-                                                        ? <img src={u.profilePic} alt={u.fullname} className="w-full h-full object-cover" />
-                                                        : <div className="w-full h-full flex items-center justify-center"><i className="ri-user-3-line text-foreground/30" /></div>}
-                                                </div>
-                                                {/* Info */}
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-black text-sm truncate">{u.fullname}</p>
-                                                    <p className="text-[10px] text-foreground/40 truncate">{u.email}</p>
-                                                </div>
-                                                {/* Role */}
-                                                <div className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest flex-shrink-0 ${roleColors[u.role] || 'text-foreground/40'}`}>
-                                                    <i className={roleIcons[u.role] || 'ri-user-line'} />
-                                                    {u.role}
-                                                </div>
-                                                {/* Address */}
-                                                {u.place && <p className="text-[9px] text-foreground/25 hidden xl:block max-w-[140px] truncate">{u.place}</p>}
-                                                {/* Arrow */}
-                                                <i className="ri-arrow-right-s-line text-foreground/20 group-hover:text-accent transition-colors flex-shrink-0" />
-                                            </div>
-                                        );
-                                    })
-                                }
-                                {allUsers.length === 0 && (
-                                    <div className="py-20 flex flex-col items-center gap-3 text-foreground/25">
-                                        <i className="ri-team-line text-4xl" />
-                                        <p className="text-sm font-black uppercase tracking-widest">No users found</p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )}
+                        <div>
+                            <p className="text-5xl font-black tracking-tighter text-foreground mb-1">{stat.count}</p>
+                            <p className="text-xs font-black uppercase tracking-widest text-foreground/40">{stat.label}</p>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+
+            {/* Quick Actions Panel */}
+            <div className="bg-surface/30 border border-border-theme/60 rounded-3xl p-8 backdrop-blur-md">
+                <h2 className="text-xl font-black mb-4">Quick Management</h2>
+                <p className="text-sm text-foreground/40 mb-6 font-medium">Access any management page directly from the left sidebar or click one of the stat cards above to begin updating the store taxonomy.</p>
             </div>
         </div>
     );

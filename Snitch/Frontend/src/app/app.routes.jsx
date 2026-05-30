@@ -8,6 +8,13 @@ import CreateProduct from "../Features/Poducts/Pages/CreateProduct.jsx";
 import ProductDetails from "../Features/Poducts/Pages/ProductDetails.jsx";
 import AdminDashboard from "../Features/Admin/Pages/AdminDashboard.jsx";
 import AdminLayout from "../Features/Components/AdminLayout.jsx";
+import AdminUsersPage from "../Features/Admin/Pages/AdminUsersPage.jsx";
+import AdminUserDetailPage from "../Features/Admin/Pages/AdminUserDetailPage.jsx";
+import AdminCategoriesPage from "../Features/Admin/Pages/AdminCategoriesPage.jsx";
+import AdminBrandsPage from "../Features/Admin/Pages/AdminBrandsPage.jsx";
+import AdminColorsPage from "../Features/Admin/Pages/AdminColorsPage.jsx";
+import AdminSizesPage from "../Features/Admin/Pages/AdminSizesPage.jsx";
+import AdminUnitsPage from "../Features/Admin/Pages/AdminUnitsPage.jsx";
 import SellerDashboard from "../Features/Seller/Pages/SellerDashboard.jsx";
 import Wishlist from "../Features/Wishlist/Pages/Wishlist.jsx";
 import Orders from "../Features/Orders/Pages/Orders.jsx";
@@ -62,6 +69,34 @@ export const routes = createBrowserRouter([
             {
                 path: "",
                 element: <AdminDashboard />,
+            },
+            {
+                path: "users",
+                element: <AdminUsersPage />,
+            },
+            {
+                path: "users/:id",
+                element: <AdminUserDetailPage />,
+            },
+            {
+                path: "categories",
+                element: <AdminCategoriesPage />,
+            },
+            {
+                path: "brands",
+                element: <AdminBrandsPage />,
+            },
+            {
+                path: "colors",
+                element: <AdminColorsPage />,
+            },
+            {
+                path: "sizes",
+                element: <AdminSizesPage />,
+            },
+            {
+                path: "units",
+                element: <AdminUnitsPage />,
             }
         ]
     },
