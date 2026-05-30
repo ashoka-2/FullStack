@@ -35,11 +35,15 @@ const Login = () => {
                 identifier = `+91${identifier}`;
             }
 
-            await handleLogin({
+            const loggedInUser = await handleLogin({
                 identifier: identifier,
                 password: formData.password
             });
-            navigate("/");
+            if (loggedInUser?.role === 'admin') {
+                navigate("/admin");
+            } else {
+                navigate("/");
+            }
         } catch (error) {
             console.error("Login failed", error);
         }

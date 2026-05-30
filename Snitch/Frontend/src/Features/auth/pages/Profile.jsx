@@ -8,6 +8,7 @@ import SellerProductCard from '../../Poducts/Components/SellerProductCard';
 import { ProfileSkeleton } from '../../Components/Skeletons';
 import PageLoader from '../../Components/PageLoader';
 import { PrimaryBtn, SecondaryBtn, TertiaryBtn } from '../../Components/Buttons';
+import axios from 'axios';
 
 const Profile = () => {
     const { user, loading: authLoading } = useSelector((state) => state.auth);
@@ -19,7 +20,12 @@ const Profile = () => {
     const [formData, setFormData] = useState({
         fullname: '',
         email: '',
-        contact: ''
+        contact: '',
+        pincode: '',
+        post: '',
+        place: '',
+        city: '',
+        state: ''
     });
     const [profilePic, setProfilePic] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
@@ -38,9 +44,31 @@ const Profile = () => {
             setFormData({
                 fullname: user.fullname || '',
                 email: user.email || '',
-                contact: displayContact
+                contact: displayContact,
+                pincode: '',
+                post: '',
+                place: '',
+                city: '',
+                state: ''
             });
             setPreviewUrl(user.profilePic || '');
+
+            // Fetch Place details
+            axios.get('/api/places', { withCredentials: true })
+                .then(res => {
+                    const savedPlace = res.data.place;
+                    if (savedPlace) {
+                        setFormData(prev => ({
+                            ...prev,
+                            pincode: savedPlace.pincode || '',
+                            post: savedPlace.post || '',
+                            place: savedPlace.place || '',
+                            city: savedPlace.city || '',
+                            state: savedPlace.state || ''
+                        }));
+                    }
+                })
+                .catch(err => console.error("Error loading place details", err));
 
             // Fetch seller products if applicable
             if (user.role === 'seller') {
@@ -77,6 +105,12 @@ const Profile = () => {
                 ...prev,
                 [name]: cleaned
             }));
+        } else if (name === 'pincode') {
+            const cleaned = value.replace(/\D/g, '').slice(0, 6);
+            setFormData(prev => ({
+                ...prev,
+                [name]: cleaned
+            }));
         } else {
             setFormData(prev => ({
                 ...prev,
@@ -96,6 +130,15 @@ const Profile = () => {
                 data.append('profilePic', profilePic);
             }
             await handleUpdateProfile(data);
+
+            // Save Place details
+            await axios.post('/api/places/update', {
+                pincode: formData.pincode,
+                post: formData.post,
+                place: formData.place,
+                city: formData.city,
+                state: formData.state
+            }, { withCredentials: true });
         } catch (error) {
             console.error("Update failed", error);
         }
@@ -236,17 +279,94 @@ const Profile = () => {
                                     <p className="mt-2 text-[10px] text-gray-500 ml-1 uppercase tracking-widest font-bold">10 Digits Required</p>
                                 </div>
 
+                                {/* Address / Location Section */}
+                                <div className="flex flex-col md:col-span-2 mt-4 pt-6 border-t border-border-theme/40">
+                                    <h4 className="text-[10px] font-black tracking-widest text-accent uppercase mb-4">Location & Delivery Vault</h4>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="flex flex-col md:col-span-2">
+                                            <label className="text-xs text-gray-400 mb-2 font-medium ml-1">Street Address / House No.</label>
+                                            <input
+                                                type="text"
+                                                name="place"
+                                                value={formData.place}
+                                                onChange={handleChange}
+                                                required
+                                                className="w-full bg-background border border-border-theme focus:border-accent rounded-xl px-4 py-3 outline-none transition-all focus:ring-4 focus:ring-accent/10"
+                                                placeholder="e.g. Apartment, House no, Street Name"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <label className="text-xs text-gray-400 mb-2 font-medium ml-1">Pincode</label>
+                                            <input
+                                                type="text"
+                                                name="pincode"
+                                                value={formData.pincode}
+                                                onChange={handleChange}
+                                                required
+                                                className="w-full bg-background border border-border-theme focus:border-accent rounded-xl px-4 py-3 outline-none transition-all focus:ring-4 focus:ring-accent/10"
+                                                placeholder="6 Digits"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <label className="text-xs text-gray-400 mb-2 font-medium ml-1">Post Office / Area</label>
+                                            <input
+                                                type="text"
+                                                name="post"
+                                                value={formData.post}
+                                                onChange={handleChange}
+                                                required
+                                                className="w-full bg-background border border-border-theme focus:border-accent rounded-xl px-4 py-3 outline-none transition-all focus:ring-4 focus:ring-accent/10"
+                                                placeholder="Post office or Sector"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <label className="text-xs text-gray-400 mb-2 font-medium ml-1">City</label>
+                                            <input
+                                                type="text"
+                                                name="city"
+                                                value={formData.city}
+                                                onChange={handleChange}
+                                                required
+                                                className="w-full bg-background border border-border-theme focus:border-accent rounded-xl px-4 py-3 outline-none transition-all focus:ring-4 focus:ring-accent/10"
+                                                placeholder="City"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <label className="text-xs text-gray-400 mb-2 font-medium ml-1">State</label>
+                                            <input
+                                                type="text"
+                                                name="state"
+                                                value={formData.state}
+                                                onChange={handleChange}
+                                                required
+                                                className="w-full bg-background border border-border-theme focus:border-accent rounded-xl px-4 py-3 outline-none transition-all focus:ring-4 focus:ring-accent/10"
+                                                placeholder="State"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
 
-                            <div className="mt-12 flex justify-end gap-3">
+                            <div className="mt-12 flex justify-end flex-wrap gap-3">
                                 {user?.role === 'admin' && (
                                     <SecondaryBtn
                                         type="button"
                                         onClick={() => navigate('/admin')}
-                                        icon="ri-dashboard-fill"
+                                        icon="ri-shield-flash-fill"
                                         size="lg"
                                     >
-                                        Admin Dashboard
+                                        Admin Control
+                                    </SecondaryBtn>
+                                )}
+                                {(user?.role === 'seller' || user?.role === 'admin') && (
+                                    <SecondaryBtn
+                                        type="button"
+                                        onClick={() => navigate('/seller/dashboard')}
+                                        icon="ri-store-2-fill"
+                                        size="lg"
+                                    >
+                                        Seller Console
                                     </SecondaryBtn>
                                 )}
                                 <PrimaryBtn
