@@ -51,6 +51,11 @@ export const addToCart = async (req: AuthRequest, res: Response) => {
     }
 
     try {
+        const product = await placeModel.db.model("Product").findById(productId);
+        if (product && product.seller.toString() === userId) {
+            return res.status(400).json({ message: "Sellers cannot add their own products to the cart" });
+        }
+
         let cart = await cartModel.findOne({ user: userId });
 
         if (!cart) {

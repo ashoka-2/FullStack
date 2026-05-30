@@ -10,8 +10,11 @@ const toastSlice = createSlice({
             state.toasts.push({
                 id: Date.now(),
                 message: action.payload.message,
-                type: action.payload.type || "info", // error, success, info
+                type: action.payload.type || "info",
             });
+            if (state.toasts.length > 3) {
+                state.toasts.shift();
+            }
         },
         removeToast: (state, action) => {
             state.toasts = state.toasts.filter(toast => toast.id !== action.payload);

@@ -1,28 +1,43 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeToast } from '../../app/toast.slice';
 
 const Toast = ({ id, message, type }) => {
     const dispatch = useDispatch();
+    const [isExiting, setIsExiting] = useState(false);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            dispatch(removeToast(id));
-        }, 5000); // Auto close after 5s
+        const exitTimer = setTimeout(() => {
+            setIsExiting(true);
+        }, 4600); // Trigger exit animation slightly before removal
 
-        return () => clearTimeout(timer);
+        const removeTimer = setTimeout(() => {
+            dispatch(removeToast(id));
+        }, 5000); // Match absolute lifecycle
+
+        return () => {
+            clearTimeout(exitTimer);
+            clearTimeout(removeTimer);
+        };
     }, [dispatch, id]);
+
+    const handleManualDismiss = () => {
+        setIsExiting(true);
+        setTimeout(() => {
+            dispatch(removeToast(id));
+        }, 300); // wait for exit animation
+    };
 
     const getToastStyles = () => {
         switch (type) {
             case 'error':
-                return 'border-red-500/50 bg-white dark:bg-red-500/10 text-red-900 dark:text-red-100 shadow-red-500/20';
+                return 'border-red-500/50 bg-white/90 dark:bg-red-950/20 text-red-900 dark:text-red-200 shadow-red-500/10';
             case 'success':
-                return 'border-emerald-500/50 bg-white dark:bg-emerald-500/10 text-emerald-900 dark:text-emerald-100 shadow-emerald-500/20';
+                return 'border-emerald-500/50 bg-white/90 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-200 shadow-emerald-500/10';
             case 'info':
-                return 'border-blue-500/50 bg-white dark:bg-blue-500/10 text-blue-900 dark:text-blue-100 shadow-blue-500/20';
+                return 'border-blue-500/50 bg-white/90 dark:bg-blue-950/20 text-blue-900 dark:text-blue-200 shadow-blue-500/10';
             default:
-                return 'border-border-theme bg-white dark:bg-surface/80 text-foreground shadow-black/5';
+                return 'border-border-theme bg-white/90 dark:bg-surface/90 text-foreground shadow-black/5';
         }
     };
 
@@ -41,17 +56,19 @@ const Toast = ({ id, message, type }) => {
 
     return (
         <div 
-            className={`flex items-center gap-4 p-4 pr-12 rounded-xl border backdrop-blur-md shadow-2xl transition-all duration-300 animate-in slide-in-from-right-10 fade-in ${getToastStyles()}`}
-            style={{ width: 'max-content', minWidth: '300px', maxWidth: '450px' }}
+            className={`flex items-center gap-4 p-4 pr-12 rounded-xl border backdrop-blur-md shadow-2xl transition-all duration-300 ${
+                isExiting ? 'toast-slide-out' : 'toast-slide-in'
+            } ${getToastStyles()}`}
+            style={{ width: 'max-content', minWidth: '320px', maxWidth: '450px' }}
         >
             <div className="flex-shrink-0">
                 {getIcon()}
             </div>
             <div className="flex-1">
-                <p className="text-sm font-medium tracking-tight">{message}</p>
+                <p className="text-sm font-semibold tracking-tight">{message}</p>
             </div>
             <button 
-                onClick={() => dispatch(removeToast(id))}
+                onClick={handleManualDismiss}
                 className="absolute right-4 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100 transition-opacity"
             >
                 <i className="ri-close-line text-lg"></i>
@@ -64,7 +81,7 @@ export const ToastContainer = () => {
     const toasts = useSelector((state) => state.toast.toasts);
 
     return (
-        <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3">
+        <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3">
             {toasts.map((toast) => (
                 <Toast key={toast.id} {...toast} />
             ))}

@@ -42,6 +42,11 @@ export const toggleWishlist = async (req: AuthRequest, res: Response) => {
     }
 
     try {
+        const product = await placeModel.db.model("Product").findById(productId);
+        if (product && product.seller.toString() === userId) {
+            return res.status(400).json({ message: "Sellers cannot add their own products to the wishlist" });
+        }
+
         let wishlist = await wishlistModel.findOne({ user: userId });
 
         if (!wishlist) {

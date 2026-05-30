@@ -85,6 +85,14 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
         if (itemsToProcess) {
             // Process custom items (buy-now flow)
             for (const item of itemsToProcess) {
+                // Prevent seller from buying their own products
+                const checkProd = await productModel.findById(item.product).session(session);
+                if (checkProd && checkProd.seller.toString() === userId) {
+                    await session.abortTransaction();
+                    session.endSession();
+                    return res.status(400).json({ message: `You cannot purchase your own product: "${checkProd.title}"` });
+                }
+
                 // ── Atomic stock deduction ──────────────────────────────────────
                 // findOneAndUpdate with $gte filter: only succeeds if stock >= quantity
                 // This is race-condition safe — no separate read-then-write
@@ -125,6 +133,13 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
             for (const item of cart.items) {
                 const productObj = item.product as any;
                 if (!productObj) continue;
+
+                // Prevent seller from buying their own products
+                if (productObj.seller && productObj.seller.toString() === userId) {
+                    await session.abortTransaction();
+                    session.endSession();
+                    return res.status(400).json({ message: `You cannot purchase your own product: "${productObj.title}"` });
+                }
 
                 // ── Atomic stock deduction ──────────────────────────────────────
                 const updatedProduct = await productModel.findOneAndUpdate(
