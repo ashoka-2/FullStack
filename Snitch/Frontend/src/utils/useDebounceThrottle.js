@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from "react";
  */
 export const useDebounceThrottle = (value, delay = 800, throttleLimit = 800) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
-    const lastRan = useRef(Date.now());
+    const lastRan = useRef(0);
     const handlerRef = useRef(null);
 
     useEffect(() => {

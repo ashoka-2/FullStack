@@ -185,7 +185,7 @@ const SellerDashboard = () => {
                                 allCarts.map((cart) => (
                                     <div key={cart._id} className="bg-surface border border-border-theme rounded-3xl p-6 md:p-8 shadow-sm">
                                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border-theme/40 pb-6 mb-6">
-                                            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedUser(cart.user)}>
+                                            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedUserId(cart.user?._id || cart.user)}>
                                                 <div className="w-12 h-12 rounded-full overflow-hidden border border-border-theme">
                                                     <img src={cart.user?.profilePic} alt={cart.user?.fullname} className="w-full h-full object-cover" />
                                                 </div>
@@ -257,7 +257,7 @@ const SellerDashboard = () => {
                             {allWishlists?.length > 0 ? (
                                 allWishlists.map((wishlist) => (
                                     <div key={wishlist._id} className="bg-surface border border-border-theme rounded-3xl p-6 md:p-8 shadow-sm">
-                                        <div className="flex items-center gap-3 cursor-pointer border-b border-border-theme/40 pb-6 mb-6" onClick={() => setSelectedUser(wishlist.user)}>
+                                        <div className="flex items-center gap-3 cursor-pointer border-b border-border-theme/40 pb-6 mb-6" onClick={() => setSelectedUserId(wishlist.user?._id || wishlist.user)}>
                                             <div className="w-12 h-12 rounded-full overflow-hidden border border-border-theme">
                                                 <img src={wishlist.user?.profilePic} alt={wishlist.user?.fullname} className="w-full h-full object-cover" />
                                             </div>
@@ -302,7 +302,7 @@ const SellerDashboard = () => {
                                 allOrders.map((order) => (
                                     <div key={order._id} className="bg-surface border border-border-theme rounded-3xl p-6 md:p-8 shadow-sm">
                                         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-border-theme/40 pb-6 mb-6">
-                                            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedUser(order.buyer)}>
+                                            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedUserId(order.buyer?._id || order.buyer)}>
                                                 <div className="w-12 h-12 rounded-full overflow-hidden border border-border-theme">
                                                     <img src={order.buyer?.profilePic} alt={order.buyer?.fullname} className="w-full h-full object-cover" />
                                                 </div>

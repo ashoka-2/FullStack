@@ -389,6 +389,56 @@ export const AdminUserDetailSkeleton = () => (
         </div>
     </div>
 );
+// ─── Admin Product Detail Skeleton ───────────────────────────────────────────
+export const AdminProductDetailSkeleton = () => (
+    <div className="space-y-8 animate-pulse">
+        <div className="flex items-center gap-4">
+            <SkeletonBase className="w-10 h-10 rounded-xl" />
+            <div className="space-y-2">
+                <SkeletonBase className="w-24 h-3 rounded-full opacity-30" />
+                <SkeletonBase className="w-64 h-8 rounded-xl" />
+            </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+            <div className="lg:col-span-6 flex flex-col md:flex-row-reverse gap-3">
+                <SkeletonBase className="flex-1 aspect-[3/4] max-h-[520px] rounded-[2.2rem]" />
+                <div className="flex md:flex-col gap-2 md:w-16 shrink-0">
+                    {[1, 2, 3].map(i => (
+                        <SkeletonBase key={i} className="w-16 h-20 rounded-2xl opacity-40" />
+                    ))}
+                </div>
+            </div>
+            <div className="lg:col-span-6 space-y-6">
+                <div className="space-y-3">
+                    <div className="flex gap-2">
+                        <SkeletonBase className="w-20 h-6 rounded-full" />
+                        <SkeletonBase className="w-28 h-6 rounded-full" />
+                    </div>
+                    <SkeletonBase className="w-3/4 h-12 rounded-2xl" />
+                    <SkeletonBase className="w-32 h-4 rounded-lg opacity-30" />
+                </div>
+                <SkeletonBase className="w-full h-20 rounded-3xl" />
+                <div className="space-y-3">
+                    <SkeletonBase className="w-16 h-4 rounded-lg opacity-40" />
+                    <div className="flex gap-2">
+                        {[1, 2, 3, 4].map(i => (
+                            <SkeletonBase key={i} className="w-12 h-10 rounded-xl" />
+                        ))}
+                    </div>
+                </div>
+                <div className="space-y-3">
+                    <SkeletonBase className="w-16 h-4 rounded-lg opacity-40" />
+                    <div className="flex gap-3">
+                        {[1, 2, 3].map(i => (
+                            <SkeletonBase key={i} className="w-8 h-8 rounded-full" />
+                        ))}
+                    </div>
+                </div>
+                <SkeletonBase className="w-full h-32 rounded-3xl" />
+            </div>
+        </div>
+    </div>
+);
 
 // ─── Admin Taxonomy Skeleton (Categories/Brands/Colors/Sizes/Units) ───────────
 export const AdminTaxonomySkeleton = () => (

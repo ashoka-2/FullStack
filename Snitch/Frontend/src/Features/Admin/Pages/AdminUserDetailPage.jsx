@@ -23,10 +23,14 @@ const RoleBadge = ({ role }) => {
 
 // Product Mini-card
 const ProductChip = ({ product }) => {
+    const navigate = useNavigate();
     const img = product?.images?.[0]?.url;
     const price = product?.price?.saleAmount || product?.price?.amount;
     return (
-        <div className="flex items-center gap-3 p-3 rounded-2xl bg-background/50 border border-border-theme/30 hover:border-accent/30 transition-colors">
+        <div
+            onClick={() => product?._id && navigate(`/admin/products/${product._id}`)}
+            className="flex items-center gap-3 p-3 rounded-2xl bg-background/50 border border-border-theme/30 hover:border-accent/30 transition-colors cursor-pointer hover:bg-surface/10 hover:shadow-sm"
+        >
             <div className="w-11 h-11 rounded-xl overflow-hidden bg-surface flex-shrink-0">
                 {img ? <img src={img} alt={product.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><i className="ri-image-line text-foreground/20" /></div>}
             </div>
@@ -45,9 +49,13 @@ const ProductChip = ({ product }) => {
 
 // Cart Item Row
 const CartItem = ({ item }) => {
+    const navigate = useNavigate();
     const img = item?.product?.images?.[0]?.url;
     return (
-        <div className="flex items-center gap-3 p-3 rounded-2xl bg-background/50 border border-border-theme/30">
+        <div
+            onClick={() => item?.product?._id && navigate(`/admin/products/${item.product._id}`)}
+            className="flex items-center gap-3 p-3 rounded-2xl bg-background/50 border border-border-theme/30 hover:border-accent/30 transition-colors cursor-pointer hover:bg-surface/10 hover:shadow-sm"
+        >
             <div className="w-11 h-11 rounded-xl overflow-hidden bg-surface flex-shrink-0">
                 {img ? <img src={img} alt={item.product?.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><i className="ri-image-line text-foreground/20" /></div>}
             </div>
@@ -80,6 +88,7 @@ const statusMap = {
 };
 
 const OrderRow = ({ order }) => {
+    const navigate = useNavigate();
     const { cls } = statusMap[order.status] || statusMap.pending;
     const date = new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
     return (
@@ -95,11 +104,15 @@ const OrderRow = ({ order }) => {
             {/* Items */}
             <div className="space-y-1.5">
                 {order.items?.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
+                    <div
+                        key={idx}
+                        onClick={() => item.product?._id && navigate(`/admin/products/${item.product._id}`)}
+                        className="flex items-center gap-2 hover:bg-foreground/5 p-1 rounded-xl cursor-pointer transition-colors group"
+                    >
                         <div className="w-7 h-7 rounded-lg overflow-hidden bg-surface flex-shrink-0">
                             {item.product?.images?.[0]?.url ? <img src={item.product.images[0].url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><i className="ri-image-line text-[8px] text-foreground/20" /></div>}
                         </div>
-                        <p className="text-[10px] font-bold truncate flex-1">{item.product?.title}</p>
+                        <p className="text-[10px] font-bold truncate flex-1 group-hover:text-accent transition-colors">{item.product?.title}</p>
                         <span className="text-[9px] text-foreground/40 flex-shrink-0">×{item.quantity}</span>
                     </div>
                 ))}
