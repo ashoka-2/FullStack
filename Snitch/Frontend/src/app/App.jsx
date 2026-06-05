@@ -3,6 +3,9 @@ import './App.css'
 import { RouterProvider } from 'react-router'
 import { routes } from './app.routes'
 import { useAuth } from '../Features/auth/Hooks/useAuth'
+import { useDispatch, useSelector } from 'react-redux'
+import { addToast } from './toast.slice'
+import socket from '../utils/socket'
 import { ToastContainer } from '../Features/Components/Toast'
 import Preloader from '../Features/Components/Preloader'
 import '../../src/utils/axios'
@@ -30,6 +33,7 @@ function App() {
 
   // 2. Poll server until it's "ON"
   useEffect(() => {
+    if (isServerReady) return;
     let intervalId;
 
     const checkServer = async () => {
@@ -57,6 +61,34 @@ function App() {
     checkServer();
     return () => clearTimeout(intervalId);
   }, [isServerReady, fetchMe, hasSeenPreloader]);
+
+  // 3. Realtime Ban listener for active session
+  const user = useSelector(state => state.auth.user);
+  const { handleLogout } = useAuth();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!user) return;
+
+    const handleRealtimeBan = (payload) => {
+      if (payload.type === "user_ban_update" && payload.data?.userId === user.id && payload.data?.isBanned) {
+        dispatch(addToast({ 
+          message: "You are banned by the snitch admin and cannot login from now", 
+          type: "error" 
+        }));
+        
+        // Log out user locally
+        setTimeout(() => {
+          handleLogout();
+        }, 3000); // Allow time for toast message to read
+      }
+    };
+
+    socket.on("realtime_update", handleRealtimeBan);
+    return () => {
+      socket.off("realtime_update", handleRealtimeBan);
+    };
+  }, [user, handleLogout, dispatch]);
 
   // Handle the completion of the cinematic intro
   const handlePreloaderComplete = () => {

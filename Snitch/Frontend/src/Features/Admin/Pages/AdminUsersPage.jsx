@@ -5,6 +5,7 @@ import { useUsers } from '../../Users/Hooks/useUsers';
 import PageLoader from '../../Components/PageLoader';
 import { AdminUsersSkeleton } from '../../Components/Skeletons';
 import useDebounceThrottle from '../../../utils/useDebounceThrottle';
+import socket from '../../../utils/socket';
 
 const AdminUsersPage = () => {
     const navigate = useNavigate();
@@ -15,6 +16,20 @@ const AdminUsersPage = () => {
 
     useEffect(() => {
         handleFetchAllUsers();
+    }, []);
+
+    useEffect(() => {
+        const handleRealtimeUserUpdate = (payload) => {
+            if (payload.type === "user_ban_update" || payload.type === "auth_update") {
+                handleFetchAllUsers();
+            }
+        };
+
+        socket.on("realtime_update", handleRealtimeUserUpdate);
+
+        return () => {
+            socket.off("realtime_update", handleRealtimeUserUpdate);
+        };
     }, []);
 
     if (loading) return <PageLoader skeleton={AdminUsersSkeleton} />;

@@ -11,7 +11,7 @@ import { useOrder } from '../Orders/Hooks/useOrder';
 import socket from '../../utils/socket';
 
 const MainLayout = () => {
-    const { user } = useSelector(state => state.auth);
+    const user = useSelector(state => state.auth.user);
     const navigate = useNavigate();
     const { getCart } = useCart();
     const { getWishlist } = useWishlist();

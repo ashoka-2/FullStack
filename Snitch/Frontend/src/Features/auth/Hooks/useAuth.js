@@ -1,3 +1,4 @@
+import { useCallback } from "react"
 import { setError, setLoading, setUser } from "../State/auth.slice"
 import { register, login, getMe, logout, updateProfile } from "../Services/auth.api"
 import { useDispatch } from "react-redux"
@@ -8,7 +9,7 @@ export const useAuth = () => {
 
     const dispatch = useDispatch()
 
-    async function handleRegister({ email, contact, password, fullname, isSeller = false }) {
+    const handleRegister = useCallback(async ({ email, contact, password, fullname, isSeller = false }) => {
         dispatch(setLoading(true))
         try {
             const data = await register({ email, contact, password, fullname, isSeller })
@@ -21,9 +22,9 @@ export const useAuth = () => {
         } finally {
             dispatch(setLoading(false))
         }
-    }
+    }, [dispatch])
 
-    async function handleLogin({ identifier, password }) {
+    const handleLogin = useCallback(async ({ identifier, password }) => {
         dispatch(setLoading(true))
         try {
             const data = await login({ identifier, password })
@@ -37,9 +38,9 @@ export const useAuth = () => {
         } finally {
             dispatch(setLoading(false))
         }
-    }
+    }, [dispatch])
 
-    async function fetchMe() {
+    const fetchMe = useCallback(async () => {
         dispatch(setLoading(true))
         try {
             const data = await getMe()
@@ -50,9 +51,9 @@ export const useAuth = () => {
         } finally {
             dispatch(setLoading(false))
         }
-    }
+    }, [dispatch])
 
-    async function handleLogout() {
+    const handleLogout = useCallback(async () => {
         try {
             await logout()
             dispatch(setUser(null))
@@ -62,9 +63,9 @@ export const useAuth = () => {
             // Even if backend fails, we should probably clear local state
             dispatch(setUser(null))
         }
-    }
+    }, [dispatch])
 
-    async function handleUpdateProfile(profileData) {
+    const handleUpdateProfile = useCallback(async (profileData) => {
         dispatch(setLoading(true))
         try {
             const data = await updateProfile(profileData)
@@ -78,7 +79,7 @@ export const useAuth = () => {
         } finally {
             dispatch(setLoading(false))
         }
-    }
+    }, [dispatch])
 
     return { handleRegister, handleLogin, fetchMe, handleLogout, handleUpdateProfile }
 }

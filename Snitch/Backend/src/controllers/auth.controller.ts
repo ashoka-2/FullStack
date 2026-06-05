@@ -12,6 +12,7 @@ import orderSubModel from "../models/orderSub.model.js";
 import productModel from "../models/product.model.js";
 import jwt from "jsonwebtoken";
 import { config } from "../config/config.js";
+import { broadcastUpdate } from "../services/socket.service.js";
 
 async function sendTokenResponse(user: IUser, res: Response, message: string) {
     const token = jwt.sign(
@@ -90,7 +91,7 @@ export const login = async (req: Request, res: Response) => {
         }
 
         if (user.isBanned) {
-            return res.status(403).json({ message: "Your account is banned" });
+            return res.status(403).json({ message: "You are banned and cannot log in." });
         }
 
         const isMatch = await user.comparePassword(password);
@@ -127,6 +128,10 @@ export const googleCallback = async (req: Request, res: Response) => {
                 contact: `G-${id}`.slice(0, 15), // Satisfy required/unique constraint
                 role: "buyer", // Default role
             });
+        }
+
+        if (user.isBanned) {
+            return res.redirect(`${config.FRONTEND_URL}/login?error=banned`);
         }
 
         const token = jwt.sign(
@@ -426,6 +431,9 @@ export const toggleBanUser = async (req: AuthRequest, res: Response) => {
         }
         user.isBanned = !user.isBanned;
         await user.save();
+        
+        broadcastUpdate("user_ban_update", { userId: user._id.toString(), isBanned: user.isBanned });
+
         return res.status(200).json({ 
             success: true, 
             message: `User has been ${user.isBanned ? 'banned' : 'unbanned'}`, 

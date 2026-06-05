@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router';
 import { flushSync } from 'react-dom';
 import AdminNavbar from './AdminNavbar';
+import { useAdmin } from '../Admin/Hooks/useAdmin';
+import socket from '../../utils/socket';
 
 const AdminLayout = () => {
     const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -9,6 +11,8 @@ const AdminLayout = () => {
         if (saved) return saved === 'dark';
         return true; // Default to dark mode
     });
+
+    const { fetchAll } = useAdmin();
 
     useEffect(() => {
         if (isDarkMode) {
@@ -19,6 +23,20 @@ const AdminLayout = () => {
             localStorage.setItem('theme', 'light');
         }
     }, [isDarkMode]);
+
+    useEffect(() => {
+        const handleRealtimeCatalogUpdate = (payload) => {
+            if (payload.type === "catalog_update") {
+                fetchAll();
+            }
+        };
+
+        socket.on("realtime_update", handleRealtimeCatalogUpdate);
+
+        return () => {
+            socket.off("realtime_update", handleRealtimeCatalogUpdate);
+        };
+    }, [fetchAll]);
 
     const toggleTheme = (e) => {
         if (!document.startViewTransition) {
