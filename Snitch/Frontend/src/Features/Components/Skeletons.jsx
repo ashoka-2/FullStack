@@ -603,4 +603,89 @@ export const SellerOrdersSkeleton = () => (
   </div>
 );
 
+// ─── Admin Settings Skeleton ──────────────────────────────────────────────────
+export const AdminSettingsSkeleton = () => (
+  <div className="space-y-8 animate-pulse max-w-5xl mx-auto">
+    <div className="flex justify-between items-center mb-8">
+      <SkeletonBase className="w-64 h-10 rounded-2xl" />
+      <SkeletonBase className="w-44 h-12 rounded-full opacity-35" />
+    </div>
+
+    {/* Tabs Skeleton */}
+    <div className="flex gap-2 border-b border-border-theme/30 mb-8 pb-3">
+      {[1, 2, 3, 4].map((i) => (
+        <SkeletonBase key={i} className="w-28 h-6 rounded-lg opacity-40" />
+      ))}
+    </div>
+
+    {/* Form Panel Skeleton */}
+    <div className="bg-surface/50 border border-border-theme/50 rounded-3xl p-6 md:p-8 space-y-6">
+      <SkeletonBase className="w-48 h-6 rounded-lg mb-6" />
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="space-y-2">
+          <SkeletonBase className="w-24 h-3 rounded-full opacity-35" />
+          <SkeletonBase className="w-full h-12 rounded-xl" />
+        </div>
+      ))}
+      <div className="flex justify-end pt-4">
+        <SkeletonBase className="w-36 h-10 rounded-full" />
+      </div>
+    </div>
+  </div>
+);
+
+// ─── Admin Inbox Skeleton ────────────────────────────────────────────────────
+export const AdminInboxSkeleton = () => (
+  <div className="p-4 md:p-6 max-w-6xl mx-auto h-[calc(100vh-100px)] flex flex-col animate-pulse">
+    {/* Header */}
+    <div className="flex items-center justify-between mb-6">
+      <div className="space-y-2">
+        <SkeletonBase className="w-32 h-10 rounded-xl" />
+        <SkeletonBase className="w-48 h-4 rounded-md opacity-35" />
+      </div>
+      <SkeletonBase className="w-16 h-4 rounded-full opacity-40" />
+    </div>
+
+    {/* Filters */}
+    <div className="flex gap-2 mb-4">
+      {[1, 2, 3, 4].map((i) => (
+        <SkeletonBase key={i} className="w-24 h-8 rounded-full opacity-45" />
+      ))}
+    </div>
+
+    {/* Main Split Pane */}
+    <div className="flex gap-4 flex-1 min-h-0">
+      {/* Left List */}
+      <div className="w-full md:w-80 flex-shrink-0 space-y-2">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="p-4 rounded-2xl border border-border-theme/40 bg-surface/30 space-y-2">
+            <div className="flex justify-between">
+              <SkeletonBase className="w-16 h-4 rounded-full opacity-40" />
+              <SkeletonBase className="w-12 h-3 rounded-md opacity-30" />
+            </div>
+            <SkeletonBase className="w-3/4 h-4 rounded-md" />
+            <SkeletonBase className="w-1/2 h-3 rounded-md opacity-30" />
+          </div>
+        ))}
+      </div>
+
+      {/* Right Details Panel */}
+      <div className="flex-1 hidden md:block bg-surface/50 border border-border-theme/50 rounded-3xl p-8 space-y-6">
+        <div className="flex justify-between items-start">
+          <div className="space-y-2 w-1/2">
+            <SkeletonBase className="w-20 h-4 rounded-full opacity-45" />
+            <SkeletonBase className="w-3/4 h-8 rounded-lg" />
+            <SkeletonBase className="w-1/2 h-4 rounded-md opacity-35" />
+          </div>
+          <div className="flex gap-2">
+            <SkeletonBase className="w-10 h-10 rounded-xl opacity-40" />
+            <SkeletonBase className="w-10 h-10 rounded-xl opacity-40" />
+          </div>
+        </div>
+        <SkeletonBase className="w-full h-[120px] rounded-2xl" />
+      </div>
+    </div>
+  </div>
+);
+
 export default SkeletonBase;

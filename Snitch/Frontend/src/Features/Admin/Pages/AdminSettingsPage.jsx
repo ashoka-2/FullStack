@@ -5,6 +5,8 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import PageLoader from "../../Components/PageLoader";
+import { AdminSettingsSkeleton } from "../../Components/Skeletons";
 
 // Fix Leaflet default marker icon broken in Webpack/Vite
 delete L.Icon.Default.prototype._getIconUrl;
@@ -367,25 +369,20 @@ const AdminSettingsPage = () => {
     }));
   };
 
-  if (loading && !settings)
-    return (
-      <div className="p-10 text-center">
-        <div className="animate-pulse text-xs font-black tracking-[0.5em] uppercase text-gray-400">
-          Loading Settings...
-        </div>
-      </div>
-    );
+  if (loading && !settings) {
+    return <PageLoader skeleton={AdminSettingsSkeleton} />;
+  }
 
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
         <h1 className="text-3xl font-black uppercase tracking-widest text-foreground">
           Site Settings
         </h1>
         <button
           onClick={handleSaveAll}
           disabled={savingAll}
-          className="px-6 py-2.5 bg-accent text-accent-content font-black uppercase tracking-widest rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-60 flex items-center gap-2"
+          className="px-6 py-2.5 bg-accent text-accent-content font-black uppercase tracking-widest rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-60 flex items-center gap-2 self-start sm:self-auto"
         >
           {savingAll ? (
             <>
@@ -839,11 +836,11 @@ const AdminSettingsPage = () => {
             
             {/* Privacy Policy Block */}
             <div className="bg-background/40 border border-border-theme/30 rounded-2xl p-5 space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                 <label className="block text-[10px] uppercase tracking-[0.4em] font-black text-gray-500">
                   Privacy Policy
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={handleResetPrivacy}
                     className="px-3 py-1.5 bg-surface-variant/25 text-gray-400 hover:text-white border border-border-theme/30 rounded-xl font-bold uppercase tracking-widest text-[9px] transition-all flex items-center gap-1.5"
@@ -878,11 +875,11 @@ const AdminSettingsPage = () => {
 
             {/* Return Policy Block */}
             <div className="bg-background/40 border border-border-theme/30 rounded-2xl p-5 space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                 <label className="block text-[10px] uppercase tracking-[0.4em] font-black text-gray-500">
                   Return Policy
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={handleResetReturns}
                     className="px-3 py-1.5 bg-surface-variant/25 text-gray-400 hover:text-white border border-border-theme/30 rounded-xl font-bold uppercase tracking-widest text-[9px] transition-all flex items-center gap-1.5"
@@ -917,11 +914,11 @@ const AdminSettingsPage = () => {
 
             {/* Terms of Service Block */}
             <div className="bg-background/40 border border-border-theme/30 rounded-2xl p-5 space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                 <label className="block text-[10px] uppercase tracking-[0.4em] font-black text-gray-500">
                   Terms of Service
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={handleResetTerms}
                     className="px-3 py-1.5 bg-surface-variant/25 text-gray-400 hover:text-white border border-border-theme/30 rounded-xl font-bold uppercase tracking-widest text-[9px] transition-all flex items-center gap-1.5"

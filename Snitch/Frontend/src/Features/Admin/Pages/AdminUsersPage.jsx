@@ -67,50 +67,54 @@ const AdminUsersPage = () => {
                         <div
                             key={u._id}
                             onClick={() => navigate(`/admin/users/${u._id}`)}
-                            className="flex items-center gap-4 p-4 bg-surface/40 hover:bg-surface border border-border-theme/40 hover:border-accent/30 rounded-2xl cursor-pointer transition-all group animate-in fade-in duration-200"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-surface/40 hover:bg-surface border border-border-theme/40 hover:border-accent/30 rounded-2xl cursor-pointer transition-all group animate-in fade-in duration-200"
                         >
-                            {/* Avatar */}
-                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-background flex-shrink-0 border border-border-theme/40">
-                                {u.profilePic
-                                    ? <img src={u.profilePic} alt={u.fullname} className="w-full h-full object-cover" />
-                                    : <div className="w-full h-full flex items-center justify-center bg-accent/5"><i className="ri-user-3-line text-foreground/30" /></div>}
-                            </div>
-                            
-                            {/* Info */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                    <p className="font-black text-sm truncate">{u.fullname}</p>
-                                    {u.isBanned && (
-                                        <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 border border-red-500/20">Banned</span>
-                                    )}
+                            {/* Left Part: Avatar & Info */}
+                            <div className="flex items-center gap-4 w-full sm:w-auto min-w-0">
+                                {/* Avatar */}
+                                <div className="w-10 h-10 rounded-xl overflow-hidden bg-background flex-shrink-0 border border-border-theme/40">
+                                    {u.profilePic
+                                        ? <img src={u.profilePic} alt={u.fullname} className="w-full h-full object-cover" />
+                                        : <div className="w-full h-full flex items-center justify-center bg-accent/5"><i className="ri-user-3-line text-foreground/30" /></div>}
                                 </div>
-                                <p className="text-[10px] text-foreground/40 truncate">{u.email}</p>
+                                
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-black text-sm truncate">{u.fullname}</p>
+                                        {u.isBanned && (
+                                            <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 border border-red-500/20 flex-shrink-0">Banned</span>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-foreground/40 truncate">{u.email}</p>
+                                </div>
                             </div>
                             
-                            {/* Verification Status Badge */}
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {/* Right Part: Badges & Actions */}
+                            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto sm:justify-end pl-14 sm:pl-0">
+                                {/* Verification Status Badge */}
                                 {u.verified ? (
-                                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-0.5 rounded-full">
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-0.5 rounded-full flex-shrink-0">
                                         <i className="ri-checkbox-circle-fill text-xs" /> Verified
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-foreground/30 bg-foreground/5 border border-border-theme/35 px-2.5 py-0.5 rounded-full">
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-foreground/30 bg-foreground/5 border border-border-theme/35 px-2.5 py-0.5 rounded-full flex-shrink-0">
                                         Unverified
                                     </span>
                                 )}
-                            </div>
 
-                            {/* Role */}
-                            <div className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest flex-shrink-0 px-2.5 py-1 rounded-full border ${roleColors[u.role] || 'text-foreground/40'}`}>
-                                <i className={roleIcons[u.role] || 'ri-user-line'} />
-                                {u.role}
+                                {/* Role */}
+                                <div className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest flex-shrink-0 px-2.5 py-1 rounded-full border ${roleColors[u.role] || 'text-foreground/40'}`}>
+                                    <i className={roleIcons[u.role] || 'ri-user-line'} />
+                                    {u.role}
+                                </div>
+                                
+                                {/* Address */}
+                                {u.place && <p className="text-[9px] text-foreground/25 hidden xl:block max-w-[140px] truncate">{u.place}</p>}
+                                
+                                {/* Arrow */}
+                                <i className="ri-arrow-right-s-line text-foreground/20 group-hover:text-accent transition-colors flex-shrink-0" />
                             </div>
-                            
-                            {/* Address */}
-                            {u.place && <p className="text-[9px] text-foreground/25 hidden xl:block max-w-[140px] truncate">{u.place}</p>}
-                            
-                            {/* Arrow */}
-                            <i className="ri-arrow-right-s-line text-foreground/20 group-hover:text-accent transition-colors flex-shrink-0" />
                         </div>
                     );
                 })}

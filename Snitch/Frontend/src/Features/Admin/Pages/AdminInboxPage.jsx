@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useMessages } from "../../Messages/Hooks/useMessages";
+import PageLoader from "../../Components/PageLoader";
+import { AdminInboxSkeleton } from "../../Components/Skeletons";
 
 const AdminInboxPage = () => {
     const { handleFetchMessages, handleMarkRead, handleDeleteMessage } = useMessages();
@@ -34,6 +36,10 @@ const AdminInboxPage = () => {
         const d = new Date(dateStr);
         return d.toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
     };
+
+    if (loading && messages.length === 0) {
+        return <PageLoader skeleton={AdminInboxSkeleton} />;
+    }
 
     return (
         <div className="p-4 md:p-6 max-w-6xl mx-auto h-[calc(100vh-100px)] flex flex-col">
@@ -77,14 +83,8 @@ const AdminInboxPage = () => {
             {/* Main Inbox Layout */}
             <div className="flex gap-4 flex-1 min-h-0 overflow-hidden">
                 {/* Message List */}
-                <div className="w-full md:w-80 flex-shrink-0 overflow-y-auto scrollbar-hide space-y-2">
-                    {loading && messages.length === 0 ? (
-                        <div className="space-y-3">
-                            {[...Array(4)].map((_, i) => (
-                                <div key={i} className="h-20 rounded-2xl bg-surface animate-pulse"></div>
-                            ))}
-                        </div>
-                    ) : filtered.length === 0 ? (
+                <div className={`w-full md:w-80 flex-shrink-0 overflow-y-auto scrollbar-hide space-y-2 ${selectedMsg ? "hidden md:block" : "block"}`}>
+                    {filtered.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-40 text-gray-500">
                             <i className="ri-inbox-2-line text-4xl mb-3"></i>
                             <p className="text-xs font-bold uppercase tracking-widest">No messages</p>
@@ -116,10 +116,18 @@ const AdminInboxPage = () => {
                 </div>
 
                 {/* Message Detail Panel */}
-                <div className="flex-1 hidden md:flex flex-col min-h-0">
+                <div className={`flex-1 flex flex-col min-h-0 ${selectedMsg ? "block" : "hidden md:block"}`}>
                     {selectedMsg ? (
-                        <div className="bg-surface/50 border border-border-theme/50 rounded-3xl p-8 h-full overflow-y-auto">
-                            <div className="flex justify-between items-start mb-6">
+                        <div className="bg-surface/50 border border-border-theme/50 rounded-3xl p-6 md:p-8 h-full overflow-y-auto">
+                            {/* Back Button for mobile */}
+                            <button
+                                onClick={() => setSelectedMsg(null)}
+                                className="md:hidden flex items-center gap-2 mb-6 text-xs font-black uppercase tracking-widest text-accent hover:underline cursor-pointer"
+                            >
+                                <i className="ri-arrow-left-line text-base"></i> Back to Inbox
+                            </button>
+
+                            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
                                 <div>
                                     <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full mb-3 inline-block ${selectedMsg.type === "contact" ? "bg-blue-500/10 text-blue-400" : "bg-purple-500/10 text-purple-400"}`}>
                                         {selectedMsg.type}
@@ -152,7 +160,7 @@ const AdminInboxPage = () => {
                                 </div>
                             )}
                             {selectedMsg.content && (
-                                <div className="bg-background/50 border border-border-theme/30 rounded-2xl p-6">
+                                <div className="bg-background/50 border border-border-theme/30 rounded-2xl p-4 md:p-6">
                                     <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 block mb-3">Message</span>
                                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedMsg.content}</p>
                                 </div>
@@ -165,7 +173,7 @@ const AdminInboxPage = () => {
                             )}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-full bg-surface/30 border border-border-theme/50 rounded-3xl text-gray-500">
+                        <div className="flex flex-col items-center justify-center h-full bg-surface/30 border border-border-theme/50 rounded-3xl text-gray-500 p-6 text-center">
                             <i className="ri-mail-open-line text-5xl mb-4 opacity-30"></i>
                             <p className="text-xs font-black uppercase tracking-[0.3em]">Select a message to read</p>
                         </div>
