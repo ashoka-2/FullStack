@@ -2,29 +2,38 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import { Outlet, useNavigate } from 'react-router';
 import { flushSync } from 'react-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import CartDrawer from './CartDrawer';
 import CheckoutModal from './CheckoutModal';
+import Footer from './Footer';
 import { useCart } from '../Cart/Hooks/useCart';
 import { useWishlist } from '../Wishlist/Hooks/useWishlist';
 import { useOrder } from '../Orders/Hooks/useOrder';
+import { useSettings } from '../Settings/Hooks/useSettings';
+import { applyRealtimeSettings } from '../Settings/State/settings.slice';
 import socket from '../../utils/socket';
 
 const MainLayout = () => {
     const user = useSelector(state => state.auth.user);
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const { getCart } = useCart();
     const { getWishlist } = useWishlist();
     const { getMyOrders } = useOrder();
+    const { handleGetSettings } = useSettings();
 
-    // Use localStorage to persist theme. Default to dark mode given the Snitch branding.
     const [isDarkMode, setIsDarkMode] = useState(() => {
         const saved = localStorage.getItem('theme');
         if (saved) return saved === 'dark';
-        return true; // Default to dark mode
+        return true;
     });
-    
+
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+    // Fetch settings once on mount for Footer, About, Contact pages
+    useEffect(() => {
+        handleGetSettings();
+    }, []);
 
     useEffect(() => {
         if (user?.role === 'admin') {
@@ -33,25 +42,26 @@ const MainLayout = () => {
     }, [user, navigate]);
 
     useEffect(() => {
-        if (!user) return;
-
+        // ⚡ GLOBAL REALTIME SOCKET HANDLER
         const handleRealtimeUpdate = (payload) => {
-            console.log("Socket.io update message received (buyer):", payload.type);
-            if (payload.type === "cart_update") {
+            console.log("Socket.io event:", payload.type);
+            if (payload.type === "cart_update" && user) {
                 getCart();
-            } else if (payload.type === "wishlist_update") {
+            } else if (payload.type === "wishlist_update" && user) {
                 getWishlist();
-            } else if (payload.type === "order_update") {
+            } else if (payload.type === "order_update" && user) {
                 getMyOrders();
+            } else if (payload.type === "settings_update") {
+                // ⚡ Instantly apply site settings for ALL users (no reload needed)
+                dispatch(applyRealtimeSettings(payload.data));
             }
         };
 
         socket.on("realtime_update", handleRealtimeUpdate);
-
         return () => {
             socket.off("realtime_update", handleRealtimeUpdate);
         };
-    }, [user, getCart, getWishlist, getMyOrders]);
+    }, [user, getCart, getWishlist, getMyOrders, dispatch]);
 
     useEffect(() => {
         if (isDarkMode) {
@@ -83,14 +93,16 @@ const MainLayout = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground transition-colors duration-500 overflow-x-clip">
-            <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-4 md:py-6">
+        <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-500 overflow-x-clip">
+            <div className="max-w-[1440px] w-full mx-auto px-4 md:px-6 py-4 md:py-6 flex-grow">
                 <Navbar toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
-                <main className="pt-16 md:pt-20 w-full relative z-10">
+                <main className="pt-16 md:pt-20 w-full relative z-10 pb-20">
                     <Outlet />
                 </main>
             </div>
-            
+
+            <Footer />
+
             {/* Global E-commerce Overlays */}
             <CartDrawer onCheckout={() => setIsCheckoutOpen(true)} />
             <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} />

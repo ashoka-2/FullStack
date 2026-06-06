@@ -126,17 +126,17 @@ const Navbar = ({ toggleTheme, isDarkMode }) => {
   }, [lastScrollY, mobileMenuOpen]);
 
   const menuLinks = [
-    { id: '01', name: 'Latest Arrivals', path: '/', desc: 'Fresh Binary Drops' },
-    { id: '02', name: 'Curated Sets', path: '#', desc: 'Style Systems' },
-    { id: '03', name: 'Style Journal', path: '#', desc: 'Editorial' },
-    { id: '04', name: 'Our Vision', path: '#', desc: 'Identity' },
-    { id: '05', name: 'Support Hub', path: '#', desc: 'Contact Us' },
+    { id: '01', name: 'Latest Arrivals', path: '/shop', desc: 'Fresh Binary Drops' },
+    { id: '02', name: 'Curated Sets', path: '/shop', desc: 'Style Systems' },
+    { id: '03', name: 'Style Journal', path: '/about', desc: 'Editorial' },
+    { id: '04', name: 'Our Vision', path: '/about', desc: 'Identity' },
+    { id: '05', name: 'Support Hub', path: '/contact', desc: 'Contact Us' },
   ];
 
   const navLinks = [
-    { name: 'Shop', path: '/' },
-    { name: 'Drops', path: '/' },
-    { name: 'Vision', path: '/' },
+    { name: 'Shop', path: '/shop' },
+    { name: 'Vision', path: '/about' },
+    { name: 'Support', path: '/contact' },
   ];
 
   return (

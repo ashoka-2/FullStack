@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router';
 import { flushSync } from 'react-dom';
+import { useDispatch } from 'react-redux';
 import AdminNavbar from './AdminNavbar';
 import { useAdmin } from '../Admin/Hooks/useAdmin';
+import { prependMessage } from '../Messages/State/messages.slice';
+import { applyRealtimeSettings } from '../Settings/State/settings.slice';
+import { addToast } from '../../app/toast.slice';
 import socket from '../../utils/socket';
 
 const AdminLayout = () => {
@@ -13,6 +17,7 @@ const AdminLayout = () => {
     });
 
     const { fetchAll } = useAdmin();
+    const dispatch = useDispatch();
 
     useEffect(() => {
         if (isDarkMode) {
@@ -28,6 +33,15 @@ const AdminLayout = () => {
         const handleRealtimeCatalogUpdate = (payload) => {
             if (payload.type === "catalog_update") {
                 fetchAll();
+            } else if (payload.type === "settings_update") {
+                dispatch(applyRealtimeSettings(payload.data));
+            } else if (payload.type === "new_message") {
+                // ⚡ New inbox message - show toast and add to inbox
+                dispatch(prependMessage(payload.data));
+                dispatch(addToast({
+                    message: `📬 New ${payload.data.type === 'newsletter' ? 'newsletter' : 'contact'} message from ${payload.data.email}`,
+                    type: "info"
+                }));
             }
         };
 
@@ -58,17 +72,13 @@ const AdminLayout = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-background text-foreground transition-colors duration-500 overflow-hidden">
-            {/* Sidebar */}
+        <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors duration-500">
             <AdminNavbar toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
 
-            {/* Scrollable Workspace */}
-            <main className="flex-1 overflow-y-auto h-screen relative p-8 md:p-12">
-                {/* Background Accent Gradients */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
-                <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
-                
-                {/* Main page content outlet */}
+            <main className="flex-1 overflow-y-auto relative p-6 md:p-10">
+                <div className="fixed top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
+                <div className="fixed bottom-0 left-64 w-96 h-96 bg-accent/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
+
                 <div className="relative z-10">
                     <Outlet />
                 </div>

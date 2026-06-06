@@ -13,5 +13,13 @@ export default defineConfig({
         secure: false,
       }
     }
-  }
+  },
+  optimizeDeps: {
+    include: [
+      "leaflet",
+      "react-leaflet",
+      "@hello-pangea/dnd",
+    ],
+  },
 })
+

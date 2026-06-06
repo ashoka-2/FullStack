@@ -9,6 +9,8 @@ import cartRouter from "./routes/cart.routes.js";
 import wishlistRouter from "./routes/wishlist.routes.js";
 import orderRouter from "./routes/order.routes.js";
 import placeRouter from "./routes/place.routes.js";
+import settingRouter from "./routes/setting.routes.js";
+import messageRouter from "./routes/message.routes.js";
 
 import cors from "cors";
 import passport from "passport";
@@ -59,5 +61,7 @@ app.use("/api/carts",     cartRouter);
 app.use("/api/wishlists", wishlistRouter);
 app.use("/api/orders",    orderRouter);
 app.use("/api/places",    placeRouter);
+app.use("/api/settings",  settingRouter);
+app.use("/api/messages",  messageRouter);
 
 export default app;

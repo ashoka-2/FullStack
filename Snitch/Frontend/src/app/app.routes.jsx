@@ -2,6 +2,9 @@ import { createBrowserRouter } from "react-router";
 import Register from "../Features/auth/Pages/Register.jsx";
 import Login from "../Features/auth/Pages/Login.jsx";
 import Home from "../Features/Home/pages/Home.jsx";
+import About from "../Features/Home/pages/About.jsx";
+import Contact from "../Features/Home/pages/Contact.jsx";
+import Shop from "../Features/Poducts/Pages/Shop.jsx";
 import Profile from "../Features/auth/Pages/Profile.jsx";
 import MainLayout from "../Features/Components/MainLayout.jsx";
 import CreateProduct from "../Features/Poducts/Pages/CreateProduct.jsx";
@@ -16,6 +19,8 @@ import AdminBrandsPage from "../Features/Admin/Pages/AdminBrandsPage.jsx";
 import AdminColorsPage from "../Features/Admin/Pages/AdminColorsPage.jsx";
 import AdminSizesPage from "../Features/Admin/Pages/AdminSizesPage.jsx";
 import AdminUnitsPage from "../Features/Admin/Pages/AdminUnitsPage.jsx";
+import AdminSettingsPage from "../Features/Admin/Pages/AdminSettingsPage.jsx";
+import AdminInboxPage from "../Features/Admin/Pages/AdminInboxPage.jsx";
 import SellerLayout from "../Features/Components/SellerLayout.jsx";
 import SellerDashboardOverview from "../Features/Seller/Pages/SellerDashboardOverview.jsx";
 import SellerCatalogPage from "../Features/Seller/Pages/SellerCatalogPage.jsx";
@@ -37,8 +42,28 @@ export const routes = createBrowserRouter([
     element: <MainLayout />,
     children: [
       {
-        path: "",
+        path: "/",
         element: <Home />,
+      },
+      {
+        path: "/shop",
+        element: <Shop />,
+      },
+      {
+        path: "/about",
+        element: <About />,
+      },
+      {
+        path: "/contact",
+        element: <Contact />,
+      },
+      {
+        path: "product/:id",
+        element: (
+          <Protected>
+            <Profile />
+          </Protected>
+        ),
       },
       {
         path: "profile",
@@ -181,6 +206,14 @@ export const routes = createBrowserRouter([
       {
         path: "units",
         element: <AdminUnitsPage />,
+      },
+      {
+        path: "inbox",
+        element: <AdminInboxPage />,
+      },
+      {
+        path: "settings",
+        element: <AdminSettingsPage />,
       },
     ],
   },
