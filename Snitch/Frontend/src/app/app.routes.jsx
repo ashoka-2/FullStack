@@ -4,6 +4,9 @@ import Login from "../Features/auth/Pages/Login.jsx";
 import Home from "../Features/Home/pages/Home.jsx";
 import About from "../Features/Home/pages/About.jsx";
 import Contact from "../Features/Home/pages/Contact.jsx";
+import PrivacyPolicy from "../Features/Home/pages/LegalPrivacy.jsx";
+import ReturnsPolicy from "../Features/Home/pages/LegalReturns.jsx";
+import TermsOfService from "../Features/Home/pages/LegalTerms.jsx";
 import Shop from "../Features/Poducts/Pages/Shop.jsx";
 import Profile from "../Features/auth/Pages/Profile.jsx";
 import MainLayout from "../Features/Components/MainLayout.jsx";
@@ -56,6 +59,18 @@ export const routes = createBrowserRouter([
       {
         path: "/contact",
         element: <Contact />,
+      },
+      {
+        path: "/privacy",
+        element: <PrivacyPolicy />,
+      },
+      {
+        path: "/returns",
+        element: <ReturnsPolicy />,
+      },
+      {
+        path: "/terms",
+        element: <TermsOfService />,
       },
       {
         path: "product/:id",

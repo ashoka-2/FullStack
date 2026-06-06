@@ -15,6 +15,49 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+// Default legal content constants
+const DEFAULT_PRIVACY_POLICY = `<h2><strong>1. Information We Collect</strong></h2>
+<p>We collect personal information that you provide to us, such as your name, shipping address, email address, phone number, and payment information when you make a purchase on Snitch.</p>
+
+<h2><strong>2. How We Use Your Information</strong></h2>
+<p>We use your information to process transactions, manage your account, deliver products, communicate with you about orders and promotions, and improve our website and services.</p>
+
+<h2><strong>3. Data Security</strong></h2>
+<p>We implement a variety of security measures, including SSL encryption and secure payment gateways, to maintain the safety of your personal information.</p>
+
+<h2><strong>4. Cookies</strong></h2>
+<p>We use cookies to enhance your browsing experience, analyze site traffic, and understand user behavior to deliver personalized recommendations.</p>
+
+<h2><strong>5. Third-Party Disclosures</strong></h2>
+<p>We do not sell, trade, or otherwise transfer your personally identifiable information to outside parties except to trusted partners who assist us in operating our website and processing payments.</p>`;
+
+const DEFAULT_RETURN_POLICY = `<h2><strong>1. Return & Exchange Window</strong></h2>
+<p>We offer a hassle-free 15-day return and exchange policy from the date of delivery. Items must be unworn, unwashed, and in their original packaging with all tags intact.</p>
+
+<h2><strong>2. Refund Process</strong></h2>
+<p>Once we receive and inspect your returned items, we will notify you of the approval or rejection of your refund. Approved refunds will be credited back to your original payment method within 5-7 business days.</p>
+
+<h2><strong>3. Return Shipping</strong></h2>
+<p>For convenience, we offer free reverse pickups in major locations. If your pin code is not eligible for reverse pickup, you will need to ship the item back to us, and we will reimburse shipping costs up to a specified limit.</p>
+
+<h2><strong>4. Non-Returnable Items</strong></h2>
+<p>For hygiene reasons, certain products such as innerwear, socks, and custom-tailored apparel are non-returnable unless they arrive damaged or defective.</p>`;
+
+const DEFAULT_TERMS_OF_SERVICE = `<h2><strong>1. Agreement to Terms</strong></h2>
+<p>By accessing and shopping at Snitch, you agree to be bound by these Terms of Service. If you do not agree, please do not use our website or services.</p>
+
+<h2><strong>2. Account & Eligibility</strong></h2>
+<p>You must be at least 18 years old or browsing under parent supervision to create an account and shop. You are responsible for maintaining the confidentiality of your account credentials.</p>
+
+<h2><strong>3. Pricing & Product Details</strong></h2>
+<p>We strive to display product colors and prices as accurately as possible. However, we reserve the right to correct any pricing errors and update product availability without prior notice.</p>
+
+<h2><strong>4. Intellectual Property</strong></h2>
+<p>All content on this website, including text, graphics, logos, images, and software, is the property of Snitch and is protected by copyright and intellectual property laws.</p>
+
+<h2><strong>5. Limitation of Liability</strong></h2>
+<p>Snitch shall not be liable for any indirect, incidental, or consequential damages resulting from your use or inability to use our website or products.</p>`;
+
 // Icon options for social links
 const ICON_OPTIONS = [
   { icon: "ri-instagram-line", label: "Instagram" },
@@ -46,10 +89,27 @@ const MapClickHandler = ({ onMapClick }) => {
 };
 
 const AdminSettingsPage = () => {
-  const { handleGetSettings, handleUpdateSettings } = useSettings();
+  const {
+    handleGetSettings,
+    handleUpdateSettings,
+    handleUpdateAboutSettings,
+    handleUpdateContactSettings,
+    handleUpdateFooterSettings,
+    handleUpdateLegalSettings,
+    handleUpdatePrivacyPolicy,
+    handleUpdateReturnPolicy,
+    handleUpdateTermsOfService
+  } = useSettings();
   const { settings, loading } = useSelector((state) => state.settings);
   const [activeTab, setActiveTab] = useState("about");
-  const [saving, setSaving] = useState(false);
+  const [savingAll, setSavingAll] = useState(false);
+  const [savingAbout, setSavingAbout] = useState(false);
+  const [savingContact, setSavingContact] = useState(false);
+  const [savingFooter, setSavingFooter] = useState(false);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
+  const [savingReturns, setSavingReturns] = useState(false);
+  const [savingTerms, setSavingTerms] = useState(false);
+  const [savingLegalAll, setSavingLegalAll] = useState(false);
   const [iconPickerOpen, setIconPickerOpen] = useState(null); // holds social.id when open
 
   const [formData, setFormData] = useState({
@@ -92,6 +152,11 @@ const AdminSettingsPage = () => {
       privacyPolicyLink: "/privacy",
       returnPolicyLink: "/returns",
     },
+    legal: {
+      privacyPolicy: "Loading...",
+      returnPolicy: "Loading...",
+      termsOfService: "Loading...",
+    },
   });
 
   useEffect(() => {
@@ -110,6 +175,7 @@ const AdminSettingsPage = () => {
           privacyPolicyLink: settings.footer?.privacyPolicyLink || "/privacy",
           returnPolicyLink: settings.footer?.returnPolicyLink || "/returns",
         },
+        legal: settings.legal || formData.legal,
       });
     }
   }, [settings]);
@@ -127,6 +193,14 @@ const AdminSettingsPage = () => {
     setFormData((prev) => ({
       ...prev,
       contact: { ...prev.contact, [name]: value },
+    }));
+  };
+
+  const handleLegalChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      legal: { ...prev.legal, [name]: value },
     }));
   };
 
@@ -165,6 +239,7 @@ const AdminSettingsPage = () => {
   };
 
   const addSocialLink = () => {
+    if (formData.footer.socialLinks.length >= 4) return;
     const newLink = {
       id: `social-${Date.now()}`,
       platform: "New Platform",
@@ -196,13 +271,100 @@ const AdminSettingsPage = () => {
     }));
   };
 
-  const handleSave = async () => {
-    setSaving(true);
+  // Save All together
+  const handleSaveAll = async () => {
+    setSavingAll(true);
     try {
       await handleUpdateSettings(formData);
     } finally {
-      setSaving(false);
+      setSavingAll(false);
     }
+  };
+
+  // Section saves
+  const handleSaveAbout = async () => {
+    setSavingAbout(true);
+    try {
+      await handleUpdateAboutSettings(formData.about);
+    } finally {
+      setSavingAbout(false);
+    }
+  };
+
+  const handleSaveContact = async () => {
+    setSavingContact(true);
+    try {
+      await handleUpdateContactSettings(formData.contact);
+    } finally {
+      setSavingContact(false);
+    }
+  };
+
+  const handleSaveFooter = async () => {
+    setSavingFooter(true);
+    try {
+      await handleUpdateFooterSettings(formData.footer);
+    } finally {
+      setSavingFooter(false);
+    }
+  };
+
+  const handleSaveLegalAll = async () => {
+    setSavingLegalAll(true);
+    try {
+      await handleUpdateLegalSettings(formData.legal);
+    } finally {
+      setSavingLegalAll(false);
+    }
+  };
+
+  const handleSavePrivacy = async () => {
+    setSavingPrivacy(true);
+    try {
+      await handleUpdatePrivacyPolicy(formData.legal.privacyPolicy);
+    } finally {
+      setSavingPrivacy(false);
+    }
+  };
+
+  const handleSaveReturns = async () => {
+    setSavingReturns(true);
+    try {
+      await handleUpdateReturnPolicy(formData.legal.returnPolicy);
+    } finally {
+      setSavingReturns(false);
+    }
+  };
+
+  const handleSaveTerms = async () => {
+    setSavingTerms(true);
+    try {
+      await handleUpdateTermsOfService(formData.legal.termsOfService);
+    } finally {
+      setSavingTerms(false);
+    }
+  };
+
+  // Legal reset handlers
+  const handleResetPrivacy = () => {
+    setFormData((prev) => ({
+      ...prev,
+      legal: { ...prev.legal, privacyPolicy: DEFAULT_PRIVACY_POLICY }
+    }));
+  };
+
+  const handleResetReturns = () => {
+    setFormData((prev) => ({
+      ...prev,
+      legal: { ...prev.legal, returnPolicy: DEFAULT_RETURN_POLICY }
+    }));
+  };
+
+  const handleResetTerms = () => {
+    setFormData((prev) => ({
+      ...prev,
+      legal: { ...prev.legal, termsOfService: DEFAULT_TERMS_OF_SERVICE }
+    }));
   };
 
   if (loading && !settings)
@@ -221,17 +383,17 @@ const AdminSettingsPage = () => {
           Site Settings
         </h1>
         <button
-          onClick={handleSave}
-          disabled={saving}
+          onClick={handleSaveAll}
+          disabled={savingAll}
           className="px-6 py-2.5 bg-accent text-accent-content font-black uppercase tracking-widest rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-60 flex items-center gap-2"
         >
-          {saving ? (
+          {savingAll ? (
             <>
-              <i className="ri-loader-4-line animate-spin"></i> Saving...
+              <i className="ri-loader-4-line animate-spin"></i> Saving All...
             </>
           ) : (
             <>
-              <i className="ri-check-line"></i> Save & Publish
+              <i className="ri-check-line"></i> Save & Publish All
             </>
           )}
         </button>
@@ -239,7 +401,7 @@ const AdminSettingsPage = () => {
 
       {/* TABS */}
       <div className="flex gap-2 border-b border-border-theme/30 mb-8 overflow-x-auto scrollbar-hide">
-        {["about", "contact", "footer"].map((tab) => (
+        {["about", "contact", "footer", "legal"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -249,7 +411,9 @@ const AdminSettingsPage = () => {
               ? "📝 About Page"
               : tab === "contact"
                 ? "📍 Contact & Map"
-                : "🧩 Footer Builder"}
+                : tab === "footer"
+                  ? "🧩 Footer Builder"
+                  : "⚖️ Legal Pages"}
           </button>
         ))}
       </div>
@@ -296,6 +460,23 @@ const AdminSettingsPage = () => {
                 onChange={handleAboutChange}
                 className="w-full bg-background border border-border-theme/50 rounded-xl px-4 py-3 outline-none focus:border-accent transition-all resize-none"
               ></textarea>
+            </div>
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={handleSaveAbout}
+                disabled={savingAbout}
+                className="px-6 py-2.5 bg-accent text-accent-content font-black uppercase tracking-widest rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-60 flex items-center gap-2 text-xs"
+              >
+                {savingAbout ? (
+                  <>
+                    <i className="ri-loader-4-line animate-spin"></i> Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="ri-check-line"></i> Save About Page
+                  </>
+                )}
+              </button>
             </div>
           </div>
         )}
@@ -390,6 +571,23 @@ const AdminSettingsPage = () => {
                 </span>
               </div>
             </div>
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={handleSaveContact}
+                disabled={savingContact}
+                className="px-6 py-2.5 bg-accent text-accent-content font-black uppercase tracking-widest rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-60 flex items-center gap-2 text-xs"
+              >
+                {savingContact ? (
+                  <>
+                    <i className="ri-loader-4-line animate-spin"></i> Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="ri-check-line"></i> Save Contact Info
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
 
@@ -460,14 +658,18 @@ const AdminSettingsPage = () => {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <p className="text-[10px] uppercase tracking-[0.4em] font-black text-gray-500">
-                  Social Media Links
+                  Social Media Links <span className="lowercase text-[8px] text-gray-400 font-mono tracking-normal ml-1">({formData.footer.socialLinks.length}/4)</span>
                 </p>
-                <button
-                  onClick={addSocialLink}
-                  className="text-xs font-black uppercase tracking-widest text-accent hover:underline flex items-center gap-1"
-                >
-                  <i className="ri-add-circle-line"></i> Add Platform
-                </button>
+                {formData.footer.socialLinks.length < 4 ? (
+                  <button
+                    onClick={addSocialLink}
+                    className="text-xs font-black uppercase tracking-widest text-accent hover:underline flex items-center gap-1"
+                  >
+                    <i className="ri-add-circle-line"></i> Add Platform
+                  </button>
+                ) : (
+                  <span className="text-[9px] uppercase tracking-[0.2em] font-black text-gray-400 bg-surface px-2 py-1 rounded-md">Max Reached</span>
+                )}
               </div>
               <div className="space-y-3">
                 {formData.footer.socialLinks.map((social) => (
@@ -603,38 +805,172 @@ const AdminSettingsPage = () => {
                 </div>
               </div>
             )}
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={handleSaveFooter}
+                disabled={savingFooter}
+                className="px-6 py-2.5 bg-accent text-accent-content font-black uppercase tracking-widest rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-60 flex items-center gap-2 text-xs"
+              >
+                {savingFooter ? (
+                  <>
+                    <i className="ri-loader-4-line animate-spin"></i> Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="ri-check-line"></i> Save Footer Builder
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
 
-            {/* Legal Links */}
+        {/* ─── LEGAL PAGES TAB ────────────────────────────── */}
+        {activeTab === "legal" && (
+          <div className="space-y-8">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.4em] font-black text-gray-500 mb-4">
-                Legal Links
+              <h2 className="text-lg font-black uppercase tracking-widest mb-2">
+                Legal Pages Content
+              </h2>
+              <p className="text-xs text-gray-400 font-mono">
+                Use these fields to update the text on your legal pages. HTML tags (like &lt;h2&gt;, &lt;p&gt;, or &lt;b&gt;) are supported.
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">
-                    Privacy Policy URL
-                  </label>
-                  <input
-                    type="text"
-                    name="privacyPolicyLink"
-                    value={formData.footer.privacyPolicyLink}
-                    onChange={handleFooterLinkChange}
-                    className="w-full bg-background border border-border-theme/50 rounded-xl px-4 py-3 outline-none focus:border-accent transition-all text-sm font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">
-                    Return Policy URL
-                  </label>
-                  <input
-                    type="text"
-                    name="returnPolicyLink"
-                    value={formData.footer.returnPolicyLink}
-                    onChange={handleFooterLinkChange}
-                    className="w-full bg-background border border-border-theme/50 rounded-xl px-4 py-3 outline-none focus:border-accent transition-all text-sm font-mono"
-                  />
+            </div>
+            
+            {/* Privacy Policy Block */}
+            <div className="bg-background/40 border border-border-theme/30 rounded-2xl p-5 space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="block text-[10px] uppercase tracking-[0.4em] font-black text-gray-500">
+                  Privacy Policy
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleResetPrivacy}
+                    className="px-3 py-1.5 bg-surface-variant/25 text-gray-400 hover:text-white border border-border-theme/30 rounded-xl font-bold uppercase tracking-widest text-[9px] transition-all flex items-center gap-1.5"
+                  >
+                    <i className="ri-refresh-line"></i> Reset to Default
+                  </button>
+                  <button
+                    onClick={handleSavePrivacy}
+                    disabled={savingPrivacy}
+                    className="px-3 py-1.5 bg-accent text-accent-content rounded-xl font-black uppercase tracking-widest text-[9px] transition-all disabled:opacity-60 flex items-center gap-1.5"
+                  >
+                    {savingPrivacy ? (
+                      <>
+                        <i className="ri-loader-4-line animate-spin"></i> Saving...
+                      </>
+                    ) : (
+                      <>
+                        <i className="ri-check-line"></i> Save Privacy Policy
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
+              <textarea
+                name="privacyPolicy"
+                rows="6"
+                value={formData.legal.privacyPolicy}
+                onChange={handleLegalChange}
+                className="w-full bg-background border border-border-theme/50 rounded-xl px-4 py-3 outline-none focus:border-accent transition-all resize-y font-mono text-xs"
+              ></textarea>
+            </div>
+
+            {/* Return Policy Block */}
+            <div className="bg-background/40 border border-border-theme/30 rounded-2xl p-5 space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="block text-[10px] uppercase tracking-[0.4em] font-black text-gray-500">
+                  Return Policy
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleResetReturns}
+                    className="px-3 py-1.5 bg-surface-variant/25 text-gray-400 hover:text-white border border-border-theme/30 rounded-xl font-bold uppercase tracking-widest text-[9px] transition-all flex items-center gap-1.5"
+                  >
+                    <i className="ri-refresh-line"></i> Reset to Default
+                  </button>
+                  <button
+                    onClick={handleSaveReturns}
+                    disabled={savingReturns}
+                    className="px-3 py-1.5 bg-accent text-accent-content rounded-xl font-black uppercase tracking-widest text-[9px] transition-all disabled:opacity-60 flex items-center gap-1.5"
+                  >
+                    {savingReturns ? (
+                      <>
+                        <i className="ri-loader-4-line animate-spin"></i> Saving...
+                      </>
+                    ) : (
+                      <>
+                        <i className="ri-check-line"></i> Save Return Policy
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <textarea
+                name="returnPolicy"
+                rows="6"
+                value={formData.legal.returnPolicy}
+                onChange={handleLegalChange}
+                className="w-full bg-background border border-border-theme/50 rounded-xl px-4 py-3 outline-none focus:border-accent transition-all resize-y font-mono text-xs"
+              ></textarea>
+            </div>
+
+            {/* Terms of Service Block */}
+            <div className="bg-background/40 border border-border-theme/30 rounded-2xl p-5 space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="block text-[10px] uppercase tracking-[0.4em] font-black text-gray-500">
+                  Terms of Service
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleResetTerms}
+                    className="px-3 py-1.5 bg-surface-variant/25 text-gray-400 hover:text-white border border-border-theme/30 rounded-xl font-bold uppercase tracking-widest text-[9px] transition-all flex items-center gap-1.5"
+                  >
+                    <i className="ri-refresh-line"></i> Reset to Default
+                  </button>
+                  <button
+                    onClick={handleSaveTerms}
+                    disabled={savingTerms}
+                    className="px-3 py-1.5 bg-accent text-accent-content rounded-xl font-black uppercase tracking-widest text-[9px] transition-all disabled:opacity-60 flex items-center gap-1.5"
+                  >
+                    {savingTerms ? (
+                      <>
+                        <i className="ri-loader-4-line animate-spin"></i> Saving...
+                      </>
+                    ) : (
+                      <>
+                        <i className="ri-check-line"></i> Save Terms of Service
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <textarea
+                name="termsOfService"
+                rows="6"
+                value={formData.legal.termsOfService}
+                onChange={handleLegalChange}
+                className="w-full bg-background border border-border-theme/50 rounded-xl px-4 py-3 outline-none focus:border-accent transition-all resize-y font-mono text-xs"
+              ></textarea>
+            </div>
+
+            {/* General Save Button for Legal tab */}
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={handleSaveLegalAll}
+                disabled={savingLegalAll}
+                className="px-6 py-2.5 bg-accent text-accent-content font-black uppercase tracking-widest rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-60 flex items-center gap-2 text-xs"
+              >
+                {savingLegalAll ? (
+                  <>
+                    <i className="ri-loader-4-line animate-spin"></i> Saving All...
+                  </>
+                ) : (
+                  <>
+                    <i className="ri-check-line"></i> Save All Legal Pages
+                  </>
+                )}
+              </button>
             </div>
           </div>
         )}

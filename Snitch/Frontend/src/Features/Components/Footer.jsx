@@ -102,7 +102,7 @@ const Footer = () => {
                         <ul className="space-y-4 text-xs font-bold uppercase tracking-widest">
                             <li><a href={footerData.privacyPolicyLink || "/privacy"} className="hover:text-accent transition-colors">Privacy Policy</a></li>
                             <li><a href={footerData.returnPolicyLink || "/returns"} className="hover:text-accent transition-colors">Return Policy</a></li>
-                            <li><a href="#" className="hover:text-accent transition-colors">Terms of Service</a></li>
+                            <li><Link to="/terms" className="hover:text-accent transition-colors">Terms of Service</Link></li>
                         </ul>
                     </div>
                 );
