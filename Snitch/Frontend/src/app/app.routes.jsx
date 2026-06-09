@@ -25,6 +25,8 @@ import AdminUnitsPage from "../Features/Admin/Pages/AdminUnitsPage.jsx";
 import AdminSettingsPage from "../Features/Admin/Pages/AdminSettingsPage.jsx";
 import AdminInboxPage from "../Features/Admin/Pages/AdminInboxPage.jsx";
 import AdminAttributePage from "../Features/Admin/Pages/AdminAttributePage.jsx";
+import AdminPopupsPage from "../Features/Admin/Pages/AdminPopupsPage.jsx";
+import NotFoundPage from "../Features/Home/pages/NotFoundPage.jsx";
 import SellerLayout from "../Features/Components/SellerLayout.jsx";
 import SellerDashboardOverview from "../Features/Seller/Pages/SellerDashboardOverview.jsx";
 import SellerCatalogPage from "../Features/Seller/Pages/SellerCatalogPage.jsx";
@@ -247,6 +249,10 @@ export const routes = createBrowserRouter([
         path: "settings",
         element: <AdminSettingsPage />,
       },
+      {
+        path: "popups",
+        element: <AdminPopupsPage />,
+      },
     ],
   },
   {
@@ -256,5 +262,9 @@ export const routes = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ]);

@@ -29,6 +29,7 @@ const AdminNavbar = ({ toggleTheme, isDarkMode, isOpen, onClose }) => {
     { name: "Fits", path: "/admin/fits", icon: "ri-body-scan-line" },
     { name: "Materials", path: "/admin/materials", icon: "ri-scissors-line" },
     { name: "Collars", path: "/admin/collars", icon: "ri-shirt-line" },
+    { name: "Popups", path: "/admin/popups", icon: "ri-advertisement-line" },
     { name: "Settings", path: "/admin/settings", icon: "ri-settings-3-line" },
   ];
 

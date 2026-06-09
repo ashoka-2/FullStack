@@ -5,6 +5,7 @@ import { flushSync } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import CartDrawer from './CartDrawer';
 import CheckoutModal from './CheckoutModal';
+import PopupManager from './PopupManager';
 import Footer from './Footer';
 import { useCart } from '../Cart/Hooks/useCart';
 import { useWishlist } from '../Wishlist/Hooks/useWishlist';
@@ -106,6 +107,7 @@ const MainLayout = () => {
             {/* Global E-commerce Overlays */}
             <CartDrawer onCheckout={() => setIsCheckoutOpen(true)} />
             <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} />
+            <PopupManager />
         </div>
     );
 };

@@ -11,6 +11,7 @@ import orderRouter from "./routes/order.routes.js";
 import placeRouter from "./routes/place.routes.js";
 import settingRouter from "./routes/setting.routes.js";
 import messageRouter from "./routes/message.routes.js";
+import popupRouter from "./routes/popup.routes.js";
 
 import cors from "cors";
 import passport from "passport";
@@ -29,7 +30,7 @@ app.use(cookieParser());
 // In production, config.FRONTEND_URL = your Vercel URL (set as env var on Render)
 app.use(cors({
     origin: config.FRONTEND_URL,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,              // Required for cookies to work cross-domain
 }));
 
@@ -63,5 +64,6 @@ app.use("/api/orders",    orderRouter);
 app.use("/api/places",    placeRouter);
 app.use("/api/settings",  settingRouter);
 app.use("/api/messages",  messageRouter);
+app.use("/api/popups",    popupRouter);
 
 export default app;

@@ -244,7 +244,13 @@ export const getProductById = async (req: Request, res: Response) => {
         const cacheKey = keyOne(id as string);
         const cached = await redisClient.get(cacheKey);
         if (cached) {
-            return res.status(200).json(JSON.parse(cached));
+            const parsed = JSON.parse(cached);
+            // If cache exists but seller is not populated (still a string ID), bypass cache to heal it
+            if (parsed && parsed.product && typeof parsed.product.seller === "string") {
+                await redisClient.del(cacheKey);
+            } else {
+                return res.status(200).json(parsed);
+            }
         }
 
         const product = await productModel.findById(id).populate(POPULATE);

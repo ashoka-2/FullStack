@@ -10,6 +10,7 @@ import sellerReducer from "../Features/Seller/State/seller.slice";
 import usersReducer from "../Features/Users/State/users.slice";
 import settingsReducer from "../Features/Settings/State/settings.slice";
 import messagesReducer from "../Features/Messages/State/messages.slice";
+import popupReducer from "../Features/Admin/State/popup.slice";
 
 export const store = configureStore({
   reducer: {
@@ -24,5 +25,6 @@ export const store = configureStore({
     users: usersReducer,
     settings: settingsReducer,
     messages: messagesReducer,
+    popup: popupReducer,
   },
 });
