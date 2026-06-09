@@ -50,6 +50,8 @@ export const createPopup = async (req: Request, res: Response): Promise<void> =>
             isDraft,
             imageFilter,
             imageUrl,
+            metadata,
+            displayTime,
         } = req.body;
 
         let finalImageUrl = imageUrl || "";
@@ -92,6 +94,8 @@ export const createPopup = async (req: Request, res: Response): Promise<void> =>
             linkUrl,
             isActive: isActive === "true" || isActive === true,
             isDraft: isDraft === "true" || isDraft === true,
+            metadata,
+            displayTime: Number(displayTime) || 5,
         });
 
         // Broadcast to all clients if it is published immediately
@@ -149,6 +153,9 @@ export const updatePopup = async (req: Request, res: Response): Promise<void> =>
         }
         if (updateData.isDraft !== undefined) {
             updateData.isDraft = updateData.isDraft === "true" || updateData.isDraft === true;
+        }
+        if (updateData.displayTime !== undefined) {
+            updateData.displayTime = Number(updateData.displayTime) || 5;
         }
 
         const updatedPopup = await popupModel.findByIdAndUpdate(id, updateData, { new: true });

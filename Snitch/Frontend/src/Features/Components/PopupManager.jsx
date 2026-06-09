@@ -73,12 +73,14 @@ const PopupManager = () => {
         }
     }, [activePopups]);
 
-    // ⚡ Auto-dismiss promotional popup after 5 seconds (resets on slide transition)
+    // ⚡ Auto-dismiss promotional popup after dynamic displayTime seconds (resets on slide transition)
     useEffect(() => {
         if (showPromoPopup && activePopups && activePopups.length > 0) {
+            const currentPopup = activePopups[currentSlideIndex];
+            const duration = (currentPopup?.displayTime || 5) * 1000;
             const timer = setTimeout(() => {
                 setShowPromoPopup(false);
-            }, 5000);
+            }, duration);
             return () => clearTimeout(timer);
         }
     }, [showPromoPopup, currentSlideIndex, activePopups]);
@@ -259,52 +261,67 @@ const PopupManager = () => {
                                         transition={{ duration: 0.25 }}
                                         className="w-full h-full flex flex-col"
                                     >
-                                        {/* Image Box */}
-                                        {activePopups[currentSlideIndex].imageUrl && (
-                                            <div className="w-full overflow-hidden flex items-center justify-center relative max-h-[350px]">
-                                                <img
-                                                    src={activePopups[currentSlideIndex].imageUrl}
-                                                    alt={activePopups[currentSlideIndex].title}
-                                                    className="w-full h-full object-cover select-none"
-                                                    style={getImageFilterStyle(activePopups[currentSlideIndex].imageFilter)}
-                                                />
-                                            </div>
-                                        )}
+                                        {(() => {
+                                            const popup = activePopups[currentSlideIndex];
+                                            const isCompiled = popup.text === "Canvas Compiled Poster";
+                                            
+                                            const handleRedirect = () => {
+                                                if (!popup.linkUrl) return;
+                                                setShowPromoPopup(false);
+                                                const link = popup.linkUrl;
+                                                if (link.startsWith("http")) {
+                                                    window.open(link, "_blank");
+                                                } else {
+                                                    navigate(link);
+                                                }
+                                            };
 
-                                        {/* Description Content */}
-                                        {activePopups[currentSlideIndex].text && (
-                                            <div className="p-8 flex-1 flex flex-col justify-center">
-                                                <p
-                                                    className={`leading-relaxed uppercase ${getFontSizeClass(activePopups[currentSlideIndex].fontSize)} ${getFontWeightClass(activePopups[currentSlideIndex].fontWeight)}`}
-                                                    style={{
-                                                        color: activePopups[currentSlideIndex].textColor,
-                                                        textAlign: activePopups[currentSlideIndex].textAlign
-                                                    }}
-                                                >
-                                                    {activePopups[currentSlideIndex].text}
-                                                </p>
-
-                                                {/* Redirect link button */}
-                                                {activePopups[currentSlideIndex].linkUrl && (
-                                                    <div className="mt-6 flex justify-center">
-                                                        <button
-                                                            onClick={() => {
-                                                                setShowPromoPopup(false);
-                                                                const link = activePopups[currentSlideIndex].linkUrl;
-                                                                if (link.startsWith("http")) {
-                                                                    window.open(link, "_blank");
-                                                                } else {
-                                                                    navigate(link);
-                                                                }
-                                                            }}
-                                                            className="px-6 py-2.5 bg-white text-black hover:bg-white/95 text-[10px] font-black tracking-widest uppercase rounded-xl shadow transition-all cursor-pointer active:scale-95"
+                                            return (
+                                                <>
+                                                    {/* Image Box */}
+                                                    {popup.imageUrl && (
+                                                        <div 
+                                                            className={`w-full flex items-center justify-center relative ${isCompiled ? "cursor-pointer" : "max-h-[350px] overflow-hidden"}`}
+                                                            onClick={isCompiled ? handleRedirect : undefined}
                                                         >
-                                                            View Promotion
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
+                                                            <img
+                                                                src={popup.imageUrl}
+                                                                alt={popup.title}
+                                                                className={`${isCompiled ? "w-full h-auto max-h-[80vh] object-contain" : "w-full h-full object-cover"} select-none`}
+                                                                style={getImageFilterStyle(popup.imageFilter)}
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    {/* Description Content (Hide for Canvas Compiled Posters) */}
+                                                    {popup.text && !isCompiled && (
+                                                        <div className="p-8 flex-1 flex flex-col justify-center">
+                                                            <p
+                                                                className={`leading-relaxed uppercase ${getFontSizeClass(popup.fontSize)} ${getFontWeightClass(popup.fontWeight)}`}
+                                                                style={{
+                                                                    color: popup.textColor,
+                                                                    textAlign: popup.textAlign
+                                                                }}
+                                                            >
+                                                                {popup.text}
+                                                            </p>
+
+                                                            {/* Redirect link button */}
+                                                            {popup.linkUrl && (
+                                                                <div className="mt-6 flex justify-center">
+                                                                    <button
+                                                                        onClick={handleRedirect}
+                                                                        className="px-6 py-2.5 bg-white text-black hover:bg-white/95 text-[10px] font-black tracking-widest uppercase rounded-xl shadow transition-all cursor-pointer active:scale-95"
+                                                                    >
+                                                                        View Promotion
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
                                     </motion.div>
                                 </AnimatePresence>
                             </div>

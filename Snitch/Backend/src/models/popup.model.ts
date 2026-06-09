@@ -24,6 +24,8 @@ export interface IPopup extends Document {
     linkUrl?: string;
     isActive: boolean;
     isDraft: boolean;
+    metadata?: string;
+    displayTime?: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -99,6 +101,13 @@ const popupSchema = new Schema<IPopup>(
         isDraft: {
             type: Boolean,
             default: true,
+        },
+        metadata: {
+            type: String,
+        },
+        displayTime: {
+            type: Number,
+            default: 5,
         },
     },
     { timestamps: true }
