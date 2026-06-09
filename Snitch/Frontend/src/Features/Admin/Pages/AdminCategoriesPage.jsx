@@ -157,24 +157,31 @@ const AdminCategoriesPage = () => {
                             <img src={item.image} className="absolute inset-0 w-full h-full object-cover opacity-[0.03] grayscale blur-sm pointer-events-none group-hover:opacity-[0.08] transition-opacity" />
                         )}
                         
-                        {/* Top: Name & Description */}
-                        <div className="relative z-10 w-full min-w-0">
-                            <h3 className="font-black text-xl text-foreground truncate mb-1" title={item.name}>
-                                {item.name}
-                            </h3>
-                            <p className="text-[10px] text-foreground/40 font-bold truncate">
-                                {item.description || 'No description'}
-                            </p>
+                        {/* Top: Icon & Name / Description */}
+                        <div className="relative z-10 flex items-center gap-4 w-full min-w-0">
+                            {item.image ? (
+                                <div className="w-12 h-12 rounded-xl bg-white/5 border border-border-theme/40 p-1.5 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                    <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                                </div>
+                            ) : (
+                                <div className="w-12 h-12 rounded-xl bg-foreground/5 border border-border-theme/40 flex-shrink-0 flex items-center justify-center text-foreground/20">
+                                    <i className="ri-apps-2-line text-lg" />
+                                </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-black text-xl text-foreground truncate mb-1" title={item.name}>
+                                    {item.name}
+                                </h3>
+                                <p className="text-[10px] text-foreground/40 font-bold truncate">
+                                    {item.description || 'No description'}
+                                </p>
+                            </div>
                         </div>
                         
                         {/* Bottom: Active Status & Actions */}
                         <div className="relative z-10 flex items-center justify-between gap-4 pt-3 border-t border-border-theme/30 mt-6">
                             <div className="flex items-center gap-2">
-                                {item.image && (
-                                    <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-surface border border-border-theme/50 text-foreground/40">
-                                        Has Icon
-                                    </span>
-                                )}
+                                {/* Left side empty or metadata */}
                             </div>
                             
                             <div className="flex items-center gap-2">
