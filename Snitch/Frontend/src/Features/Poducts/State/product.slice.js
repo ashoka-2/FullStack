@@ -17,6 +17,8 @@ const productSlice = createSlice({
         frequentlyBought: [],
         // Currently viewed single product
         currentProduct: null,
+        // Cached product metadata (categories, brands, sizes, colors, units, patterns, fits, materials, collars)
+        productMetadata: null,
         loading: false,
         sellerLoading: false,
         currentLoading: false,   // dedicated loading for single product fetch
@@ -82,6 +84,9 @@ const productSlice = createSlice({
         setError: (state, action) => {
             state.error = action.payload;
         },
+        setProductMetadata: (state, action) => {
+            state.productMetadata = action.payload;
+        },
     },
 });
 
@@ -100,6 +105,7 @@ export const {
     updateProductInList,
     removeProductFromList,
     setError,
+    setProductMetadata,
 } = productSlice.actions;
 
 export default productSlice.reducer;

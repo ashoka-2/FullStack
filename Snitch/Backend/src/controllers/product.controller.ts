@@ -16,6 +16,7 @@ import redisClient from "../config/redis.js";
 
 // Reusable populate config
 const POPULATE = [
+    { path: "seller", select: "fullname email profilePic" },
     { path: "category", select: "name slug" },
     { path: "brand", select: "name logo" },
     { path: "sizes", select: "name sortOrder" },
@@ -33,9 +34,9 @@ const TTL_PRODUCT_ONE   = 5 * 60;   // 5 minutes  — single product
 const TTL_METADATA      = 30 * 60;  // 30 minutes — categories/brands/sizes (rarely change)
 
 // ─── Cache Key Helpers ───────────────────────────────────────────────────────
-const KEY_ALL       = "products:all";
-const KEY_METADATA  = "products:metadata";
-const keyOne = (id: string) => `products:${id}`;
+const KEY_ALL       = "products:all:v2";
+const KEY_METADATA  = "products:metadata:v2";
+const keyOne = (id: string) => `products:v2:${id}`;
 
 // ─── Cache Invalidation ──────────────────────────────────────────────────────
 // Called whenever a product is created, updated, or deleted

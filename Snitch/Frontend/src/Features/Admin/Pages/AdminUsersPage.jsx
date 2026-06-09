@@ -32,6 +32,20 @@ const AdminUsersPage = () => {
         };
     }, []);
 
+    const highlightId = new URLSearchParams(window.location.search).get('highlight');
+
+    useEffect(() => {
+        if (!loading && allUsers.length > 0 && highlightId) {
+            const timer = setTimeout(() => {
+                const el = document.getElementById(`user-row-${highlightId}`);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [loading, allUsers, highlightId]);
+
     if (loading) return <PageLoader skeleton={AdminUsersSkeleton} />;
 
     const filteredUsers = allUsers.filter(u => {
@@ -63,11 +77,17 @@ const AdminUsersPage = () => {
                 {filteredUsers.map(u => {
                     const roleColors = { admin: 'text-violet-400 bg-violet-400/10 border-violet-400/25', seller: 'text-accent bg-accent/10 border-accent/25', buyer: 'text-sky-400 bg-sky-400/10 border-sky-400/25' };
                     const roleIcons  = { admin: 'ri-shield-star-line', seller: 'ri-store-2-line', buyer: 'ri-user-line' };
+                    const isHighlighted = u._id === highlightId;
                     return (
                         <div
                             key={u._id}
+                            id={`user-row-${u._id}`}
                             onClick={() => navigate(`/admin/users/${u._id}`)}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-surface/40 hover:bg-surface border border-border-theme/40 hover:border-accent/30 rounded-2xl cursor-pointer transition-all group animate-in fade-in duration-200"
+                            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border rounded-2xl cursor-pointer transition-all group animate-in fade-in duration-200 ${
+                                isHighlighted
+                                    ? 'bg-accent/10 border-accent/80 shadow-[0_0_15px_rgba(235,68,90,0.15)] ring-1 ring-accent/30'
+                                    : 'bg-surface/40 hover:bg-surface border-border-theme/40 hover:border-accent/30'
+                            }`}
                         >
                             {/* Left Part: Avatar & Info */}
                             <div className="flex items-center gap-4 w-full sm:w-auto min-w-0">

@@ -1,9 +1,10 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { PrimaryBtn, SecondaryBtn, TertiaryBtn } from '../../Components/Buttons';
 import { useProduct } from '../Hooks/useProduct';
 import { getProductMetadata, getProductById } from '../Services/product.api';
+import { setProductMetadata } from '../State/product.slice';
 import Modal from '../../Components/Modal';
 import PageLoader from '../../Components/PageLoader';
 import { ProductFormSkeleton } from '../../Components/Skeletons';
@@ -593,7 +594,9 @@ const CreateProduct = () => {
     const navigate    = useNavigate();
     const { id }     = useParams();
     const isEdit      = Boolean(id);
+    const dispatch    = useDispatch();
     const { creating } = useSelector(state => state.product);
+    const cachedMeta   = useSelector(state => state.product.productMetadata);
     const { handleCreateProduct, handleUpdateProduct } = useProduct();
 
     const [step, setStep] = useState(0);
@@ -653,11 +656,27 @@ const CreateProduct = () => {
         }
     }, [images, isEdit]);
     useEffect(() => {
+        // If metadata already cached in Redux, use it immediately (no loading delay)
+        if (cachedMeta) {
+            setMetadata({
+                categories: cachedMeta.categories || [],
+                brands:     cachedMeta.brands     || [],
+                sizes:      cachedMeta.sizes      || [],
+                colors:     cachedMeta.colors     || [],
+                units:      cachedMeta.units      || [],
+                patterns:   cachedMeta.patterns   || [],
+                fits:       cachedMeta.fits       || [],
+                materials:  cachedMeta.materials  || [],
+                collars:    cachedMeta.collars    || [],
+            });
+            setLoadingMeta(false);
+            return;
+        }
         const fetchMeta = async () => {
             try {
                 const res = await getProductMetadata();
                 if (res.success) {
-                    setMetadata({
+                    const meta = {
                         categories: res.categories || [],
                         brands:     res.brands     || [],
                         sizes:      res.sizes      || [],
@@ -667,7 +686,9 @@ const CreateProduct = () => {
                         fits:       res.fits       || [],
                         materials:  res.materials  || [],
                         collars:    res.collars    || [],
-                    });
+                    };
+                    setMetadata(meta);
+                    dispatch(setProductMetadata(meta)); // cache in Redux for future visits
                 }
             } catch (err) { 
                 console.error("Metadata fetch failed:", err); 

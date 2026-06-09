@@ -296,10 +296,19 @@ const AdminProductDetailPage = () => {
                             <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">Product Specifications</span>
                         </div>
                         <div className="grid grid-cols-2 gap-4 text-xs font-medium text-foreground/85">
-                            <div>
-                                <span className="text-[9px] font-black uppercase tracking-widest text-foreground/35 block mb-0.5">Seller ID</span>
-                                <span className="font-mono text-[10px] break-all">{product.seller?._id || product.seller || "N/A"}</span>
-                            </div>
+                        <div>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-foreground/35 block mb-0.5">Seller</span>
+                            <button
+                                onClick={() => navigate(`/admin/users?highlight=${product.seller?._id || product.seller}`)}
+                                className="font-bold text-accent hover:underline flex items-center gap-1.5 group cursor-pointer"
+                                title={`ID: ${product.seller?._id || product.seller}`}
+                            >
+                                <i className="ri-user-star-line text-xs" />
+                                {product.seller?.fullname || 'Unknown Seller'}
+                                <i className="ri-external-link-line text-[10px] opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </button>
+                            <span className="text-[9px] font-mono text-foreground/25 block mt-0.5">{product.seller?.email || (typeof product.seller === 'string' ? product.seller : '')}</span>
+                        </div>
                             <div>
                                 <span className="text-[9px] font-black uppercase tracking-widest text-foreground/35 block mb-0.5">Weight</span>
                                 <span>{product.weight ? `${product.weight} grams` : "N/A"}</span>
@@ -314,6 +323,58 @@ const AdminProductDetailPage = () => {
                             </div>
                         </div>
                     </div>
+
+                    {/* New Attributes Section */}
+                    {(product.patterns?.length > 0 || product.fits?.length > 0 || product.materials?.length > 0 || product.collars?.length > 0) && (
+                        <div className="p-5 rounded-3xl bg-surface/30 border border-border-theme/60 backdrop-blur-md space-y-4">
+                            <div className="flex items-center gap-2">
+                                <i className="ri-t-shirt-line text-accent text-lg" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">Garment Attributes</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 text-xs font-medium">
+                                {product.patterns?.length > 0 && (
+                                    <div>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-foreground/35 block mb-1.5">Pattern</span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {product.patterns.map(p => (
+                                                <span key={p._id} className="px-2 py-0.5 rounded-lg bg-violet-500/10 text-violet-400 text-[10px] font-black border border-violet-500/20">{p.name}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {product.fits?.length > 0 && (
+                                    <div>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-foreground/35 block mb-1.5">Fit</span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {product.fits.map(f => (
+                                                <span key={f._id} className="px-2 py-0.5 rounded-lg bg-sky-500/10 text-sky-400 text-[10px] font-black border border-sky-500/20">{f.name}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {product.materials?.length > 0 && (
+                                    <div>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-foreground/35 block mb-1.5">Material</span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {product.materials.map(m => (
+                                                <span key={m._id} className="px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-400 text-[10px] font-black border border-amber-500/20">{m.name}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {product.collars?.length > 0 && (
+                                    <div>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-foreground/35 block mb-1.5">Collar</span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {product.collars.map(c => (
+                                                <span key={c._id} className="px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-400 text-[10px] font-black border border-rose-500/20">{c.name}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Tabs / Accordion for Description */}
                     <div className="border border-border-theme/40 rounded-3xl overflow-hidden">

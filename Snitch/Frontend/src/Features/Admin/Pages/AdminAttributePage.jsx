@@ -74,7 +74,10 @@ const AdminAttributePage = ({ type }) => {
     const debouncedSearch = useDebounceThrottle(searchVal);
 
     useEffect(() => {
-        fetchAll();
+        // Only fetch if this attribute's list is empty (not already loaded)
+        if (items.length === 0) {
+            fetchAll();
+        }
     }, []);
 
     if (loading) return <PageLoader skeleton={AdminTaxonomySkeleton} />;
@@ -207,45 +210,47 @@ const AdminAttributePage = ({ type }) => {
                 {filteredItems.map(item => (
                     <div
                         key={item._id}
-                        className="group bg-surface/40 hover:bg-surface border border-border-theme rounded-3xl p-6 transition-all flex flex-col justify-between min-h-[120px]"
+                        className="group bg-surface/40 hover:bg-surface border border-border-theme rounded-3xl p-6 transition-all flex flex-col justify-between min-h-[140px]"
                     >
-                        <div className="flex justify-between items-start gap-4">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0 ${iconBgClass}`}>
-                                    <i className={`${config.icon} text-sm`} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-black text-lg text-foreground truncate" title={item.name}>
-                                        {item.name}
-                                    </h3>
-                                </div>
+                        {/* Top: Icon & Name */}
+                        <div className="flex items-center gap-3 w-full min-w-0">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0 ${iconBgClass}`}>
+                                <i className={`${config.icon} text-sm`} />
                             </div>
-                            <div className="flex gap-2 flex-shrink-0">
-                                <div
-                                    className={`w-7 h-7 rounded-full flex items-center justify-center border text-xs ${item.isActive !== false ? 'border-accent/20 bg-accent/5 text-accent' : 'border-red-500/20 bg-red-500/5 text-red-500'}`}
-                                    title={item.isActive !== false ? 'Active' : 'Inactive'}
-                                >
-                                    <i className={item.isActive !== false ? 'ri-checkbox-circle-line' : 'ri-eye-off-line'} />
-                                </div>
-                                <button
-                                    onClick={() => startEdit(item)}
-                                    className="w-7 h-7 rounded-full flex items-center justify-center bg-foreground/5 text-foreground/30 hover:bg-accent hover:text-accent-content transition-all cursor-pointer"
-                                >
-                                    <i className="ri-edit-line text-xs" />
-                                </button>
-                                <button
-                                    onClick={() => setDeleteModal({ isOpen: true, id: item._id })}
-                                    className="w-7 h-7 rounded-full flex items-center justify-center bg-foreground/5 text-foreground/30 hover:bg-red-500 hover:text-white transition-all cursor-pointer"
-                                >
-                                    <i className="ri-delete-bin-line text-xs" />
-                                </button>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-black text-lg text-foreground truncate" title={item.name}>
+                                    {item.name}
+                                </h3>
                             </div>
                         </div>
 
-                        <div className="mt-3 flex items-center gap-2">
-                            <span className={`text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full ${item.isActive !== false ? 'bg-accent/10 text-accent' : 'bg-red-500/10 text-red-500'}`}>
-                                {item.isActive !== false ? 'Active' : 'Inactive'}
-                            </span>
+                        {/* Bottom: Actions Group */}
+                        <div className="mt-6 flex items-center justify-end gap-2 pt-3 border-t border-border-theme/30">
+                            {/* Active Icon Indicator */}
+                            <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center border text-[13px] ${item.isActive !== false ? 'border-accent/20 bg-accent/5 text-accent' : 'border-red-500/20 bg-red-500/5 text-red-500'}`}
+                                title={item.isActive !== false ? 'Active' : 'Inactive'}
+                            >
+                                <i className={item.isActive !== false ? 'ri-checkbox-circle-line' : 'ri-eye-off-line'} />
+                            </div>
+
+                            {/* Edit Button */}
+                            <button
+                                onClick={() => startEdit(item)}
+                                className="w-8 h-8 rounded-full flex items-center justify-center bg-foreground/5 text-foreground/30 hover:bg-accent hover:text-accent-content transition-all cursor-pointer"
+                                title="Edit"
+                            >
+                                <i className="ri-edit-line text-sm" />
+                            </button>
+
+                            {/* Delete Button */}
+                            <button
+                                onClick={() => setDeleteModal({ isOpen: true, id: item._id })}
+                                className="w-8 h-8 rounded-full flex items-center justify-center bg-foreground/5 text-foreground/30 hover:bg-red-500 hover:text-white transition-all cursor-pointer"
+                                title="Delete"
+                            >
+                                <i className="ri-delete-bin-line text-sm" />
+                            </button>
                         </div>
                     </div>
                 ))}

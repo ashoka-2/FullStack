@@ -641,6 +641,53 @@ const ProductDetails = () => {
               {activeTab === "details" && (
                 <div className="space-y-3">
                   <p>{product?.description}</p>
+
+                  {/* Garment Attributes */}
+                  {(product?.patterns?.length > 0 || product?.fits?.length > 0 || product?.materials?.length > 0 || product?.collars?.length > 0) && (
+                    <div className="pt-3 border-t border-border-theme/20 space-y-2.5">
+                      {product?.patterns?.length > 0 && (
+                        <div className="flex items-start gap-2 flex-wrap">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-foreground/35 mt-0.5 w-14 flex-shrink-0">Pattern</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {product.patterns.map(p => (
+                              <span key={p._id} className="px-2 py-0.5 rounded-lg bg-violet-500/10 text-violet-400 text-[9px] font-black border border-violet-500/20 uppercase tracking-widest">{p.name}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {product?.fits?.length > 0 && (
+                        <div className="flex items-start gap-2 flex-wrap">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-foreground/35 mt-0.5 w-14 flex-shrink-0">Fit</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {product.fits.map(f => (
+                              <span key={f._id} className="px-2 py-0.5 rounded-lg bg-sky-500/10 text-sky-400 text-[9px] font-black border border-sky-500/20 uppercase tracking-widest">{f.name}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {product?.materials?.length > 0 && (
+                        <div className="flex items-start gap-2 flex-wrap">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-foreground/35 mt-0.5 w-14 flex-shrink-0">Material</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {product.materials.map(m => (
+                              <span key={m._id} className="px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-400 text-[9px] font-black border border-amber-500/20 uppercase tracking-widest">{m.name}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {product?.collars?.length > 0 && (
+                        <div className="flex items-start gap-2 flex-wrap">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-foreground/35 mt-0.5 w-14 flex-shrink-0">Collar</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {product.collars.map(c => (
+                              <span key={c._id} className="px-2 py-0.5 rounded-lg bg-rose-500/10 text-rose-400 text-[9px] font-black border border-rose-500/20 uppercase tracking-widest">{c.name}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border-theme/20 text-[10px] text-foreground/45 font-black uppercase tracking-widest">
                     {product?.weight && (
                       <div className="flex gap-2">
