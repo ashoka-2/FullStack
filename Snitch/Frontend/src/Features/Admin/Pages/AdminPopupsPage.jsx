@@ -985,8 +985,8 @@ const AdminPopupsPage = () => {
             if (el.id !== selectedId) return el;
             return {
                 ...el,
-                x: Math.max(-100, Math.min(canvasWidth, newX)),
-                y: Math.max(-100, Math.min(canvasHeight, newY))
+                x: newX,
+                y: newY
             };
         }));
     };
@@ -1036,61 +1036,71 @@ const AdminPopupsPage = () => {
             info.hasMoved = true;
         }
 
-        let newX = info.elementX;
-        let newY = info.elementY;
+        // Get selected element to retrieve rotation angle
+        const selectedEl = elementsRef.current.find(el => el.id === selectedId);
+        const rotate = selectedEl?.rotate || 0;
+        const rad = rotate * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+
+        // Project world space dx, dy to element's local coordinate axes
+        const localDx = dx * cos + dy * sin;
+        const localDy = -dx * sin + dy * cos;
+
         let newW = info.elementW;
         let newH = info.elementH;
 
         const grid = snapToGrid ? 8 : 1;
         const snap = (val) => Math.round(val / grid) * grid;
 
-        switch (info.handle) {
-            case "e":
-                newW = snap(Math.max(10, info.elementW + dx));
-                break;
-            case "w":
-                newW = snap(Math.max(10, info.elementW - dx));
-                newX = info.elementX + (info.elementW - newW);
-                break;
-            case "s":
-                newH = snap(Math.max(10, info.elementH + dy));
-                break;
-            case "n":
-                newH = snap(Math.max(10, info.elementH - dy));
-                newY = info.elementY + (info.elementH - newH);
-                break;
-            case "se":
-                newW = snap(Math.max(10, info.elementW + dx));
-                newH = snap(Math.max(10, info.elementH + dy));
-                break;
-            case "sw":
-                newW = snap(Math.max(10, info.elementW - dx));
-                newH = snap(Math.max(10, info.elementH + dy));
-                newX = info.elementX + (info.elementW - newW);
-                break;
-            case "ne":
-                newW = snap(Math.max(10, info.elementW + dx));
-                newH = snap(Math.max(10, info.elementH - dy));
-                newY = info.elementY + (info.elementH - newH);
-                break;
-            case "nw":
-                newW = snap(Math.max(10, info.elementW - dx));
-                newH = snap(Math.max(10, info.elementH - dy));
-                newX = info.elementX + (info.elementW - newW);
-                newY = info.elementY + (info.elementH - newH);
-                break;
-            default:
-                break;
+        // Calculate new dimensions along local axes
+        if (info.handle.includes("e")) {
+            newW = Math.max(10, info.elementW + localDx);
+        } else if (info.handle.includes("w")) {
+            newW = Math.max(10, info.elementW - localDx);
         }
+
+        if (info.handle.includes("s")) {
+            newH = Math.max(10, info.elementH + localDy);
+        } else if (info.handle.includes("n")) {
+            newH = Math.max(10, info.elementH - localDy);
+        }
+
+        newW = snap(newW);
+        newH = snap(newH);
+
+        // Original center of rotation
+        const C0_x = info.elementX + info.elementW / 2;
+        const C0_y = info.elementY + info.elementH / 2;
+
+        // Shift calculations based on dimension differences
+        const shiftW = (newW - info.elementW) / 2;
+        const shiftH = (newH - info.elementH) / 2;
+
+        let factorX = 0;
+        if (info.handle.includes("e")) factorX = 1;
+        else if (info.handle.includes("w")) factorX = -1;
+
+        let factorY = 0;
+        if (info.handle.includes("s")) factorY = 1;
+        else if (info.handle.includes("n")) factorY = -1;
+
+        // Relocate the rotated center point relative to the fixed opposite edge
+        const C_new_x = C0_x + factorX * shiftW * cos - factorY * shiftH * sin;
+        const C_new_y = C0_y + factorX * shiftW * sin + factorY * shiftH * cos;
+
+        // Deduce the new top-left coordinates from the updated center point
+        const newX = C_new_x - newW / 2;
+        const newY = C_new_y - newH / 2;
 
         setElements(prev => prev.map(el => {
             if (el.id !== selectedId) return el;
             return {
                 ...el,
-                x: newX,
-                y: newY,
-                width: newW,
-                height: newH
+                x: Math.round(newX),
+                y: Math.round(newY),
+                width: Math.round(newW),
+                height: Math.round(newH)
             };
         }));
     };

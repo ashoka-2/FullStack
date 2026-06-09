@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState, useLayoutEffect } from "react";
 
 const ContextMenu = ({
     x,
@@ -13,6 +13,32 @@ const ContextMenu = ({
     handleAddShape
 }) => {
     const targetEl = elements.find((item) => item.id === targetId);
+    const menuRef = useRef(null);
+    const [adjustedPos, setAdjustedPos] = useState({ top: y, left: x });
+
+    useLayoutEffect(() => {
+        if (!menuRef.current) return;
+        const rect = menuRef.current.getBoundingClientRect();
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+
+        let left = x;
+        let top = y;
+
+        // Prevent horizontal off-screen overflow
+        if (x + rect.width > screenWidth) {
+            left = screenWidth - rect.width - 12;
+        }
+        if (left < 12) left = 12;
+
+        // Prevent vertical off-screen overflow
+        if (y + rect.height > screenHeight) {
+            top = screenHeight - rect.height - 12;
+        }
+        if (top < 12) top = 12;
+
+        setAdjustedPos({ top, left });
+    }, [x, y, targetId]);
 
     const MenuBtn = ({ onClick, icon, label, shortcut, danger }) => (
         <button
@@ -33,7 +59,8 @@ const ContextMenu = ({
 
     return (
         <div 
-            style={{ top: `${y}px`, left: `${x}px` }} 
+            ref={menuRef}
+            style={{ top: `${adjustedPos.top}px`, left: `${adjustedPos.left}px` }} 
             className="fixed bg-[#1f1f23]/97 border border-[#2e2e34] rounded-2xl shadow-2xl p-1.5 z-[99999] min-w-[180px] backdrop-blur-xl text-xs space-y-0.5 animate-in zoom-in-95 duration-100 text-white"
         >
             {targetId ? (
