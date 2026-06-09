@@ -1640,6 +1640,102 @@ const AdminPopupsPage = () => {
         setDeleteModal({ isOpen: false, id: null });
     };
 
+    const handlePublishFromList = async (popup) => {
+        if (popup.isActive) {
+            await handleTogglePopupActive(popup._id);
+            return;
+        }
+
+        let meta = null;
+        if (popup.metadata) {
+            try {
+                meta = typeof popup.metadata === "string" ? JSON.parse(popup.metadata) : popup.metadata;
+            } catch (e) {
+                console.error("Failed to parse metadata", e);
+            }
+        }
+
+        if (meta && meta.deviceDesigns) {
+            // Temporarily load this design into compile canvases
+            setDeviceDesigns(meta.deviceDesigns);
+            setBorderRadius(popup.borderRadius || "2xl");
+            setTitle(popup.title);
+            setTargetDevices(popup.targetDevices || ["desktop", "tablet", "mobile", "tv"]);
+
+            // Let DOM re-render the canvases
+            await new Promise(r => setTimeout(r, 350));
+
+            try {
+                const activeTargets = popup.targetDevices && popup.targetDevices.length > 0 
+                    ? popup.targetDevices 
+                    : ["desktop", "tablet", "mobile", "tv"];
+                
+                const capturedDeviceImages = {};
+                
+                const devicesList = [
+                    { key: "desktop", ref: desktopCanvasRef, width: meta.deviceDesigns.desktop.canvasWidth, height: meta.deviceDesigns.desktop.canvasHeight },
+                    { key: "tablet", ref: tabletCanvasRef, width: meta.deviceDesigns.tablet.canvasWidth, height: meta.deviceDesigns.tablet.canvasHeight },
+                    { key: "mobile", ref: mobileCanvasRef, width: meta.deviceDesigns.mobile.canvasWidth, height: meta.deviceDesigns.mobile.canvasHeight },
+                    { key: "tv", ref: tvCanvasRef, width: meta.deviceDesigns.tv.canvasWidth, height: meta.deviceDesigns.tv.canvasHeight }
+                ].filter(dev => activeTargets.includes(dev.key));
+
+                for (const dev of devicesList) {
+                    if (dev.ref.current) {
+                        const canvas = await html2canvas(dev.ref.current, {
+                            useCORS: true,
+                            backgroundColor: null,
+                            width: dev.width,
+                            height: dev.height,
+                            scale: 1.5
+                        });
+                        const base64 = canvas.toDataURL("image/png", 0.90);
+                        capturedDeviceImages[dev.key] = base64;
+                    }
+                }
+
+                const mainDeviceKey = activeTargets.includes("desktop") ? "desktop" : activeTargets[0];
+                const mainCanvasRef = mainDeviceKey === "desktop" ? (desktopCanvasRef.current || canvasRef.current) :
+                                     mainDeviceKey === "tablet" ? tabletCanvasRef.current :
+                                     mainDeviceKey === "mobile" ? mobileCanvasRef.current : tvCanvasRef.current;
+                
+                const mainWidth = meta.deviceDesigns[mainDeviceKey]?.canvasWidth || 800;
+                const mainHeight = meta.deviceDesigns[mainDeviceKey]?.canvasHeight || 500;
+
+                const data = new FormData();
+                data.append("title", popup.title);
+                data.append("text", "Canvas Compiled Poster");
+                data.append("isActive", "true");
+                data.append("isDraft", "false");
+                data.append("metadata", typeof popup.metadata === "string" ? popup.metadata : JSON.stringify(popup.metadata));
+                data.append("displayTime", String(popup.displayTime || 5));
+                data.append("borderRadius", popup.borderRadius || "2xl");
+                data.append("linkUrl", popup.linkUrl || "");
+                data.append("targetDevices", JSON.stringify(activeTargets));
+
+                if (mainCanvasRef) {
+                    const mainCanvas = await html2canvas(mainCanvasRef, {
+                        useCORS: true,
+                        backgroundColor: null,
+                        width: mainWidth,
+                        height: mainHeight,
+                        scale: 1.5
+                    });
+                    const mainBlob = await new Promise(resolve => mainCanvas.toBlob(resolve, "image/png", 0.95));
+                    const imageFile = new File([mainBlob], `${popup.title.replace(/ /g, "_")}-${mainDeviceKey}-${Date.now()}.png`, { type: "image/png" });
+                    data.append("image", imageFile);
+                }
+                data.append("deviceImages", JSON.stringify(capturedDeviceImages));
+
+                await handleUpdatePopup(popup._id, data);
+                resetForm();
+            } catch (err) {
+                console.error("Failed to compile list popup", err);
+            }
+        } else {
+            await handleTogglePopupActive(popup._id);
+        }
+    };
+
     // Filters formatting helper
     const getImageFilterStyle = (f) => {
         if (!f) return {};
@@ -1733,7 +1829,7 @@ const AdminPopupsPage = () => {
 
                                 <div className="flex items-center justify-between border-t border-border-theme/30 pt-4">
                                     <button
-                                        onClick={() => handleTogglePopupActive(popup._id)}
+                                        onClick={() => handlePublishFromList(popup)}
                                         className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer border
                                             ${popup.isActive 
                                                 ? "bg-red-500/10 text-red-500 border-red-500/25 hover:bg-red-500 hover:text-white" 
@@ -2246,7 +2342,12 @@ const AdminPopupsPage = () => {
             {/* Offscreen hidden canvases for compiling all 4 devices */}
             <div style={{ position: "absolute", left: "-9999px", top: "-9999px", pointerEvents: "none" }} aria-hidden="true">
                 {["desktop", "tablet", "mobile", "tv"].map(deviceKey => {
-                    const design = deviceDesigns[deviceKey] || {};
+                    const design = deviceKey === activeDevice ? {
+                        elements,
+                        canvasBg,
+                        canvasWidth,
+                        canvasHeight
+                    } : (deviceDesigns[deviceKey] || {});
                     const devWidth = design.canvasWidth || 800;
                     const devHeight = design.canvasHeight || 500;
                     const devBg = design.canvasBg || { type: "solid", color1: "#111111" };
