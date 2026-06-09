@@ -98,6 +98,7 @@ const AdminPopupsPage = () => {
     const [snapToGrid, setSnapToGrid] = useState(true);
     const [clipContent, setClipContent] = useState(true);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
+    const [targetDevices, setTargetDevices] = useState(["desktop", "tablet", "mobile", "tv"]);
     const [imageLinkInput, setImageLinkInput] = useState("");
     const [loadedFonts, setLoadedFonts] = useState(new Set(["Inter"]));
 
@@ -558,6 +559,7 @@ const AdminPopupsPage = () => {
         setTitle(item.title);
         setLinkUrl(item.linkUrl || "");
         setBorderRadius(item.borderRadius || "2xl");
+        setTargetDevices(item.targetDevices || ["desktop", "tablet", "mobile", "tv"]);
         
         let loadedEls = [];
         let loadedBg = {
@@ -1533,15 +1535,17 @@ const AdminPopupsPage = () => {
             data.append("displayTime", String(displayTime));
             data.append("borderRadius", borderRadius);
             data.append("linkUrl", linkUrl);
+            data.append("targetDevices", JSON.stringify(targetDevices));
 
             if (isPublishing) {
+                const activeTargets = targetDevices.length > 0 ? targetDevices : ["desktop"];
                 const capturedDeviceImages = {};
                 const devicesList = [
                     { key: "desktop", ref: desktopCanvasRef, width: deviceDesigns.desktop.canvasWidth, height: deviceDesigns.desktop.canvasHeight },
                     { key: "tablet", ref: tabletCanvasRef, width: deviceDesigns.tablet.canvasWidth, height: deviceDesigns.tablet.canvasHeight },
                     { key: "mobile", ref: mobileCanvasRef, width: deviceDesigns.mobile.canvasWidth, height: deviceDesigns.mobile.canvasHeight },
                     { key: "tv", ref: tvCanvasRef, width: deviceDesigns.tv.canvasWidth, height: deviceDesigns.tv.canvasHeight }
-                ];
+                ].filter(dev => activeTargets.includes(dev.key));
 
                 for (const dev of devicesList) {
                     if (dev.ref.current) {
@@ -1557,18 +1561,26 @@ const AdminPopupsPage = () => {
                     }
                 }
 
-                // Standard desktop screenshot for the primary 'image' field
-                const mainCanvas = await html2canvas(desktopCanvasRef.current || canvasRef.current, {
-                    useCORS: true,
-                    backgroundColor: null,
-                    width: deviceDesigns.desktop.canvasWidth,
-                    height: deviceDesigns.desktop.canvasHeight,
-                    scale: 1.5
-                });
-                const mainBlob = await new Promise(resolve => mainCanvas.toBlob(resolve, "image/png", 0.95));
-                const imageFile = new File([mainBlob], `${title.replace(/ /g, "_")}-desktop-${Date.now()}.png`, { type: "image/png" });
+                // Standard screenshot for the primary 'image' field (uses first available targeted device)
+                const mainDeviceKey = activeTargets.includes("desktop") ? "desktop" : activeTargets[0];
+                const mainCanvasRef = mainDeviceKey === "desktop" ? (desktopCanvasRef.current || canvasRef.current) :
+                                     mainDeviceKey === "tablet" ? tabletCanvasRef.current :
+                                     mainDeviceKey === "mobile" ? mobileCanvasRef.current : tvCanvasRef.current;
+                const mainWidth = deviceDesigns[mainDeviceKey]?.canvasWidth || 800;
+                const mainHeight = deviceDesigns[mainDeviceKey]?.canvasHeight || 500;
 
-                data.append("image", imageFile);
+                if (mainCanvasRef) {
+                    const mainCanvas = await html2canvas(mainCanvasRef, {
+                        useCORS: true,
+                        backgroundColor: null,
+                        width: mainWidth,
+                        height: mainHeight,
+                        scale: 1.5
+                    });
+                    const mainBlob = await new Promise(resolve => mainCanvas.toBlob(resolve, "image/png", 0.95));
+                    const imageFile = new File([mainBlob], `${title.replace(/ /g, "_")}-${mainDeviceKey}-${Date.now()}.png`, { type: "image/png" });
+                    data.append("image", imageFile);
+                }
                 data.append("deviceImages", JSON.stringify(capturedDeviceImages));
             } else {
                 // For draft saves, keep existing images if editing
@@ -1618,6 +1630,7 @@ const AdminPopupsPage = () => {
         });
         setCanvasOffset({ x: 0, y: 0 });
         setCanvasZoom(1);
+        setTargetDevices(["desktop", "tablet", "mobile", "tv"]);
     };
 
     const handleDeleteCampaign = () => {
@@ -1731,9 +1744,36 @@ const AdminPopupsPage = () => {
                                     </button>
 
                                     <div className="flex gap-1.5">
+                                        {popup.imageUrl && (
+                                            <button
+                                                onClick={() => {
+                                                    const downloadName = `${popup.title.replace(/ /g, "_")}_poster.png`;
+                                                    fetch(popup.imageUrl)
+                                                        .then(res => res.blob())
+                                                        .then(blob => {
+                                                            const url = URL.createObjectURL(blob);
+                                                            const a = document.createElement("a");
+                                                            a.href = url;
+                                                            a.download = downloadName;
+                                                            document.body.appendChild(a);
+                                                            a.click();
+                                                            document.body.removeChild(a);
+                                                            URL.revokeObjectURL(url);
+                                                        })
+                                                        .catch(err => {
+                                                            console.error("Failed to download image", err);
+                                                            window.open(popup.imageUrl, "_blank");
+                                                        });
+                                                }}
+                                                className="w-8 h-8 rounded-full flex items-center justify-center bg-foreground/5 text-foreground/45 hover:bg-accent hover:text-accent-content transition-all cursor-pointer"
+                                                title="Download Image"
+                                            >
+                                                <i className="ri-download-line text-sm" />
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => handleEditCampaign(popup)}
-                                            className="w-8 h-8 rounded-full flex items-center justify-center bg-foreground/5 text-foreground/40 hover:bg-accent hover:text-accent-content transition-all cursor-pointer"
+                                            className="w-8 h-8 rounded-full flex items-center justify-center bg-foreground/5 text-foreground/45 hover:bg-accent hover:text-accent-content transition-all cursor-pointer"
                                             title="Edit Design Canvas"
                                         >
                                             <i className="ri-edit-line text-sm" />
@@ -2192,6 +2232,8 @@ const AdminPopupsPage = () => {
                             handleMoveMeshPointBack={handleMoveMeshPointBack}
                             clipContent={clipContent}
                             setClipContent={setClipContent}
+                            targetDevices={targetDevices}
+                            setTargetDevices={setTargetDevices}
                         />
 
                     </div>

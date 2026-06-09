@@ -83,38 +83,44 @@ const PopupManager = () => {
         };
     }, []);
 
+    // Filter active popups based on current device type and targetDevices configuration
+    const filteredPopups = activePopups?.filter(popup => {
+        if (!popup.targetDevices || popup.targetDevices.length === 0) return true;
+        return popup.targetDevices.includes(deviceType);
+    }) || [];
+
     // Toggle promotions visibility when activePopups updates
     useEffect(() => {
-        if (activePopups && activePopups.length > 0) {
+        if (filteredPopups && filteredPopups.length > 0) {
             setShowPromoPopup(true);
             setCurrentSlideIndex(0);
         } else {
             setShowPromoPopup(false);
         }
-    }, [activePopups]);
+    }, [activePopups, deviceType]);
 
     // ⚡ Auto-dismiss promotional popup after dynamic displayTime seconds (resets on slide transition)
     useEffect(() => {
-        if (showPromoPopup && activePopups && activePopups.length > 0) {
-            const currentPopup = activePopups[currentSlideIndex];
+        if (showPromoPopup && filteredPopups && filteredPopups.length > 0) {
+            const currentPopup = filteredPopups[currentSlideIndex];
             const duration = (currentPopup?.displayTime || 5) * 1000;
             const timer = setTimeout(() => {
                 setShowPromoPopup(false);
             }, duration);
             return () => clearTimeout(timer);
         }
-    }, [showPromoPopup, currentSlideIndex, activePopups]);
+    }, [showPromoPopup, currentSlideIndex, activePopups, deviceType]);
 
     const handleDismissPromo = () => {
         setShowPromoPopup(false);
     };
 
     const handleNextSlide = () => {
-        setCurrentSlideIndex((prev) => (prev + 1) % activePopups.length);
+        setCurrentSlideIndex((prev) => (prev + 1) % filteredPopups.length);
     };
 
     const handlePrevSlide = () => {
-        setCurrentSlideIndex((prev) => (prev - 1 + activePopups.length) % activePopups.length);
+        setCurrentSlideIndex((prev) => (prev - 1 + filteredPopups.length) % filteredPopups.length);
     };
 
     // Helper functions for layouts
@@ -252,7 +258,7 @@ const PopupManager = () => {
 
             {/* 2. REAL-TIME PROMOTIONS CAMPAIGN POPUP */}
             <AnimatePresence>
-                {showPromoPopup && activePopups && activePopups.length > 0 && (
+                {showPromoPopup && filteredPopups && filteredPopups.length > 0 && (
                     <div className="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-black/75 backdrop-blur-[4px]">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
@@ -260,14 +266,14 @@ const PopupManager = () => {
                             exit={{ scale: 0.95, opacity: 0 }}
                             transition={{ duration: 0.3 }}
                             className={`${
-                                activePopups[currentSlideIndex].text === "Canvas Compiled Poster"
+                                filteredPopups[currentSlideIndex].text === "Canvas Compiled Poster"
                                     ? "max-w-[95vw] sm:max-w-lg md:max-w-xl border-none shadow-none bg-transparent"
-                                    : `${getModalSizeClass(activePopups[currentSlideIndex].size)} border border-white/10`
-                            } ${getBorderRadiusClass(activePopups[currentSlideIndex].borderRadius)} shadow-2xl relative overflow-hidden flex flex-col`}
+                                    : `${getModalSizeClass(filteredPopups[currentSlideIndex].size)} border border-white/10`
+                            } ${getBorderRadiusClass(filteredPopups[currentSlideIndex].borderRadius)} shadow-2xl relative overflow-hidden flex flex-col`}
                             style={
-                                activePopups[currentSlideIndex].text === "Canvas Compiled Poster"
+                                filteredPopups[currentSlideIndex].text === "Canvas Compiled Poster"
                                     ? { background: "transparent" }
-                                    : getBackgroundStyle(activePopups[currentSlideIndex])
+                                    : getBackgroundStyle(filteredPopups[currentSlideIndex])
                             }
                         >
                             {/* Close Button */}
@@ -290,7 +296,7 @@ const PopupManager = () => {
                                         className="w-full h-full flex flex-col"
                                     >
                                         {(() => {
-                                            const popup = activePopups[currentSlideIndex];
+                                            const popup = filteredPopups[currentSlideIndex];
                                             const isCompiled = popup.text === "Canvas Compiled Poster";
                                             
                                             const handleRedirect = () => {
@@ -359,7 +365,7 @@ const PopupManager = () => {
                             </div>
 
                             {/* Slideshow Controls (Only show if multiple popups active) */}
-                            {activePopups.length > 1 && (
+                            {filteredPopups.length > 1 && (
                                 <div className="absolute bottom-4 left-0 right-0 flex items-center justify-between px-6 z-20">
                                     {/* Left Arrow */}
                                     <button
@@ -371,7 +377,7 @@ const PopupManager = () => {
 
                                     {/* Slide Indicators */}
                                     <div className="flex gap-1.5 items-center">
-                                        {activePopups.map((_, idx) => (
+                                        {filteredPopups.map((_, idx) => (
                                             <button
                                                 key={idx}
                                                 onClick={() => setCurrentSlideIndex(idx)}

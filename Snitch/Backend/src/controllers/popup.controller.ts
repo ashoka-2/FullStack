@@ -78,6 +78,7 @@ export const createPopup = async (req: Request, res: Response): Promise<void> =>
             deviceImages,
             metadata,
             displayTime,
+            targetDevices,
         } = req.body;
 
         let finalImageUrl = imageUrl || "";
@@ -112,6 +113,16 @@ export const createPopup = async (req: Request, res: Response): Promise<void> =>
             }
         }
 
+        // Parse targetDevices if it's sent as stringified JSON
+        let parsedTargetDevices = ["desktop", "tablet", "mobile", "tv"];
+        if (targetDevices) {
+            try {
+                parsedTargetDevices = typeof targetDevices === "string" ? JSON.parse(targetDevices) : targetDevices;
+            } catch (e) {
+                console.error("Error parsing targetDevices:", e);
+            }
+        }
+
         const uploadedDeviceImages = await uploadDeviceImagesBase64(parsedDeviceImages);
 
         const newPopup = await popupModel.create({
@@ -135,6 +146,7 @@ export const createPopup = async (req: Request, res: Response): Promise<void> =>
             isDraft: isDraft === "true" || isDraft === true,
             metadata,
             displayTime: Number(displayTime) || 5,
+            targetDevices: parsedTargetDevices,
         });
 
         // Broadcast to all clients if it is published immediately
@@ -194,6 +206,17 @@ export const updatePopup = async (req: Request, res: Response): Promise<void> =>
             }
             // Upload base64 device images to ImageKit
             updateData.deviceImages = await uploadDeviceImagesBase64(updateData.deviceImages);
+        }
+
+        // Parse targetDevices if stringified
+        if (updateData.targetDevices) {
+            try {
+                updateData.targetDevices = typeof updateData.targetDevices === "string"
+                    ? JSON.parse(updateData.targetDevices)
+                    : updateData.targetDevices;
+            } catch (e) {
+                console.error("Error parsing targetDevices on update:", e);
+            }
         }
 
         // Convert strings to booleans

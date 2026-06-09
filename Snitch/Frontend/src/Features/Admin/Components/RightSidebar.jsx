@@ -43,7 +43,9 @@ const RightSidebar = ({
     handleMoveMeshPointFront,
     handleMoveMeshPointBack,
     clipContent,
-    setClipContent
+    setClipContent,
+    targetDevices,
+    setTargetDevices
 }) => {
     const selectedItemRef = useRef(selectedItem);
     useEffect(() => {
@@ -812,6 +814,36 @@ const RightSidebar = ({
                             placeholder="e.g. 5 seconds"
                         />
                         <span className="text-[8px] text-white/35 font-bold uppercase mt-1 block">* Determines how long the popup stays open before auto-closing.</span>
+                    </div>
+
+                    {/* Target Devices Selection Checkboxes */}
+                    <div className="pt-4 border-t border-white/5 space-y-2">
+                        <label className="text-[9px] font-black uppercase text-white/45 block">Target Devices</label>
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                            {["desktop", "tablet", "mobile", "tv"].map((device) => {
+                                const isChecked = targetDevices?.includes(device) ?? true;
+                                return (
+                                    <label key={device} className="flex items-center gap-2 bg-[#1b1b1f] border border-white/5 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-white/[0.02] active:scale-95 transition-all">
+                                        <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={(e) => {
+                                                let updated;
+                                                if (e.target.checked) {
+                                                    updated = [...(targetDevices || []), device];
+                                                } else {
+                                                    updated = (targetDevices || []).filter(d => d !== device);
+                                                }
+                                                setTargetDevices(updated);
+                                            }}
+                                            className="w-4 h-4 accent-accent cursor-pointer"
+                                        />
+                                        <span className="text-[10px] font-black uppercase tracking-wider select-none text-white/80">{device}</span>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                        <span className="text-[8px] text-white/35 font-bold uppercase block">* Only checked devices will compile images and trigger popup displays.</span>
                     </div>
 
                     {/* Background Picker */}

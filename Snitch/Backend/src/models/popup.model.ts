@@ -32,6 +32,7 @@ export interface IPopup extends Document {
     isDraft: boolean;
     metadata?: string;
     displayTime?: number;
+    targetDevices?: string[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -120,6 +121,10 @@ const popupSchema = new Schema<IPopup>(
             tablet: { type: String },
             mobile: { type: String },
             tv: { type: String },
+        },
+        targetDevices: {
+            type: [String],
+            default: ["desktop", "tablet", "mobile", "tv"],
         },
     },
     { timestamps: true }
