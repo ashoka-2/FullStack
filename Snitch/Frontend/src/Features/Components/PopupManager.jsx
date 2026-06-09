@@ -15,6 +15,26 @@ const PopupManager = () => {
     const [showLoginPrompt, setShowLoginPrompt] = useState(false);
     const [showPromoPopup, setShowPromoPopup] = useState(false);
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+    const [deviceType, setDeviceType] = useState("desktop");
+
+    // Detect screen size type
+    useEffect(() => {
+        const updateDeviceType = () => {
+            const width = window.innerWidth;
+            if (width >= 1440) {
+                setDeviceType("tv");
+            } else if (width >= 1024) {
+                setDeviceType("desktop");
+            } else if (width >= 640) {
+                setDeviceType("tablet");
+            } else {
+                setDeviceType("mobile");
+            }
+        };
+        updateDeviceType();
+        window.addEventListener("resize", updateDeviceType);
+        return () => window.removeEventListener("resize", updateDeviceType);
+    }, []);
 
     // ── 1. guest Login Prompt Timer ──────────────────────────────
     useEffect(() => {
@@ -239,8 +259,16 @@ const PopupManager = () => {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
                             transition={{ duration: 0.3 }}
-                            className={`${getModalSizeClass(activePopups[currentSlideIndex].size)} ${getBorderRadiusClass(activePopups[currentSlideIndex].borderRadius)} border border-white/10 shadow-2xl relative overflow-hidden flex flex-col`}
-                            style={getBackgroundStyle(activePopups[currentSlideIndex])}
+                            className={`${
+                                activePopups[currentSlideIndex].text === "Canvas Compiled Poster"
+                                    ? "max-w-[95vw] sm:max-w-lg md:max-w-xl border-none shadow-none bg-transparent"
+                                    : `${getModalSizeClass(activePopups[currentSlideIndex].size)} border border-white/10`
+                            } ${getBorderRadiusClass(activePopups[currentSlideIndex].borderRadius)} shadow-2xl relative overflow-hidden flex flex-col`}
+                            style={
+                                activePopups[currentSlideIndex].text === "Canvas Compiled Poster"
+                                    ? { background: "transparent" }
+                                    : getBackgroundStyle(activePopups[currentSlideIndex])
+                            }
                         >
                             {/* Close Button */}
                             <button
@@ -279,19 +307,23 @@ const PopupManager = () => {
                                             return (
                                                 <>
                                                     {/* Image Box */}
-                                                    {popup.imageUrl && (
-                                                        <div 
-                                                            className={`w-full flex items-center justify-center relative ${isCompiled ? "cursor-pointer" : "max-h-[350px] overflow-hidden"}`}
-                                                            onClick={isCompiled ? handleRedirect : undefined}
-                                                        >
-                                                            <img
-                                                                src={popup.imageUrl}
-                                                                alt={popup.title}
-                                                                className={`${isCompiled ? "w-full h-auto max-h-[80vh] object-contain" : "w-full h-full object-cover"} select-none`}
-                                                                style={getImageFilterStyle(popup.imageFilter)}
-                                                            />
-                                                        </div>
-                                                    )}
+                                                    {(popup.imageUrl || popup.deviceImages) && (() => {
+                                                        const imgUrl = popup.deviceImages?.[deviceType] || popup.imageUrl;
+                                                        if (!imgUrl) return null;
+                                                        return (
+                                                            <div 
+                                                                className={`w-full flex items-center justify-center relative ${isCompiled ? "cursor-pointer" : "max-h-[350px] overflow-hidden"}`}
+                                                                onClick={isCompiled ? handleRedirect : undefined}
+                                                            >
+                                                                <img
+                                                                    src={imgUrl}
+                                                                    alt={popup.title}
+                                                                    className={`${isCompiled ? "w-full h-auto max-h-[80vh] object-contain" : "w-full h-full object-cover"} select-none`}
+                                                                    style={getImageFilterStyle(popup.imageFilter)}
+                                                                />
+                                                            </div>
+                                                        );
+                                                    })()}
 
                                                     {/* Description Content (Hide for Canvas Compiled Posters) */}
                                                     {popup.text && !isCompiled && (

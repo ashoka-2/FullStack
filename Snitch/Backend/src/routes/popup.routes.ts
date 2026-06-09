@@ -12,7 +12,10 @@ import {
 
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
+    limits: { 
+        fileSize: 10 * 1024 * 1024, // 10 MB limit for file
+        fieldSize: 25 * 1024 * 1024 // 25 MB limit for text fields (stringified base64)
+    },
 });
 
 const router: Router = express.Router();

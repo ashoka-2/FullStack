@@ -11,6 +11,7 @@ import CanvasElement from "../Components/CanvasElement";
 import LeftSidebar from "../Components/LeftSidebar";
 import RightSidebar from "../Components/RightSidebar";
 import ContextMenu from "../Components/ContextMenu";
+import PopupPreview from "../Components/PopupPreview";
 import { PRESET_SHAPES, PRESET_GRADIENTS, TEXT_PRESETS, CANVAS_SIZES } from "../Components/CanvasPresets";
 
 const AdminPopupsPage = () => {
@@ -26,8 +27,26 @@ const AdminPopupsPage = () => {
         handleTogglePopupActive,
     } = usePopup();
 
-    // Infinite canvas workspace references
+    // Infinite canvas workspace references & state
     const canvasRef = useRef(null);
+    const desktopCanvasRef = useRef(null);
+    const tabletCanvasRef = useRef(null);
+    const mobileCanvasRef = useRef(null);
+    const tvCanvasRef = useRef(null);
+    const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
+    const [canvasZoom, setCanvasZoom] = useState(1);
+    const [isSpaceHeld, setIsSpaceHeld] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
+
+    // Multi-device responsive states
+    const [activeDevice, setActiveDevice] = useState("desktop");
+    const [deviceDesigns, setDeviceDesigns] = useState({
+        desktop: { elements: [], canvasBg: { type: "solid", color1: "#111111", stops: [{ color: "#111111", offset: 0 }, { color: "#333333", offset: 100 }] }, canvasWidth: 800, canvasHeight: 500 },
+        tablet:  { elements: [], canvasBg: { type: "solid", color1: "#111111", stops: [{ color: "#111111", offset: 0 }, { color: "#333333", offset: 100 }] }, canvasWidth: 540, canvasHeight: 700 },
+        mobile:  { elements: [], canvasBg: { type: "solid", color1: "#111111", stops: [{ color: "#111111", offset: 0 }, { color: "#333333", offset: 100 }] }, canvasWidth: 360, canvasHeight: 640 },
+        tv:      { elements: [], canvasBg: { type: "solid", color1: "#111111", stops: [{ color: "#111111", offset: 0 }, { color: "#333333", offset: 100 }] }, canvasWidth: 1280, canvasHeight: 720 }
+    });
+
     const [canvasBg, setCanvasBg] = useState({
         type: "solid",
         color1: "#111111",
@@ -48,7 +67,7 @@ const AdminPopupsPage = () => {
     });
 
     // Dynamic sizing states
-    const [canvasWidth, setCanvasWidth] = useState(380);
+    const [canvasWidth, setCanvasWidth] = useState(800);
     const [canvasHeight, setCanvasHeight] = useState(500);
 
     // Dynamic campaign display time in seconds
@@ -114,6 +133,39 @@ const AdminPopupsPage = () => {
         fetchAllPopups();
     }, []);
 
+    // Listen for Space bar keydowns to toggle pan mode
+    useEffect(() => {
+        const handleSpaceDown = (e) => {
+            if (e.code === "Space" && document.activeElement === document.body && showEditor) {
+                e.preventDefault();
+                setIsSpaceHeld(true);
+            }
+        };
+        const handleSpaceUp = (e) => {
+            if (e.code === "Space") {
+                setIsSpaceHeld(false);
+            }
+        };
+        window.addEventListener("keydown", handleSpaceDown);
+        window.addEventListener("keyup", handleSpaceUp);
+        return () => {
+            window.removeEventListener("keydown", handleSpaceDown);
+            window.removeEventListener("keyup", handleSpaceUp);
+        };
+    }, [showEditor]);
+
+    // Lock body scroll in fullscreen mode
+    useEffect(() => {
+        if (isFullScreen && showEditor) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "unset";
+        }
+        return () => {
+            document.body.style.overflow = "unset";
+        };
+    }, [isFullScreen, showEditor]);
+
     // Load Google Fonts on the fly
     const loadGoogleFont = (fontName) => {
         if (loadedFonts.has(fontName)) return;
@@ -128,6 +180,55 @@ const AdminPopupsPage = () => {
         "Inter", "Roboto", "Outfit", "Playfair Display", "Montserrat", 
         "Cinzel", "Pacifico", "Bungee", "Righteous", "Syne", "Cabinet Grotesk"
     ];
+
+    // Device switcher that synchronizes state
+    const switchDevice = (newDevice) => {
+        setDeviceDesigns(prev => {
+            const updated = {
+                ...prev,
+                [activeDevice]: {
+                    elements,
+                    canvasBg,
+                    canvasWidth,
+                    canvasHeight
+                }
+            };
+            saveToLocalStorage(elements, canvasBg, borderRadius, title, linkUrl, canvasWidth, canvasHeight, displayTime, newDevice, updated);
+            
+            let target = updated[newDevice] || {
+                elements: [],
+                canvasBg: { ...canvasBg },
+                canvasWidth: newDevice === "desktop" ? 800 : newDevice === "tablet" ? 540 : newDevice === "mobile" ? 360 : 1280,
+                canvasHeight: newDevice === "desktop" ? 500 : newDevice === "tablet" ? 700 : newDevice === "mobile" ? 640 : 720
+            };
+            
+            if ((!target.elements || target.elements.length === 0) && elements.length > 0) {
+                const targetW = newDevice === "desktop" ? 800 : newDevice === "tablet" ? 540 : newDevice === "mobile" ? 360 : 1280;
+                const targetH = newDevice === "desktop" ? 500 : newDevice === "tablet" ? 700 : newDevice === "mobile" ? 640 : 720;
+                const activeW = canvasWidth || 800;
+                const activeH = canvasHeight || 500;
+                
+                target.elements = elements.map(el => ({
+                    ...el,
+                    x: Math.round(el.x * targetW / activeW),
+                    y: Math.round(el.y * targetH / activeH),
+                    width: Math.round(el.width * targetW / activeW),
+                    height: Math.round(el.height * targetH / activeH)
+                }));
+                target.canvasBg = { ...canvasBg };
+                updated[newDevice] = target;
+            }
+            
+            setElements(target.elements || []);
+            setCanvasBg(target.canvasBg || { type: "solid", color1: "#111111" });
+            setCanvasWidth(target.canvasWidth || 800);
+            setCanvasHeight(target.canvasHeight || 500);
+            return updated;
+        });
+        setActiveDevice(newDevice);
+        setSelectedId(null);
+        setSelectedMeshPointId(null);
+    };
 
     // Undo / Redo engine
     const pushToHistoryState = (newElements, newBg = canvasBg) => {
@@ -160,21 +261,28 @@ const AdminPopupsPage = () => {
         saveToLocalStorage(next.elements, next.canvasBg, borderRadius, title, linkUrl, canvasWidth, canvasHeight);
     };
 
-    // Auto-Save draft recovery
-    const saveToLocalStorage = (els, bg, br, t, link, w = canvasWidth, h = canvasHeight, time = displayTime) => {
+    // Auto-Save draft recovery v2 (keeps all 4 devices)
+    const saveToLocalStorage = (els = elements, bg = canvasBg, br = borderRadius, t = title, link = linkUrl, w = canvasWidth, h = canvasHeight, time = displayTime, device = activeDevice, designs = deviceDesigns) => {
         try {
+            const updatedDesigns = {
+                ...designs,
+                [device]: {
+                    elements: els,
+                    canvasBg: bg,
+                    canvasWidth: w,
+                    canvasHeight: h
+                }
+            };
             const data = {
-                elements: els,
-                canvasBg: bg,
+                deviceDesigns: updatedDesigns,
+                activeDevice: device,
                 borderRadius: br,
                 title: t,
                 linkUrl: link,
-                canvasWidth: w,
-                canvasHeight: h,
                 displayTime: time,
                 timestamp: Date.now()
             };
-            localStorage.setItem("snitch_popup_canvas_draft", JSON.stringify(data));
+            localStorage.setItem("snitch_popup_canvas_draft_v2", JSON.stringify(data));
         } catch (e) {
             console.error("Local storage save failed", e);
         }
@@ -182,23 +290,25 @@ const AdminPopupsPage = () => {
 
     const restoreDraft = () => {
         try {
-            const saved = localStorage.getItem("snitch_popup_canvas_draft");
+            const saved = localStorage.getItem("snitch_popup_canvas_draft_v2");
             if (saved) {
                 const parsed = JSON.parse(saved);
-                if (parsed.elements) setElements(parsed.elements);
-                if (parsed.canvasBg) setCanvasBg(parsed.canvasBg);
+                if (parsed.deviceDesigns) {
+                    setDeviceDesigns(parsed.deviceDesigns);
+                    const dev = parsed.activeDevice || "desktop";
+                    setActiveDevice(dev);
+                    const target = parsed.deviceDesigns[dev];
+                    if (target) {
+                        setElements(target.elements || []);
+                        setCanvasBg(target.canvasBg || { type: "solid", color1: "#111111" });
+                        setCanvasWidth(target.canvasWidth || 800);
+                        setCanvasHeight(target.canvasHeight || 500);
+                    }
+                }
                 if (parsed.borderRadius) setBorderRadius(parsed.borderRadius);
                 if (parsed.title) setTitle(parsed.title);
                 if (parsed.linkUrl) setLinkUrl(parsed.linkUrl);
-                if (parsed.canvasWidth) setCanvasWidth(parsed.canvasWidth);
-                if (parsed.canvasHeight) setCanvasHeight(parsed.canvasHeight);
                 if (parsed.displayTime) setDisplayTime(parsed.displayTime);
-                
-                parsed.elements.forEach(el => {
-                    if (el.type === "text" && el.fontFamily) {
-                        loadGoogleFont(el.fontFamily);
-                    }
-                });
             }
         } catch (e) {
             console.error("Failed to restore draft", e);
@@ -206,7 +316,7 @@ const AdminPopupsPage = () => {
     };
 
     const hasLocalStorageBackup = () => {
-        return !!localStorage.getItem("snitch_popup_canvas_draft");
+        return !!localStorage.getItem("snitch_popup_canvas_draft_v2");
     };
 
     // Keyboard bindings matching Canva/Figma hotkeys
@@ -426,81 +536,109 @@ const AdminPopupsPage = () => {
         let loadedH = 500;
         let loadedTime = item.displayTime || 5;
 
+        let meta = null;
         if (item.metadata) {
             try {
-                const meta = typeof item.metadata === "string" ? JSON.parse(item.metadata) : item.metadata;
+                meta = typeof item.metadata === "string" ? JSON.parse(item.metadata) : item.metadata;
+            } catch (e) {
+                console.error("Failed parsing metadata json", e);
+            }
+        }
+
+        if (meta && meta.deviceDesigns) {
+            setDeviceDesigns(meta.deviceDesigns);
+            const dev = "desktop";
+            const target = meta.deviceDesigns[dev] || {
+                elements: [],
+                canvasBg: loadedBg,
+                canvasWidth: 800,
+                canvasHeight: 500
+            };
+            loadedEls = target.elements || [];
+            loadedBg = target.canvasBg || loadedBg;
+            loadedW = target.canvasWidth || 800;
+            loadedH = target.canvasHeight || 500;
+            if (meta.displayTime) loadedTime = meta.displayTime;
+        } else {
+            // Setup from meta elements or legacy values
+            if (meta) {
                 if (meta.elements) loadedEls = meta.elements;
                 if (meta.canvasBg) loadedBg = meta.canvasBg;
                 if (meta.canvasWidth) loadedW = meta.canvasWidth;
                 if (meta.canvasHeight) loadedH = meta.canvasHeight;
                 if (meta.displayTime) loadedTime = meta.displayTime;
-            } catch (e) {
-                console.error("Failed parsing metadata json", e);
+            } else {
+                // Legacy DB fields fallback
+                loadedBg = {
+                    type: item.isGradient ? (item.gradientDirection === "radial" ? "radial" : "linear") : "solid",
+                    color1: item.backgroundColor || "#111111",
+                    color2: item.gradientColor || "#333333",
+                    color3: "#4f46e5",
+                    color4: "#db2777",
+                    direction: item.gradientDirection || "to-r",
+                    conicAngle: "0deg",
+                    grainOpacity: 0,
+                    stops: [
+                        { color: item.backgroundColor || "#111111", offset: 0 },
+                        { color: item.gradientColor || "#333333", offset: 100 }
+                    ]
+                };
+                
+                loadedEls = [];
+                if (item.imageUrl) {
+                    loadedEls.push({
+                        id: `image-${Date.now()}`,
+                        type: "image",
+                        x: 40,
+                        y: 100,
+                        width: 300,
+                        height: 300,
+                        url: item.imageUrl,
+                        rotate: 0,
+                        opacity: 100,
+                        zIndex: 1,
+                        borderRadius: parseInt(item.borderRadius) || 0,
+                        filter: item.imageFilter || { blur: 0, brightness: 100, contrast: 100, grayscale: 0, sepia: 0 },
+                        shadowX: 0,
+                        shadowY: 4,
+                        shadowBlur: 10,
+                        shadowColor: "rgba(0,0,0,0.3)"
+                    });
+                }
+                if (item.text && item.text !== "Canvas Compiled Poster") {
+                    loadedEls.push({
+                        id: `text-${Date.now()}`,
+                        type: "text",
+                        content: item.text,
+                        x: 40,
+                        y: 420,
+                        width: 300,
+                        height: 60,
+                        zIndex: 2,
+                        fontFamily: "Outfit",
+                        fontSize: item.fontSize === "lg" ? 20 : item.fontSize === "xl" ? 24 : item.fontSize === "2xl" ? 28 : item.fontSize === "3xl" ? 32 : item.fontSize === "4xl" ? 36 : 16,
+                        fontWeight: item.fontWeight || "bold",
+                        textAlign: item.textAlign || "center",
+                        color: item.textColor || "#ffffff",
+                        isGradientText: false,
+                        textGradient: { start: "#ff007f", end: "#7f00ff", dir: "to-r" },
+                        opacity: 100,
+                        rotate: 0,
+                        shadowX: 0,
+                        shadowY: 0,
+                        shadowBlur: 0,
+                        shadowColor: "rgba(0,0,0,0.5)"
+                    });
+                }
             }
-        } else {
-            // Fallback: Populate campaign background & elements from top-level fields
-            loadedBg = {
-                type: item.isGradient ? (item.gradientDirection === "radial" ? "radial" : "linear") : "solid",
-                color1: item.backgroundColor || "#111111",
-                color2: item.gradientColor || "#333333",
-                color3: "#4f46e5",
-                color4: "#db2777",
-                direction: item.gradientDirection || "to-r",
-                conicAngle: "0deg",
-                grainOpacity: 0,
-                stops: [
-                    { color: item.backgroundColor || "#111111", offset: 0 },
-                    { color: item.gradientColor || "#333333", offset: 100 }
-                ]
-            };
-            
-            // Build editable canvas components from image & text
-            loadedEls = [];
-            if (item.imageUrl) {
-                loadedEls.push({
-                    id: `image-${Date.now()}`,
-                    type: "image",
-                    x: 40,
-                    y: 100,
-                    width: 300,
-                    height: 300,
-                    url: item.imageUrl,
-                    rotate: 0,
-                    opacity: 100,
-                    zIndex: 1,
-                    borderRadius: parseInt(item.borderRadius) || 0,
-                    filter: item.imageFilter || { blur: 0, brightness: 100, contrast: 100, grayscale: 0, sepia: 0 },
-                    shadowX: 0,
-                    shadowY: 4,
-                    shadowBlur: 10,
-                    shadowColor: "rgba(0,0,0,0.3)"
-                });
-            }
-            if (item.text && item.text !== "Canvas Compiled Poster") {
-                loadedEls.push({
-                    id: `text-${Date.now()}`,
-                    type: "text",
-                    content: item.text,
-                    x: 40,
-                    y: 420,
-                    width: 300,
-                    height: 60,
-                    zIndex: 2,
-                    fontFamily: "Outfit",
-                    fontSize: item.fontSize === "lg" ? 20 : item.fontSize === "xl" ? 24 : item.fontSize === "2xl" ? 28 : item.fontSize === "3xl" ? 32 : item.fontSize === "4xl" ? 36 : 16,
-                    fontWeight: item.fontWeight || "bold",
-                    textAlign: item.textAlign || "center",
-                    color: item.textColor || "#ffffff",
-                    isGradientText: false,
-                    textGradient: { start: "#ff007f", end: "#7f00ff", dir: "to-r" },
-                    opacity: 100,
-                    rotate: 0,
-                    shadowX: 0,
-                    shadowY: 0,
-                    shadowBlur: 0,
-                    shadowColor: "rgba(0,0,0,0.5)"
-                });
-            }
+
+            // Sync legacy config to deviceDesigns
+            setDeviceDesigns({
+                desktop: { elements: loadedEls, canvasBg: loadedBg, canvasWidth: loadedW || 800, canvasHeight: loadedH || 500 },
+                tablet:  { elements: loadedEls.map(el => ({ ...el, x: Math.round(el.x * 540 / (loadedW || 800)), y: Math.round(el.y * 700 / (loadedH || 500)) })), canvasBg: loadedBg, canvasWidth: 540, canvasHeight: 700 },
+                mobile:  { elements: loadedEls.map(el => ({ ...el, x: Math.round(el.x * 360 / (loadedW || 800)), y: Math.round(el.y * 640 / (loadedH || 500)) })), canvasBg: loadedBg, canvasWidth: 360, canvasHeight: 640 },
+                tv:      { elements: loadedEls.map(el => ({ ...el, x: Math.round(el.x * 1280 / (loadedW || 800)), y: Math.round(el.y * 720 / (loadedH || 500)) })), canvasBg: loadedBg, canvasWidth: 1280, canvasHeight: 720 }
+            });
         }
         
         setElements(loadedEls);
@@ -765,6 +903,7 @@ const AdminPopupsPage = () => {
         e.stopPropagation();
         setSelectedId(item.id);
         setEditingTextId(null);
+        if (item.isLocked) return;
 
         dragInfo.current = {
             isDragging: true,
@@ -811,6 +950,7 @@ const AdminPopupsPage = () => {
     const handleResizeStart = (e, handle, item) => {
         e.stopPropagation();
         e.preventDefault();
+        if (item.isLocked) return;
 
         dragInfo.current = {
             isDragging: false,
@@ -905,6 +1045,7 @@ const AdminPopupsPage = () => {
     const handleRotateStart = (e, item) => {
         e.stopPropagation();
         e.preventDefault();
+        if (item.isLocked) return;
 
         const rect = document.getElementById(`element-frame-${item.id}`).getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
@@ -1141,30 +1282,99 @@ const AdminPopupsPage = () => {
         const index = elements.findIndex(el => el.id === selectedId);
         if (index === -1) return;
 
-        let list = [...elements].sort((a, b) => a.zIndex - b.zIndex);
+        let list = [...elements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
         const itemIdx = list.findIndex(el => el.id === selectedId);
 
         if (direction === "front") {
-            const maxZ = Math.max(...list.map(el => el.zIndex), 0);
-            pushToHistoryState(elements.map(el => el.id === selectedId ? { ...el, zIndex: maxZ + 1 } : el));
+            const [item] = list.splice(itemIdx, 1);
+            list.push(item);
         } else if (direction === "back") {
-            const minZ = Math.min(...list.map(el => el.zIndex), 0);
-            pushToHistoryState(elements.map(el => el.id === selectedId ? { ...el, zIndex: minZ - 1 } : el));
+            const [item] = list.splice(itemIdx, 1);
+            list.unshift(item);
         } else if (direction === "forward" && itemIdx < list.length - 1) {
-            const nextItem = list[itemIdx + 1];
-            pushToHistoryState(elements.map(el => {
-                if (el.id === selectedId) return { ...el, zIndex: nextItem.zIndex };
-                if (el.id === nextItem.id) return { ...el, zIndex: list[itemIdx].zIndex };
-                return el;
-            }));
+            const [item] = list.splice(itemIdx, 1);
+            list.splice(itemIdx + 1, 0, item);
         } else if (direction === "backward" && itemIdx > 0) {
-            const prevItem = list[itemIdx - 1];
-            pushToHistoryState(elements.map(el => {
-                if (el.id === selectedId) return { ...el, zIndex: prevItem.zIndex };
-                if (el.id === prevItem.id) return { ...el, zIndex: list[itemIdx].zIndex };
-                return el;
-            }));
+            const [item] = list.splice(itemIdx, 1);
+            list.splice(itemIdx - 1, 0, item);
         }
+
+        // Reassign normalized zIndex: 1..n
+        const updated = elements.map(el => {
+            const newListIdx = list.findIndex(item => item.id === el.id);
+            return { ...el, zIndex: newListIdx + 1 };
+        });
+
+        pushToHistoryState(updated);
+    };
+
+    // Mesh gradient node layering ordering (Front/Back)
+    const handleMoveMeshPointUp = (id) => {
+        setCanvasBg(prev => {
+            const points = prev.meshPoints ? [...prev.meshPoints] : [];
+            const idx = points.findIndex((p, i) => p.id === id || i === id);
+            if (idx === -1 || idx === points.length - 1) return prev;
+            
+            const temp = points[idx];
+            points[idx] = points[idx + 1];
+            points[idx + 1] = temp;
+            
+            const updated = { ...prev, meshPoints: points };
+            saveToLocalStorage(elementsRef.current, updated, borderRadius, title, linkUrl, canvasWidth, canvasHeight, displayTime);
+            return updated;
+        });
+        pushToHistoryState(elementsRef.current, canvasBgRef.current);
+    };
+
+    const handleMoveMeshPointDown = (id) => {
+        setCanvasBg(prev => {
+            const points = prev.meshPoints ? [...prev.meshPoints] : [];
+            const idx = points.findIndex((p, i) => p.id === id || i === id);
+            if (idx === -1 || idx === 0) return prev;
+            
+            const temp = points[idx];
+            points[idx] = points[idx - 1];
+            points[idx - 1] = temp;
+            
+            const updated = { ...prev, meshPoints: points };
+            saveToLocalStorage(elementsRef.current, updated, borderRadius, title, linkUrl, canvasWidth, canvasHeight, displayTime);
+            return updated;
+        });
+        pushToHistoryState(elementsRef.current, canvasBgRef.current);
+    };
+
+    const handleMoveMeshPointFront = (id) => {
+        setCanvasBg(prev => {
+            const points = prev.meshPoints ? [...prev.meshPoints] : [];
+            const idx = points.findIndex((p, i) => p.id === id || i === id);
+            if (idx === -1 || idx === points.length - 1) return prev;
+            
+            const target = points[idx];
+            const filtered = points.filter((_, i) => i !== idx);
+            filtered.push(target);
+            
+            const updated = { ...prev, meshPoints: filtered };
+            saveToLocalStorage(elementsRef.current, updated, borderRadius, title, linkUrl, canvasWidth, canvasHeight, displayTime);
+            return updated;
+        });
+        pushToHistoryState(elementsRef.current, canvasBgRef.current);
+    };
+
+    const handleMoveMeshPointBack = (id) => {
+        setCanvasBg(prev => {
+            const points = prev.meshPoints ? [...prev.meshPoints] : [];
+            const idx = points.findIndex((p, i) => p.id === id || i === id);
+            if (idx === -1 || idx === 0) return prev;
+            
+            const target = points[idx];
+            const filtered = points.filter((_, i) => i !== idx);
+            filtered.unshift(target);
+            
+            const updated = { ...prev, meshPoints: filtered };
+            saveToLocalStorage(elementsRef.current, updated, borderRadius, title, linkUrl, canvasWidth, canvasHeight, displayTime);
+            return updated;
+        });
+        pushToHistoryState(elementsRef.current, canvasBgRef.current);
     };
 
     // Align controls relative to canvas bounds
@@ -1193,29 +1403,58 @@ const AdminPopupsPage = () => {
 
     // html2canvas-pro Compile & Save Pipeline
     const handleCompileAndSave = async (isPublishing = false) => {
-        if (!canvasRef.current) return;
         setSelectedId(null);
         setEditingTextId(null);
         
         await new Promise(r => setTimeout(r, 120));
 
         try {
-            const canvas = await html2canvas(canvasRef.current, {
+            const capturedDeviceImages = {};
+            const devicesList = [
+                { key: "desktop", ref: desktopCanvasRef, width: deviceDesigns.desktop.canvasWidth, height: deviceDesigns.desktop.canvasHeight },
+                { key: "tablet", ref: tabletCanvasRef, width: deviceDesigns.tablet.canvasWidth, height: deviceDesigns.tablet.canvasHeight },
+                { key: "mobile", ref: mobileCanvasRef, width: deviceDesigns.mobile.canvasWidth, height: deviceDesigns.mobile.canvasHeight },
+                { key: "tv", ref: tvCanvasRef, width: deviceDesigns.tv.canvasWidth, height: deviceDesigns.tv.canvasHeight }
+            ];
+
+            // Update designs first to capture active design
+            const updatedDesigns = {
+                ...deviceDesigns,
+                [activeDevice]: {
+                    elements,
+                    canvasBg,
+                    canvasWidth,
+                    canvasHeight
+                }
+            };
+
+            for (const dev of devicesList) {
+                if (dev.ref.current) {
+                    const canvas = await html2canvas(dev.ref.current, {
+                        useCORS: true,
+                        backgroundColor: null,
+                        width: dev.width,
+                        height: dev.height,
+                        scale: 1.5
+                    });
+                    const base64 = canvas.toDataURL("image/png", 0.90);
+                    capturedDeviceImages[dev.key] = base64;
+                }
+            }
+
+            // Standard desktop screenshot for the primary 'image' field
+            const mainCanvas = await html2canvas(desktopCanvasRef.current || canvasRef.current, {
                 useCORS: true,
                 backgroundColor: null,
-                width: canvasWidth,
-                height: canvasHeight,
-                scale: 2
+                width: deviceDesigns.desktop.canvasWidth,
+                height: deviceDesigns.desktop.canvasHeight,
+                scale: 1.5
             });
-
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png", 0.95));
-            const imageFile = new File([blob], `${title.replace(/ /g, "_")}-${Date.now()}.png`, { type: "image/png" });
+            const mainBlob = await new Promise(resolve => mainCanvas.toBlob(resolve, "image/png", 0.95));
+            const imageFile = new File([mainBlob], `${title.replace(/ /g, "_")}-desktop-${Date.now()}.png`, { type: "image/png" });
 
             const payloadData = {
-                elements: elementsRef.current,
-                canvasBg: canvasBgRef.current,
-                canvasWidth,
-                canvasHeight,
+                deviceDesigns: updatedDesigns,
                 displayTime
             };
 
@@ -1225,6 +1464,7 @@ const AdminPopupsPage = () => {
             data.append("isActive", isPublishing ? "true" : editItem ? String(editItem.isActive) : "false");
             data.append("isDraft", isPublishing ? "false" : "true");
             data.append("image", imageFile);
+            data.append("deviceImages", JSON.stringify(capturedDeviceImages));
             data.append("metadata", JSON.stringify(payloadData));
             data.append("displayTime", String(displayTime));
             data.append("borderRadius", borderRadius);
@@ -1237,7 +1477,7 @@ const AdminPopupsPage = () => {
             }
             
             // Clean local storage draft upon clean compilation saves
-            localStorage.removeItem("snitch_popup_canvas_draft");
+            localStorage.removeItem("snitch_popup_canvas_draft_v2");
             resetForm();
         } catch (err) {
             console.error("Canvas export failed", err);
@@ -1258,6 +1498,15 @@ const AdminPopupsPage = () => {
         setDisplayTime(5);
         setSelectedMeshPointId(null);
         setIsFullScreen(false);
+        setActiveDevice("desktop");
+        setDeviceDesigns({
+            desktop: { elements: [], canvasBg: { type: "solid", color1: "#111111", stops: [{ color: "#111111", offset: 0 }, { color: "#333333", offset: 100 }] }, canvasWidth: 800, canvasHeight: 500 },
+            tablet:  { elements: [], canvasBg: { type: "solid", color1: "#111111", stops: [{ color: "#111111", offset: 0 }, { color: "#333333", offset: 100 }] }, canvasWidth: 540, canvasHeight: 700 },
+            mobile:  { elements: [], canvasBg: { type: "solid", color1: "#111111", stops: [{ color: "#111111", offset: 0 }, { color: "#333333", offset: 100 }] }, canvasWidth: 360, canvasHeight: 640 },
+            tv:      { elements: [], canvasBg: { type: "solid", color1: "#111111", stops: [{ color: "#111111", offset: 0 }, { color: "#333333", offset: 100 }] }, canvasWidth: 1280, canvasHeight: 720 }
+        });
+        setCanvasOffset({ x: 0, y: 0 });
+        setCanvasZoom(1);
     };
 
     const handleDeleteCampaign = () => {
@@ -1393,7 +1642,7 @@ const AdminPopupsPage = () => {
                 </>
             ) : (
                 /* Figma-Style studio editor view */
-                <div className={`flex flex-col bg-[#121214] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 text-white ${isFullScreen ? "fixed inset-0 z-[9999] w-screen h-screen" : "h-[85vh] border border-white/10 rounded-[32px]"}`}>
+                <div className={`flex flex-col bg-[#121214] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 text-white ${isFullScreen ? "fixed inset-0 left-0 top-0 w-full h-full z-[9999] rounded-none border-none m-0 p-0" : "h-[85vh] border border-white/10 rounded-[32px]"}`}>
                     {/* Editor Header Bar */}
                     <div className="p-4 bg-[#18181c] border-b border-white/5 flex items-center justify-between flex-wrap gap-4 z-50">
                         <div className="flex items-center gap-3">
@@ -1501,6 +1750,55 @@ const AdminPopupsPage = () => {
                             )}
                         </div>
 
+                        {/* Device Responsive Tabs */}
+                        <div className="flex gap-1 bg-[#1f1f24] border border-white/5 rounded-xl p-1">
+                            {[
+                                { key: "tv",      label: "TV",      icon: "ri-tv-line" },
+                                { key: "desktop", label: "Desktop", icon: "ri-computer-line" },
+                                { key: "tablet",  label: "Tablet",  icon: "ri-tablet-line" },
+                                { key: "mobile",  label: "Mobile",  icon: "ri-smartphone-line" },
+                            ].map(d => (
+                                <button
+                                    key={d.key}
+                                    onClick={() => switchDevice(d.key)}
+                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                                        activeDevice === d.key
+                                            ? "bg-accent text-accent-content"
+                                            : "text-white/45 hover:text-white hover:bg-white/5"
+                                    }`}
+                                >
+                                    <i className={d.icon} />
+                                    {d.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Zoom Panning Toolbar */}
+                        <div className="flex items-center gap-1.5 bg-[#1f1f24] border border-white/5 p-1 rounded-xl">
+                            <button
+                                onClick={() => setCanvasZoom(z => Math.max(0.1, z - 0.1))}
+                                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/5 text-white/60 cursor-pointer"
+                                title="Zoom Out"
+                            >
+                                <i className="ri-subtract-line text-xs" />
+                            </button>
+                            <span className="text-[9px] font-black font-mono text-white/50 w-8 text-center">{Math.round(canvasZoom * 100)}%</span>
+                            <button
+                                onClick={() => setCanvasZoom(z => Math.min(4, z + 0.1))}
+                                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/5 text-white/60 cursor-pointer"
+                                title="Zoom In"
+                            >
+                                <i className="ri-add-line text-xs" />
+                            </button>
+                            <button
+                                onClick={() => { setCanvasOffset({ x: 0, y: 0 }); setCanvasZoom(1); }}
+                                className="px-2 py-1 flex items-center justify-center rounded-lg hover:bg-white/5 text-white/60 text-[8px] font-black uppercase tracking-wider cursor-pointer"
+                                title="Reset Zoom & Pan"
+                            >
+                                Reset
+                            </button>
+                        </div>
+
                         {/* Save Actions */}
                         <div className="flex gap-2">
                             {/* Snapping Toggle */}
@@ -1514,6 +1812,16 @@ const AdminPopupsPage = () => {
                                 />
                                 <label htmlFor="snapToGrid" className="text-[8px] font-black uppercase tracking-wider cursor-pointer select-none">Snap (8px)</label>
                             </div>
+                            
+                            {/* Eye Preview button */}
+                            <button
+                                onClick={() => setShowPreview(true)}
+                                className="w-8 h-8 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 cursor-pointer text-white/60 transition-colors"
+                                title="Preview Live Popup View"
+                            >
+                                <i className="ri-eye-line text-sm" />
+                            </button>
+
                             <button
                                 onClick={() => handleCompileAndSave(false)}
                                 className="px-4 py-2 bg-white/5 hover:bg-white/10 text-[9px] font-black uppercase tracking-widest border border-white/10 rounded-xl cursor-pointer"
@@ -1569,7 +1877,42 @@ const AdminPopupsPage = () => {
                                 }
                             }}
                             onContextMenu={(e) => handleCanvasContextMenu(e)}
-                            className="flex-1 bg-[#0e0e10] flex items-center justify-center p-6 relative overflow-auto select-none"
+                            onMouseDown={(e) => {
+                                if (isSpaceHeld || e.button === 1) {
+                                    e.preventDefault();
+                                    const startX = e.clientX - canvasOffset.x;
+                                    const startY = e.clientY - canvasOffset.y;
+                                    
+                                    const handleMouseMove = (moveEvent) => {
+                                        setCanvasOffset({
+                                            x: moveEvent.clientX - startX,
+                                            y: moveEvent.clientY - startY
+                                        });
+                                    };
+                                    
+                                    const handleMouseUp = () => {
+                                        document.removeEventListener("mousemove", handleMouseMove);
+                                        document.removeEventListener("mouseup", handleMouseUp);
+                                    };
+                                    
+                                    document.addEventListener("mousemove", handleMouseMove);
+                                    document.addEventListener("mouseup", handleMouseUp);
+                                }
+                            }}
+                            onWheel={(e) => {
+                                if (e.ctrlKey) {
+                                    e.preventDefault();
+                                    const zoomFactor = 1.1;
+                                    let newZoom = canvasZoom;
+                                    if (e.deltaY < 0) {
+                                        newZoom = Math.min(4, canvasZoom * zoomFactor);
+                                    } else {
+                                        newZoom = Math.max(0.1, canvasZoom / zoomFactor);
+                                    }
+                                    setCanvasZoom(newZoom);
+                                }
+                            }}
+                            className={`flex-1 bg-[#0e0e10] flex items-center justify-center p-6 relative overflow-hidden select-none ${isSpaceHeld ? "cursor-grab active:cursor-grabbing" : "cursor-default"}`}
                             style={{
                                 backgroundImage: "radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)",
                                 backgroundSize: "16px 16px"
@@ -1585,7 +1928,9 @@ const AdminPopupsPage = () => {
                                     width: `${canvasWidth}px`,
                                     height: `${canvasHeight}px`,
                                     background: getCanvasBackgroundCSS(),
-                                    borderRadius: borderRadius === "none" ? "0px" : borderRadius === "md" ? "12px" : borderRadius === "lg" ? "16px" : borderRadius === "full" ? "40px" : "24px"
+                                    borderRadius: borderRadius === "none" ? "0px" : borderRadius === "md" ? "12px" : borderRadius === "lg" ? "16px" : borderRadius === "full" ? "40px" : "24px",
+                                    transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${canvasZoom})`,
+                                    transformOrigin: "center center"
                                 }}
                             >
                                 {/* Vector Render Elements */}
@@ -1645,7 +1990,12 @@ const AdminPopupsPage = () => {
                             {canvasBg.type === "mesh" && (
                                 <div 
                                     className="absolute pointer-events-none shrink-0 overflow-visible z-[2000]"
-                                    style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px` }}
+                                    style={{ 
+                                        width: `${canvasWidth}px`, 
+                                        height: `${canvasHeight}px`,
+                                        transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${canvasZoom})`,
+                                        transformOrigin: "center center"
+                                    }}
                                 >
                                     {(() => {
                                         const points = canvasBg.meshPoints || [
@@ -1713,11 +2063,73 @@ const AdminPopupsPage = () => {
                             handleAddMeshPoint={handleAddMeshPoint}
                             handleRemoveMeshPoint={handleRemoveMeshPoint}
                             handleUpdateMeshPoint={handleUpdateMeshPoint}
+                            handleMoveMeshPointUp={handleMoveMeshPointUp}
+                            handleMoveMeshPointDown={handleMoveMeshPointDown}
+                            handleMoveMeshPointFront={handleMoveMeshPointFront}
+                            handleMoveMeshPointBack={handleMoveMeshPointBack}
                         />
 
                     </div>
                 </div>
             )}
+
+            {/* Offscreen hidden canvases for compiling all 4 devices */}
+            <div style={{ position: "absolute", left: "-9999px", top: "-9999px", pointerEvents: "none" }} aria-hidden="true">
+                {["desktop", "tablet", "mobile", "tv"].map(deviceKey => {
+                    const design = deviceDesigns[deviceKey] || {};
+                    const devWidth = design.canvasWidth || 800;
+                    const devHeight = design.canvasHeight || 500;
+                    const devBg = design.canvasBg || { type: "solid", color1: "#111111" };
+                    const devElements = design.elements || [];
+                    const ref = deviceKey === "desktop" ? desktopCanvasRef : deviceKey === "tablet" ? tabletCanvasRef : deviceKey === "mobile" ? mobileCanvasRef : tvCanvasRef;
+                    
+                    return (
+                        <div
+                            key={deviceKey}
+                            ref={ref}
+                            style={{
+                                width: `${devWidth}px`,
+                                height: `${devHeight}px`,
+                                background: getCanvasBackgroundCSS(devBg),
+                                borderRadius: borderRadius === "none" ? "0px" : borderRadius === "md" ? "12px" : borderRadius === "lg" ? "16px" : borderRadius === "full" ? "40px" : "24px",
+                                position: "relative",
+                                overflow: "hidden"
+                            }}
+                        >
+                            {devElements.map((el) => {
+                                if (el.hidden) return null;
+                                return (
+                                    <CanvasElement
+                                        key={el.id}
+                                        el={el}
+                                        selectedId={null}
+                                        editingTextId={null}
+                                        isPenMode={false}
+                                        setSelectedId={() => {}}
+                                        setEditingTextId={() => {}}
+                                        handleElementMouseDown={() => {}}
+                                        handleResizeStart={() => {}}
+                                        handleRotateStart={() => {}}
+                                        handleCanvasContextMenu={() => {}}
+                                        updateSelectedElement={() => {}}
+                                        pushToHistoryState={() => {}}
+                                        elements={devElements}
+                                    />
+                                );
+                            })}
+                            {devBg.grainOpacity > 0 && (
+                                <div 
+                                    className="absolute inset-0 pointer-events-none mix-blend-overlay z-[1999]"
+                                    style={{
+                                        opacity: (devBg.grainOpacity || 0) / 100,
+                                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0%200%20200%20200'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter%20id='noiseFilter'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.8'%20numOctaves='3'%20stitchTiles='stitch'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+                                    }}
+                                />
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
 
             {/* Custom right-click Context Menu overlay */}
             {contextMenu.visible && (
@@ -1741,12 +2153,23 @@ const AdminPopupsPage = () => {
                 onClose={() => setDeleteModal({ isOpen: false, id: null })}
                 onConfirm={handleDeleteCampaign}
                 title="Deconstruct Campaign"
+                description="Are you sure you want to permanently delete this visual campaign? This action is irreversible."
                 type="danger"
                 confirmText="Confirm Delete"
                 cancelText="Cancel"
-            >
-                <p className="text-xs text-foreground/60 leading-normal text-center">Are you sure you want to permanently delete this visual campaign? This action is irreversible.</p>
-            </Modal>
+            />
+
+            {/* Eye Icon Popup Preview Overlay Modal */}
+            {showPreview && (
+                <PopupPreview
+                    deviceDesigns={deviceDesigns}
+                    title={title}
+                    linkUrl={linkUrl}
+                    displayTime={displayTime}
+                    borderRadius={borderRadius}
+                    onClose={() => setShowPreview(false)}
+                />
+            )}
         </div>
     );
 };

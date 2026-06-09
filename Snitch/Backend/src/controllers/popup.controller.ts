@@ -27,6 +27,31 @@ export const getPopups = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+// Helper to upload base64 device images to ImageKit
+const uploadDeviceImagesBase64 = async (deviceImages: any): Promise<any> => {
+    if (!deviceImages) return deviceImages;
+    const uploadedImages: any = {};
+    for (const key of ["desktop", "tablet", "mobile", "tv"]) {
+        const value = deviceImages[key];
+        if (value && typeof value === "string" && value.startsWith("data:")) {
+            try {
+                const uploaded = await uploadFile({
+                    file: value,
+                    filename: `popup_${key}_${Date.now()}.png`,
+                    folder: "/snitch/popups"
+                });
+                uploadedImages[key] = uploaded.url;
+            } catch (e) {
+                console.error(`Failed to upload ${key} device image to ImageKit:`, e);
+                uploadedImages[key] = value;
+            }
+        } else if (value) {
+            uploadedImages[key] = value;
+        }
+    }
+    return uploadedImages;
+};
+
 // @desc    Create a popup (Admin only)
 // @route   POST /api/popups
 // @access  Private/Admin
@@ -50,6 +75,7 @@ export const createPopup = async (req: Request, res: Response): Promise<void> =>
             isDraft,
             imageFilter,
             imageUrl,
+            deviceImages,
             metadata,
             displayTime,
         } = req.body;
@@ -76,10 +102,23 @@ export const createPopup = async (req: Request, res: Response): Promise<void> =>
             }
         }
 
+        // Parse deviceImages if it's sent as stringified JSON
+        let parsedDeviceImages = undefined;
+        if (deviceImages) {
+            try {
+                parsedDeviceImages = typeof deviceImages === "string" ? JSON.parse(deviceImages) : deviceImages;
+            } catch (e) {
+                console.error("Error parsing deviceImages:", e);
+            }
+        }
+
+        const uploadedDeviceImages = await uploadDeviceImagesBase64(parsedDeviceImages);
+
         const newPopup = await popupModel.create({
             title,
             imageUrl: finalImageUrl,
             imageFilter: parsedFilter,
+            deviceImages: uploadedDeviceImages,
             text,
             textColor,
             fontSize,
@@ -142,6 +181,19 @@ export const updatePopup = async (req: Request, res: Response): Promise<void> =>
             } catch (e) {
                 console.error("Error parsing image filter on update:", e);
             }
+        }
+
+        // Parse deviceImages if stringified
+        if (updateData.deviceImages) {
+            try {
+                updateData.deviceImages = typeof updateData.deviceImages === "string"
+                    ? JSON.parse(updateData.deviceImages)
+                    : updateData.deviceImages;
+            } catch (e) {
+                console.error("Error parsing deviceImages on update:", e);
+            }
+            // Upload base64 device images to ImageKit
+            updateData.deviceImages = await uploadDeviceImagesBase64(updateData.deviceImages);
         }
 
         // Convert strings to booleans

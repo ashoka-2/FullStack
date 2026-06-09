@@ -36,12 +36,61 @@ const CanvasElement = ({
         };
     };
 
+    // Compute the CSS background/fill value for a shape
+    const getShapeFillCSS = (el) => {
+        if (el.fillType === "gradient" && el.fillGradient) {
+            const fg = el.fillGradient;
+            const stops = (fg.stops || [{ color: fg.color1 || el.fill || "#4f46e5", offset: 0 }, { color: fg.color2 || "#db2777", offset: 100 }])
+                .map(s => `${s.color} ${s.offset}%`).join(", ");
+            if (fg.type === "radial") return `radial-gradient(circle, ${stops})`;
+            if (fg.type === "conic") return `conic-gradient(from ${fg.conicAngle || "0deg"} at 50% 50%, ${stops})`;
+            const dir = fg.direction === "to-b" ? "to bottom" : fg.direction === "to-tr" ? "to top right" : "to right";
+            return `linear-gradient(${dir}, ${stops})`;
+        }
+        return el.fill || "transparent";
+    };
+
     const handleTextDoubleClick = (e, targetEl) => {
         e.stopPropagation();
         if (targetEl.isLocked) return;
         setEditingTextId(targetEl.id);
         setSelectedId(targetEl.id);
     };
+
+    // For SVG shapes with gradient fill, we need an SVG gradient def
+    const getSvgGradientDef = (el) => {
+        if (el.fillType !== "gradient" || !el.fillGradient) return null;
+        const fg = el.fillGradient;
+        const stops = fg.stops || [{ color: fg.color1 || el.fill || "#4f46e5", offset: 0 }, { color: fg.color2 || "#db2777", offset: 100 }];
+        const gradId = `grad-el-${el.id}`;
+
+        if (fg.type === "radial") {
+            return (
+                <defs>
+                    <radialGradient id={gradId} cx="50%" cy="50%" r="50%">
+                        {stops.map((s, i) => <stop key={i} offset={`${s.offset}%`} stopColor={s.color} />)}
+                    </radialGradient>
+                </defs>
+            );
+        }
+        // linear / conic
+        const angle = fg.direction === "to-b" ? 90 : fg.direction === "to-tr" ? 315 : 0;
+        const rad = angle * (Math.PI / 180);
+        const x2 = 50 + 50 * Math.cos(rad);
+        const y2 = 50 + 50 * Math.sin(rad);
+        const x1 = 50 - 50 * Math.cos(rad);
+        const y1 = 50 - 50 * Math.sin(rad);
+        return (
+            <defs>
+                <linearGradient id={gradId} x1={`${x1}%`} y1={`${y1}%`} x2={`${x2}%`} y2={`${y2}%`}>
+                    {stops.map((s, i) => <stop key={i} offset={`${s.offset}%`} stopColor={s.color} />)}
+                </linearGradient>
+            </defs>
+        );
+    };
+
+    const svgFillRef = `url(#grad-el-${el.id})`;
+    const svgFill = el.fillType === "gradient" ? svgFillRef : (el.fill || "transparent");
 
     return (
         <div
@@ -59,11 +108,12 @@ const CanvasElement = ({
                 opacity: (el.opacity ?? 100) / 100,
                 filter: el.shadowBlur > 0 
                     ? `drop-shadow(${el.shadowX || 0}px ${el.shadowY || 0}px ${el.shadowBlur || 0}px ${el.shadowColor || "rgba(0,0,0,0.5)"})`
-                    : "none"
+                    : "none",
+                cursor: el.isLocked ? "not-allowed" : isPenMode ? "crosshair" : "move"
             }}
             className={`${isSelected ? "z-[1000]" : ""}`}
         >
-            {/* Outline border & Handles */}
+            {/* Selection Outline & Handles (only show if not locked) */}
             {isSelected && !el.isLocked && (
                 <>
                     <div className="absolute inset-0 border-[1.5px] border-[#00c0ff] pointer-events-none z-50" />
@@ -89,6 +139,17 @@ const CanvasElement = ({
                             className={`absolute w-2.5 h-2.5 bg-white border border-[#00c0ff] rounded-sm z-50 shadow-sm ${handleClasses[handle]}`}
                         />
                     ))}
+                </>
+            )}
+
+            {/* Locked Element — show selection border + lock badge (no handles) */}
+            {isSelected && el.isLocked && (
+                <>
+                    <div className="absolute inset-0 border-[1.5px] border-amber-400/60 pointer-events-none z-50 rounded-sm" />
+                    <div className="absolute -top-5 left-0 bg-amber-500 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow select-none pointer-events-none z-50 flex items-center gap-1">
+                        <i className="ri-lock-fill" />
+                        {el.name || el.type} (Locked)
+                    </div>
                 </>
             )}
 
@@ -140,9 +201,9 @@ const CanvasElement = ({
                                 ? `linear-gradient(${el.textGradient.dir === "to-b" ? "180deg" : "90deg"}, ${el.textGradient.start}, ${el.textGradient.end})`
                                 : "none",
                             WebkitBackgroundClip: el.isGradientText ? "text" : "unset",
-                            backgroundClip: el.isGradientText ? "text" : "unset"
+                            backgroundClip: el.isGradientText ? "text" : "unset",
+                            cursor: el.isLocked ? "not-allowed" : "text"
                         }}
-                        className="cursor-text"
                     >
                         {el.content}
                     </p>
@@ -168,54 +229,62 @@ const CanvasElement = ({
             {/* Render Context: Shape */}
             {el.type === "shape" && (
                 <div className="w-full h-full" style={{ filter: el.blur > 0 ? `blur(${el.blur}px)` : "none" }}>
+                    {/* Rect — uses CSS gradient via background */}
                     {el.shapeType === "rect" && (
                         <div 
                             className="w-full h-full" 
                             style={{ 
-                                backgroundColor: el.fill,
+                                background: getShapeFillCSS(el),
                                 border: el.strokeWidth > 0 ? `${el.strokeWidth}px solid ${el.stroke}` : "none",
                                 borderRadius: `${el.borderRadius || 0}px`
                             }} 
                         />
                     )}
+                    {/* Circle — uses CSS gradient via background */}
                     {el.shapeType === "circle" && (
                         <div 
                             className="w-full h-full rounded-full" 
                             style={{ 
-                                backgroundColor: el.fill,
+                                background: getShapeFillCSS(el),
                                 border: el.strokeWidth > 0 ? `${el.strokeWidth}px solid ${el.stroke}` : "none"
                             }} 
                         />
                     )}
+                    {/* Polygon with optional SVG gradient */}
                     {el.shapeType === "polygon" && el.points && (
                         <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            {getSvgGradientDef(el)}
                             <polygon
                                 points={el.points}
-                                fill={el.fill}
+                                fill={svgFill}
                                 stroke={el.stroke}
                                 strokeWidth={el.strokeWidth}
                             />
                         </svg>
                     )}
+                    {/* Path with optional SVG gradient */}
                     {el.shapeType === "path" && el.path && (
                         <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            {getSvgGradientDef(el)}
                             <path
                                 d={el.path}
-                                fill={el.fill}
+                                fill={svgFill}
                                 stroke={el.stroke}
                                 strokeWidth={el.strokeWidth}
                             />
                         </svg>
                     )}
+                    {/* Custom pen-drawn shape */}
                     {el.shapeType === "custom" && el.path && (
                         <svg className="w-full h-full overflow-visible" viewBox={`0 0 ${el.width} ${el.height}`} preserveAspectRatio="none">
+                            {getSvgGradientDef(el)}
                             <polygon
                                 points={el.path.map(pt => {
                                     const origW = el.originalWidth || el.width || 1;
                                     const origH = el.originalHeight || el.height || 1;
                                     return `${(pt.x / origW) * el.width},${(pt.y / origH) * el.height}`;
                                 }).join(" ")}
-                                fill={el.fill}
+                                fill={el.fillType === "gradient" ? svgFillRef : (el.fill || "transparent")}
                                 stroke={el.stroke}
                                 strokeWidth={el.strokeWidth}
                             />

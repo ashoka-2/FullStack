@@ -113,7 +113,7 @@ const AdminNavbar = ({ toggleTheme, isDarkMode, isOpen, onClose }) => {
             setIsCollapsed(next);
             localStorage.setItem("admin_sidebar_collapsed", String(next));
           }}
-          className="hidden lg:flex absolute top-1/2 -right-3 -translate-y-1/2 w-6 h-6 rounded-full bg-surface border border-border-theme items-center justify-center text-foreground/60 hover:text-accent shadow-md cursor-pointer hover:scale-110 active:scale-95 transition-all z-[100]"
+          className="hidden lg:flex absolute top-6 -right-3 w-6 h-6 rounded-full bg-surface border border-border-theme items-center justify-center text-foreground/60 hover:text-accent shadow-md cursor-pointer hover:scale-110 active:scale-95 transition-all z-[100]"
           title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
           <i className={isCollapsed ? "ri-arrow-right-s-line text-sm" : "ri-arrow-left-s-line text-sm"} />

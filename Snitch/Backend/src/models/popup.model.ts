@@ -3,6 +3,12 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 export interface IPopup extends Document {
     title: string;
     imageUrl?: string;
+    deviceImages?: {
+        desktop?: string;
+        tablet?: string;
+        mobile?: string;
+        tv?: string;
+    };
     imageFilter: {
         blur: number;
         brightness: number;
@@ -108,6 +114,12 @@ const popupSchema = new Schema<IPopup>(
         displayTime: {
             type: Number,
             default: 5,
+        },
+        deviceImages: {
+            desktop: { type: String },
+            tablet: { type: String },
+            mobile: { type: String },
+            tv: { type: String },
         },
     },
     { timestamps: true }
