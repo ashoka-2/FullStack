@@ -7,6 +7,10 @@ import {
     createSize, getAllSizes, updateSize, deleteSize,
     createColor, getAllColors, updateColor, deleteColor,
     createBrand, getAllBrands, updateBrand, deleteBrand,
+    createPattern, getAllPatterns, updatePattern, deletePattern,
+    createFit, getAllFits, updateFit, deleteFit,
+    createMaterial, getAllMaterials, updateMaterial, deleteMaterial,
+    createCollar, getAllCollars, updateCollar, deleteCollar,
 } from "../controllers/admin.controller.js";
 import { adminValidator } from "../validator/admin.validator.js";
 
@@ -49,5 +53,29 @@ router.post("/brands", upload.single("logo"), adminValidator("brand"), createBra
 router.get("/brands", getAllBrands as any);
 router.put("/brands/:id", upload.single("logo"), updateBrand as any);
 router.delete("/brands/:id", deleteBrand as any);
+
+// ── Patterns ─────────────────────────────────────────────────────────────────
+router.post("/patterns", createPattern as any);
+router.get("/patterns", getAllPatterns as any);
+router.put("/patterns/:id", updatePattern as any);
+router.delete("/patterns/:id", deletePattern as any);
+
+// ── Fits ─────────────────────────────────────────────────────────────────────
+router.post("/fits", createFit as any);
+router.get("/fits", getAllFits as any);
+router.put("/fits/:id", updateFit as any);
+router.delete("/fits/:id", deleteFit as any);
+
+// ── Materials ─────────────────────────────────────────────────────────────────
+router.post("/materials", createMaterial as any);
+router.get("/materials", getAllMaterials as any);
+router.put("/materials/:id", updateMaterial as any);
+router.delete("/materials/:id", deleteMaterial as any);
+
+// ── Collars ───────────────────────────────────────────────────────────────────
+router.post("/collars", createCollar as any);
+router.get("/collars", getAllCollars as any);
+router.put("/collars/:id", updateCollar as any);
+router.delete("/collars/:id", deleteCollar as any);
 
 export default router;

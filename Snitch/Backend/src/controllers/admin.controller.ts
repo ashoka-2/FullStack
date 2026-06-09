@@ -7,6 +7,10 @@ import unitModel from "../models/unit.model.js";
 import sizeModel from "../models/size.model.js";
 import colorModel from "../models/color.model.js";
 import brandModel from "../models/brand.model.js";
+import patternModel from "../models/pattern.model.js";
+import fitModel from "../models/fit.model.js";
+import materialModel from "../models/material.model.js";
+import collarModel from "../models/collar.model.js";
 
 // ─── Helper ────────────────────────────────────────────────────────────────
 const err500 = (res: Response, e: unknown) => {
@@ -249,5 +253,161 @@ export const deleteBrand = async (req: AuthRequest, res: Response) => {
         await brandModel.findByIdAndDelete(req.params.id);
         broadcastUpdate("catalog_update");
         return res.status(200).json({ success: true, message: "Brand deleted" });
+    } catch (e) { return err500(res, e); }
+};
+
+
+// ══════════════════════════════════════════════════════════════════════════
+//  PATTERNS
+// ══════════════════════════════════════════════════════════════════════════
+export const createPattern = async (req: AuthRequest, res: Response) => {
+    try {
+        const { name } = req.body;
+        const pattern = await patternModel.create({ name });
+        broadcastUpdate("catalog_update");
+        return res.status(201).json({ success: true, message: "Pattern created", pattern });
+    } catch (e) { return err500(res, e); }
+};
+
+export const getAllPatterns = async (_req: AuthRequest, res: Response) => {
+    try {
+        const patterns = await patternModel.find().sort({ name: 1 });
+        return res.status(200).json({ success: true, patterns });
+    } catch (e) { return err500(res, e); }
+};
+
+export const updatePattern = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { name, isActive } = req.body;
+        const pattern = await patternModel.findByIdAndUpdate(id, { $set: { name, isActive } }, { new: true, runValidators: true });
+        if (!pattern) return res.status(404).json({ success: false, message: "Pattern not found" });
+        broadcastUpdate("catalog_update");
+        return res.status(200).json({ success: true, message: "Pattern updated", pattern });
+    } catch (e) { return err500(res, e); }
+};
+
+export const deletePattern = async (req: AuthRequest, res: Response) => {
+    try {
+        await patternModel.findByIdAndDelete(req.params.id);
+        broadcastUpdate("catalog_update");
+        return res.status(200).json({ success: true, message: "Pattern deleted" });
+    } catch (e) { return err500(res, e); }
+};
+
+
+// ══════════════════════════════════════════════════════════════════════════
+//  FITS
+// ══════════════════════════════════════════════════════════════════════════
+export const createFit = async (req: AuthRequest, res: Response) => {
+    try {
+        const { name } = req.body;
+        const fit = await fitModel.create({ name });
+        broadcastUpdate("catalog_update");
+        return res.status(201).json({ success: true, message: "Fit created", fit });
+    } catch (e) { return err500(res, e); }
+};
+
+export const getAllFits = async (_req: AuthRequest, res: Response) => {
+    try {
+        const fits = await fitModel.find().sort({ name: 1 });
+        return res.status(200).json({ success: true, fits });
+    } catch (e) { return err500(res, e); }
+};
+
+export const updateFit = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { name, isActive } = req.body;
+        const fit = await fitModel.findByIdAndUpdate(id, { $set: { name, isActive } }, { new: true, runValidators: true });
+        if (!fit) return res.status(404).json({ success: false, message: "Fit not found" });
+        broadcastUpdate("catalog_update");
+        return res.status(200).json({ success: true, message: "Fit updated", fit });
+    } catch (e) { return err500(res, e); }
+};
+
+export const deleteFit = async (req: AuthRequest, res: Response) => {
+    try {
+        await fitModel.findByIdAndDelete(req.params.id);
+        broadcastUpdate("catalog_update");
+        return res.status(200).json({ success: true, message: "Fit deleted" });
+    } catch (e) { return err500(res, e); }
+};
+
+
+// ══════════════════════════════════════════════════════════════════════════
+//  MATERIALS
+// ══════════════════════════════════════════════════════════════════════════
+export const createMaterial = async (req: AuthRequest, res: Response) => {
+    try {
+        const { name } = req.body;
+        const material = await materialModel.create({ name });
+        broadcastUpdate("catalog_update");
+        return res.status(201).json({ success: true, message: "Material created", material });
+    } catch (e) { return err500(res, e); }
+};
+
+export const getAllMaterials = async (_req: AuthRequest, res: Response) => {
+    try {
+        const materials = await materialModel.find().sort({ name: 1 });
+        return res.status(200).json({ success: true, materials });
+    } catch (e) { return err500(res, e); }
+};
+
+export const updateMaterial = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { name, isActive } = req.body;
+        const material = await materialModel.findByIdAndUpdate(id, { $set: { name, isActive } }, { new: true, runValidators: true });
+        if (!material) return res.status(404).json({ success: false, message: "Material not found" });
+        broadcastUpdate("catalog_update");
+        return res.status(200).json({ success: true, message: "Material updated", material });
+    } catch (e) { return err500(res, e); }
+};
+
+export const deleteMaterial = async (req: AuthRequest, res: Response) => {
+    try {
+        await materialModel.findByIdAndDelete(req.params.id);
+        broadcastUpdate("catalog_update");
+        return res.status(200).json({ success: true, message: "Material deleted" });
+    } catch (e) { return err500(res, e); }
+};
+
+
+// ══════════════════════════════════════════════════════════════════════════
+//  COLLARS
+// ══════════════════════════════════════════════════════════════════════════
+export const createCollar = async (req: AuthRequest, res: Response) => {
+    try {
+        const { name } = req.body;
+        const collar = await collarModel.create({ name });
+        broadcastUpdate("catalog_update");
+        return res.status(201).json({ success: true, message: "Collar created", collar });
+    } catch (e) { return err500(res, e); }
+};
+
+export const getAllCollars = async (_req: AuthRequest, res: Response) => {
+    try {
+        const collars = await collarModel.find().sort({ name: 1 });
+        return res.status(200).json({ success: true, collars });
+    } catch (e) { return err500(res, e); }
+};
+
+export const updateCollar = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { name, isActive } = req.body;
+        const collar = await collarModel.findByIdAndUpdate(id, { $set: { name, isActive } }, { new: true, runValidators: true });
+        if (!collar) return res.status(404).json({ success: false, message: "Collar not found" });
+        broadcastUpdate("catalog_update");
+        return res.status(200).json({ success: true, message: "Collar updated", collar });
+    } catch (e) { return err500(res, e); }
+};
+
+export const deleteCollar = async (req: AuthRequest, res: Response) => {
+    try {
+        await collarModel.findByIdAndDelete(req.params.id);
+        broadcastUpdate("catalog_update");
+        return res.status(200).json({ success: true, message: "Collar deleted" });
     } catch (e) { return err500(res, e); }
 };

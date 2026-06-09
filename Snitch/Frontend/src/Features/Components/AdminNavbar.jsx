@@ -25,6 +25,10 @@ const AdminNavbar = ({ toggleTheme, isDarkMode, isOpen, onClose }) => {
     { name: "Colors", path: "/admin/colors", icon: "ri-palette-line" },
     { name: "Sizes", path: "/admin/sizes", icon: "ri-ruler-line" },
     { name: "Units", path: "/admin/units", icon: "ri-scales-line" },
+    { name: "Patterns", path: "/admin/patterns", icon: "ri-layout-masonry-line" },
+    { name: "Fits", path: "/admin/fits", icon: "ri-body-scan-line" },
+    { name: "Materials", path: "/admin/materials", icon: "ri-scissors-line" },
+    { name: "Collars", path: "/admin/collars", icon: "ri-shirt-line" },
     { name: "Settings", path: "/admin/settings", icon: "ri-settings-3-line" },
   ];
 

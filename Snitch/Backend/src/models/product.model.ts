@@ -9,6 +9,10 @@ export interface IProduct extends Document {
     sizes: mongoose.Types.ObjectId[];       // ref: Size       (admin-managed)
     colors: mongoose.Types.ObjectId[];      // ref: Color      (admin-managed)
     unit: mongoose.Types.ObjectId;          // ref: Unit       (admin-managed)
+    patterns: mongoose.Types.ObjectId[];    // ref: Pattern    (admin-managed, optional)
+    fits: mongoose.Types.ObjectId[];        // ref: Fit        (admin-managed, optional)
+    materials: mongoose.Types.ObjectId[];   // ref: Material   (admin-managed, optional)
+    collars: mongoose.Types.ObjectId[];     // ref: Collar     (admin-managed, optional)
     price: {
         amount: number;
         saleAmount?: number;
@@ -64,6 +68,30 @@ const productSchema = new Schema<IProduct>(
             ref: "Unit",
             required: [true, "Unit is required"],
         },
+        patterns: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Pattern",
+            },
+        ],
+        fits: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Fit",
+            },
+        ],
+        materials: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Material",
+            },
+        ],
+        collars: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Collar",
+            },
+        ],
         price: {
             amount: {
                 type: Number,

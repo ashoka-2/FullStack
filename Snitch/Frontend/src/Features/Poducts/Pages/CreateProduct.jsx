@@ -278,6 +278,71 @@ const StepDetails = ({ form, onChange, metadata }) => (
                 </p>
             )}
         </Field>
+
+        {/* Pattern, Fit, Material, Collar */}
+        {metadata.patterns?.length > 0 && (
+            <Field label="Pattern" hint="Optional — select one">
+                <div className="flex flex-wrap gap-2 mt-1">
+                    {metadata.patterns.map(p => {
+                        const selected = form.patterns?.includes(p._id);
+                        return (
+                            <button key={p._id} type="button" onClick={() => {
+                                const next = selected ? form.patterns.filter(x => x !== p._id) : [...(form.patterns || []), p._id];
+                                onChange({ target: { name: 'patterns', value: next } });
+                            }} className={['px-4 py-2 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-200 border-2', selected ? 'bg-violet-500 text-white border-violet-500 shadow-md scale-105' : 'border-border-theme/40 text-foreground/50 hover:border-violet-400/50 bg-background'].join(' ')}>{p.name}</button>
+                        );
+                    })}
+                </div>
+            </Field>
+        )}
+
+        {metadata.fits?.length > 0 && (
+            <Field label="Fit Style" hint="Optional — select one">
+                <div className="flex flex-wrap gap-2 mt-1">
+                    {metadata.fits.map(f => {
+                        const selected = form.fits?.includes(f._id);
+                        return (
+                            <button key={f._id} type="button" onClick={() => {
+                                const next = selected ? form.fits.filter(x => x !== f._id) : [...(form.fits || []), f._id];
+                                onChange({ target: { name: 'fits', value: next } });
+                            }} className={['px-4 py-2 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-200 border-2', selected ? 'bg-sky-500 text-white border-sky-500 shadow-md scale-105' : 'border-border-theme/40 text-foreground/50 hover:border-sky-400/50 bg-background'].join(' ')}>{f.name}</button>
+                        );
+                    })}
+                </div>
+            </Field>
+        )}
+
+        {metadata.materials?.length > 0 && (
+            <Field label="Material" hint="Optional — select one">
+                <div className="flex flex-wrap gap-2 mt-1">
+                    {metadata.materials.map(m => {
+                        const selected = form.materials?.includes(m._id);
+                        return (
+                            <button key={m._id} type="button" onClick={() => {
+                                const next = selected ? form.materials.filter(x => x !== m._id) : [...(form.materials || []), m._id];
+                                onChange({ target: { name: 'materials', value: next } });
+                            }} className={['px-4 py-2 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-200 border-2', selected ? 'bg-amber-500 text-white border-amber-500 shadow-md scale-105' : 'border-border-theme/40 text-foreground/50 hover:border-amber-400/50 bg-background'].join(' ')}>{m.name}</button>
+                        );
+                    })}
+                </div>
+            </Field>
+        )}
+
+        {metadata.collars?.length > 0 && (
+            <Field label="Collar Style" hint="Optional — select one">
+                <div className="flex flex-wrap gap-2 mt-1">
+                    {metadata.collars.map(c => {
+                        const selected = form.collars?.includes(c._id);
+                        return (
+                            <button key={c._id} type="button" onClick={() => {
+                                const next = selected ? form.collars.filter(x => x !== c._id) : [...(form.collars || []), c._id];
+                                onChange({ target: { name: 'collars', value: next } });
+                            }} className={['px-4 py-2 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-200 border-2', selected ? 'bg-rose-500 text-white border-rose-500 shadow-md scale-105' : 'border-border-theme/40 text-foreground/50 hover:border-rose-400/50 bg-background'].join(' ')}>{c.name}</button>
+                        );
+                    })}
+                </div>
+            </Field>
+        )}
     </div>
 );
 
@@ -532,7 +597,7 @@ const CreateProduct = () => {
     const { handleCreateProduct, handleUpdateProduct } = useProduct();
 
     const [step, setStep] = useState(0);
-    const [metadata, setMetadata] = useState({ categories: [], brands: [], sizes: [], colors: [], units: [] });
+    const [metadata, setMetadata] = useState({ categories: [], brands: [], sizes: [], colors: [], units: [], patterns: [], fits: [], materials: [], collars: [] });
     const [loadingMeta, setLoadingMeta] = useState(true);
     const [loadingProduct, setLoadingProduct] = useState(isEdit);
     const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -550,6 +615,10 @@ const CreateProduct = () => {
             brand:       '',
             sizes:       [],
             colors:      [],
+            patterns:    [],
+            fits:        [],
+            materials:   [],
+            collars:     [],
             unit:        '',
             price:       '',
             salePrice:   '',
@@ -594,6 +663,10 @@ const CreateProduct = () => {
                         sizes:      res.sizes      || [],
                         colors:     res.colors     || [],
                         units:      res.units      || [],
+                        patterns:   res.patterns   || [],
+                        fits:       res.fits       || [],
+                        materials:  res.materials  || [],
+                        collars:    res.collars    || [],
                     });
                 }
             } catch (err) { 
@@ -624,6 +697,10 @@ const CreateProduct = () => {
                             brand:       getID(p.brand) || '',
                             sizes:       p.sizes?.map(s => getID(s)) || [],
                             colors:      p.colors?.map(c => getID(c)) || [],
+                            patterns:    p.patterns?.map(x => getID(x)) || [],
+                            fits:        p.fits?.map(x => getID(x)) || [],
+                            materials:   p.materials?.map(x => getID(x)) || [],
+                            collars:     p.collars?.map(x => getID(x)) || [],
                             unit:        getID(p.unit) || '',
                             price:       p.price?.amount || '',
                             salePrice:   p.price?.saleAmount || '',
@@ -672,6 +749,10 @@ const CreateProduct = () => {
             brand:       '',
             sizes:       [],
             colors:      [],
+            patterns:    [],
+            fits:        [],
+            materials:   [],
+            collars:     [],
             unit:        '',
             price:       '',
             salePrice:   '',
@@ -717,6 +798,10 @@ const CreateProduct = () => {
 
         form.sizes.forEach(s  => payload.append('sizes',  s));
         form.colors.forEach(c => payload.append('colors', c));
+        form.patterns?.forEach(p => payload.append('patterns', p));
+        form.fits?.forEach(f => payload.append('fits', f));
+        form.materials?.forEach(m => payload.append('materials', m));
+        form.collars?.forEach(c => payload.append('collars', c));
         
         // Only append new files and send URLs to be processed
         images.forEach(img => {

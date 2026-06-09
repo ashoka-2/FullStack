@@ -24,6 +24,7 @@ import AdminSizesPage from "../Features/Admin/Pages/AdminSizesPage.jsx";
 import AdminUnitsPage from "../Features/Admin/Pages/AdminUnitsPage.jsx";
 import AdminSettingsPage from "../Features/Admin/Pages/AdminSettingsPage.jsx";
 import AdminInboxPage from "../Features/Admin/Pages/AdminInboxPage.jsx";
+import AdminAttributePage from "../Features/Admin/Pages/AdminAttributePage.jsx";
 import SellerLayout from "../Features/Components/SellerLayout.jsx";
 import SellerDashboardOverview from "../Features/Seller/Pages/SellerDashboardOverview.jsx";
 import SellerCatalogPage from "../Features/Seller/Pages/SellerCatalogPage.jsx";
@@ -221,6 +222,22 @@ export const routes = createBrowserRouter([
       {
         path: "units",
         element: <AdminUnitsPage />,
+      },
+      {
+        path: "patterns",
+        element: <AdminAttributePage type="patterns" />,
+      },
+      {
+        path: "fits",
+        element: <AdminAttributePage type="fits" />,
+      },
+      {
+        path: "materials",
+        element: <AdminAttributePage type="materials" />,
+      },
+      {
+        path: "collars",
+        element: <AdminAttributePage type="collars" />,
       },
       {
         path: "inbox",

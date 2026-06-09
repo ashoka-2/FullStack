@@ -33,3 +33,27 @@ export const createBrand = (data) => adminApi.post("/brands", data, { headers: {
 export const getAllBrands = () => adminApi.get("/brands").then(r => r.data);
 export const updateBrand = (id, data) => adminApi.put(`/brands/${id}`, data, { headers: { "Content-Type": "multipart/form-data" } }).then(r => r.data);
 export const deleteBrand = (id) => adminApi.delete(`/brands/${id}`).then(r => r.data);
+
+// ── Patterns ─────────────────────────────────────────────────────────────────
+export const createPattern = (data) => adminApi.post("/patterns", data).then(r => r.data);
+export const getAllPatterns = () => adminApi.get("/patterns").then(r => r.data);
+export const updatePattern = (id, data) => adminApi.put(`/patterns/${id}`, data).then(r => r.data);
+export const deletePattern = (id) => adminApi.delete(`/patterns/${id}`).then(r => r.data);
+
+// ── Fits ─────────────────────────────────────────────────────────────────────
+export const createFit = (data) => adminApi.post("/fits", data).then(r => r.data);
+export const getAllFits = () => adminApi.get("/fits").then(r => r.data);
+export const updateFit = (id, data) => adminApi.put(`/fits/${id}`, data).then(r => r.data);
+export const deleteFit = (id) => adminApi.delete(`/fits/${id}`).then(r => r.data);
+
+// ── Materials ─────────────────────────────────────────────────────────────────
+export const createMaterial = (data) => adminApi.post("/materials", data).then(r => r.data);
+export const getAllMaterials = () => adminApi.get("/materials").then(r => r.data);
+export const updateMaterial = (id, data) => adminApi.put(`/materials/${id}`, data).then(r => r.data);
+export const deleteMaterial = (id) => adminApi.delete(`/materials/${id}`).then(r => r.data);
+
+// ── Collars ───────────────────────────────────────────────────────────────────
+export const createCollar = (data) => adminApi.post("/collars", data).then(r => r.data);
+export const getAllCollars = () => adminApi.get("/collars").then(r => r.data);
+export const updateCollar = (id, data) => adminApi.put(`/collars/${id}`, data).then(r => r.data);
+export const deleteCollar = (id) => adminApi.delete(`/collars/${id}`).then(r => r.data);

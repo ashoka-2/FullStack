@@ -8,6 +8,10 @@ import brandModel from "../models/brand.model.js";
 import sizeModel from "../models/size.model.js";
 import colorModel from "../models/color.model.js";
 import unitModel from "../models/unit.model.js";
+import patternModel from "../models/pattern.model.js";
+import fitModel from "../models/fit.model.js";
+import materialModel from "../models/material.model.js";
+import collarModel from "../models/collar.model.js";
 import redisClient from "../config/redis.js";
 
 // Reusable populate config
@@ -17,6 +21,10 @@ const POPULATE = [
     { path: "sizes", select: "name sortOrder" },
     { path: "colors", select: "name hexCode" },
     { path: "unit", select: "name abbreviation" },
+    { path: "patterns", select: "name" },
+    { path: "fits", select: "name" },
+    { path: "materials", select: "name" },
+    { path: "collars", select: "name" },
 ];
 
 // ─── Cache TTLs ─────────────────────────────────────────────────────────────
@@ -48,15 +56,19 @@ export const getProductMetadata = async (_req: Request, res: Response) => {
         }
 
         const filter = { isActive: { $ne: false } };
-        const [categories, brands, sizes, colors, units] = await Promise.all([
+        const [categories, brands, sizes, colors, units, patterns, fits, materials, collars] = await Promise.all([
             categoryModel.find(filter).sort({ name: 1 }),
             brandModel.find(filter).sort({ name: 1 }),
             sizeModel.find(filter).sort({ sortOrder: 1, name: 1 }),
             colorModel.find(filter).sort({ name: 1 }),
             unitModel.find(filter).sort({ name: 1 }),
+            patternModel.find(filter).sort({ name: 1 }),
+            fitModel.find(filter).sort({ name: 1 }),
+            materialModel.find(filter).sort({ name: 1 }),
+            collarModel.find(filter).sort({ name: 1 }),
         ]);
 
-        const payload = { success: true, categories, brands, sizes, colors, units };
+        const payload = { success: true, categories, brands, sizes, colors, units, patterns, fits, materials, collars };
         await redisClient.setex(KEY_METADATA, TTL_METADATA, JSON.stringify(payload));
 
         return res.status(200).json(payload);
@@ -91,6 +103,22 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
         const colors: string[] = Array.isArray(req.body.colors)
             ? req.body.colors
             : req.body.colors ? [req.body.colors] : [];
+
+        const patterns: string[] = Array.isArray(req.body.patterns)
+            ? req.body.patterns
+            : req.body.patterns ? [req.body.patterns] : [];
+
+        const fits: string[] = Array.isArray(req.body.fits)
+            ? req.body.fits
+            : req.body.fits ? [req.body.fits] : [];
+
+        const materials: string[] = Array.isArray(req.body.materials)
+            ? req.body.materials
+            : req.body.materials ? [req.body.materials] : [];
+
+        const collars: string[] = Array.isArray(req.body.collars)
+            ? req.body.collars
+            : req.body.collars ? [req.body.collars] : [];
 
         const sellerId = req.user?.id;
         if (!sellerId) {
@@ -130,6 +158,10 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
             brand: brand || null,
             sizes,
             colors,
+            patterns,
+            fits,
+            materials,
+            collars,
             unit,
             price,
             stock: Number(stock),
@@ -232,7 +264,8 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
         const { id } = req.params;
         const sellerId = req.user?.id;
         const { 
-            title, description, category, brand, sizes, colors, 
+            title, description, category, brand, sizes, colors,
+            patterns, fits, materials, collars,
             unit, priceAmount, priceCurrency, saleAmount, 
             stock, sku, weight, status 
         } = req.body;
@@ -252,6 +285,10 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
         if (brand !== undefined) updateData.brand = brand || null;
         if (sizes) updateData.sizes = Array.isArray(sizes) ? sizes : [sizes];
         if (colors) updateData.colors = Array.isArray(colors) ? colors : [colors];
+        if (patterns !== undefined) updateData.patterns = Array.isArray(patterns) ? patterns : (patterns ? [patterns] : []);
+        if (fits !== undefined) updateData.fits = Array.isArray(fits) ? fits : (fits ? [fits] : []);
+        if (materials !== undefined) updateData.materials = Array.isArray(materials) ? materials : (materials ? [materials] : []);
+        if (collars !== undefined) updateData.collars = Array.isArray(collars) ? collars : (collars ? [collars] : []);
         if (unit) updateData.unit = unit;
         if (stock !== undefined) updateData.stock = Number(stock);
         if (sku !== undefined) updateData.sku = sku;
