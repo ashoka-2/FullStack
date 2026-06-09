@@ -3,6 +3,7 @@ import React, { useRef, useEffect } from "react";
 const RightSidebar = ({
     selectedItem,
     updateSelectedElement,
+    updateSelectedElementAndPush,
     handleDeleteElement,
     handleAlign,
     popularFonts,
@@ -295,6 +296,8 @@ const RightSidebar = ({
                                     max="360" 
                                     value={selectedItem.rotate || 0} 
                                     onChange={e => updateSelectedElement("rotate", parseInt(e.target.value))} 
+                                    onMouseUp={() => pushToHistoryState(elements, canvasBg)}
+                                    onTouchEnd={() => pushToHistoryState(elements, canvasBg)}
                                     className={sliderCls} 
                                     disabled={selectedItem.isLocked}
                                 />
@@ -311,7 +314,10 @@ const RightSidebar = ({
                                     max="100" 
                                     value={selectedItem.opacity ?? 100} 
                                     onChange={e => updateSelectedElement("opacity", parseInt(e.target.value))} 
+                                    onMouseUp={() => pushToHistoryState(elements, canvasBg)}
+                                    onTouchEnd={() => pushToHistoryState(elements, canvasBg)}
                                     className={sliderCls} 
+                                    disabled={selectedItem.isLocked}
                                 />
                             </div>
                         </div>
@@ -325,6 +331,7 @@ const RightSidebar = ({
                                         rows="3" 
                                         value={selectedItem.content} 
                                         onChange={e => updateSelectedElement("content", e.target.value)} 
+                                        onBlur={e => updateSelectedElementAndPush("content", e.target.value)}
                                         className={inputCls} 
                                     />
                                 </div>
@@ -334,7 +341,7 @@ const RightSidebar = ({
                                         value={selectedItem.fontFamily} 
                                         onChange={e => {
                                             loadGoogleFont(e.target.value);
-                                            updateSelectedElement("fontFamily", e.target.value);
+                                            updateSelectedElementAndPush("fontFamily", e.target.value);
                                         }} 
                                         className={inputCls}
                                     >
@@ -346,11 +353,17 @@ const RightSidebar = ({
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
                                         <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Font Size</label>
-                                        <input type="number" value={selectedItem.fontSize} onChange={e => updateSelectedElement("fontSize", parseInt(e.target.value) || 12)} className={inputCls} />
+                                        <input 
+                                            type="number" 
+                                            value={selectedItem.fontSize} 
+                                            onChange={e => updateSelectedElement("fontSize", parseInt(e.target.value) || 12)} 
+                                            onBlur={e => updateSelectedElementAndPush("fontSize", parseInt(e.target.value) || 12)}
+                                            className={inputCls} 
+                                        />
                                     </div>
                                     <div>
                                         <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Font Weight</label>
-                                        <select value={selectedItem.fontWeight} onChange={e => updateSelectedElement("fontWeight", e.target.value)} className={inputCls}>
+                                        <select value={selectedItem.fontWeight} onChange={e => updateSelectedElementAndPush("fontWeight", e.target.value)} className={inputCls}>
                                             <option value="normal">Normal</option>
                                             <option value="medium">Medium</option>
                                             <option value="bold">Bold</option>
@@ -361,7 +374,7 @@ const RightSidebar = ({
 
                                 <div>
                                     <label className="text-[9px] font-black uppercase text-white/45 block mb-1.5">Text Align</label>
-                                    <select value={selectedItem.textAlign} onChange={e => updateSelectedElement("textAlign", e.target.value)} className={inputCls}>
+                                    <select value={selectedItem.textAlign} onChange={e => updateSelectedElementAndPush("textAlign", e.target.value)} className={inputCls}>
                                         <option value="left">Left Align</option>
                                         <option value="center">Center Align</option>
                                         <option value="right">Right Align</option>
@@ -374,7 +387,7 @@ const RightSidebar = ({
                                         type="checkbox" 
                                         id="isGradientText" 
                                         checked={selectedItem.isGradientText || false} 
-                                        onChange={e => updateSelectedElement("isGradientText", e.target.checked)} 
+                                        onChange={e => updateSelectedElementAndPush("isGradientText", e.target.checked)} 
                                         className="w-4 h-4 accent-accent cursor-pointer"
                                     />
                                     <label htmlFor="isGradientText" className="text-[10px] font-black uppercase tracking-wider cursor-pointer">Use Gradient Text</label>
@@ -384,8 +397,8 @@ const RightSidebar = ({
                                     <div>
                                         <label className="text-[9px] font-black uppercase text-white/45 block mb-1.5">Text Color</label>
                                         <div className="flex gap-2">
-                                            <input type="color" value={selectedItem.color || "#ffffff"} onChange={e => updateSelectedElement("color", e.target.value)} className="w-10 h-8 rounded-lg cursor-pointer border-0 bg-transparent" />
-                                            <input type="text" value={selectedItem.color || "#ffffff"} onChange={e => updateSelectedElement("color", e.target.value)} className={inputCls} />
+                                            <input type="color" value={selectedItem.color || "#ffffff"} onChange={e => updateSelectedElementAndPush("color", e.target.value)} className="w-10 h-8 rounded-lg cursor-pointer border-0 bg-transparent" />
+                                            <input type="text" value={selectedItem.color || "#ffffff"} onChange={e => updateSelectedElement("color", e.target.value)} onBlur={e => updateSelectedElementAndPush("color", e.target.value)} className={inputCls} />
                                         </div>
                                     </div>
                                 ) : (
@@ -393,16 +406,16 @@ const RightSidebar = ({
                                         <div className="grid grid-cols-2 gap-2">
                                             <div>
                                                 <label className="text-[8px] font-bold text-white/40 block mb-1">Start Color</label>
-                                                <input type="color" value={selectedItem.textGradient?.start || "#ffffff"} onChange={e => updateSelectedElement("textGradient", { ...selectedItem.textGradient, start: e.target.value })} className="w-full h-8 rounded-lg cursor-pointer border-0 bg-transparent" />
+                                                <input type="color" value={selectedItem.textGradient?.start || "#ffffff"} onChange={e => updateSelectedElementAndPush("textGradient", { ...selectedItem.textGradient, start: e.target.value })} className="w-full h-8 rounded-lg cursor-pointer border-0 bg-transparent" />
                                             </div>
                                             <div>
                                                 <label className="text-[8px] font-bold text-white/40 block mb-1">End Color</label>
-                                                <input type="color" value={selectedItem.textGradient?.end || "#000000"} onChange={e => updateSelectedElement("textGradient", { ...selectedItem.textGradient, end: e.target.value })} className="w-full h-8 rounded-lg cursor-pointer border-0 bg-transparent" />
+                                                <input type="color" value={selectedItem.textGradient?.end || "#000000"} onChange={e => updateSelectedElementAndPush("textGradient", { ...selectedItem.textGradient, end: e.target.value })} className="w-full h-8 rounded-lg cursor-pointer border-0 bg-transparent" />
                                             </div>
                                         </div>
                                         <div>
                                             <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Flow Direction</label>
-                                            <select value={selectedItem.textGradient?.dir || "to-r"} onChange={e => updateSelectedElement("textGradient", { ...selectedItem.textGradient, dir: e.target.value })} className={inputCls}>
+                                            <select value={selectedItem.textGradient?.dir || "to-r"} onChange={e => updateSelectedElementAndPush("textGradient", { ...selectedItem.textGradient, dir: e.target.value })} className={inputCls}>
                                                 <option value="to-r">Horizontal</option>
                                                 <option value="to-b">Vertical</option>
                                             </select>
@@ -419,29 +432,29 @@ const RightSidebar = ({
                                 
                                 <div>
                                     <label className="text-[8px] font-bold text-white/45 flex justify-between mb-1"><span>Blur Radius</span><span>{selectedItem.filter?.blur || 0}px</span></label>
-                                    <input type="range" min="0" max="15" value={selectedItem.filter?.blur || 0} onChange={e => updateSelectedElement("filter", { ...selectedItem.filter, blur: parseInt(e.target.value) })} className={sliderCls} />
+                                    <input type="range" min="0" max="15" value={selectedItem.filter?.blur || 0} onChange={e => updateSelectedElement("filter", { ...selectedItem.filter, blur: parseInt(e.target.value) })} onMouseUp={() => pushToHistoryState(elements, canvasBg)} onTouchEnd={() => pushToHistoryState(elements, canvasBg)} className={sliderCls} />
                                 </div>
                                 <div>
                                     <label className="text-[8px] font-bold text-white/45 flex justify-between mb-1"><span>Brightness</span><span>{selectedItem.filter?.brightness || 100}%</span></label>
-                                    <input type="range" min="20" max="180" value={selectedItem.filter?.brightness || 100} onChange={e => updateSelectedElement("filter", { ...selectedItem.filter, brightness: parseInt(e.target.value) })} className={sliderCls} />
+                                    <input type="range" min="20" max="180" value={selectedItem.filter?.brightness || 100} onChange={e => updateSelectedElement("filter", { ...selectedItem.filter, brightness: parseInt(e.target.value) })} onMouseUp={() => pushToHistoryState(elements, canvasBg)} onTouchEnd={() => pushToHistoryState(elements, canvasBg)} className={sliderCls} />
                                 </div>
                                 <div>
                                     <label className="text-[8px] font-bold text-white/45 flex justify-between mb-1"><span>Contrast</span><span>{selectedItem.filter?.contrast || 100}%</span></label>
-                                    <input type="range" min="20" max="180" value={selectedItem.filter?.contrast || 100} onChange={e => updateSelectedElement("filter", { ...selectedItem.filter, contrast: parseInt(e.target.value) })} className={sliderCls} />
+                                    <input type="range" min="20" max="180" value={selectedItem.filter?.contrast || 100} onChange={e => updateSelectedElement("filter", { ...selectedItem.filter, contrast: parseInt(e.target.value) })} onMouseUp={() => pushToHistoryState(elements, canvasBg)} onTouchEnd={() => pushToHistoryState(elements, canvasBg)} className={sliderCls} />
                                 </div>
                                 <div>
                                     <label className="text-[8px] font-bold text-white/45 flex justify-between mb-1"><span>Grayscale</span><span>{selectedItem.filter?.grayscale || 0}%</span></label>
-                                    <input type="range" min="0" max="100" value={selectedItem.filter?.grayscale || 0} onChange={e => updateSelectedElement("filter", { ...selectedItem.filter, grayscale: parseInt(e.target.value) })} className={sliderCls} />
+                                    <input type="range" min="0" max="100" value={selectedItem.filter?.grayscale || 0} onChange={e => updateSelectedElement("filter", { ...selectedItem.filter, grayscale: parseInt(e.target.value) })} onMouseUp={() => pushToHistoryState(elements, canvasBg)} onTouchEnd={() => pushToHistoryState(elements, canvasBg)} className={sliderCls} />
                                 </div>
                                 <div>
                                     <label className="text-[8px] font-bold text-white/45 flex justify-between mb-1"><span>Sepia</span><span>{selectedItem.filter?.sepia || 0}%</span></label>
-                                    <input type="range" min="0" max="100" value={selectedItem.filter?.sepia || 0} onChange={e => updateSelectedElement("filter", { ...selectedItem.filter, sepia: parseInt(e.target.value) })} className={sliderCls} />
+                                    <input type="range" min="0" max="100" value={selectedItem.filter?.sepia || 0} onChange={e => updateSelectedElement("filter", { ...selectedItem.filter, sepia: parseInt(e.target.value) })} onMouseUp={() => pushToHistoryState(elements, canvasBg)} onTouchEnd={() => pushToHistoryState(elements, canvasBg)} className={sliderCls} />
                                 </div>
 
                                 {/* Image Border Radius */}
                                 <div className="pt-3 border-t border-white/5">
                                     <label className="text-[8px] font-bold text-white/45 flex justify-between mb-1"><span>Border Corners</span><span>{selectedItem.borderRadius || 0}px</span></label>
-                                    <input type="range" min="0" max="100" value={selectedItem.borderRadius || 0} onChange={e => updateSelectedElement("borderRadius", parseInt(e.target.value))} className={sliderCls} />
+                                    <input type="range" min="0" max="100" value={selectedItem.borderRadius || 0} onChange={e => updateSelectedElement("borderRadius", parseInt(e.target.value))} onMouseUp={() => pushToHistoryState(elements, canvasBg)} onTouchEnd={() => pushToHistoryState(elements, canvasBg)} className={sliderCls} />
                                 </div>
 
                                 {/* Canva-Style Quick Filters Presets */}
@@ -484,13 +497,12 @@ const RightSidebar = ({
                         {selectedItem.type === "shape" && (
                             <div className="space-y-4 pt-4 border-t border-white/5">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-accent mb-2">Vector Styles</h4>
-                                
-                                {/* Fill Type Toggle */}
+                                                            {/* Fill Type Toggle */}
                                 <div>
                                     <label className="text-[9px] font-black uppercase text-white/45 block mb-1.5">Fill Type</label>
                                     <div className="grid grid-cols-2 gap-1.5">
                                         <button
-                                            onClick={() => updateSelectedElement("fillType", "solid")}
+                                            onClick={() => updateSelectedElementAndPush("fillType", "solid")}
                                             disabled={selectedItem.isLocked}
                                             className={`py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                                                 (selectedItem.fillType || "solid") === "solid"
@@ -501,7 +513,7 @@ const RightSidebar = ({
                                             <i className="ri-paint-fill mr-1" />Solid
                                         </button>
                                         <button
-                                            onClick={() => updateSelectedElement("fillType", "gradient")}
+                                            onClick={() => updateSelectedElementAndPush("fillType", "gradient")}
                                             disabled={selectedItem.isLocked}
                                             className={`py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                                                 selectedItem.fillType === "gradient"
@@ -513,17 +525,22 @@ const RightSidebar = ({
                                         </button>
                                     </div>
                                 </div>
-
                                 {/* Solid Fill */}
                                 {(selectedItem.fillType || "solid") === "solid" && (
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Fill Color</label>
-                                            <input type="color" value={selectedItem.fill || "#ffffff"} onChange={e => updateSelectedElement("fill", e.target.value)} disabled={selectedItem.isLocked} className="w-full h-8 rounded-lg cursor-pointer border-0 bg-transparent disabled:opacity-40 disabled:cursor-not-allowed" />
+                                    <div className="space-y-3.5">
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Fill Color</label>
+                                                <input type="color" value={selectedItem.fill || "#ffffff"} onChange={e => updateSelectedElement("fill", e.target.value)} onBlur={e => updateSelectedElementAndPush("fill", e.target.value)} disabled={selectedItem.isLocked} className="w-full h-8 rounded-lg cursor-pointer border-0 bg-transparent disabled:opacity-40 disabled:cursor-not-allowed" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Stroke Color</label>
+                                                <input type="color" value={selectedItem.stroke || "#000000"} onChange={e => updateSelectedElement("stroke", e.target.value)} onBlur={e => updateSelectedElementAndPush("stroke", e.target.value)} disabled={selectedItem.isLocked} className="w-full h-8 rounded-lg cursor-pointer border-0 bg-transparent disabled:opacity-40 disabled:cursor-not-allowed" />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Stroke Color</label>
-                                            <input type="color" value={selectedItem.stroke || "#000000"} onChange={e => updateSelectedElement("stroke", e.target.value)} disabled={selectedItem.isLocked} className="w-full h-8 rounded-lg cursor-pointer border-0 bg-transparent disabled:opacity-40 disabled:cursor-not-allowed" />
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <input type="text" value={selectedItem.fill || "#ffffff"} onChange={e => updateSelectedElement("fill", e.target.value)} onBlur={e => updateSelectedElementAndPush("fill", e.target.value)} disabled={selectedItem.isLocked} className={inputCls} placeholder="Fill Hex" />
+                                            <input type="text" value={selectedItem.stroke || "#000000"} onChange={e => updateSelectedElement("stroke", e.target.value)} onBlur={e => updateSelectedElementAndPush("stroke", e.target.value)} disabled={selectedItem.isLocked} className={inputCls} placeholder="Stroke Hex" />
                                         </div>
                                     </div>
                                 )}
@@ -586,8 +603,7 @@ const RightSidebar = ({
                                                             const trackEl = e.currentTarget.parentElement;
                                                             if (!trackEl) return;
                                                             const trackRect = trackEl.getBoundingClientRect();
-                                                            
-                                                            const move = (me) => {
+                                                                                                                const move = (me) => {
                                                                 let newOff = Math.round(startOff + ((me.clientX - startX) / trackRect.width) * 100);
                                                                 newOff = Math.max(0, Math.min(100, newOff));
                                                                 updateShapeGradientStop(idx, "offset", newOff);
@@ -595,6 +611,7 @@ const RightSidebar = ({
                                                             const up = () => {
                                                                 document.removeEventListener("mousemove", move);
                                                                 document.removeEventListener("mouseup", up);
+                                                                pushToHistoryState(elements, canvasBg);
                                                             };
                                                             document.addEventListener("mousemove", move);
                                                             document.addEventListener("mouseup", up);
@@ -629,16 +646,31 @@ const RightSidebar = ({
                                                             currentStops[dropIdx].color = tempColor;
                                                             
                                                             updateShapeFillGradient("stops", currentStops);
+                                                            pushToHistoryState(elements, canvasBg);
                                                         }}
                                                         className="flex items-center gap-1.5 bg-[#1b1b1f] border border-white/5 p-1.5 rounded-xl text-[10px] cursor-grab active:cursor-grabbing hover:bg-white/[0.02]"
                                                     >
                                                         <i className="ri-drag-drop-line text-white/30 cursor-grab" />
-                                                        <input type="color" value={stop.color} onChange={e => updateShapeGradientStop(idx, "color", e.target.value)} disabled={selectedItem.isLocked} className="w-6 h-5 rounded cursor-pointer border border-white/5 bg-transparent" />
-                                                        <input type="text" value={stop.color} onChange={e => updateShapeGradientStop(idx, "color", e.target.value)} disabled={selectedItem.isLocked} className="flex-1 bg-transparent border border-white/10 rounded px-1 py-0.5 outline-none font-mono text-[9px] text-white" />
+                                                        <input type="color" value={stop.color} onChange={e => updateShapeGradientStop(idx, "color", e.target.value)} onBlur={() => pushToHistoryState(elements, canvasBg)} disabled={selectedItem.isLocked} className="w-6 h-5 rounded cursor-pointer border border-white/5 bg-transparent" />
+                                                        <input type="text" value={stop.color} onChange={e => updateShapeGradientStop(idx, "color", e.target.value)} onBlur={() => pushToHistoryState(elements, canvasBg)} disabled={selectedItem.isLocked} className="flex-1 bg-transparent border border-white/10 rounded px-1 py-0.5 outline-none font-mono text-[9px] text-white" />
                                                         <span className="text-white/30 font-mono text-[8px]">{stop.offset}%</span>
                                                         {getShapeFillGradientStops().length > 2 && (
-                                                            <button onClick={() => removeShapeGradientStop(idx)} className="w-4 h-4 flex items-center justify-center hover:bg-red-500 text-red-400 hover:text-white rounded transition-all cursor-pointer"><i className="ri-close-line text-[9px]" /></button>
+                                                            <button onClick={() => { removeShapeGradientStop(idx); pushToHistoryState(elements, canvasBg); }} className="w-4 h-4 flex items-center justify-center hover:bg-red-500 text-red-400 hover:text-white rounded transition-all cursor-pointer" title="Delete stop"><i className="ri-close-line text-[9px]" /></button>
                                                         )}
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const stops = getShapeFillGradientStops();
+                                                                const current = stops[idx];
+                                                                const newOffset = Math.min(100, current.offset + 5);
+                                                                addShapeGradientStop(newOffset, current.color);
+                                                                pushToHistoryState(elements, canvasBg);
+                                                            }}
+                                                            className="w-4 h-4 flex items-center justify-center bg-accent/10 hover:bg-accent hover:text-accent-content text-accent rounded transition-all cursor-pointer"
+                                                            title="Duplicate stop"
+                                                        >
+                                                            <i className="ri-file-copy-line text-[9px]" />
+                                                        </button>
                                                     </div>
                                                 ))}
                                             </div>
@@ -647,20 +679,20 @@ const RightSidebar = ({
                                         {/* Stroke alongside gradient */}
                                         <div>
                                             <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Stroke Color</label>
-                                            <input type="color" value={selectedItem.stroke || "#000000"} onChange={e => updateSelectedElement("stroke", e.target.value)} disabled={selectedItem.isLocked} className="w-full h-8 rounded-lg cursor-pointer border-0 bg-transparent disabled:opacity-40" />
+                                            <input type="color" value={selectedItem.stroke || "#000000"} onChange={e => updateSelectedElement("stroke", e.target.value)} onBlur={e => updateSelectedElementAndPush("stroke", e.target.value)} disabled={selectedItem.isLocked} className="w-full h-8 rounded-lg cursor-pointer border-0 bg-transparent disabled:opacity-40" />
                                         </div>
                                     </div>
                                 )}
 
                                 <div>
                                     <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Stroke Width (px)</label>
-                                    <input type="number" value={selectedItem.strokeWidth || 0} onChange={e => updateSelectedElement("strokeWidth", parseInt(e.target.value) || 0)} disabled={selectedItem.isLocked} className={inputCls} />
+                                    <input type="number" value={selectedItem.strokeWidth || 0} onChange={e => updateSelectedElement("strokeWidth", parseInt(e.target.value) || 0)} onBlur={e => updateSelectedElementAndPush("strokeWidth", parseInt(e.target.value) || 0)} disabled={selectedItem.isLocked} className={inputCls} />
                                 </div>
 
                                 {selectedItem.shapeType === "rect" && (
                                     <div>
                                         <label className="text-[8px] font-bold text-white/45 flex justify-between mb-1"><span>Border Corners</span><span>{selectedItem.borderRadius || 0}px</span></label>
-                                        <input type="range" min="0" max="100" value={selectedItem.borderRadius || 0} onChange={e => updateSelectedElement("borderRadius", parseInt(e.target.value))} disabled={selectedItem.isLocked} className={sliderCls} />
+                                        <input type="range" min="0" max="100" value={selectedItem.borderRadius || 0} onChange={e => updateSelectedElement("borderRadius", parseInt(e.target.value))} onMouseUp={() => pushToHistoryState(elements, canvasBg)} onTouchEnd={() => pushToHistoryState(elements, canvasBg)} disabled={selectedItem.isLocked} className={sliderCls} />
                                     </div>
                                 )}
 
@@ -675,6 +707,8 @@ const RightSidebar = ({
                                         max="1000" 
                                         value={selectedItem.blur || 0} 
                                         onChange={e => updateSelectedElement("blur", parseInt(e.target.value))} 
+                                        onMouseUp={() => pushToHistoryState(elements, canvasBg)}
+                                        onTouchEnd={() => pushToHistoryState(elements, canvasBg)}
                                         disabled={selectedItem.isLocked}
                                         className={sliderCls} 
                                     />
@@ -688,21 +722,24 @@ const RightSidebar = ({
                             
                             <div>
                                 <label className="text-[8px] font-bold text-white/45 flex justify-between mb-1"><span>Shadow Blur</span><span>{selectedItem.shadowBlur || 0}px</span></label>
-                                <input type="range" min="0" max="50" value={selectedItem.shadowBlur || 0} onChange={e => updateSelectedElement("shadowBlur", parseInt(e.target.value))} className={sliderCls} />
+                                 <input type="range" min="0" max="50" value={selectedItem.shadowBlur || 0} onChange={e => updateSelectedElement("shadowBlur", parseInt(e.target.value))} onMouseUp={() => pushToHistoryState(elements, canvasBg)} onTouchEnd={() => pushToHistoryState(elements, canvasBg)} className={sliderCls} />
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
                                     <label className="text-[8px] font-bold text-white/35 block mb-1">Offset X</label>
-                                    <input type="number" value={selectedItem.shadowX || 0} onChange={e => updateSelectedElement("shadowX", parseInt(e.target.value) || 0)} className={inputCls} />
+                                    <input type="number" value={selectedItem.shadowX || 0} onChange={e => updateSelectedElement("shadowX", parseInt(e.target.value) || 0)} onBlur={e => updateSelectedElementAndPush("shadowX", parseInt(e.target.value) || 0)} className={inputCls} />
                                 </div>
                                 <div>
                                     <label className="text-[8px] font-bold text-white/35 block mb-1">Offset Y</label>
-                                    <input type="number" value={selectedItem.shadowY || 0} onChange={e => updateSelectedElement("shadowY", parseInt(e.target.value) || 0)} className={inputCls} />
+                                    <input type="number" value={selectedItem.shadowY || 0} onChange={e => updateSelectedElement("shadowY", parseInt(e.target.value) || 0)} onBlur={e => updateSelectedElementAndPush("shadowY", parseInt(e.target.value) || 0)} className={inputCls} />
                                 </div>
                             </div>
                             <div>
                                 <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Shadow Color</label>
-                                <input type="color" value={selectedItem.shadowColor || "#000000"} onChange={e => updateSelectedElement("shadowColor", e.target.value)} className="w-full h-8 rounded-lg cursor-pointer border-0 bg-transparent" />
+                                <div className="flex gap-2">
+                                    <input type="color" value={selectedItem.shadowColor || "#000000"} onChange={e => updateSelectedElement("shadowColor", e.target.value)} onBlur={e => updateSelectedElementAndPush("shadowColor", e.target.value)} className="w-10 h-8 rounded-lg cursor-pointer border-0 bg-transparent" />
+                                    <input type="text" value={selectedItem.shadowColor || "#000000"} onChange={e => updateSelectedElement("shadowColor", e.target.value)} onBlur={e => updateSelectedElementAndPush("shadowColor", e.target.value)} className={inputCls} />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -717,7 +754,7 @@ const RightSidebar = ({
                         <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Aspect Ratio / Size</label>
                         <select 
                             value={canvasSizes.find(s => s.width === canvasWidth && s.height === canvasHeight)?.name || ""}
-                            onChange={e => handleSelectSizePreset(e.target.value)}
+                            onChange={e => { handleSelectSizePreset(e.target.value); pushToHistoryState(elements, canvasBg); }}
                             className={inputCls}
                         >
                             <option value="" disabled>Custom Sizing</option>
@@ -736,6 +773,7 @@ const RightSidebar = ({
                                         setCanvasWidth(w);
                                         saveToLocalStorage(elements, canvasBg, borderRadius, title, linkUrl, w, canvasHeight, displayTime);
                                     }} 
+                                    onBlur={() => pushToHistoryState(elements, canvasBg)}
                                     className={inputCls} 
                                 />
                             </div>
@@ -749,6 +787,7 @@ const RightSidebar = ({
                                         setCanvasHeight(h);
                                         saveToLocalStorage(elements, canvasBg, borderRadius, title, linkUrl, canvasWidth, h, displayTime);
                                     }} 
+                                    onBlur={() => pushToHistoryState(elements, canvasBg)}
                                     className={inputCls} 
                                 />
                             </div>
@@ -768,6 +807,7 @@ const RightSidebar = ({
                                 setDisplayTime(val);
                                 saveToLocalStorage(elements, canvasBg, borderRadius, title, linkUrl, canvasWidth, canvasHeight, val);
                             }}
+                            onBlur={() => pushToHistoryState(elements, canvasBg)}
                             className={inputCls}
                             placeholder="e.g. 5 seconds"
                         />
@@ -780,7 +820,10 @@ const RightSidebar = ({
                             <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Background Type</label>
                             <select 
                                 value={canvasBg.type} 
-                                onChange={e => updateBgKey("type", e.target.value)} 
+                                onChange={e => {
+                                    updateBgKey("type", e.target.value);
+                                    pushToHistoryState(elements, { ...canvasBg, type: e.target.value });
+                                }} 
                                 className={inputCls}
                             >
                                 <option value="solid">Solid Background</option>
@@ -797,8 +840,8 @@ const RightSidebar = ({
                                 <div>
                                     <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Solid Color</label>
                                     <div className="flex gap-2">
-                                        <input type="color" value={canvasBg.color1} onChange={e => updateBgKey("color1", e.target.value)} className="w-10 h-8 rounded-lg cursor-pointer border-0 bg-transparent" />
-                                        <input type="text" value={canvasBg.color1} onChange={e => updateBgKey("color1", e.target.value)} className={inputCls} />
+                                        <input type="color" value={canvasBg.color1} onChange={e => updateBgKey("color1", e.target.value)} onBlur={() => pushToHistoryState(elements, canvasBg)} className="w-10 h-8 rounded-lg cursor-pointer border-0 bg-transparent" />
+                                        <input type="text" value={canvasBg.color1} onChange={e => updateBgKey("color1", e.target.value)} onBlur={() => pushToHistoryState(elements, canvasBg)} className={inputCls} />
                                     </div>
                                 </div>
                             ) : canvasBg.type === "mesh" ? (
@@ -806,7 +849,7 @@ const RightSidebar = ({
                                     <div className="flex justify-between items-center">
                                         <label className="text-[9px] font-black uppercase text-white/45">Mesh Color Nodes</label>
                                         <button 
-                                            onClick={handleAddMeshPoint}
+                                            onClick={() => { handleAddMeshPoint(); pushToHistoryState(elements, canvasBg); }}
                                             className="px-2 py-1 bg-accent/20 hover:bg-accent/35 text-accent text-[8px] font-black uppercase rounded-lg cursor-pointer transition-colors"
                                             title="Place a new color dot in center"
                                         >
@@ -836,6 +879,7 @@ const RightSidebar = ({
                                                     type="color" 
                                                     value={activeMeshPt?.color || "#ffffff"} 
                                                     onChange={e => handleUpdateMeshPoint(activeMeshPtId, "color", e.target.value)} 
+                                                    onBlur={() => pushToHistoryState(elements, canvasBg)}
                                                     className="w-full h-8 rounded-lg cursor-pointer border-0 bg-transparent" 
                                                 />
                                             </div>
@@ -845,6 +889,7 @@ const RightSidebar = ({
                                                     type="number"
                                                     value={activeMeshPt?.radius || 65}
                                                     onChange={e => handleUpdateMeshPoint(activeMeshPtId, "radius", parseInt(e.target.value) || 10)}
+                                                    onBlur={() => pushToHistoryState(elements, canvasBg)}
                                                     className={inputCls}
                                                 />
                                             </div>
@@ -861,13 +906,15 @@ const RightSidebar = ({
                                                 max="180"
                                                 value={activeMeshPt?.radius || 65}
                                                 onChange={e => handleUpdateMeshPoint(activeMeshPtId, "radius", parseInt(e.target.value))}
+                                                onMouseUp={() => pushToHistoryState(elements, canvasBg)}
+                                                onTouchEnd={() => pushToHistoryState(elements, canvasBg)}
                                                 className={sliderCls}
                                             />
                                         </div>
 
                                         {points.length > 2 && (
                                             <button 
-                                                onClick={() => handleRemoveMeshPoint(activeMeshPtId)}
+                                                onClick={() => { handleRemoveMeshPoint(activeMeshPtId); pushToHistoryState(elements, canvasBg); }}
                                                 className="w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[9px] font-black uppercase tracking-wider rounded-xl cursor-pointer transition-colors"
                                                 title="Remove this color point"
                                             >
@@ -880,7 +927,7 @@ const RightSidebar = ({
                                             <span className="text-[8px] font-black uppercase text-white/30 block">Layer Order</span>
                                             <div className="grid grid-cols-4 gap-1">
                                                 <button
-                                                    onClick={() => handleMoveMeshPointBack && handleMoveMeshPointBack(activeMeshPtId)}
+                                                    onClick={() => { handleMoveMeshPointBack && handleMoveMeshPointBack(activeMeshPtId); pushToHistoryState(elements, canvasBg); }}
                                                     title="Send node to back (renders underneath all others)"
                                                     className="flex flex-col items-center justify-center p-1 bg-[#1b1b1f] hover:bg-accent/20 hover:text-accent text-white/50 text-[8px] font-black rounded-lg cursor-pointer transition-all"
                                                 >
@@ -888,7 +935,7 @@ const RightSidebar = ({
                                                     <span className="mt-0.5">Back</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => handleMoveMeshPointDown && handleMoveMeshPointDown(activeMeshPtId)}
+                                                    onClick={() => { handleMoveMeshPointDown && handleMoveMeshPointDown(activeMeshPtId); pushToHistoryState(elements, canvasBg); }}
                                                     title="Move node down/backward"
                                                     className="flex flex-col items-center justify-center p-1 bg-[#1b1b1f] hover:bg-accent/20 hover:text-accent text-white/50 text-[8px] font-black rounded-lg cursor-pointer transition-all"
                                                 >
@@ -896,7 +943,7 @@ const RightSidebar = ({
                                                     <span className="mt-0.5">Down</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => handleMoveMeshPointUp && handleMoveMeshPointUp(activeMeshPtId)}
+                                                    onClick={() => { handleMoveMeshPointUp && handleMoveMeshPointUp(activeMeshPtId); pushToHistoryState(elements, canvasBg); }}
                                                     title="Move node up/forward"
                                                     className="flex flex-col items-center justify-center p-1 bg-[#1b1b1f] hover:bg-accent/20 hover:text-accent text-white/50 text-[8px] font-black rounded-lg cursor-pointer transition-all"
                                                 >
@@ -904,7 +951,7 @@ const RightSidebar = ({
                                                     <span className="mt-0.5">Up</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => handleMoveMeshPointFront && handleMoveMeshPointFront(activeMeshPtId)}
+                                                    onClick={() => { handleMoveMeshPointFront && handleMoveMeshPointFront(activeMeshPtId); pushToHistoryState(elements, canvasBg); }}
                                                     title="Bring node to front (renders on top of all others)"
                                                     className="flex flex-col items-center justify-center p-1 bg-[#1b1b1f] hover:bg-accent/20 hover:text-accent text-white/50 text-[8px] font-black rounded-lg cursor-pointer transition-all"
                                                 >
@@ -921,7 +968,7 @@ const RightSidebar = ({
                                     {canvasBg.type === "linear" && (
                                         <div>
                                             <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Flow Direction</label>
-                                            <select value={canvasBg.direction} onChange={e => updateBgKey("direction", e.target.value)} className={inputCls}>
+                                            <select value={canvasBg.direction} onChange={e => { updateBgKey("direction", e.target.value); pushToHistoryState(elements, { ...canvasBg, direction: e.target.value }); }} className={inputCls}>
                                                 <option value="to-r">Left to Right</option>
                                                 <option value="to-b">Top to Bottom</option>
                                                 <option value="to-tr">Top Right Diagonal</option>
@@ -932,7 +979,7 @@ const RightSidebar = ({
                                     {canvasBg.type === "conic" && (
                                         <div>
                                             <label className="text-[9px] font-black uppercase text-white/45 block mb-1">Conic Angle</label>
-                                            <input type="text" value={canvasBg.conicAngle || "0deg"} onChange={e => updateBgKey("conicAngle", e.target.value)} className={inputCls} placeholder="e.g. 45deg" />
+                                            <input type="text" value={canvasBg.conicAngle || "0deg"} onChange={e => updateBgKey("conicAngle", e.target.value)} onBlur={() => pushToHistoryState(elements, canvasBg)} className={inputCls} placeholder="e.g. 45deg" />
                                         </div>
                                     )}
 
@@ -946,6 +993,7 @@ const RightSidebar = ({
                                                 const rect = e.currentTarget.getBoundingClientRect();
                                                 const percent = Math.round(((e.clientX - rect.left) / rect.width) * 100);
                                                 addGradientStop(percent, "#ffffff");
+                                                pushToHistoryState(elements, canvasBg);
                                             }}
                                             className="h-6 rounded-lg relative cursor-pointer border border-white/10 shadow-inner"
                                             style={{
@@ -969,7 +1017,6 @@ const RightSidebar = ({
                                                             const dx = moveEvent.clientX - capturedStartX;
                                                             let newOffset = Math.round(capturedOffset + (dx / trackRect.width) * 100);
                                                             newOffset = Math.max(0, Math.min(100, newOffset));
-                                                            // Update without re-sorting during drag (prevents jumpy behavior)
                                                             const currentStops = getStops(canvasBgRef.current);
                                                             const updatedStops = currentStops.map((s, i) => i === capturedIdx ? { ...s, offset: newOffset } : s);
                                                             const updatedBg = { ...canvasBgRef.current, stops: updatedStops };
@@ -979,7 +1026,6 @@ const RightSidebar = ({
                                                         const handleStopUp = () => {
                                                             document.removeEventListener("mousemove", handleStopMove);
                                                             document.removeEventListener("mouseup", handleStopUp);
-                                                            // Sort only on release
                                                             pushToHistoryState(elements, canvasBgRef.current);
                                                         };
                                                         
@@ -992,6 +1038,7 @@ const RightSidebar = ({
                                                     onDoubleClick={(e) => {
                                                         e.stopPropagation();
                                                         removeGradientStop(idx);
+                                                        pushToHistoryState(elements, canvasBg);
                                                     }}
                                                 >
                                                     <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: stop.color }} />
@@ -1034,23 +1081,38 @@ const RightSidebar = ({
                                                         type="color" 
                                                         value={stop.color} 
                                                         onChange={(e) => updateGradientStop(idx, "color", e.target.value)} 
+                                                        onBlur={() => pushToHistoryState(elements, canvasBg)}
                                                         className="w-7 h-5 rounded cursor-pointer border border-white/5 bg-transparent" 
                                                     />
                                                     <input 
                                                         type="text" 
                                                         value={stop.color} 
                                                         onChange={(e) => updateGradientStop(idx, "color", e.target.value)} 
+                                                        onBlur={() => pushToHistoryState(elements, canvasBg)}
                                                         className="flex-1 bg-background/50 border border-white/10 rounded px-1.5 py-0.5 outline-none font-mono text-[9px] text-white" 
                                                     />
                                                     {getStops().length > 2 && (
                                                         <button 
-                                                            onClick={() => removeGradientStop(idx)} 
+                                                            onClick={() => { removeGradientStop(idx); pushToHistoryState(elements, canvasBg); }} 
                                                             className="w-5 h-5 flex items-center justify-center bg-red-500/10 hover:bg-red-500 hover:text-white text-red-400 rounded transition-all cursor-pointer"
                                                             title="Delete stop"
                                                         >
                                                             <i className="ri-delete-bin-6-line text-[10px]" />
                                                         </button>
                                                     )}
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const stops = getStops();
+                                                            const current = stops[idx];
+                                                            const newOffset = Math.min(100, current.offset + 5);
+                                                            addGradientStop(newOffset, current.color);
+                                                        }}
+                                                        className="w-5 h-5 flex items-center justify-center bg-accent/10 hover:bg-accent hover:text-accent-content text-accent rounded transition-all cursor-pointer"
+                                                        title="Duplicate stop"
+                                                    >
+                                                        <i className="ri-file-copy-line text-[10px]" />
+                                                    </button>
                                                 </div>
                                             ))}
                                         </div>
@@ -1072,6 +1134,8 @@ const RightSidebar = ({
                             max="100" 
                             value={canvasBg.grainOpacity ?? 0} 
                             onChange={e => updateBgKey("grainOpacity", parseInt(e.target.value))} 
+                            onMouseUp={() => pushToHistoryState(elements, canvasBg)}
+                            onTouchEnd={() => pushToHistoryState(elements, canvasBg)}
                             className={sliderCls} 
                         />
                     </div>
@@ -1084,6 +1148,7 @@ const RightSidebar = ({
                             onChange={e => {
                                 setBorderRadius(e.target.value);
                                 saveToLocalStorage(elements, canvasBg, e.target.value, title, linkUrl, canvasWidth, canvasHeight, displayTime);
+                                pushToHistoryState(elements, canvasBg);
                             }} 
                             className={inputCls}
                         >

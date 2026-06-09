@@ -122,6 +122,8 @@ const AdminPopupsPage = () => {
 
     const elementsRef = useRef(elements);
     const canvasBgRef = useRef(canvasBg);
+    const dragStartElements = useRef(null);
+    const dragStartBg = useRef(null);
 
     useEffect(() => {
         elementsRef.current = elements;
@@ -434,26 +436,48 @@ const AdminPopupsPage = () => {
 
     // Apply Gradient Presets
     const applyPresetGradient = (preset) => {
-        const updated = {
-            ...canvasBg,
-            type: preset.type,
-            direction: preset.direction || "to-r",
-            color1: preset.color1 || "#ffffff",
-            color2: preset.color2 || "#000000",
-            color3: preset.color3 || "#ffffff",
-            color4: preset.color4 || "#000000",
-            p1: preset.p1 || { x: 10, y: 15 },
-            p2: preset.p2 || { x: 90, y: 10 },
-            p3: preset.p3 || { x: 85, y: 85 },
-            p4: preset.p4 || { x: 15, y: 90 },
-            meshPoints: preset.meshPoints || undefined,
-            stops: preset.stops || [
-                { color: preset.color1 || "#ffffff", offset: 0 },
-                { color: preset.color2 || "#000000", offset: 100 }
-            ]
-        };
-        setCanvasBg(updated);
-        pushToHistoryState(elementsRef.current, updated);
+        const selectedEl = elementsRef.current.find(el => el.id === selectedId);
+        if (selectedEl && selectedEl.type === "shape") {
+            const updatedElements = elementsRef.current.map(el => {
+                if (el.id !== selectedId) return el;
+                return {
+                    ...el,
+                    fillType: "gradient",
+                    fillGradient: {
+                        type: preset.type,
+                        direction: preset.direction || "to-r",
+                        conicAngle: preset.conicAngle || "0deg",
+                        stops: preset.stops || [
+                            { color: preset.color1 || "#ffffff", offset: 0 },
+                            { color: preset.color2 || "#000000", offset: 100 }
+                        ]
+                    }
+                };
+            });
+            setElements(updatedElements);
+            pushToHistoryState(updatedElements, canvasBg);
+        } else {
+            const updated = {
+                ...canvasBg,
+                type: preset.type,
+                direction: preset.direction || "to-r",
+                color1: preset.color1 || "#ffffff",
+                color2: preset.color2 || "#000000",
+                color3: preset.color3 || "#ffffff",
+                color4: preset.color4 || "#000000",
+                p1: preset.p1 || { x: 10, y: 15 },
+                p2: preset.p2 || { x: 90, y: 10 },
+                p3: preset.p3 || { x: 85, y: 85 },
+                p4: preset.p4 || { x: 15, y: 90 },
+                meshPoints: preset.meshPoints || undefined,
+                stops: preset.stops || [
+                    { color: preset.color1 || "#ffffff", offset: 0 },
+                    { color: preset.color2 || "#000000", offset: 100 }
+                ]
+            };
+            setCanvasBg(updated);
+            pushToHistoryState(elementsRef.current, updated);
+        }
     };
 
     // Editor initializers
@@ -934,8 +958,10 @@ const AdminPopupsPage = () => {
             startX: e.clientX,
             startY: e.clientY,
             elementX: item.x,
-            elementY: item.y
+            elementY: item.y,
+            hasMoved: false
         };
+        dragStartElements.current = elementsRef.current;
 
         document.addEventListener("mousemove", handleGlobalDragMouseMove);
         document.addEventListener("mouseup", handleGlobalDragMouseUp);
@@ -945,8 +971,11 @@ const AdminPopupsPage = () => {
         const info = dragInfo.current;
         if (!info.isDragging) return;
 
-        const dx = e.clientX - info.startX;
-        const dy = e.clientY - info.startY;
+        const dx = (e.clientX - info.startX) / canvasZoom;
+        const dy = (e.clientY - info.startY) / canvasZoom;
+        if (dx !== 0 || dy !== 0) {
+            info.hasMoved = true;
+        }
 
         const grid = snapToGrid ? 8 : 1;
         const newX = Math.round((info.elementX + dx) / grid) * grid;
@@ -965,7 +994,11 @@ const AdminPopupsPage = () => {
     const handleGlobalDragMouseUp = () => {
         document.removeEventListener("mousemove", handleGlobalDragMouseMove);
         document.removeEventListener("mouseup", handleGlobalDragMouseUp);
-        pushToHistoryState(elementsRef.current);
+        if (dragInfo.current.hasMoved && dragStartElements.current) {
+            setPast(prev => [...prev.slice(-49), { elements: dragStartElements.current, canvasBg: canvasBgRef.current }]);
+            setFuture([]);
+            saveToLocalStorage(elementsRef.current, canvasBgRef.current, borderRadius, title, linkUrl, canvasWidth, canvasHeight);
+        }
     };
 
     // 8-Direction Resizing Handler
@@ -984,8 +1017,10 @@ const AdminPopupsPage = () => {
             elementX: item.x,
             elementY: item.y,
             elementW: item.width,
-            elementH: item.height
+            elementH: item.height,
+            hasMoved: false
         };
+        dragStartElements.current = elementsRef.current;
 
         document.addEventListener("mousemove", handleGlobalResizeMouseMove);
         document.addEventListener("mouseup", handleGlobalResizeMouseUp);
@@ -995,8 +1030,11 @@ const AdminPopupsPage = () => {
         const info = dragInfo.current;
         if (!info.isResizing) return;
 
-        const dx = e.clientX - info.startX;
-        const dy = e.clientY - info.startY;
+        const dx = (e.clientX - info.startX) / canvasZoom;
+        const dy = (e.clientY - info.startY) / canvasZoom;
+        if (dx !== 0 || dy !== 0) {
+            info.hasMoved = true;
+        }
 
         let newX = info.elementX;
         let newY = info.elementY;
@@ -1060,7 +1098,11 @@ const AdminPopupsPage = () => {
     const handleGlobalResizeMouseUp = () => {
         document.removeEventListener("mousemove", handleGlobalResizeMouseMove);
         document.removeEventListener("mouseup", handleGlobalResizeMouseUp);
-        pushToHistoryState(elementsRef.current);
+        if (dragInfo.current.hasMoved && dragStartElements.current) {
+            setPast(prev => [...prev.slice(-49), { elements: dragStartElements.current, canvasBg: canvasBgRef.current }]);
+            setFuture([]);
+            saveToLocalStorage(elementsRef.current, canvasBgRef.current, borderRadius, title, linkUrl, canvasWidth, canvasHeight);
+        }
     };
 
     // Rotate Interaction Handler
@@ -1079,8 +1121,10 @@ const AdminPopupsPage = () => {
             isRotating: true,
             centerX,
             centerY,
-            elementR: item.rotate || 0
+            elementR: item.rotate || 0,
+            hasMoved: false
         };
+        dragStartElements.current = elementsRef.current;
 
         document.addEventListener("mousemove", handleGlobalRotateMouseMove);
         document.addEventListener("mouseup", handleGlobalRotateMouseUp);
@@ -1092,6 +1136,9 @@ const AdminPopupsPage = () => {
 
         const dx = e.clientX - info.centerX;
         const dy = e.clientY - info.centerY;
+        if (dx !== 0 || dy !== 0) {
+            info.hasMoved = true;
+        }
 
         let angle = Math.atan2(dy, dx) * (180 / Math.PI) - 90;
         if (angle < 0) angle += 360;
@@ -1112,7 +1159,11 @@ const AdminPopupsPage = () => {
     const handleGlobalRotateMouseUp = () => {
         document.removeEventListener("mousemove", handleGlobalRotateMouseMove);
         document.removeEventListener("mouseup", handleGlobalRotateMouseUp);
-        pushToHistoryState(elementsRef.current);
+        if (dragInfo.current.hasMoved && dragStartElements.current) {
+            setPast(prev => [...prev.slice(-49), { elements: dragStartElements.current, canvasBg: canvasBgRef.current }]);
+            setFuture([]);
+            saveToLocalStorage(elementsRef.current, canvasBgRef.current, borderRadius, title, linkUrl, canvasWidth, canvasHeight);
+        }
     };
 
     // Pen Drawing Tool interaction
@@ -1189,8 +1240,10 @@ const AdminPopupsPage = () => {
 
         dragInfo.current = {
             isDraggingMeshPoint: true,
-            pointIndex: index
+            pointIndex: index,
+            hasMoved: false
         };
+        dragStartBg.current = canvasBgRef.current;
 
         document.addEventListener("mousemove", handleGlobalMeshMouseMove);
         document.addEventListener("mouseup", handleGlobalMeshMouseUp);
@@ -1209,6 +1262,7 @@ const AdminPopupsPage = () => {
 
         rx = Math.max(-20, Math.min(120, Math.round(rx)));
         ry = Math.max(-20, Math.min(120, Math.round(ry)));
+        info.hasMoved = true;
 
         setCanvasBg(prev => {
             const points = prev.meshPoints || [
@@ -1241,7 +1295,11 @@ const AdminPopupsPage = () => {
     const handleGlobalMeshMouseUp = () => {
         document.removeEventListener("mousemove", handleGlobalMeshMouseMove);
         document.removeEventListener("mouseup", handleGlobalMeshMouseUp);
-        pushToHistoryState(elementsRef.current, canvasBgRef.current);
+        if (dragInfo.current.hasMoved && dragStartBg.current) {
+            setPast(prev => [...prev.slice(-49), { elements: elementsRef.current, canvasBg: dragStartBg.current }]);
+            setFuture([]);
+            saveToLocalStorage(elementsRef.current, canvasBgRef.current, borderRadius, title, linkUrl, canvasWidth, canvasHeight);
+        }
     };
 
     // Right-Click Context Menu triggers
@@ -1296,6 +1354,15 @@ const AdminPopupsPage = () => {
             return { ...el, [key]: value };
         }));
         saveToLocalStorage(elementsRef.current, canvasBg, borderRadius, title, linkUrl, canvasWidth, canvasHeight);
+    };
+
+    const updateSelectedElementAndPush = (key, value) => {
+        const updated = elementsRef.current.map(el => {
+            if (el.id !== selectedId) return el;
+            return { ...el, [key]: value };
+        });
+        setElements(updated);
+        pushToHistoryState(updated, canvasBg);
     };
 
     // Layer zIndex ordering
@@ -2075,6 +2142,7 @@ const AdminPopupsPage = () => {
                         <RightSidebar 
                             selectedItem={selectedItem}
                             updateSelectedElement={updateSelectedElement}
+                            updateSelectedElementAndPush={updateSelectedElementAndPush}
                             handleDeleteElement={handleDeleteElement}
                             handleAlign={handleAlign}
                             popularFonts={popularFonts}
