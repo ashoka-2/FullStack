@@ -30,21 +30,34 @@ const SellerDashboardOverview = () => {
         [sellerProducts]
     );
 
+    // ── Filter Carts and Wishlists for this seller ──────────────────────────
+    const sellerCartsCount = useMemo(() => {
+        return allCarts?.filter(c => 
+            c.items?.some(i => i.product && myProductIds.has(i.product._id?.toString() || i.product.toString()))
+        ).length || 0;
+    }, [allCarts, myProductIds]);
+
+    const sellerWishlistsCount = useMemo(() => {
+        return allWishlists?.filter(w => 
+            w.products?.some(p => p && myProductIds.has(p._id?.toString() || p.toString()))
+        ).length || 0;
+    }, [allWishlists, myProductIds]);
+
     // ── Filter Customers: Users who have added seller's products to cart, wishlist, or placed orders
     const customers = useMemo(() => {
         const cartUserIds = new Set(
             allCarts
-                .filter(c => c.items?.some(i => myProductIds.has(i.product?._id?.toString())))
+                .filter(c => c.items?.some(i => i.product && myProductIds.has(i.product._id?.toString() || i.product.toString())))
                 .map(c => c.user?._id?.toString())
         );
         const wishUserIds = new Set(
             allWishlists
-                .filter(w => w.products?.some(p => myProductIds.has(p._id?.toString())))
+                .filter(w => w.products?.some(p => p && myProductIds.has(p._id?.toString() || p.toString())))
                 .map(w => w.user?._id?.toString())
         );
         const orderUserIds = new Set(
             allOrders
-                .filter(o => o.items?.some(i => myProductIds.has(i.product?._id?.toString())))
+                .filter(o => o.items?.some(i => i.product && myProductIds.has(i.product._id?.toString() || i.product.toString())))
                 .map(o => o.buyer?._id?.toString())
         );
         const relevantIds = new Set([...cartUserIds, ...wishUserIds, ...orderUserIds]);
@@ -71,8 +84,8 @@ const SellerDashboardOverview = () => {
         { label: 'Catalog Products', val: sellerProducts?.length || 0, icon: 'ri-archive-line', path: '/seller/catalog', color: 'from-blue-500/10 to-indigo-500/10 hover:border-blue-500/30' },
         { label: 'Managed Orders', val: allOrders?.length || 0, icon: 'ri-bill-line', path: '/seller/orders', color: 'from-amber-500/10 to-orange-500/10 hover:border-amber-500/30' },
         { label: 'Active Customers', val: customers.length, icon: 'ri-user-heart-line', path: '/seller/customers', color: 'from-pink-500/10 to-rose-500/10 hover:border-pink-500/30' },
-        { label: 'User Carts', val: allCarts?.length || 0, icon: 'ri-shopping-cart-line', path: '/seller/carts', color: 'from-emerald-500/10 to-teal-500/10 hover:border-emerald-500/30' },
-        { label: 'Wishlisted Products', val: allWishlists?.length || 0, icon: 'ri-heart-line', path: '/seller/wishlists', color: 'from-violet-500/10 to-fuchsia-500/10 hover:border-violet-500/30' },
+        { label: 'User Carts', val: sellerCartsCount, icon: 'ri-shopping-cart-line', path: '/seller/carts', color: 'from-emerald-500/10 to-teal-500/10 hover:border-emerald-500/30' },
+        { label: 'Wishlisted Products', val: sellerWishlistsCount, icon: 'ri-heart-line', path: '/seller/wishlists', color: 'from-violet-500/10 to-fuchsia-500/10 hover:border-violet-500/30' },
         { label: 'Other Platform Users', val: directoryUsers.length, icon: 'ri-team-line', path: '/seller/users', color: 'from-sky-500/10 to-cyan-500/10 hover:border-sky-500/30' },
     ];
 

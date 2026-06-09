@@ -47,21 +47,21 @@ const SellerUsersPage = () => {
     const cartUserIds = new Set(
       allCarts
         .filter((c) =>
-          c.items?.some((i) => myProductIds.has(i.product?._id?.toString())),
+          c.items?.some((i) => i.product && myProductIds.has(i.product._id?.toString() || i.product.toString())),
         )
         .map((c) => c.user?._id?.toString()),
     );
     const wishUserIds = new Set(
       allWishlists
         .filter((w) =>
-          w.products?.some((p) => myProductIds.has(p._id?.toString())),
+          w.products?.some((p) => p && myProductIds.has(p._id?.toString() || p.toString())),
         )
         .map((w) => w.user?._id?.toString()),
     );
     const orderUserIds = new Set(
       allOrders
         .filter((o) =>
-          o.items?.some((i) => myProductIds.has(i.product?._id?.toString())),
+          o.items?.some((i) => i.product && myProductIds.has(i.product._id?.toString() || i.product.toString())),
         )
         .map((o) => o.buyer?._id?.toString()),
     );
