@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useSelector } from "react-redux";
 import { usePopup } from "../Hooks/usePopup";
 import { PrimaryBtn, SecondaryBtn } from "../../Components/Buttons";
@@ -95,6 +96,7 @@ const AdminPopupsPage = () => {
     const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, targetId: null });
     const [editingTextId, setEditingTextId] = useState(null);
     const [snapToGrid, setSnapToGrid] = useState(true);
+    const [clipContent, setClipContent] = useState(true);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
     const [imageLinkInput, setImageLinkInput] = useState("");
     const [loadedFonts, setLoadedFonts] = useState(new Set(["Inter"]));
@@ -136,9 +138,13 @@ const AdminPopupsPage = () => {
     // Listen for Space bar keydowns to toggle pan mode
     useEffect(() => {
         const handleSpaceDown = (e) => {
-            if (e.code === "Space" && document.activeElement === document.body && showEditor) {
-                e.preventDefault();
-                setIsSpaceHeld(true);
+            if (e.code === "Space" && showEditor) {
+                const active = document.activeElement;
+                const isTyping = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.contentEditable === "true");
+                if (!isTyping) {
+                    e.preventDefault();
+                    setIsSpaceHeld(true);
+                }
             }
         };
         const handleSpaceUp = (e) => {
@@ -158,11 +164,14 @@ const AdminPopupsPage = () => {
     useEffect(() => {
         if (isFullScreen && showEditor) {
             document.body.style.overflow = "hidden";
+            document.documentElement.style.overflow = "hidden";
         } else {
             document.body.style.overflow = "unset";
+            document.documentElement.style.overflow = "unset";
         }
         return () => {
             document.body.style.overflow = "unset";
+            document.documentElement.style.overflow = "unset";
         };
     }, [isFullScreen, showEditor]);
 
@@ -333,6 +342,19 @@ const AdminPopupsPage = () => {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d" && selectedId) {
                 e.preventDefault();
                 handleDuplicateElement(selectedId);
+            }
+            if ((e.ctrlKey || e.metaKey) && (e.key === "=" || e.key === "+")) {
+                e.preventDefault();
+                setCanvasZoom(z => Math.min(4, z + 0.1));
+            }
+            if ((e.ctrlKey || e.metaKey) && (e.key === "-" || e.key === "_")) {
+                e.preventDefault();
+                setCanvasZoom(z => Math.max(0.1, z - 0.1));
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === "0") {
+                e.preventDefault();
+                setCanvasZoom(1);
+                setCanvasOffset({ x: 0, y: 0 });
             }
             if ((e.key === "Delete" || e.key === "Backspace") && selectedId && editingTextId === null) {
                 const active = document.activeElement;
@@ -1097,8 +1119,8 @@ const AdminPopupsPage = () => {
     const handleCanvasClick = (e) => {
         if (isPenMode) {
             const rect = canvasRef.current.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const x = (e.clientX - rect.left) / canvasZoom;
+            const y = (e.clientY - rect.top) / canvasZoom;
             setPenPoints([...penPoints, { x, y }]);
         } else {
             if (e.target === e.currentTarget) {
@@ -1409,14 +1431,6 @@ const AdminPopupsPage = () => {
         await new Promise(r => setTimeout(r, 120));
 
         try {
-            const capturedDeviceImages = {};
-            const devicesList = [
-                { key: "desktop", ref: desktopCanvasRef, width: deviceDesigns.desktop.canvasWidth, height: deviceDesigns.desktop.canvasHeight },
-                { key: "tablet", ref: tabletCanvasRef, width: deviceDesigns.tablet.canvasWidth, height: deviceDesigns.tablet.canvasHeight },
-                { key: "mobile", ref: mobileCanvasRef, width: deviceDesigns.mobile.canvasWidth, height: deviceDesigns.mobile.canvasHeight },
-                { key: "tv", ref: tvCanvasRef, width: deviceDesigns.tv.canvasWidth, height: deviceDesigns.tv.canvasHeight }
-            ];
-
             // Update designs first to capture active design
             const updatedDesigns = {
                 ...deviceDesigns,
@@ -1428,31 +1442,6 @@ const AdminPopupsPage = () => {
                 }
             };
 
-            for (const dev of devicesList) {
-                if (dev.ref.current) {
-                    const canvas = await html2canvas(dev.ref.current, {
-                        useCORS: true,
-                        backgroundColor: null,
-                        width: dev.width,
-                        height: dev.height,
-                        scale: 1.5
-                    });
-                    const base64 = canvas.toDataURL("image/png", 0.90);
-                    capturedDeviceImages[dev.key] = base64;
-                }
-            }
-
-            // Standard desktop screenshot for the primary 'image' field
-            const mainCanvas = await html2canvas(desktopCanvasRef.current || canvasRef.current, {
-                useCORS: true,
-                backgroundColor: null,
-                width: deviceDesigns.desktop.canvasWidth,
-                height: deviceDesigns.desktop.canvasHeight,
-                scale: 1.5
-            });
-            const mainBlob = await new Promise(resolve => mainCanvas.toBlob(resolve, "image/png", 0.95));
-            const imageFile = new File([mainBlob], `${title.replace(/ /g, "_")}-desktop-${Date.now()}.png`, { type: "image/png" });
-
             const payloadData = {
                 deviceDesigns: updatedDesigns,
                 displayTime
@@ -1463,12 +1452,57 @@ const AdminPopupsPage = () => {
             data.append("text", "Canvas Compiled Poster");
             data.append("isActive", isPublishing ? "true" : editItem ? String(editItem.isActive) : "false");
             data.append("isDraft", isPublishing ? "false" : "true");
-            data.append("image", imageFile);
-            data.append("deviceImages", JSON.stringify(capturedDeviceImages));
             data.append("metadata", JSON.stringify(payloadData));
             data.append("displayTime", String(displayTime));
             data.append("borderRadius", borderRadius);
             data.append("linkUrl", linkUrl);
+
+            if (isPublishing) {
+                const capturedDeviceImages = {};
+                const devicesList = [
+                    { key: "desktop", ref: desktopCanvasRef, width: deviceDesigns.desktop.canvasWidth, height: deviceDesigns.desktop.canvasHeight },
+                    { key: "tablet", ref: tabletCanvasRef, width: deviceDesigns.tablet.canvasWidth, height: deviceDesigns.tablet.canvasHeight },
+                    { key: "mobile", ref: mobileCanvasRef, width: deviceDesigns.mobile.canvasWidth, height: deviceDesigns.mobile.canvasHeight },
+                    { key: "tv", ref: tvCanvasRef, width: deviceDesigns.tv.canvasWidth, height: deviceDesigns.tv.canvasHeight }
+                ];
+
+                for (const dev of devicesList) {
+                    if (dev.ref.current) {
+                        const canvas = await html2canvas(dev.ref.current, {
+                            useCORS: true,
+                            backgroundColor: null,
+                            width: dev.width,
+                            height: dev.height,
+                            scale: 1.5
+                        });
+                        const base64 = canvas.toDataURL("image/png", 0.90);
+                        capturedDeviceImages[dev.key] = base64;
+                    }
+                }
+
+                // Standard desktop screenshot for the primary 'image' field
+                const mainCanvas = await html2canvas(desktopCanvasRef.current || canvasRef.current, {
+                    useCORS: true,
+                    backgroundColor: null,
+                    width: deviceDesigns.desktop.canvasWidth,
+                    height: deviceDesigns.desktop.canvasHeight,
+                    scale: 1.5
+                });
+                const mainBlob = await new Promise(resolve => mainCanvas.toBlob(resolve, "image/png", 0.95));
+                const imageFile = new File([mainBlob], `${title.replace(/ /g, "_")}-desktop-${Date.now()}.png`, { type: "image/png" });
+
+                data.append("image", imageFile);
+                data.append("deviceImages", JSON.stringify(capturedDeviceImages));
+            } else {
+                // For draft saves, keep existing images if editing
+                if (editItem) {
+                    if (editItem.imageUrl) data.append("imageUrl", editItem.imageUrl);
+                    if (editItem.deviceImages) {
+                        const devImg = typeof editItem.deviceImages === "string" ? editItem.deviceImages : JSON.stringify(editItem.deviceImages);
+                        data.append("deviceImages", devImg);
+                    }
+                }
+            }
 
             if (editItem) {
                 await handleUpdatePopup(editItem._id, data);
@@ -1642,7 +1676,9 @@ const AdminPopupsPage = () => {
                 </>
             ) : (
                 /* Figma-Style studio editor view */
-                <div className={`flex flex-col bg-[#121214] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 text-white ${isFullScreen ? "fixed inset-0 left-0 top-0 w-full h-full z-[9999] rounded-none border-none m-0 p-0" : "h-[85vh] border border-white/10 rounded-[32px]"}`}>
+                (() => {
+                    const editorJSX = (
+                        <div className={`flex flex-col bg-[#121214] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 text-white ${isFullScreen ? "fixed inset-0 w-screen h-screen z-[99999] rounded-none border-none m-0 p-0" : "h-[85vh] border border-white/10 rounded-[32px]"}`}>
                     {/* Editor Header Bar */}
                     <div className="p-4 bg-[#18181c] border-b border-white/5 flex items-center justify-between flex-wrap gap-4 z-50">
                         <div className="flex items-center gap-3">
@@ -1910,6 +1946,14 @@ const AdminPopupsPage = () => {
                                         newZoom = Math.max(0.1, canvasZoom / zoomFactor);
                                     }
                                     setCanvasZoom(newZoom);
+                                } else {
+                                    e.preventDefault();
+                                    const speed = 1.2;
+                                    if (e.shiftKey) {
+                                        setCanvasOffset(prev => ({ ...prev, x: prev.x - e.deltaY * speed }));
+                                    } else {
+                                        setCanvasOffset(prev => ({ ...prev, y: prev.y - e.deltaY * speed }));
+                                    }
                                 }
                             }}
                             className={`flex-1 bg-[#0e0e10] flex items-center justify-center p-6 relative overflow-hidden select-none ${isSpaceHeld ? "cursor-grab active:cursor-grabbing" : "cursor-default"}`}
@@ -1922,7 +1966,8 @@ const AdminPopupsPage = () => {
                             <div
                                 ref={canvasRef}
                                 onClick={handleCanvasClick}
-                                className={`relative shadow-2xl border border-white/5 shrink-0 overflow-hidden select-none transition-shadow duration-300
+                                className={`relative shadow-2xl border border-white/5 shrink-0 select-none transition-shadow duration-300
+                                    ${clipContent ? "overflow-hidden" : "overflow-visible"}
                                     ${isPenMode ? "cursor-crosshair" : "cursor-default"}`}
                                 style={{
                                     width: `${canvasWidth}px`,
@@ -2067,11 +2112,16 @@ const AdminPopupsPage = () => {
                             handleMoveMeshPointDown={handleMoveMeshPointDown}
                             handleMoveMeshPointFront={handleMoveMeshPointFront}
                             handleMoveMeshPointBack={handleMoveMeshPointBack}
+                            clipContent={clipContent}
+                            setClipContent={setClipContent}
                         />
 
                     </div>
                 </div>
-            )}
+            );
+            return isFullScreen ? createPortal(editorJSX, document.body) : editorJSX;
+        })()
+    )}
 
             {/* Offscreen hidden canvases for compiling all 4 devices */}
             <div style={{ position: "absolute", left: "-9999px", top: "-9999px", pointerEvents: "none" }} aria-hidden="true">

@@ -183,3 +183,23 @@ html, body {
     background-position: 200% 0;
   }
 }
+
+/* Premium Dark/Figma-style scrollbars for studio panels */
+.popup-custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.popup-custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.popup-custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+}
+.popup-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+.popup-custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}

@@ -40,7 +40,9 @@ const RightSidebar = ({
     handleMoveMeshPointUp,
     handleMoveMeshPointDown,
     handleMoveMeshPointFront,
-    handleMoveMeshPointBack
+    handleMoveMeshPointBack,
+    clipContent,
+    setClipContent
 }) => {
     const selectedItemRef = useRef(selectedItem);
     useEffect(() => {
@@ -182,7 +184,7 @@ const RightSidebar = ({
     };
 
     return (
-        <div className="w-80 bg-[#18181c] border-l border-white/5 overflow-y-auto p-5 space-y-6 flex flex-col h-full text-white select-none">
+        <div className="w-80 bg-[#18181c] border-l border-white/5 overflow-y-auto popup-custom-scrollbar p-5 space-y-6 flex flex-col h-full text-white select-none">
             {selectedItem ? (
                 <div className="space-y-5 animate-in fade-in duration-200">
                     <div className="flex justify-between items-center pb-2 border-b border-white/5">
@@ -574,17 +576,18 @@ const RightSidebar = ({
                                                     background: `linear-gradient(to right, ${getShapeFillGradientStops().map(s => `${s.color} ${s.offset}%`).join(", ")})`
                                                 }}
                                             >
-                                                {getShapeFillGradientStops().map((stop, idx) => (
+                                                                                {getShapeFillGradientStops().map((stop, idx) => (
                                                     <div
                                                         key={idx}
                                                         onMouseDown={(e) => {
                                                             e.stopPropagation();
                                                             const startX = e.clientX;
                                                             const startOff = stop.offset;
+                                                            const trackEl = e.currentTarget.parentElement;
+                                                            if (!trackEl) return;
+                                                            const trackRect = trackEl.getBoundingClientRect();
+                                                            
                                                             const move = (me) => {
-                                                                const trackEl = e.currentTarget?.parentElement;
-                                                                if (!trackEl) return;
-                                                                const trackRect = trackEl.getBoundingClientRect();
                                                                 let newOff = Math.round(startOff + ((me.clientX - startX) / trackRect.width) * 100);
                                                                 newOff = Math.max(0, Math.min(100, newOff));
                                                                 updateShapeGradientStop(idx, "offset", newOff);
@@ -605,9 +608,31 @@ const RightSidebar = ({
                                                 ))}
                                             </div>
                                             <p className="text-[7px] text-white/25 mt-1">Click track to add stop. Drag stop left/right. Double-click to delete.</p>
-                                            <div className="space-y-1.5 mt-2 max-h-32 overflow-y-auto pr-0.5">
+                                            <div className="space-y-1.5 mt-2 max-h-32 overflow-y-auto popup-custom-scrollbar pr-0.5">
                                                 {getShapeFillGradientStops().map((stop, idx) => (
-                                                    <div key={idx} className="flex items-center gap-2 bg-[#1b1b1f] border border-white/5 p-1.5 rounded-xl text-[10px]">
+                                                    <div 
+                                                        key={idx} 
+                                                        draggable={!selectedItem.isLocked}
+                                                        onDragStart={(e) => {
+                                                            e.dataTransfer.setData("text/plain", idx);
+                                                        }}
+                                                        onDragOver={(e) => e.preventDefault()}
+                                                        onDrop={(e) => {
+                                                            e.preventDefault();
+                                                            const dragIdx = parseInt(e.dataTransfer.getData("text/plain"));
+                                                            const dropIdx = idx;
+                                                            if (dragIdx === dropIdx) return;
+                                                            
+                                                            const currentStops = [...getShapeFillGradientStops()];
+                                                            const tempColor = currentStops[dragIdx].color;
+                                                            currentStops[dragIdx].color = currentStops[dropIdx].color;
+                                                            currentStops[dropIdx].color = tempColor;
+                                                            
+                                                            updateShapeFillGradient("stops", currentStops);
+                                                        }}
+                                                        className="flex items-center gap-1.5 bg-[#1b1b1f] border border-white/5 p-1.5 rounded-xl text-[10px] cursor-grab active:cursor-grabbing hover:bg-white/[0.02]"
+                                                    >
+                                                        <i className="ri-drag-drop-line text-white/30 cursor-grab" />
                                                         <input type="color" value={stop.color} onChange={e => updateShapeGradientStop(idx, "color", e.target.value)} disabled={selectedItem.isLocked} className="w-6 h-5 rounded cursor-pointer border border-white/5 bg-transparent" />
                                                         <input type="text" value={stop.color} onChange={e => updateShapeGradientStop(idx, "color", e.target.value)} disabled={selectedItem.isLocked} className="flex-1 bg-transparent border border-white/10 rounded px-1 py-0.5 outline-none font-mono text-[9px] text-white" />
                                                         <span className="text-white/30 font-mono text-[8px]">{stop.offset}%</span>
@@ -936,11 +961,11 @@ const RightSidebar = ({
                                                         const capturedStartX = e.clientX;
                                                         const capturedOffset = stop.offset;
                                                         const capturedIdx = idx;
+                                                        const trackDom = e.currentTarget.parentElement;
+                                                        if (!trackDom) return;
+                                                        const trackRect = trackDom.getBoundingClientRect();
                                                         
                                                         const handleStopMove = (moveEvent) => {
-                                                            const trackDom = e.currentTarget?.parentElement;
-                                                            if (!trackDom) return;
-                                                            const trackRect = trackDom.getBoundingClientRect();
                                                             const dx = moveEvent.clientX - capturedStartX;
                                                             let newOffset = Math.round(capturedOffset + (dx / trackRect.width) * 100);
                                                             newOffset = Math.max(0, Math.min(100, newOffset));
@@ -976,9 +1001,34 @@ const RightSidebar = ({
                                         
                                         <p className="text-[8px] text-white/30 leading-normal font-bold uppercase tracking-wider mt-1">* Click track to add stop. Drag stop to slide. Double-click stop to delete.</p>
                                         
-                                        <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                                        <div className="space-y-2 max-h-40 overflow-y-auto popup-custom-scrollbar pr-1">
                                             {getStops().map((stop, idx) => (
-                                                <div key={idx} className="flex items-center gap-2 bg-[#1b1b1f] border border-white/5 p-2 rounded-xl text-[10px]">
+                                                <div 
+                                                    key={idx} 
+                                                    draggable
+                                                    onDragStart={(e) => {
+                                                        e.dataTransfer.setData("text/plain", idx);
+                                                    }}
+                                                    onDragOver={(e) => e.preventDefault()}
+                                                    onDrop={(e) => {
+                                                        e.preventDefault();
+                                                        const dragIdx = parseInt(e.dataTransfer.getData("text/plain"));
+                                                        const dropIdx = idx;
+                                                        if (dragIdx === dropIdx) return;
+                                                        
+                                                        const currentStops = [...getStops()];
+                                                        const tempColor = currentStops[dragIdx].color;
+                                                        currentStops[dragIdx].color = currentStops[dropIdx].color;
+                                                        currentStops[dropIdx].color = tempColor;
+                                                        
+                                                        const updatedBg = { ...canvasBg, stops: currentStops };
+                                                        setCanvasBg(updatedBg);
+                                                        saveToLocalStorage(elements, updatedBg, borderRadius, title, linkUrl, canvasWidth, canvasHeight, displayTime);
+                                                        pushToHistoryState(elements, updatedBg);
+                                                    }}
+                                                    className="flex items-center gap-1.5 bg-[#1b1b1f] border border-white/5 p-2 rounded-xl text-[10px] cursor-grab active:cursor-grabbing hover:bg-white/[0.02]"
+                                                >
+                                                    <i className="ri-drag-drop-line text-white/30 cursor-grab" />
                                                     <span className="font-bold text-white/45 w-12 truncate">Stop {idx + 1} ({stop.offset}%)</span>
                                                     <input 
                                                         type="color" 
@@ -1043,6 +1093,24 @@ const RightSidebar = ({
                             <option value="2xl">Very Rounded</option>
                             <option value="full">Pill Modals</option>
                         </select>
+                    </div>
+
+                    {/* Clip Content Toggle */}
+                    <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                        <div>
+                            <label htmlFor="clipContentToggle" className="text-[9px] font-black uppercase text-white/45 block cursor-pointer select-none">Clip Content</label>
+                            <span className="text-[8px] text-white/30 font-medium">Overflow hidden for children</span>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                id="clipContentToggle"
+                                checked={clipContent} 
+                                onChange={e => setClipContent(e.target.checked)} 
+                                className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-[#1b1b1f] border border-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white/80 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent peer-checked:border-accent"></div>
+                        </label>
                     </div>
 
                     {/* Redirection Link */}
