@@ -36,3 +36,32 @@ export async function deleteFile(fileId: string) {
         return false;
     }
 }
+
+// URL se filename nikal kar delete karne ke liye function
+export async function deleteFileByUrl(url: string) {
+    if (!url || typeof url !== "string") return false;
+    try {
+        const parts = url.split("/");
+        const filename = parts[parts.length - 1];
+        if (!filename) return false;
+
+        // Search for the file to get its fileId
+        const files = await client.listFiles({
+            name: filename
+        });
+
+        if (files && files.length > 0) {
+            for (const file of files) {
+                if ("fileId" in file) {
+                    await client.deleteFile(file.fileId);
+                    console.log(`Deleted old ImageKit file: ${file.name} (${file.fileId})`);
+                }
+            }
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error(`Failed to delete ImageKit file by URL (${url}):`, error);
+        return false;
+    }
+}

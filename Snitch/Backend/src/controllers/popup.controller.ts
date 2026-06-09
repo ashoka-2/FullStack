@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import popupModel from "../models/popup.model.js";
-import { uploadFile } from "../services/imagekit.service.js";
+import { uploadFile, deleteFileByUrl } from "../services/imagekit.service.js";
 import { broadcastUpdate } from "../services/socket.service.js";
 
 // @desc    Get active popups (Public)
@@ -174,8 +174,13 @@ export const updatePopup = async (req: Request, res: Response): Promise<void> =>
 
         const updateData: any = { ...req.body };
 
+        const oldUrlsToDelete: string[] = [];
+
         // Handle file upload
         if (req.file) {
+            if (popup.imageUrl) {
+                oldUrlsToDelete.push(popup.imageUrl);
+            }
             const uploaded = await uploadFile({
                 file: req.file.buffer,
                 filename: req.file.originalname,
@@ -204,6 +209,20 @@ export const updatePopup = async (req: Request, res: Response): Promise<void> =>
             } catch (e) {
                 console.error("Error parsing deviceImages on update:", e);
             }
+            // We only want to delete old device images if we are actually uploading new ones
+            const hasNewBase64 = Object.values(updateData.deviceImages).some(
+                (val: any) => typeof val === "string" && val.startsWith("data:")
+            );
+
+            if (hasNewBase64 && popup.deviceImages) {
+                for (const key of ["desktop", "tablet", "mobile", "tv"]) {
+                    const oldUrl = (popup.deviceImages as any)?.[key];
+                    if (oldUrl) {
+                        oldUrlsToDelete.push(oldUrl);
+                    }
+                }
+            }
+
             // Upload base64 device images to ImageKit
             updateData.deviceImages = await uploadDeviceImagesBase64(updateData.deviceImages);
         }
@@ -234,6 +253,13 @@ export const updatePopup = async (req: Request, res: Response): Promise<void> =>
         }
 
         const updatedPopup = await popupModel.findByIdAndUpdate(id, updateData, { new: true });
+
+        // Delete old files from ImageKit
+        if (oldUrlsToDelete.length > 0) {
+            Promise.all(oldUrlsToDelete.map(url => deleteFileByUrl(url))).catch(err => {
+                console.error("Failed to delete old images:", err);
+            });
+        }
 
         // Broadcast change in real-time
         broadcastUpdate("popup_update");
