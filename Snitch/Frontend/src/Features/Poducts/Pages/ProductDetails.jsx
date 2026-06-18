@@ -143,7 +143,7 @@ const ProductDetails = () => {
     // 2. From globalAttributes
     if (product?.globalAttributes?.length) {
       product.globalAttributes.forEach(attr => {
-        if (attr.variation && attr.options?.length) {
+        if (attr.options?.length) {
           attr.options.forEach(opt => addOption(attr.name, opt));
         }
       });
@@ -167,10 +167,20 @@ const ProductDetails = () => {
     if (!product?.variants?.length) return null;
     const selKeys = Object.keys(selectedAttrs);
     if (selKeys.length === 0) return null;
+    
     return product.variants.find(v => {
       const attrs = parseAttrs(v.attributes);
       const vKeys = Object.keys(attrs);
-      return vKeys.length === selKeys.length && vKeys.every(k => attrs[k] === selectedAttrs[k]);
+      if (vKeys.length !== selKeys.length) return false;
+      
+      // Compare keys and values case-insensitively
+      return vKeys.every(vk => {
+        const sk = selKeys.find(k => k.toLowerCase() === vk.toLowerCase());
+        if (!sk) return false;
+        const vVal = attrs[vk];
+        const sVal = selectedAttrs[sk];
+        return vVal && sVal && vVal.toLowerCase() === sVal.toLowerCase();
+      });
     }) ?? null;
   }, [product, selectedAttrs]);
 
@@ -179,23 +189,90 @@ const ProductDetails = () => {
     setSelectedImage(0);
   }, [activeVariant?._id]);
 
+  // Helper to get default selected attribute value when selectedAttrs is empty
+  const getDefaultAttrVal = useCallback((attrName) => {
+    const k = attrName.toLowerCase();
+    
+    // 1. If a variant is active, use its attribute value
+    if (activeVariant) {
+      const vAttrs = parseAttrs(activeVariant.attributes);
+      // Case-insensitive lookup in variant attributes object
+      const foundKey = Object.keys(vAttrs).find(key => key.toLowerCase() === k);
+      if (foundKey && vAttrs[foundKey]) return vAttrs[foundKey];
+    }
+    
+    // 2. If selectedAttrs has a value, use it (case-insensitive lookup)
+    const foundSelKey = Object.keys(selectedAttrs).find(key => key.toLowerCase() === k);
+    if (foundSelKey && selectedAttrs[foundSelKey]) return selectedAttrs[foundSelKey];
+
+    // 3. Otherwise, check product standard arrays
+    if (k === "color" && product?.colors?.length) return product.colors[0].name;
+    if (k === "size" && product?.sizes?.length) return product.sizes[0].name;
+    if (k === "pattern" && product?.patterns?.length) return product.patterns[0].name;
+    if (k === "fit" && product?.fits?.length) return product.fits[0].name;
+    if (k === "material" && product?.materials?.length) return product.materials[0].name;
+    if (k === "collar" && product?.collars?.length) return product.collars[0].name;
+    // 4. Fallback to first variant's value if variants exist
+    if (product?.variants?.length > 0) {
+      const firstVarAttrs = parseAttrs(product.variants[0].attributes);
+      const foundFirstKey = Object.keys(firstVarAttrs).find(key => key.toLowerCase() === k);
+      if (foundFirstKey && firstVarAttrs[foundFirstKey]) return firstVarAttrs[foundFirstKey];
+    }
+
+    // 5. Check globalAttributes
+    if (product?.globalAttributes?.length) {
+      const match = product.globalAttributes.find(a => a.name.toLowerCase() === k);
+      if (match?.options?.length) return match.options[0];
+    }
+
+    return null;
+  }, [product, activeVariant, selectedAttrs]);
+
   // ── Handle Variation Change (Exact Match → Fallback) ───────────────────────
   const handleAttrChange = (attrName, value) => {
-    const newAttrs = { ...selectedAttrs, [attrName]: value };
+    // Construct merged attributes from current selection + defaults
+    const currentAttrs = {};
+    Object.keys(availableAttributes).forEach(k => {
+      currentAttrs[k] = selectedAttrs[k] || selectedAttrs[k.toUpperCase()] || getDefaultAttrVal(k);
+    });
 
-    // Find exact match
+    const newAttrs = { ...currentAttrs, [attrName]: value };
+
+    // Find exact match case-insensitively
     const exact = product.variants.find(v => {
       const attrs = parseAttrs(v.attributes);
-      return Object.keys(newAttrs).every(k => newAttrs[k] === attrs[k]) &&
-        Object.keys(attrs).every(k => newAttrs[k] === attrs[k]);
+      const vKeys = Object.keys(attrs);
+      const newKeys = Object.keys(newAttrs);
+      if (vKeys.length !== newKeys.length) return false;
+
+      return vKeys.every(vk => {
+        const nk = newKeys.find(k => k.toLowerCase() === vk.toLowerCase());
+        if (!nk) return false;
+        const vVal = attrs[vk];
+        const nVal = newAttrs[nk];
+        return vVal && nVal && vVal.toLowerCase() === nVal.toLowerCase();
+      });
     });
-    if (exact) { setSelectedAttrs(parseAttrs(exact.attributes)); return; }
 
-    // Fallback to any variant containing this option
-    const fallback = product.variants.find(v => parseAttrs(v.attributes)[attrName] === value);
-    if (fallback) { setSelectedAttrs(parseAttrs(fallback.attributes)); return; }
+    if (exact) { 
+      setSelectedAttrs(parseAttrs(exact.attributes)); 
+      return; 
+    }
 
-    // Hard select
+    // Fallback to any variant containing this option case-insensitively
+    const fallback = product.variants.find(v => {
+      const attrs = parseAttrs(v.attributes);
+      return Object.entries(attrs).some(([vk, vVal]) => {
+        return vk.toLowerCase() === attrName.toLowerCase() && vVal && value && vVal.toLowerCase() === value.toLowerCase();
+      });
+    });
+
+    if (fallback) { 
+      setSelectedAttrs(parseAttrs(fallback.attributes)); 
+      return; 
+    }
+
+    // Hard select (e.g. for custom/non-variation attributes)
     setSelectedAttrs(newAttrs);
   };
 
@@ -204,9 +281,8 @@ const ProductDetails = () => {
     const valid = arr => (arr || []).filter(img => img?.url);
     const varImgs = valid(activeVariant?.images);
     const prodImgs = valid(product?.images);
-    if (varImgs.length > 0) {
-      const varUrls = new Set(varImgs.map(i => i.url));
-      return [...varImgs, ...prodImgs.filter(i => !varUrls.has(i.url))];
+    if (activeVariant && varImgs.length > 0) {
+      return varImgs;
     }
     return prodImgs.length > 0 ? prodImgs : [{ url: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80" }];
   }, [activeVariant?._id, product?._id]);
@@ -490,7 +566,7 @@ const ProductDetails = () => {
               {Object.entries(availableAttributes).map(([attrName, values]) => {
                 const isColor = attrName.toLowerCase() === "color" || attrName.toLowerCase() === "colour";
                 const isSize = attrName.toLowerCase() === "size";
-                const selected = selectedAttrs[attrName];
+                const selected = selectedAttrs[attrName] || selectedAttrs[attrName.toLowerCase()] || getDefaultAttrVal(attrName);
 
                 return (
                   <div key={attrName} className="mb-6">
@@ -514,7 +590,7 @@ const ProductDetails = () => {
 
                     <div className="flex flex-wrap gap-2.5">
                       {values.map(val => {
-                        const isSelected = selected === val;
+                        const isSelected = selected && val && String(selected).toLowerCase() === String(val).toLowerCase();
 
                         // Check if this option has a specific image (for visual swatches)
                         const matchVar = product.variants?.find(v => parseAttrs(v.attributes)[attrName] === val);
