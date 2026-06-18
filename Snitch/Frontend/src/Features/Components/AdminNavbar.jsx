@@ -27,7 +27,6 @@ const AdminNavbar = ({ toggleTheme, isDarkMode, isOpen, onClose }) => {
     { name: "Users", path: "/admin/users", icon: "ri-team-line" },
     { name: "Categories", path: "/admin/categories", icon: "ri-apps-2-line" },
     { name: "Brands", path: "/admin/brands", icon: "ri-award-line" },
-    { name: "Colors", path: "/admin/colors", icon: "ri-palette-line" },
     { name: "Sizes", path: "/admin/sizes", icon: "ri-ruler-line" },
     { name: "Units", path: "/admin/units", icon: "ri-scales-line" },
     { name: "Patterns", path: "/admin/patterns", icon: "ri-layout-masonry-line" },

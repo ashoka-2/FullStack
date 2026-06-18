@@ -34,7 +34,6 @@ const AdminDashboard = () => {
         { label: 'Registered Users', count: allUsers.length, icon: 'ri-team-line', path: '/admin/users', color: 'from-blue-500/10 to-indigo-500/10', border: 'border-blue-500/20', text: 'text-blue-400' },
         { label: 'Categories', count: categories.length, icon: 'ri-apps-2-line', path: '/admin/categories', color: 'from-emerald-500/10 to-teal-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
         { label: 'Brands', count: brands.length, icon: 'ri-award-line', path: '/admin/brands', color: 'from-amber-500/10 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
-        { label: 'System Colors', count: colors.length, icon: 'ri-palette-line', path: '/admin/colors', color: 'from-rose-500/10 to-pink-500/10', border: 'border-rose-500/20', text: 'text-rose-400' },
         { label: 'System Sizes', count: sizes.length, icon: 'ri-ruler-line', path: '/admin/sizes', color: 'from-purple-500/10 to-violet-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
         { label: 'Measurement Units', count: units.length, icon: 'ri-scales-line', path: '/admin/units', color: 'from-cyan-500/10 to-sky-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
     ];

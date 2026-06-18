@@ -9,8 +9,8 @@ export async function fetchUserCart() {
     return response.data;
 }
 
-export async function addItemToCart(productId, sizeId, colorId, quantity) {
-    const response = await cartApiInstance.post("/add", { productId, sizeId, colorId, quantity });
+export async function addItemToCart(productId, sizeId, colorId, quantity, variantId, selectedAttributes) {
+    const response = await cartApiInstance.post("/add", { productId, sizeId, colorId, quantity, variantId, selectedAttributes });
     return response.data;
 }
 

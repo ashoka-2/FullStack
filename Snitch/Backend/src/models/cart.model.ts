@@ -5,6 +5,8 @@ export interface ICartItem {
     product: mongoose.Types.ObjectId;
     size?: mongoose.Types.ObjectId;
     color?: mongoose.Types.ObjectId;
+    variantId?: mongoose.Types.ObjectId;
+    selectedAttributes?: Map<string, string>;
     quantity: number;
 }
 
@@ -37,6 +39,15 @@ const cartSchema = new Schema<ICart>(
                     type: Schema.Types.ObjectId,
                     ref: "Color",
                     default: null,
+                },
+                variantId: {
+                    type: Schema.Types.ObjectId,
+                    default: null,
+                },
+                selectedAttributes: {
+                    type: Map,
+                    of: String,
+                    default: {},
                 },
                 quantity: {
                     type: Number,

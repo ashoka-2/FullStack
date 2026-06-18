@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 import { uploadFile } from "../services/imagekit.service.js";
-import { broadcastUpdate } from "../services/socket.service.js";
+import { broadcastUpdate as originalBroadcastUpdate } from "../services/socket.service.js";
 import categoryModel from "../models/category.model.js";
 import unitModel from "../models/unit.model.js";
 import sizeModel from "../models/size.model.js";
@@ -11,6 +11,21 @@ import patternModel from "../models/pattern.model.js";
 import fitModel from "../models/fit.model.js";
 import materialModel from "../models/material.model.js";
 import collarModel from "../models/collar.model.js";
+import redisClient from "../config/redis.js";
+
+const KEY_METADATA = "products:metadata:v2";
+const bustMetadataCache = async () => {
+    try {
+        await redisClient.del(KEY_METADATA);
+    } catch (e) {
+        console.error("Failed to delete metadata cache:", e);
+    }
+};
+
+const broadcastUpdate = (event: string) => {
+    originalBroadcastUpdate(event);
+    bustMetadataCache();
+};
 
 // ─── Helper ────────────────────────────────────────────────────────────────
 const err500 = (res: Response, e: unknown) => {

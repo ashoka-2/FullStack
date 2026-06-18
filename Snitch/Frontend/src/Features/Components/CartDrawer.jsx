@@ -77,8 +77,19 @@ const CartDrawer = ({ onCheckout }) => {
 
                             {cart?.items?.length > 0 ? (
                                 cart.items.map((item, idx) => {
-                                    const price = item.product?.price?.saleAmount || item.product?.price?.amount || 0;
-                                    const img = item.product?.images?.[0]?.url || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=400&q=80";
+                                    const matchingVariant = item.variantId && item.product?.variants?.find(v => (v._id || v) === item.variantId);
+                                    const price = matchingVariant?.price?.saleAmount || matchingVariant?.price?.amount || item.product?.price?.saleAmount || item.product?.price?.amount || 0;
+                                    const img = (matchingVariant?.images && matchingVariant.images.length > 0)
+                                        ? matchingVariant.images[0].url
+                                        : item.product?.images?.[0]?.url || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=400&q=80";
+                                    
+                                    const selectedAttributesObj = item.selectedAttributes instanceof Map 
+                                        ? Object.fromEntries(item.selectedAttributes) 
+                                        : (item.selectedAttributes || {});
+                                    const attrsText = Object.keys(selectedAttributesObj).length > 0
+                                        ? Object.entries(selectedAttributesObj).map(([k, v]) => `${k.toUpperCase()}: ${v}`).join(' • ')
+                                        : `Size: ${item.size?.name || 'STD'} • Color: ${item.color?.name || 'STD'}`;
+
                                     return (
                                         <div 
                                             key={item._id || idx} 
@@ -97,7 +108,7 @@ const CartDrawer = ({ onCheckout }) => {
                                                 <div>
                                                     <h3 className="text-xs font-black truncate uppercase leading-tight">{item.product?.title || 'Removed Product'}</h3>
                                                     <p className="text-[10px] text-accent font-bold tracking-widest uppercase mt-1">
-                                                        Size: {item.size?.name || 'STD'} • Color: {item.color?.name || 'STD'}
+                                                        {attrsText}
                                                     </p>
                                                 </div>
 

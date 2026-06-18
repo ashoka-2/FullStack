@@ -43,10 +43,7 @@ router.put("/sizes/:id", updateSize as any);
 router.delete("/sizes/:id", deleteSize as any);
 
 // ── Colors ──────────────────────────────────────────────────────────────────
-router.post("/colors", adminValidator("color"), createColor as any);
 router.get("/colors", getAllColors as any);
-router.put("/colors/:id", updateColor as any);
-router.delete("/colors/:id", deleteColor as any);
 
 // ── Brands ──────────────────────────────────────────────────────────────────
 router.post("/brands", upload.single("logo"), adminValidator("brand"), createBrand as any);

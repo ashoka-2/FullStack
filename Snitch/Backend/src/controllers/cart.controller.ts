@@ -15,7 +15,7 @@ export const getCart = async (req: AuthRequest, res: Response) => {
         let cart = await cartModel.findOne({ user: userId })
             .populate({
                 path: "items.product",
-                select: "title price images stock description category brand unit"
+                select: "title price images stock description category brand unit variants"
             })
             .populate({
                 path: "items.size",
@@ -44,7 +44,7 @@ export const addToCart = async (req: AuthRequest, res: Response) => {
         return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const { productId, sizeId, colorId, quantity = 1 } = req.body;
+    const { productId, sizeId, colorId, variantId, selectedAttributes, quantity = 1 } = req.body;
 
     if (!productId) {
         return res.status(400).json({ message: "Product ID is required" });
@@ -62,12 +62,13 @@ export const addToCart = async (req: AuthRequest, res: Response) => {
             cart = new cartModel({ user: userId, items: [] });
         }
 
-        // Check if item already exists in cart with same product, size, and color
+        // Check if item already exists in cart with same product, size, color, and variant
         const itemIndex = cart.items.findIndex(item => {
             const sameProduct = item.product.toString() === productId;
+            const sameVariant = (!item.variantId && !variantId) || (item.variantId?.toString() === variantId);
             const sameSize = (!item.size && !sizeId) || (item.size?.toString() === sizeId);
             const sameColor = (!item.color && !colorId) || (item.color?.toString() === colorId);
-            return sameProduct && sameSize && sameColor;
+            return sameProduct && sameVariant && sameSize && sameColor;
         });
 
         if (itemIndex > -1) {
@@ -80,6 +81,8 @@ export const addToCart = async (req: AuthRequest, res: Response) => {
                 product: productId,
                 size: sizeId || null,
                 color: colorId || null,
+                variantId: variantId || null,
+                selectedAttributes: selectedAttributes || {},
                 quantity: Number(quantity),
             } as any);
         }
@@ -90,7 +93,7 @@ export const addToCart = async (req: AuthRequest, res: Response) => {
         const populatedCart = await cartModel.findById(cart._id)
             .populate({
                 path: "items.product",
-                select: "title price images stock description category brand unit"
+                select: "title price images stock description category brand unit variants"
             })
             .populate({
                 path: "items.size",
@@ -147,7 +150,7 @@ export const updateCartItem = async (req: AuthRequest, res: Response) => {
         const populatedCart = await cartModel.findById(cart._id)
             .populate({
                 path: "items.product",
-                select: "title price images stock description category brand unit"
+                select: "title price images stock description category brand unit variants"
             })
             .populate({
                 path: "items.size",
@@ -187,7 +190,7 @@ export const removeFromCart = async (req: AuthRequest, res: Response) => {
         const populatedCart = await cartModel.findById(cart._id)
             .populate({
                 path: "items.product",
-                select: "title price images stock description category brand unit"
+                select: "title price images stock description category brand unit variants"
             })
             .populate({
                 path: "items.size",

@@ -36,6 +36,8 @@ export const useCart = () => {
     sizeId = null,
     colorId = null,
     quantity = 1,
+    variantId = null,
+    selectedAttributes = null
   ) => {
     if (!user) {
       toast("Please login to add products to your cart.", "info");
@@ -48,6 +50,8 @@ export const useCart = () => {
         sizeId,
         colorId,
         quantity,
+        variantId,
+        selectedAttributes
       );
       dispatch(setCart(data.cart));
       toast("Product added to bag! 👜");

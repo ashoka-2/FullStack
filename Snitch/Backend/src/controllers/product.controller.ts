@@ -26,6 +26,8 @@ const POPULATE = [
     { path: "fits", select: "name" },
     { path: "materials", select: "name" },
     { path: "collars", select: "name" },
+    { path: "upSells", select: "title price images stock description category brand unit" },
+    { path: "crossSells", select: "title price images stock description category brand unit" },
 ];
 
 // ─── Cache TTLs ─────────────────────────────────────────────────────────────
@@ -47,6 +49,29 @@ const bustProductCache = async (id?: string) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+
+export const createColor = async (req: AuthRequest, res: Response) => {
+    try {
+        const { name, hexCode } = req.body;
+        if (!name || !hexCode) {
+            return res.status(400).json({ success: false, message: "Name and hex code are required" });
+        }
+        // Case-insensitive check
+        let color = await colorModel.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+        if (color) {
+            return res.status(200).json({ success: true, message: "Color already exists", color });
+        }
+        color = await colorModel.create({ name, hexCode });
+        
+        // Bust metadata cache since a new color was added
+        await redisClient.del(KEY_METADATA);
+        
+        return res.status(201).json({ success: true, message: "Color created successfully", color });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+};
 
 export const getProductMetadata = async (_req: Request, res: Response) => {
     try {
@@ -126,22 +151,24 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
             return res.status(401).json({ success: false, message: "Not authenticated" });
         }
 
-        // Upload images to ImageKit (from files)
-        const imageFiles = (req.files as any[]) || [];
-        const fileUploads = imageFiles.map((file: any) =>
+        // Upload files dynamically using ImageKit (main images + variant images)
+        const files = (req.files as any[]) || [];
+        const fileUploads = files.map((file: any) =>
             uploadFile({ file: file.buffer, filename: file.originalname, folder: "/snitch/products" })
+                .then(res => ({ fieldname: file.fieldname, url: res.url }))
         );
 
-        // Upload images from URLs (if provided)
+        // Upload main images from URLs (if provided)
         const imageUrls: string[] = Array.isArray(req.body.imageUrls) 
             ? req.body.imageUrls 
             : req.body.imageUrl ? [req.body.imageUrl] : [];
             
         const urlUploads = imageUrls.map(url => 
             uploadFile({ file: url, filename: `url-${Date.now()}`, folder: "/snitch/products" })
+                .then(res => ({ fieldname: "images", url: res.url }))
         );
 
-        const allUploads = await Promise.all([...fileUploads, ...urlUploads]);
+        const allUploaded = await Promise.all([...fileUploads, ...urlUploads]);
 
         const price: any = {
             amount: Number(priceAmount),
@@ -150,6 +177,69 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
         if (saleAmount !== undefined && saleAmount !== "") {
             price.saleAmount = Number(saleAmount);
         }
+
+        // Process variants
+        const parsedVariants = typeof req.body.variants === "string" ? JSON.parse(req.body.variants) : (req.body.variants || []);
+        const variants = parsedVariants.map((v: any, index: number) => {
+            const variantImages = allUploaded
+                .filter(f => f.fieldname === `variant_images_${index}`)
+                .map(f => ({ url: f.url }));
+            return {
+                images: variantImages,
+                stock: Number(v.stock || 0),
+                attributes: v.attributes || {},
+                price: v.price ? {
+                    amount: Number(v.price.amount || 0),
+                    currency: v.price.currency || "INR",
+                    saleAmount: v.price.saleAmount ? Number(v.price.saleAmount) : undefined
+                } : undefined
+            };
+        });
+
+        const mainImages = allUploaded.filter(f => f.fieldname === "images").map(f => ({ url: f.url }));
+
+        // Parse WooCommerce fields
+        const isVirtual = req.body.isVirtual === "true" || req.body.isVirtual === true;
+        const isDownloadable = req.body.isDownloadable === "true" || req.body.isDownloadable === true;
+        const manageStock = req.body.manageStock === "true" || req.body.manageStock === true || req.body.manageStock === undefined;
+        const stockQuantity = req.body.stockQuantity !== undefined ? Number(req.body.stockQuantity) : 0;
+        const stockStatus = req.body.stockStatus || "instock";
+        const allowBackorders = req.body.allowBackorders || "no";
+        const soldIndividually = req.body.soldIndividually === "true" || req.body.soldIndividually === true;
+        const shippingClass = req.body.shippingClass || null;
+        
+        const dimensions = req.body.dimensions 
+            ? (typeof req.body.dimensions === "string" ? JSON.parse(req.body.dimensions) : req.body.dimensions)
+            : undefined;
+
+        const upSells = req.body.upSells 
+            ? (typeof req.body.upSells === "string" ? JSON.parse(req.body.upSells) : req.body.upSells)
+            : [];
+
+        const crossSells = req.body.crossSells 
+            ? (typeof req.body.crossSells === "string" ? JSON.parse(req.body.crossSells) : req.body.crossSells)
+            : [];
+
+        const globalAttributes = req.body.globalAttributes 
+            ? (typeof req.body.globalAttributes === "string" ? JSON.parse(req.body.globalAttributes) : req.body.globalAttributes)
+            : [];
+
+        const categories = req.body.categories 
+            ? (typeof req.body.categories === "string" ? JSON.parse(req.body.categories) : req.body.categories)
+            : (category ? [category] : []);
+
+        const tags = req.body.tags 
+            ? (typeof req.body.tags === "string" ? JSON.parse(req.body.tags) : req.body.tags)
+            : [];
+
+        const purchaseNote = req.body.purchaseNote || "";
+        const menuOrder = req.body.menuOrder !== undefined ? Number(req.body.menuOrder) : 0;
+        const enableReviews = req.body.enableReviews === "true" || req.body.enableReviews === true || req.body.enableReviews === undefined;
+
+        const featuredImage = mainImages[0]?.url || req.body.featuredImage || undefined;
+        const productGallery = req.body.productGallery 
+            ? (typeof req.body.productGallery === "string" ? JSON.parse(req.body.productGallery) : req.body.productGallery)
+            : (mainImages.length > 1 ? mainImages.slice(1).map(img => img.url) : []);
 
         const productData: any = {
             title,
@@ -167,7 +257,27 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
             price,
             stock: Number(stock),
             status: status || "active",
-            images: allUploads.map((img: any) => ({ url: img.url })),
+            images: mainImages,
+            variants,
+            isVirtual,
+            isDownloadable,
+            manageStock,
+            stockQuantity,
+            stockStatus,
+            allowBackorders,
+            soldIndividually,
+            dimensions,
+            shippingClass,
+            upSells,
+            crossSells,
+            globalAttributes,
+            purchaseNote,
+            menuOrder,
+            enableReviews,
+            categories,
+            tags,
+            featuredImage,
+            productGallery,
         };
 
         if (sku) productData.sku = sku;
@@ -280,8 +390,9 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
         const product = await productModel.findById(id);
         if (!product) return res.status(404).json({ success: false, message: "Product not found" });
 
-        // Security: Ensure the seller owns the product
-        if (product.seller.toString() !== sellerId) {
+        // Security: Ensure the seller owns the product, except when Admin bypasses
+        const isAdmin = req.user?.role === "admin";
+        if (!isAdmin && product.seller.toString() !== sellerId) {
             return res.status(403).json({ success: false, message: "Unauthorized to edit this product" });
         }
 
@@ -302,6 +413,37 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
         if (weight !== undefined) updateData.weight = weight === "" ? undefined : Number(weight);
         if (status) updateData.status = status;
 
+        if (req.body.isVirtual !== undefined) updateData.isVirtual = req.body.isVirtual === "true" || req.body.isVirtual === true;
+        if (req.body.isDownloadable !== undefined) updateData.isDownloadable = req.body.isDownloadable === "true" || req.body.isDownloadable === true;
+        if (req.body.manageStock !== undefined) updateData.manageStock = req.body.manageStock === "true" || req.body.manageStock === true;
+        if (req.body.stockQuantity !== undefined) updateData.stockQuantity = Number(req.body.stockQuantity);
+        if (req.body.stockStatus !== undefined) updateData.stockStatus = req.body.stockStatus;
+        if (req.body.allowBackorders !== undefined) updateData.allowBackorders = req.body.allowBackorders;
+        if (req.body.soldIndividually !== undefined) updateData.soldIndividually = req.body.soldIndividually === "true" || req.body.soldIndividually === true;
+        if (req.body.shippingClass !== undefined) updateData.shippingClass = req.body.shippingClass || null;
+
+        if (req.body.dimensions !== undefined) {
+            updateData.dimensions = typeof req.body.dimensions === "string" ? JSON.parse(req.body.dimensions) : req.body.dimensions;
+        }
+        if (req.body.upSells !== undefined) {
+            updateData.upSells = typeof req.body.upSells === "string" ? JSON.parse(req.body.upSells) : req.body.upSells;
+        }
+        if (req.body.crossSells !== undefined) {
+            updateData.crossSells = typeof req.body.crossSells === "string" ? JSON.parse(req.body.crossSells) : req.body.crossSells;
+        }
+        if (req.body.globalAttributes !== undefined) {
+            updateData.globalAttributes = typeof req.body.globalAttributes === "string" ? JSON.parse(req.body.globalAttributes) : req.body.globalAttributes;
+        }
+        if (req.body.categories !== undefined) {
+            updateData.categories = typeof req.body.categories === "string" ? JSON.parse(req.body.categories) : req.body.categories;
+        }
+        if (req.body.tags !== undefined) {
+            updateData.tags = typeof req.body.tags === "string" ? JSON.parse(req.body.tags) : req.body.tags;
+        }
+        if (req.body.purchaseNote !== undefined) updateData.purchaseNote = req.body.purchaseNote;
+        if (req.body.menuOrder !== undefined) updateData.menuOrder = Number(req.body.menuOrder);
+        if (req.body.enableReviews !== undefined) updateData.enableReviews = req.body.enableReviews === "true" || req.body.enableReviews === true;
+
         if (priceAmount) {
             updateData.price = {
                 amount: Number(priceAmount),
@@ -312,22 +454,57 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
             }
         }
 
-        // Image handling: handle Files + URLs
-        const imageFiles = (req.files as any[]) || [];
+        // Upload files dynamically using ImageKit (main images + variant images)
+        const files = (req.files as any[]) || [];
+        const fileUploads = files.map((file: any) =>
+            uploadFile({ file: file.buffer, filename: file.originalname, folder: "/snitch/products" })
+                .then(res => ({ fieldname: file.fieldname, url: res.url }))
+        );
+
+        // Upload main images from URLs (if provided)
         const imageUrls: string[] = Array.isArray(req.body.imageUrls) 
             ? req.body.imageUrls 
             : req.body.imageUrl ? [req.body.imageUrl] : [];
+            
+        const urlUploads = imageUrls.map(url => 
+            uploadFile({ file: url, filename: `edit-url-${Date.now()}`, folder: "/snitch/products" })
+                .then(res => ({ fieldname: "images", url: res.url }))
+        );
 
-        if (imageFiles.length > 0 || imageUrls.length > 0) {
-            const fileUploads = imageFiles.map((file: any) =>
-                uploadFile({ file: file.buffer, filename: file.originalname, folder: "/snitch/products" })
-            );
-            const urlUploads = imageUrls.map(url => 
-                uploadFile({ file: url, filename: `edit-url-${Date.now()}`, folder: "/snitch/products" })
-            );
+        const allUploaded = await Promise.all([...fileUploads, ...urlUploads]);
 
-            const allUploads = await Promise.all([...fileUploads, ...urlUploads]);
-            updateData.images = allUploads.map((img: any) => ({ url: img.url }));
+        // If new main images uploaded, replace/update them
+        const newMainImages = allUploaded.filter(f => f.fieldname === "images").map(f => ({ url: f.url }));
+        if (newMainImages.length > 0) {
+            updateData.images = newMainImages;
+            updateData.featuredImage = newMainImages[0]?.url;
+            updateData.productGallery = newMainImages.slice(1).map(img => img.url);
+        } else {
+            if (req.body.featuredImage !== undefined) updateData.featuredImage = req.body.featuredImage;
+            if (req.body.productGallery !== undefined) {
+                updateData.productGallery = typeof req.body.productGallery === "string" ? JSON.parse(req.body.productGallery) : req.body.productGallery;
+            }
+        }
+
+        // Process variants if passed
+        if (req.body.variants) {
+            const parsedVariants = typeof req.body.variants === "string" ? JSON.parse(req.body.variants) : (req.body.variants || []);
+            updateData.variants = parsedVariants.map((v: any, index: number) => {
+                const variantImages = allUploaded
+                    .filter(f => f.fieldname === `variant_images_${index}`)
+                    .map(f => ({ url: f.url }));
+                const existingImages = Array.isArray(v.images) ? v.images.filter((img: any) => img && img.url && !img.file) : [];
+                return {
+                    images: [...existingImages, ...variantImages],
+                    stock: Number(v.stock || 0),
+                    attributes: v.attributes || {},
+                    price: v.price ? {
+                        amount: Number(v.price.amount || 0),
+                        currency: v.price.currency || "INR",
+                        saleAmount: v.price.saleAmount ? Number(v.price.saleAmount) : undefined
+                    } : undefined
+                };
+            });
         }
 
         const updatedProduct = await productModel.findByIdAndUpdate(
@@ -354,7 +531,9 @@ export const deleteProduct = async (req: AuthRequest, res: Response) => {
         const product = await productModel.findById(id);
         if (!product) return res.status(404).json({ success: false, message: "Product not found" });
 
-        if (product.seller.toString() !== sellerId) {
+        // Security: Ensure the seller owns the product, except when Admin bypasses
+        const isAdmin = req.user?.role === "admin";
+        if (!isAdmin && product.seller.toString() !== sellerId) {
             return res.status(403).json({ success: false, message: "Unauthorized to delete this product" });
         }
 
