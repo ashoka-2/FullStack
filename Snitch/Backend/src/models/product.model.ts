@@ -195,6 +195,7 @@ export interface IProduct extends Document, IProductMethods {
     enableReviews: boolean;
     reviewCount: number;
     averageRating: number;
+    showSizeChart?: boolean;
 
     // ── Media ─────────────────────────────────────────────────────────
     featuredImage?: string;
@@ -394,7 +395,7 @@ const productSchema = new Schema<IProduct, ProductModel, IProductMethods>(
             type: String,
             trim: true,
             uppercase: true,
-            sparse: true, // allows many null SKUs; unique only among set values
+            // uniqueness enforced by productSchema.index({ sku: 1 }, { unique: true, sparse: true }) below
         },
         price: { type: priceSchema, required: true },
         isVirtual: { type: Boolean, default: false },
@@ -459,6 +460,7 @@ const productSchema = new Schema<IProduct, ProductModel, IProductMethods>(
             max: 5,
             set: (v: number) => Math.round(v * 10) / 10, // always 1 decimal place
         },
+        showSizeChart: { type: Boolean, default: false },
 
         // ── Media ────────────────────────────────────────────────────────────
         featuredImage: { type: String, trim: true },
@@ -541,7 +543,7 @@ productSchema.statics.findPublished = function () {
 // Pre-save middleware
 // ─────────────────────────────────────────────────────────────────────────────
 
-productSchema.pre("save", function (this: IProduct, next: (err?: CallbackError) => void) {
+productSchema.pre("save", async function (this: IProduct) {
     // 1. Auto-generate slug from title if not set or title changed
     if (!this.slug || this.isModified("title")) {
         this.slug = (this.title ?? "")
@@ -583,8 +585,6 @@ productSchema.pre("save", function (this: IProduct, next: (err?: CallbackError) 
     if (catId && !this.categories.map((c) => c.toString()).includes(catId)) {
         this.categories.push(this.category);
     }
-
-    next();
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

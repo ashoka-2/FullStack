@@ -11,6 +11,8 @@ import {
     createFit, getAllFits, updateFit, deleteFit,
     createMaterial, getAllMaterials, updateMaterial, deleteMaterial,
     createCollar, getAllCollars, updateCollar, deleteCollar,
+    promoteMetadata, demoteMetadata, getAllMetadataByType,
+    upsertSellerSizeChart, getSellerSizeChart, deleteSellerSizeChart,
 } from "../controllers/admin.controller.js";
 import { adminValidator } from "../validator/admin.validator.js";
 
@@ -23,6 +25,11 @@ const router: Router = express.Router();
 
 // All admin routes are protected by authenticateAdmin
 router.use(authenticateAdmin as any);
+
+// ── Promote / Demote (make seller-created item global or revert) ─────────────
+router.patch("/:type/:id/promote", promoteMetadata as any);
+router.patch("/:type/:id/demote", demoteMetadata as any);
+router.get("/type/:type", getAllMetadataByType as any);
 
 // ── Categories ──────────────────────────────────────────────────────────────
 router.post("/categories", upload.single("image"), adminValidator("category"), createCategory as any);
@@ -43,7 +50,10 @@ router.put("/sizes/:id", updateSize as any);
 router.delete("/sizes/:id", deleteSize as any);
 
 // ── Colors ──────────────────────────────────────────────────────────────────
+router.post("/colors", createColor as any);
 router.get("/colors", getAllColors as any);
+router.put("/colors/:id", updateColor as any);
+router.delete("/colors/:id", deleteColor as any);
 
 // ── Brands ──────────────────────────────────────────────────────────────────
 router.post("/brands", upload.single("logo"), adminValidator("brand"), createBrand as any);
@@ -74,5 +84,10 @@ router.post("/collars", createCollar as any);
 router.get("/collars", getAllCollars as any);
 router.put("/collars/:id", updateCollar as any);
 router.delete("/collars/:id", deleteCollar as any);
+
+// ── Admin Size Chart Management (view any seller's chart) ─────────────────────
+router.post("/size-chart", upload.single("sizeChart"), upsertSellerSizeChart as any);
+router.get("/size-chart", getSellerSizeChart as any);
+router.delete("/size-chart", deleteSellerSizeChart as any);
 
 export default router;

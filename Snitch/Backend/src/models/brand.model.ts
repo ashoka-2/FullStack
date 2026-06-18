@@ -1,12 +1,13 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-
 export interface IBrand extends Document {
     name: string;
     logo?: string;          // ImageKit CDN URL for brand logo
     description?: string;
     website?: string;
     isActive: boolean;
+    createdBy: mongoose.Types.ObjectId | null;
+    isPublic: boolean;
 }
 
 const brandSchema = new Schema<IBrand>(
@@ -15,7 +16,6 @@ const brandSchema = new Schema<IBrand>(
             type: String,
             required: [true, "Brand name is required"],
             trim: true,
-            unique: true,
         },
         logo: {
             type: String,
@@ -32,9 +32,21 @@ const brandSchema = new Schema<IBrand>(
             type: Boolean,
             default: true,
         },
+        createdBy: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+        },
+        isPublic: {
+            type: Boolean,
+            default: false,
+        },
     },
     { timestamps: true }
 );
+
+brandSchema.index({ name: 1, createdBy: 1 }, { unique: true });
+brandSchema.index({ createdBy: 1, isPublic: 1 });
 
 const brandModel: Model<IBrand> = mongoose.model<IBrand>("Brand", brandSchema);
 

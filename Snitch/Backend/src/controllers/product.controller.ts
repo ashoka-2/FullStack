@@ -12,6 +12,7 @@ import patternModel from "../models/pattern.model.js";
 import fitModel from "../models/fit.model.js";
 import materialModel from "../models/material.model.js";
 import collarModel from "../models/collar.model.js";
+import sellerSizeChartModel from "../models/sellerSizeChart.model.js";
 import redisClient from "../config/redis.js";
 
 // Reusable populate config
@@ -48,54 +49,47 @@ const bustProductCache = async (id?: string) => {
     await redisClient.del(...keys);
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 
-export const createColor = async (req: AuthRequest, res: Response) => {
-    try {
-        const { name, hexCode } = req.body;
-        if (!name || !hexCode) {
-            return res.status(400).json({ success: false, message: "Name and hex code are required" });
-        }
-        // Case-insensitive check
-        let color = await colorModel.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
-        if (color) {
-            return res.status(200).json({ success: true, message: "Color already exists", color });
-        }
-        color = await colorModel.create({ name, hexCode });
-        
-        // Bust metadata cache since a new color was added
-        await redisClient.del(KEY_METADATA);
-        
-        return res.status(201).json({ success: true, message: "Color created successfully", color });
-    } catch (e) {
-        console.error(e);
-        return res.status(500).json({ success: false, message: "Server error" });
-    }
-};
 
-export const getProductMetadata = async (_req: Request, res: Response) => {
+
+export const getProductMetadata = async (req: AuthRequest, res: Response) => {
     try {
-        // Try cache first
-        const cached = await redisClient.get(KEY_METADATA);
+        const sellerId = req.user?.id;
+        if (!sellerId) {
+            return res.status(401).json({ success: false, message: "Authentication required" });
+        }
+
+        // Per-seller cache key
+        const cacheKey = `products:metadata:seller:${sellerId}`;
+        const cached = await redisClient.get(cacheKey);
         if (cached) {
             return res.status(200).json(JSON.parse(cached));
         }
 
-        const filter = { isActive: { $ne: false } };
+        // Seller sees: global public items OR items they created
+        const sellerObjId = new mongoose.Types.ObjectId(sellerId);
+        const scopeFilter = {
+            isActive: { $ne: false },
+            $or: [
+                { isPublic: true, createdBy: null },
+                { createdBy: sellerObjId },
+            ],
+        };
+
         const [categories, brands, sizes, colors, units, patterns, fits, materials, collars] = await Promise.all([
-            categoryModel.find(filter).sort({ name: 1 }),
-            brandModel.find(filter).sort({ name: 1 }),
-            sizeModel.find(filter).sort({ sortOrder: 1, name: 1 }),
-            colorModel.find(filter).sort({ name: 1 }),
-            unitModel.find(filter).sort({ name: 1 }),
-            patternModel.find(filter).sort({ name: 1 }),
-            fitModel.find(filter).sort({ name: 1 }),
-            materialModel.find(filter).sort({ name: 1 }),
-            collarModel.find(filter).sort({ name: 1 }),
+            categoryModel.find(scopeFilter).sort({ name: 1 }),
+            brandModel.find(scopeFilter).sort({ name: 1 }),
+            sizeModel.find(scopeFilter).sort({ sortOrder: 1, name: 1 }),
+            colorModel.find(scopeFilter).sort({ name: 1 }),
+            unitModel.find(scopeFilter).sort({ name: 1 }),
+            patternModel.find(scopeFilter).sort({ name: 1 }),
+            fitModel.find(scopeFilter).sort({ name: 1 }),
+            materialModel.find(scopeFilter).sort({ name: 1 }),
+            collarModel.find(scopeFilter).sort({ name: 1 }),
         ]);
 
-        const payload = { success: true, categories, brands, sizes, colors, units, patterns, fits, materials, collars };
-        await redisClient.setex(KEY_METADATA, TTL_METADATA, JSON.stringify(payload));
+        const payload = { success: true, categories, brands, sizes, colors, units, patterns, fits, materials, collars, sellerId };
+        await redisClient.setex(cacheKey, TTL_METADATA, JSON.stringify(payload));
 
         return res.status(200).json(payload);
     } catch (err) {
@@ -235,6 +229,7 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
         const purchaseNote = req.body.purchaseNote || "";
         const menuOrder = req.body.menuOrder !== undefined ? Number(req.body.menuOrder) : 0;
         const enableReviews = req.body.enableReviews === "true" || req.body.enableReviews === true || req.body.enableReviews === undefined;
+        const showSizeChart = req.body.showSizeChart === "true" || req.body.showSizeChart === true;
 
         const featuredImage = mainImages[0]?.url || req.body.featuredImage || undefined;
         const productGallery = req.body.productGallery 
@@ -274,6 +269,7 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
             purchaseNote,
             menuOrder,
             enableReviews,
+            showSizeChart,
             categories,
             tags,
             featuredImage,
@@ -363,9 +359,21 @@ export const getProductById = async (req: Request, res: Response) => {
             }
         }
 
-        const product = await productModel.findById(id).populate(POPULATE);
-        if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+        const productObj = await productModel.findById(id).populate(POPULATE).lean();
+        if (!productObj) return res.status(404).json({ success: false, message: "Product not found" });
 
+        let sizeChart = null;
+        if (productObj.showSizeChart) {
+            const sellerId = (productObj.seller as any)?._id || productObj.seller;
+            if (sellerId) {
+                const chart = await sellerSizeChartModel.findOne({ seller: sellerId });
+                if (chart) {
+                    sizeChart = chart.imageUrl;
+                }
+            }
+        }
+
+        const product = { ...productObj, sizeChart };
         const payload = { success: true, product };
         await redisClient.setex(cacheKey, TTL_PRODUCT_ONE, JSON.stringify(payload));
 
@@ -443,6 +451,7 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
         if (req.body.purchaseNote !== undefined) updateData.purchaseNote = req.body.purchaseNote;
         if (req.body.menuOrder !== undefined) updateData.menuOrder = Number(req.body.menuOrder);
         if (req.body.enableReviews !== undefined) updateData.enableReviews = req.body.enableReviews === "true" || req.body.enableReviews === true;
+        if (req.body.showSizeChart !== undefined) updateData.showSizeChart = req.body.showSizeChart === "true" || req.body.showSizeChart === true;
 
         if (priceAmount) {
             updateData.price = {

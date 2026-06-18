@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth.middleware.js";
 import { uploadFile } from "../services/imagekit.service.js";
@@ -11,35 +12,139 @@ import patternModel from "../models/pattern.model.js";
 import fitModel from "../models/fit.model.js";
 import materialModel from "../models/material.model.js";
 import collarModel from "../models/collar.model.js";
+import sellerSizeChartModel from "../models/sellerSizeChart.model.js";
 import redisClient from "../config/redis.js";
 
-const KEY_METADATA = "products:metadata:v2";
-const bustMetadataCache = async () => {
+// ─── Cache helpers ────────────────────────────────────────────────────────────
+const KEY_METADATA_SELLER = (sellerId: string) => `products:metadata:seller:${sellerId}`;
+const KEY_METADATA_ADMIN  = "products:metadata:admin:all";
+
+const bustMetadataCaches = async (sellerId?: string) => {
     try {
-        await redisClient.del(KEY_METADATA);
+        const keys: string[] = [KEY_METADATA_ADMIN];
+        if (sellerId) keys.push(KEY_METADATA_SELLER(sellerId));
+        // Also bust all seller caches when admin promotes something global
+        const sellerKeys = await redisClient.keys("products:metadata:seller:*");
+        if (sellerKeys.length) keys.push(...sellerKeys);
+        if (keys.length) await redisClient.del(...keys);
     } catch (e) {
-        console.error("Failed to delete metadata cache:", e);
+        console.error("Failed to bust metadata caches:", e);
     }
 };
 
-const broadcastUpdate = (event: string) => {
+const broadcastUpdate = (event: string, sellerId?: string) => {
     originalBroadcastUpdate(event);
-    bustMetadataCache();
+    bustMetadataCaches(sellerId);
 };
 
-// ─── Helper ────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 const err500 = (res: Response, e: unknown) => {
     console.error(e);
     return res.status(500).json({ success: false, message: "Server error" });
 };
 
-// ══════════════════════════════════════════════════════════════════════════
+/**
+ * Determines scope based on who's calling:
+ *  - admin → createdBy: null, isPublic: true  (visible to all)
+ *  - seller → createdBy: sellerId, isPublic: false  (private)
+ */
+const getScope = (req: AuthRequest) => {
+    const isAdmin = req.user?.role === "admin";
+    return {
+        createdBy: isAdmin ? null : new mongoose.Types.ObjectId(req.user!.id),
+        isPublic: isAdmin,
+    };
+};
+
+// Visibility filter for a given seller (sees global + own items)
+export const sellerVisibilityFilter = (sellerId: string) => ({
+    isActive: { $ne: false },
+    $or: [
+        { isPublic: true, createdBy: null },
+        { createdBy: new mongoose.Types.ObjectId(sellerId) },
+    ],
+});
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  PROMOTE (Admin only — makes a seller-created item globally visible)
+// ══════════════════════════════════════════════════════════════════════════════
+const MODEL_MAP: Record<string, any> = {
+    category: categoryModel,
+    unit: unitModel,
+    size: sizeModel,
+    color: colorModel,
+    brand: brandModel,
+    pattern: patternModel,
+    fit: fitModel,
+    material: materialModel,
+    collar: collarModel,
+};
+
+export const promoteMetadata = async (req: AuthRequest, res: Response) => {
+    try {
+        const { type, id } = req.params;
+        const model = MODEL_MAP[type as string];
+        if (!model) {
+            return res.status(400).json({ success: false, message: `Unknown type: ${type}` });
+        }
+        const item = await model.findByIdAndUpdate(
+            id,
+            { $set: { isPublic: true } },
+            { new: true }
+        );
+        if (!item) return res.status(404).json({ success: false, message: "Item not found" });
+        await bustMetadataCaches();
+        return res.status(200).json({ success: true, message: `${type} promoted to global`, item });
+    } catch (e) { return err500(res, e); }
+};
+
+export const demoteMetadata = async (req: AuthRequest, res: Response) => {
+    try {
+        const { type, id } = req.params;
+        const model = MODEL_MAP[type as string];
+        if (!model) {
+            return res.status(400).json({ success: false, message: `Unknown type: ${type}` });
+        }
+        const item = await model.findByIdAndUpdate(
+            id,
+            { $set: { isPublic: false } },
+            { new: true }
+        );
+        if (!item) return res.status(404).json({ success: false, message: "Item not found" });
+        await bustMetadataCaches();
+        return res.status(200).json({ success: true, message: `${type} demoted to private`, item });
+    } catch (e) { return err500(res, e); }
+};
+
+// Admin-only: get ALL items of a type (for admin dashboard management)
+export const getAllMetadataByType = async (req: AuthRequest, res: Response) => {
+    try {
+        const { type } = req.params;
+        const model = MODEL_MAP[type as string];
+        if (!model) {
+            return res.status(400).json({ success: false, message: `Unknown type: ${type}` });
+        }
+        const items = await model.find().sort({ createdAt: -1 });
+        return res.status(200).json({ success: true, items });
+    } catch (e) { return err500(res, e); }
+};
+
+
+// ══════════════════════════════════════════════════════════════════════════════
 //  CATEGORIES
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 export const createCategory = async (req: AuthRequest, res: Response) => {
     try {
         const { name, description } = req.body;
         const file = req.file as any;
+        const scope = getScope(req);
+
+        // Prevent duplicate name within same scope
+        const existing = await categoryModel.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") }, createdBy: scope.createdBy });
+        if (existing) {
+            return res.status(200).json({ success: true, message: "Category already exists", category: existing });
+        }
 
         let image: string | undefined;
         if (file) {
@@ -51,11 +156,11 @@ export const createCategory = async (req: AuthRequest, res: Response) => {
             image = uploaded.url;
         }
 
-        const categoryData: any = { name, description };
+        const categoryData: any = { name, description, ...scope };
         if (image) categoryData.image = image;
 
         const category = await categoryModel.create(categoryData);
-        broadcastUpdate("catalog_update");
+        broadcastUpdate("catalog_update", scope.createdBy?.toString());
         return res.status(201).json({ success: true, message: "Category created", category });
     } catch (e) { return err500(res, e); }
 };
@@ -73,7 +178,11 @@ export const updateCategory = async (req: AuthRequest, res: Response) => {
         const { name, description, isActive } = req.body;
         const file = req.file as any;
 
-        const update: any = { ...(name && { name }), ...(description !== undefined && { description }), ...(isActive !== undefined && { isActive }) };
+        const update: any = {
+            ...(name && { name }),
+            ...(description !== undefined && { description }),
+            ...(isActive !== undefined && { isActive }),
+        };
 
         if (file) {
             const uploaded = await uploadFile({ file: file.buffer, filename: file.originalname, folder: "/snitch/categories" });
@@ -89,22 +198,24 @@ export const updateCategory = async (req: AuthRequest, res: Response) => {
 
 export const deleteCategory = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
-        await categoryModel.findByIdAndDelete(id);
+        await categoryModel.findByIdAndDelete(req.params.id);
         broadcastUpdate("catalog_update");
         return res.status(200).json({ success: true, message: "Category deleted" });
     } catch (e) { return err500(res, e); }
 };
 
 
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 //  UNITS
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 export const createUnit = async (req: AuthRequest, res: Response) => {
     try {
         const { name, abbreviation, description } = req.body;
-        const unit = await unitModel.create({ name, abbreviation, description });
-        broadcastUpdate("catalog_update");
+        const scope = getScope(req);
+        const existing = await unitModel.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") }, createdBy: scope.createdBy });
+        if (existing) return res.status(200).json({ success: true, message: "Unit already exists", unit: existing });
+        const unit = await unitModel.create({ name, abbreviation, description, ...scope });
+        broadcastUpdate("catalog_update", scope.createdBy?.toString());
         return res.status(201).json({ success: true, message: "Unit created", unit });
     } catch (e) { return err500(res, e); }
 };
@@ -136,14 +247,17 @@ export const deleteUnit = async (req: AuthRequest, res: Response) => {
 };
 
 
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 //  SIZES
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 export const createSize = async (req: AuthRequest, res: Response) => {
     try {
         const { name, category, sortOrder } = req.body;
-        const size = await sizeModel.create({ name, category: category || null, sortOrder: sortOrder || 0 });
-        broadcastUpdate("catalog_update");
+        const scope = getScope(req);
+        const existing = await sizeModel.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") }, createdBy: scope.createdBy });
+        if (existing) return res.status(200).json({ success: true, message: "Size already exists", size: existing });
+        const size = await sizeModel.create({ name, category: category || null, sortOrder: sortOrder || 0, ...scope });
+        broadcastUpdate("catalog_update", scope.createdBy?.toString());
         return res.status(201).json({ success: true, message: "Size created", size });
     } catch (e) { return err500(res, e); }
 };
@@ -175,14 +289,17 @@ export const deleteSize = async (req: AuthRequest, res: Response) => {
 };
 
 
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 //  COLORS
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 export const createColor = async (req: AuthRequest, res: Response) => {
     try {
         const { name, hexCode } = req.body;
-        const color = await colorModel.create({ name, hexCode });
-        broadcastUpdate("catalog_update");
+        const scope = getScope(req);
+        const existing = await colorModel.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") }, createdBy: scope.createdBy });
+        if (existing) return res.status(200).json({ success: true, message: "Color already exists", color: existing });
+        const color = await colorModel.create({ name, hexCode, ...scope });
+        broadcastUpdate("catalog_update", scope.createdBy?.toString());
         return res.status(201).json({ success: true, message: "Color created", color });
     } catch (e) { return err500(res, e); }
 };
@@ -214,13 +331,17 @@ export const deleteColor = async (req: AuthRequest, res: Response) => {
 };
 
 
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 //  BRANDS
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 export const createBrand = async (req: AuthRequest, res: Response) => {
     try {
         const { name, description, website } = req.body;
         const file = req.file as any;
+        const scope = getScope(req);
+
+        const existing = await brandModel.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") }, createdBy: scope.createdBy });
+        if (existing) return res.status(200).json({ success: true, message: "Brand already exists", brand: existing });
 
         let logo: string | undefined;
         if (file) {
@@ -228,11 +349,11 @@ export const createBrand = async (req: AuthRequest, res: Response) => {
             logo = uploaded.url;
         }
 
-        const brandData: any = { name, description, website };
+        const brandData: any = { name, description, website, ...scope };
         if (logo) brandData.logo = logo;
 
         const brand = await brandModel.create(brandData);
-        broadcastUpdate("catalog_update");
+        broadcastUpdate("catalog_update", scope.createdBy?.toString());
         return res.status(201).json({ success: true, message: "Brand created", brand });
     } catch (e) { return err500(res, e); }
 };
@@ -250,12 +371,10 @@ export const updateBrand = async (req: AuthRequest, res: Response) => {
         const { name, description, website, isActive } = req.body;
         const file = req.file as any;
         const update: any = { name, description, website, isActive };
-
         if (file) {
             const uploaded = await uploadFile({ file: file.buffer, filename: file.originalname, folder: "/snitch/brands" });
             update.logo = uploaded.url;
         }
-
         const brand = await brandModel.findByIdAndUpdate(id, { $set: update }, { new: true, runValidators: true });
         if (!brand) return res.status(404).json({ success: false, message: "Brand not found" });
         broadcastUpdate("catalog_update");
@@ -272,14 +391,17 @@ export const deleteBrand = async (req: AuthRequest, res: Response) => {
 };
 
 
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 //  PATTERNS
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 export const createPattern = async (req: AuthRequest, res: Response) => {
     try {
         const { name } = req.body;
-        const pattern = await patternModel.create({ name });
-        broadcastUpdate("catalog_update");
+        const scope = getScope(req);
+        const existing = await patternModel.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") }, createdBy: scope.createdBy });
+        if (existing) return res.status(200).json({ success: true, message: "Pattern already exists", pattern: existing });
+        const pattern = await patternModel.create({ name, ...scope });
+        broadcastUpdate("catalog_update", scope.createdBy?.toString());
         return res.status(201).json({ success: true, message: "Pattern created", pattern });
     } catch (e) { return err500(res, e); }
 };
@@ -311,14 +433,17 @@ export const deletePattern = async (req: AuthRequest, res: Response) => {
 };
 
 
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 //  FITS
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 export const createFit = async (req: AuthRequest, res: Response) => {
     try {
         const { name } = req.body;
-        const fit = await fitModel.create({ name });
-        broadcastUpdate("catalog_update");
+        const scope = getScope(req);
+        const existing = await fitModel.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") }, createdBy: scope.createdBy });
+        if (existing) return res.status(200).json({ success: true, message: "Fit already exists", fit: existing });
+        const fit = await fitModel.create({ name, ...scope });
+        broadcastUpdate("catalog_update", scope.createdBy?.toString());
         return res.status(201).json({ success: true, message: "Fit created", fit });
     } catch (e) { return err500(res, e); }
 };
@@ -350,14 +475,17 @@ export const deleteFit = async (req: AuthRequest, res: Response) => {
 };
 
 
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 //  MATERIALS
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 export const createMaterial = async (req: AuthRequest, res: Response) => {
     try {
         const { name } = req.body;
-        const material = await materialModel.create({ name });
-        broadcastUpdate("catalog_update");
+        const scope = getScope(req);
+        const existing = await materialModel.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") }, createdBy: scope.createdBy });
+        if (existing) return res.status(200).json({ success: true, message: "Material already exists", material: existing });
+        const material = await materialModel.create({ name, ...scope });
+        broadcastUpdate("catalog_update", scope.createdBy?.toString());
         return res.status(201).json({ success: true, message: "Material created", material });
     } catch (e) { return err500(res, e); }
 };
@@ -389,14 +517,17 @@ export const deleteMaterial = async (req: AuthRequest, res: Response) => {
 };
 
 
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 //  COLLARS
-// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 export const createCollar = async (req: AuthRequest, res: Response) => {
     try {
         const { name } = req.body;
-        const collar = await collarModel.create({ name });
-        broadcastUpdate("catalog_update");
+        const scope = getScope(req);
+        const existing = await collarModel.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") }, createdBy: scope.createdBy });
+        if (existing) return res.status(200).json({ success: true, message: "Collar already exists", collar: existing });
+        const collar = await collarModel.create({ name, ...scope });
+        broadcastUpdate("catalog_update", scope.createdBy?.toString());
         return res.status(201).json({ success: true, message: "Collar created", collar });
     } catch (e) { return err500(res, e); }
 };
@@ -424,5 +555,49 @@ export const deleteCollar = async (req: AuthRequest, res: Response) => {
         await collarModel.findByIdAndDelete(req.params.id);
         broadcastUpdate("catalog_update");
         return res.status(200).json({ success: true, message: "Collar deleted" });
+    } catch (e) { return err500(res, e); }
+};
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  SELLER SIZE CHART
+// ══════════════════════════════════════════════════════════════════════════════
+export const upsertSellerSizeChart = async (req: AuthRequest, res: Response) => {
+    try {
+        const sellerId = req.user!.id;
+        const file = req.file as any;
+        const { label } = req.body;
+
+        if (!file) return res.status(400).json({ success: false, message: "Size chart image is required" });
+
+        const uploaded = await uploadFile({
+            file: file.buffer,
+            filename: file.originalname,
+            folder: "/snitch/size-charts",
+        });
+
+        const chart = await sellerSizeChartModel.findOneAndUpdate(
+            { seller: sellerId },
+            { $set: { imageUrl: uploaded.url, label: label || "Size Chart" } },
+            { new: true, upsert: true }
+        );
+
+        return res.status(200).json({ success: true, message: "Size chart saved", chart });
+    } catch (e) { return err500(res, e); }
+};
+
+export const getSellerSizeChart = async (req: AuthRequest, res: Response) => {
+    try {
+        const sellerId = req.user!.id;
+        const chart = await sellerSizeChartModel.findOne({ seller: sellerId });
+        return res.status(200).json({ success: true, chart: chart || null });
+    } catch (e) { return err500(res, e); }
+};
+
+export const deleteSellerSizeChart = async (req: AuthRequest, res: Response) => {
+    try {
+        const sellerId = req.user!.id;
+        await sellerSizeChartModel.findOneAndDelete({ seller: sellerId });
+        return res.status(200).json({ success: true, message: "Size chart deleted" });
     } catch (e) { return err500(res, e); }
 };

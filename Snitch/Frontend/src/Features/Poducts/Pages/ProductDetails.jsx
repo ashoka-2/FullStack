@@ -79,6 +79,7 @@ const ProductDetails = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [viewCustomChart, setViewCustomChart] = useState(true);
 
   // ── Fetch Details ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -93,11 +94,9 @@ const ProductDetails = () => {
     if (!allProducts?.length) handleGetAllProducts();
   }, []);
 
-  // ── Auto-select first variant on load ──────────────────────────────────────
+  // ── Reset selected attributes on load (default to original product) ─────────
   useEffect(() => {
-    if (product?.variants?.length > 0) {
-      setSelectedAttrs(parseAttrs(product.variants[0].attributes));
-    }
+    setSelectedAttrs({});
   }, [product?._id]);
 
   // ── Construct Available Attributes & Meta ─────────────────────────────────────────
@@ -220,10 +219,7 @@ const ProductDetails = () => {
   const displayPrice = saleAmount || baseAmount;
   const discount = saleAmount ? Math.round(((baseAmount - saleAmount) / baseAmount) * 100) : 0;
 
-  const hasVariants = product?.variants?.length > 0;
-  const stock = hasVariants 
-    ? (activeVariant != null ? activeVariant.stock : 0) 
-    : (product?.stock ?? 0);
+  const stock = activeVariant != null ? activeVariant.stock : (product?.stock ?? 0);
 
   const isWishlisted = wishlist?.products?.some(p => (p._id || p) === product?._id);
 
@@ -394,6 +390,102 @@ const ProductDetails = () => {
 
               <div className="h-px w-full mb-8 bg-border-theme" />
 
+              {/* ── Available Variations Cards ────────────────────────────────────── */}
+              {product.variants?.length > 0 && (
+                <div className="mb-8">
+                  <span className="text-[10px] uppercase tracking-[0.24em] font-semibold text-accent block mb-3">
+                    Available Variations
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
+                    {/* 1. Original Product Card */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedAttrs({})}
+                      className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-300 hover:bg-foreground/5
+                        ${Object.keys(selectedAttrs).length === 0 
+                          ? "border-accent ring-1 ring-accent bg-accent/5" 
+                          : "border-border-theme bg-transparent"}`}
+                    >
+                      <div className="w-12 h-16 rounded-lg overflow-hidden bg-foreground/5 flex-shrink-0 border border-border-theme/40">
+                        <img 
+                          src={product.images?.[0]?.url || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80"} 
+                          alt="Original" 
+                          className="w-full h-full object-cover object-top" 
+                        />
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-foreground truncate">
+                          Original Product
+                        </div>
+                        <div className="text-[9px] text-foreground/40 mt-0.5 uppercase tracking-wider">
+                          Base Version
+                        </div>
+                        <div className="flex items-baseline gap-2 mt-1">
+                          <span className="text-xs font-semibold text-foreground">
+                            {fmt(product.price?.saleAmount || product.price?.amount, product.price?.currency)}
+                          </span>
+                          {product.price?.saleAmount && (
+                            <span className="text-[10px] line-through text-foreground/40">
+                              {fmt(product.price?.amount, product.price?.currency)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* 2. Variant Cards */}
+                    {product.variants.map((variant, idx) => {
+                      const vAttrs = parseAttrs(variant.attributes);
+                      const attrLabel = Object.entries(vAttrs)
+                        .map(([k, v]) => `${v}`)
+                        .join(" / ");
+                      const isSelected = activeVariant?._id === variant._id;
+                      const vPrice = variant.price?.amount ? variant.price : product.price;
+                      const vDisplayPrice = vPrice?.saleAmount || vPrice?.amount || 0;
+                      const vImg = variant.images?.[0]?.url || product.images?.[0]?.url;
+
+                      return (
+                        <button
+                          key={variant._id || idx}
+                          type="button"
+                          onClick={() => setSelectedAttrs(vAttrs)}
+                          className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-300 hover:bg-foreground/5
+                            ${isSelected 
+                              ? "border-accent ring-1 ring-accent bg-accent/5" 
+                              : "border-border-theme bg-transparent"}`}
+                        >
+                          <div className="w-12 h-16 rounded-lg overflow-hidden bg-foreground/5 flex-shrink-0 border border-border-theme/40">
+                            <img 
+                              src={vImg} 
+                              alt={attrLabel} 
+                              className="w-full h-full object-cover object-top" 
+                            />
+                          </div>
+                          <div className="flex-grow min-w-0">
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-foreground truncate">
+                              {attrLabel}
+                            </div>
+                            <div className="text-[9px] text-foreground/40 mt-0.5 uppercase tracking-wider truncate">
+                              {variant.sku || `Variant #${idx + 1}`}
+                            </div>
+                            <div className="flex items-baseline gap-2 mt-1">
+                              <span className="text-xs font-semibold text-foreground">
+                                {fmt(vDisplayPrice, vPrice?.currency)}
+                              </span>
+                              {variant.stock <= 0 ? (
+                                <span className="text-[8px] uppercase tracking-wider text-red-500 font-bold">Out of Stock</span>
+                              ) : variant.stock <= 3 ? (
+                                <span className="text-[8px] uppercase tracking-wider text-amber-500 font-semibold">{variant.stock} Left</span>
+                              ) : null}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Dynamic Variation Options */}
               {Object.entries(availableAttributes).map(([attrName, values]) => {
                 const isColor = attrName.toLowerCase() === "color" || attrName.toLowerCase() === "colour";
@@ -551,27 +643,49 @@ const ProductDetails = () => {
           <div className="relative z-10 bg-background border border-border-theme rounded-3xl shadow-2xl p-6 max-w-lg w-full" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-light uppercase tracking-wide font-serif text-foreground">Size Guide</h3>
-              <button onClick={() => setShowSizeGuide(false)} className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center hover:bg-foreground/10 transition-colors"><i className="ri-close-line text-sm text-foreground" /></button>
+              <div className="flex items-center gap-3">
+                {product.sizeChart && (
+                  <button 
+                    type="button"
+                    onClick={() => setViewCustomChart(prev => !prev)} 
+                    className="text-[9px] uppercase font-bold tracking-wider px-3 py-1.5 rounded-full border border-accent/30 text-accent hover:bg-accent/10 transition-all"
+                  >
+                    {viewCustomChart ? "Show Table" : "Show Brand Chart"}
+                  </button>
+                )}
+                <button onClick={() => setShowSizeGuide(false)} className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center hover:bg-foreground/10 transition-colors"><i className="ri-close-line text-sm text-foreground" /></button>
+              </div>
             </div>
-            <table className="w-full text-xs text-foreground/75">
-              <thead>
-                <tr className="border-b border-border-theme">
-                  {["Size","Chest (in)","Waist (in)","Length (in)"].map(h => (
-                    <th key={h} className="pb-3 text-left text-[9px] font-bold uppercase tracking-wider text-foreground/40">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[["XS","34–35","28–29","27"],["S","36–37","30–31","28"],["M","38–39","32–33","29"],["L","40–41","34–35","30"],["XL","42–43","36–37","31"],["XXL","44–46","38–40","32"]].map(([s,c,w,l]) => (
-                  <tr key={s} className="border-b border-border-theme/40 hover:bg-foreground/2 transition-colors">
-                    <td className="py-3 font-bold text-accent">{s}</td>
-                    <td className="py-3 text-foreground">{c}</td>
-                    <td className="py-3 text-foreground">{w}</td>
-                    <td className="py-3 text-foreground">{l}</td>
+
+            {product.sizeChart && viewCustomChart ? (
+              <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-border-theme/40 bg-foreground/5 flex items-center justify-center p-2">
+                <img 
+                  src={product.sizeChart} 
+                  alt="Brand Size Chart" 
+                  className="w-full h-full object-contain rounded-lg"
+                />
+              </div>
+            ) : (
+              <table className="w-full text-xs text-foreground/75">
+                <thead>
+                  <tr className="border-b border-border-theme">
+                    {["Size","Chest (in)","Waist (in)","Length (in)"].map(h => (
+                      <th key={h} className="pb-3 text-left text-[9px] font-bold uppercase tracking-wider text-foreground/40">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {[["XS","34–35","28–29","27"],["S","36–37","30–31","28"],["M","38–39","32–33","29"],["L","40–41","34–35","30"],["XL","42–43","36–37","31"],["XXL","44–46","38–40","32"]].map(([s,c,w,l]) => (
+                    <tr key={s} className="border-b border-border-theme/40 hover:bg-foreground/2 transition-colors">
+                      <td className="py-3 font-bold text-accent">{s}</td>
+                      <td className="py-3 text-foreground">{c}</td>
+                      <td className="py-3 text-foreground">{w}</td>
+                      <td className="py-3 text-foreground">{l}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
             <p className="text-[9px] text-foreground/45 font-medium mt-4">Measurements may vary ±0.5 inches. Choose the size larger if you fall between sizes.</p>
           </div>
         </div>

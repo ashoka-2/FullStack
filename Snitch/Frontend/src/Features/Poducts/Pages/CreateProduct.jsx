@@ -15,7 +15,10 @@ import {
   createPattern,
   createFit,
   createMaterial,
-  createCollar
+  createCollar,
+  getSellerSizeChart,
+  uploadSellerSizeChart,
+  deleteSellerSizeChart,
 } from '../Services/product.api';
 import { setProductMetadata } from '../State/product.slice';
 import { addToast } from '../../../app/toast.slice';
@@ -169,6 +172,15 @@ const CreateProduct = () => {
   const [newColorHex, setNewColorHex] = useState('#745a27');
   const [isCreatingColor, setIsCreatingColor] = useState(false);
 
+  // Size Chart State
+  const [sizeChart, setSizeChart] = useState(null);       // { imageUrl, label } from server
+  const [sizeChartFile, setSizeChartFile] = useState(null); // local file before upload
+  const [sizeChartLabel, setSizeChartLabel] = useState('');
+  const [sizeChartLoading, setSizeChartLoading] = useState(false);
+  const [showSizeChart, setShowSizeChart] = useState(false); // per-product toggle
+  const loggedInSellerId = useSelector(state => state.auth?.user?.id || state.auth?.user?._id);
+
+
   // Dynamic Custom Attribute Keys
   const [customAttrKeys, setCustomAttrKeys] = useState(['size', 'color']);
   const [newAttrKey, setNewAttrKey] = useState('');
@@ -232,11 +244,6 @@ const CreateProduct = () => {
 
   // Fetch Metadata
   useEffect(() => {
-    if (cachedMeta) {
-      setMetadata(cachedMeta);
-      setLoadingMeta(false);
-      return;
-    }
     const fetchMeta = async () => {
       try {
         const res = await getProductMetadata();
@@ -251,6 +258,8 @@ const CreateProduct = () => {
             fits: res.fits || [],
             materials: res.materials || [],
             collars: res.collars || [],
+            // Pass through sellerId so UI can distinguish "Mine" vs global
+            sellerId: res.sellerId,
           };
           setMetadata(meta);
           dispatch(setProductMetadata(meta));
@@ -262,6 +271,20 @@ const CreateProduct = () => {
       }
     };
     fetchMeta();
+
+    // Fetch seller's size chart
+    const fetchSizeChart = async () => {
+      try {
+        const res = await getSellerSizeChart();
+        if (res.success && res.chart) {
+          setSizeChart(res.chart);
+          setSizeChartLabel(res.chart.label || '');
+        }
+      } catch (err) {
+        // no chart yet — ignore
+      }
+    };
+    fetchSizeChart();
   }, []);
 
   // Fetch Seller Products for Linked Products
@@ -328,6 +351,8 @@ const CreateProduct = () => {
               crossSells: p.crossSells?.map(c => getID(c)) || [],
               tags: p.tags?.join(', ') || '',
             });
+
+            setShowSizeChart(p.showSizeChart || false);
 
             if (p.images) {
               setImages(p.images.map(img => ({ url: img.url, isExisting: true })));
@@ -769,6 +794,7 @@ const CreateProduct = () => {
     payload.append('stockStatus', form.stockStatus);
     payload.append('allowBackorders', form.allowBackorders);
     payload.append('soldIndividually', String(form.soldIndividually));
+    payload.append('showSizeChart', String(showSizeChart));
 
     if (form.shippingClass) payload.append('shippingClass', form.shippingClass);
 
@@ -1583,7 +1609,7 @@ const CreateProduct = () => {
                 {/* Available Sizes */}
                 <Field label="Available Sizes" required hint="Select size options for this product">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs text-foreground/45">Or create a new size dynamically:</span>
+                    <span className="text-xs text-foreground/45">Private sizes are only visible to you. Global sizes are visible to all sellers.</span>
                     <button
                       type="button"
                       onClick={() => handleOpenInlineModal('size')}
@@ -1595,6 +1621,7 @@ const CreateProduct = () => {
                   <div className="flex flex-wrap gap-2 mt-1">
                     {metadata.sizes?.map(size => {
                       const selected = form.sizes.includes(size._id);
+                      const isMine = size.createdBy && size.createdBy.toString?.() === metadata.sellerId?.toString?.();
                       return (
                         <button
                           key={size._id}
@@ -1606,13 +1633,18 @@ const CreateProduct = () => {
                             handleChange({ target: { name: 'sizes', value: next } });
                           }}
                           className={[
-                            'px-4 py-2 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-200 border-2',
+                            'px-4 py-2 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-200 border-2 relative',
                             selected
                               ? 'bg-accent text-accent-content border-accent shadow-md shadow-accent/30 scale-105'
                               : 'border-border-theme/40 text-foreground/50 hover:border-accent/50 bg-background',
                           ].join(' ')}
                         >
                           {size.name}
+                          {isMine && (
+                            <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[8px] font-black px-1 py-0.5 rounded-full leading-none">
+                              MINE
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -1621,29 +1653,36 @@ const CreateProduct = () => {
 
                 {/* Colors Grid with dynamic creation */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-border-theme">
-                  <Field label="Available Colors" hint="Select color options for this product">
+                                  <Field label="Available Colors" hint="Select color options for this product">
                     <div className="flex flex-wrap gap-3 mt-1">
                       {metadata.colors?.map(color => {
                         const selected = form.colors.includes(color._id);
+                        const isMine = color.createdBy && color.createdBy.toString?.() === metadata.sellerId?.toString?.();
                         return (
-                          <button
-                            key={color._id}
-                            type="button"
-                            title={color.name}
-                            onClick={() => {
-                              const next = selected
-                                ? form.colors.filter(c => c !== color._id)
-                                : [...form.colors, color._id];
-                              handleChange({ target: { name: 'colors', value: next } });
-                            }}
-                            className={[
-                              'w-8 h-8 rounded-full transition-all duration-200 hover:scale-110 border-2 border-border-theme/40 flex items-center justify-center',
-                              selected ? 'ring-2 ring-offset-2 ring-offset-background ring-accent scale-115 border-accent/20' : '',
-                            ].join(' ')}
-                            style={{ backgroundColor: color.hexCode }}
-                          >
-                            {selected && <i className="ri-check-line text-white text-xs drop-shadow-md" />}
-                          </button>
+                          <div key={color._id} className="relative">
+                            <button
+                              type="button"
+                              title={color.name + (isMine ? ' (Mine)' : '')}
+                              onClick={() => {
+                                const next = selected
+                                  ? form.colors.filter(c => c !== color._id)
+                                  : [...form.colors, color._id];
+                                handleChange({ target: { name: 'colors', value: next } });
+                              }}
+                              className={[
+                                'w-8 h-8 rounded-full transition-all duration-200 hover:scale-110 border-2 border-border-theme/40 flex items-center justify-center',
+                                selected ? 'ring-2 ring-offset-2 ring-offset-background ring-accent scale-115 border-accent/20' : '',
+                              ].join(' ')}
+                              style={{ backgroundColor: color.hexCode }}
+                            >
+                              {selected && <i className="ri-check-line text-white text-xs drop-shadow-md" />}
+                            </button>
+                            {isMine && (
+                              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-[6px] font-black px-1 rounded-full leading-none">
+                                MINE
+                              </span>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -1922,6 +1961,147 @@ const CreateProduct = () => {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* ─── Size Chart ─────────────────────────────────────────── */}
+                <div className="pt-6 border-t border-border-theme">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="text-sm font-black tracking-wide flex items-center gap-2">
+                        <i className="ri-ruler-line text-accent" /> Size Chart
+                      </h4>
+                      <p className="text-xs text-foreground/45 mt-0.5">
+                        Upload one size chart image for all your products. You can toggle it on/off per product.
+                      </p>
+                    </div>
+                    {sizeChart && (
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <span className="text-xs text-foreground/60">Show on this product</span>
+                        <div
+                          onClick={() => setShowSizeChart(prev => !prev)}
+                          className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${showSizeChart ? 'bg-accent' : 'bg-border-theme/60'}`}
+                        >
+                          <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${showSizeChart ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                        </div>
+                      </label>
+                    )}
+                  </div>
+
+                  {sizeChart ? (
+                    <div className="flex gap-4 items-start">
+                      <div className="relative group">
+                        <img src={sizeChart.imageUrl} alt="Size Chart" className="w-32 h-40 object-cover rounded-xl border border-border-theme/40" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2">
+                          <label className="cursor-pointer text-white text-xs bg-accent/80 px-2 py-1 rounded-lg hover:bg-accent">
+                            <i className="ri-image-edit-line" /> Replace
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files[0]) setSizeChartFile(e.target.files[0]);
+                              }}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setSizeChartLoading(true);
+                              try {
+                                await deleteSellerSizeChart();
+                                setSizeChart(null);
+                                setSizeChartFile(null);
+                                dispatch(addToast({ message: "Size chart deleted", type: "success" }));
+                              } catch { dispatch(addToast({ message: "Failed to delete size chart", type: "error" })); }
+                              setSizeChartLoading(false);
+                            }}
+                            className="text-red-400 text-xs bg-red-500/20 px-2 py-1 rounded-lg hover:bg-red-500/40"
+                          >
+                            <i className="ri-delete-bin-line" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <p className="text-xs text-foreground/60">Label: <span className="font-semibold text-foreground">{sizeChart.label}</span></p>
+                        {sizeChartFile && (
+                          <div className="flex gap-2 items-center">
+                            <span className="text-xs text-foreground/50">{sizeChartFile.name}</span>
+                            <button
+                              type="button"
+                              disabled={sizeChartLoading}
+                              onClick={async () => {
+                                setSizeChartLoading(true);
+                                try {
+                                  const fd = new FormData();
+                                  fd.append("sizeChart", sizeChartFile);
+                                  fd.append("label", sizeChartLabel || "Size Chart");
+                                  const res = await uploadSellerSizeChart(fd);
+                                  if (res.success) {
+                                    setSizeChart(res.chart);
+                                    setSizeChartFile(null);
+                                    dispatch(addToast({ message: "Size chart updated!", type: "success" }));
+                                  }
+                                } catch { dispatch(addToast({ message: "Upload failed", type: "error" })); }
+                                setSizeChartLoading(false);
+                              }}
+                              className="bg-accent text-accent-content text-xs px-3 py-1 rounded-lg hover:opacity-90"
+                            >
+                              {sizeChartLoading ? "Uploading…" : "Upload New"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-border-theme/40 hover:border-accent/40 rounded-2xl p-6 flex flex-col items-center gap-3 transition-colors">
+                      <i className="ri-image-add-line text-3xl text-foreground/25" />
+                      <p className="text-xs text-foreground/45 text-center">No size chart uploaded yet.<br />Upload one to show it on all your products.</p>
+                      {sizeChartFile ? (
+                        <div className="flex flex-col gap-2 w-full max-w-xs">
+                          <input
+                            type="text"
+                            placeholder="Label (e.g. Men's Apparel Guide)"
+                            value={sizeChartLabel}
+                            onChange={e => setSizeChartLabel(e.target.value)}
+                            className={`${inputCls} !py-2 text-xs`}
+                          />
+                          <button
+                            type="button"
+                            disabled={sizeChartLoading}
+                            onClick={async () => {
+                              setSizeChartLoading(true);
+                              try {
+                                const fd = new FormData();
+                                fd.append("sizeChart", sizeChartFile);
+                                fd.append("label", sizeChartLabel || "Size Chart");
+                                const res = await uploadSellerSizeChart(fd);
+                                if (res.success) {
+                                  setSizeChart(res.chart);
+                                  setSizeChartFile(null);
+                                  dispatch(addToast({ message: "Size chart uploaded!", type: "success" }));
+                                }
+                              } catch { dispatch(addToast({ message: "Upload failed", type: "error" })); }
+                              setSizeChartLoading(false);
+                            }}
+                            className="bg-accent text-accent-content text-xs px-4 py-2 rounded-xl font-bold hover:opacity-90 w-full"
+                          >
+                            {sizeChartLoading ? "Uploading…" : "Upload Size Chart"}
+                          </button>
+                          <span className="text-[10px] text-foreground/40 text-center">{sizeChartFile.name}</span>
+                        </div>
+                      ) : (
+                        <label className="cursor-pointer bg-surface border border-border-theme/50 hover:border-accent/50 text-foreground/60 hover:text-accent text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-1">
+                          <i className="ri-upload-line" /> Choose Image
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={e => { if (e.target.files[0]) setSizeChartFile(e.target.files[0]); }}
+                          />
+                        </label>
+                      )}
                     </div>
                   )}
                 </div>
