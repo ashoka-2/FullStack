@@ -65,50 +65,52 @@ const ProductDetails = () => {
     if (!allProducts?.length) handleGetAllProducts();
   }, []);
 
-  // ── Pre-select attributes on product change (Amazon/Flipkart mount standard) ────
+  // ── Pre-select attributes on product change (Base Product Highlight Standard) ────
   useEffect(() => {
     if (!product) return;
 
     const initialAttrs = { size: "", color: "", storage: "" };
 
-    if (product.variants?.length > 0) {
+    // Initialize with standard product attributes (the base product's specs)
+    if (product.colors?.length) {
+      const c = product.colors[0];
+      initialAttrs.color = typeof c === "object" && c !== null ? c.name : String(c);
+    }
+    if (product.sizes?.length) {
+      const s = product.sizes[0];
+      initialAttrs.size = typeof s === "object" && s !== null ? s.name : String(s);
+    }
+    if (product.patterns?.length) {
+      const p = product.patterns[0];
+      initialAttrs.pattern = typeof p === "object" && p !== null ? p.name : String(p);
+    }
+    if (product.fits?.length) {
+      const f = product.fits[0];
+      initialAttrs.fit = typeof f === "object" && f !== null ? f.name : String(f);
+    }
+    if (product.materials?.length) {
+      const m = product.materials[0];
+      initialAttrs.material = typeof m === "object" && m !== null ? m.name : String(m);
+    }
+    if (product.collars?.length) {
+      const col = product.collars[0];
+      initialAttrs.collar = typeof col === "object" && col !== null ? col.name : String(col);
+    }
+    if (product.globalAttributes?.length) {
+      product.globalAttributes.forEach((attr) => {
+        if (attr.options?.length) {
+          initialAttrs[attr.name.toLowerCase()] = String(attr.options[0]);
+        }
+      });
+    }
+
+    // Fallback: If base product didn't have size or color, but variants do, fallback to first variant's attributes
+    if (!initialAttrs.color && !initialAttrs.size && product.variants?.length > 0) {
       const defaultVar = product.variants.find((v) => v.stock > 0) || product.variants[0];
       const attrs = parseAttrs(defaultVar.attributes);
       Object.entries(attrs).forEach(([k, v]) => {
         initialAttrs[k.toLowerCase()] = String(v);
       });
-    } else {
-      if (product.colors?.length) {
-        const c = product.colors[0];
-        initialAttrs.color = typeof c === "object" && c !== null ? c.name : String(c);
-      }
-      if (product.sizes?.length) {
-        const s = product.sizes[0];
-        initialAttrs.size = typeof s === "object" && s !== null ? s.name : String(s);
-      }
-      if (product.patterns?.length) {
-        const p = product.patterns[0];
-        initialAttrs.pattern = typeof p === "object" && p !== null ? p.name : String(p);
-      }
-      if (product.fits?.length) {
-        const f = product.fits[0];
-        initialAttrs.fit = typeof f === "object" && f !== null ? f.name : String(f);
-      }
-      if (product.materials?.length) {
-        const m = product.materials[0];
-        initialAttrs.material = typeof m === "object" && m !== null ? m.name : String(m);
-      }
-      if (product.collars?.length) {
-        const col = product.collars[0];
-        initialAttrs.collar = typeof col === "object" && col !== null ? col.name : String(col);
-      }
-      if (product.globalAttributes?.length) {
-        product.globalAttributes.forEach((attr) => {
-          if (attr.options?.length) {
-            initialAttrs[attr.name.toLowerCase()] = String(attr.options[0]);
-          }
-        });
-      }
     }
 
     setSelectedAttributes(initialAttrs);
@@ -257,8 +259,6 @@ const ProductDetails = () => {
 
   // ── Amazon/Flipkart Dynamic Availability Evaluator ─────────────────────────
   const isOptionSelectable = useCallback((attrName, val) => {
-    if (!product?.variants?.length) return true;
-
     const targetKey = attrName.toLowerCase();
 
     // To prevent selection lock, primary color chips are always clickable
@@ -267,24 +267,60 @@ const ProductDetails = () => {
     }
 
     const selectedColor = selectedAttributes.color || selectedAttributes.colour;
+    const prospectiveAttrs = {
+      color: selectedColor || "",
+      [targetKey]: val
+    };
 
-    return product.variants.some((v) => {
-      const attrs = parseAttrs(v.attributes);
-
-      const matchesVal = Object.entries(attrs).some(([vk, vVal]) => {
-        return vk.toLowerCase() === targetKey && vVal && String(vVal).toLowerCase() === String(val).toLowerCase();
-      });
-      if (!matchesVal) return false;
-
-      if (selectedColor) {
-        const matchesColor = Object.entries(attrs).some(([vk, vVal]) => {
-          return (vk.toLowerCase() === "color" || vk.toLowerCase() === "colour") && vVal && String(vVal).toLowerCase() === String(selectedColor).toLowerCase();
+    // Check if combination is supported by base product standard attributes
+    const matchBase = (() => {
+      if (prospectiveAttrs.color) {
+        const baseColors = product?.colors || [];
+        const hasColor = baseColors.some((c) => {
+          const name = typeof c === "object" && c !== null ? c.name : String(c);
+          return name.toLowerCase() === prospectiveAttrs.color.toLowerCase();
         });
-        if (!matchesColor) return false;
+        if (!hasColor) return false;
       }
-
+      if (prospectiveAttrs.size) {
+        const baseSizes = product?.sizes || [];
+        const hasSize = baseSizes.some((s) => {
+          const name = typeof s === "object" && s !== null ? s.name : String(s);
+          return name.toLowerCase() === prospectiveAttrs.size.toLowerCase();
+        });
+        if (!hasSize) return false;
+      }
+      // Base product does not have storage
+      if (prospectiveAttrs.storage) {
+        return false;
+      }
       return true;
-    });
+    })();
+
+    if (matchBase) return true;
+
+    // Check if combination is supported by variants
+    if (product?.variants?.length > 0) {
+      return product.variants.some((v) => {
+        const attrs = parseAttrs(v.attributes);
+
+        const matchesVal = Object.entries(attrs).some(([vk, vVal]) => {
+          return vk.toLowerCase() === targetKey && vVal && String(vVal).toLowerCase() === String(val).toLowerCase();
+        });
+        if (!matchesVal) return false;
+
+        if (selectedColor) {
+          const matchesColor = Object.entries(attrs).some(([vk, vVal]) => {
+            return (vk.toLowerCase() === "color" || vk.toLowerCase() === "colour") && vVal && String(vVal).toLowerCase() === String(selectedColor).toLowerCase();
+          });
+          if (!matchesColor) return false;
+        }
+
+        return true;
+      });
+    }
+
+    return false;
   }, [product, selectedAttributes]);
 
   const handleVariantCardClick = (vAttrs) => {
@@ -430,7 +466,7 @@ const ProductDetails = () => {
 
           <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
             {/* ── LEFT: Image Gallery ── */}
-            <div className="w-full lg:w-[65%] flex flex-col-reverse md:flex-row gap-5">
+            <div className="w-full lg:w-[50%] flex flex-col-reverse md:flex-row gap-5">
               {/* Vertical thumbnails */}
               {images.length > 1 && (
                 <div className="flex flex-row md:flex-col gap-3 overflow-x-auto md:overflow-y-auto pb-2 md:pb-0 scrollbar-hide w-full md:w-20 lg:w-[84px] flex-shrink-0 md:max-h-[580px]">
@@ -505,7 +541,7 @@ const ProductDetails = () => {
             </div>
 
             {/* ── RIGHT: Product Details ── */}
-            <div className="w-full lg:w-[35%] lg:sticky lg:top-24 flex flex-col pt-2">
+            <div className="w-full lg:w-[50%] lg:sticky lg:top-24 flex flex-col pt-2">
               {/* Category / Brand Row */}
               <div className="flex items-center gap-2 mb-3">
                 {product.brand?.name && (
