@@ -46,7 +46,7 @@ const ProductDetails = () => {
   const wishlist = useSelector((s) => s.wishlist?.wishlist);
 
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedAttrs, setSelectedAttrs] = useState({});
+  const [selectedAttributes, setSelectedAttributes] = useState({ size: "", color: "", storage: "" });
   const [quantity, setQuantity] = useState(1);
   const [actionLoading, setActionLoading] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
@@ -58,7 +58,6 @@ const ProductDetails = () => {
     handleGetProductById(id);
     setSelectedImage(0);
     setQuantity(1);
-    setSelectedAttrs({});
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [id]);
 
@@ -66,10 +65,54 @@ const ProductDetails = () => {
     if (!allProducts?.length) handleGetAllProducts();
   }, []);
 
-  // ── Reset selected attributes on load (default to original product) ─────────
+  // ── Pre-select attributes on product change (Amazon/Flipkart mount standard) ────
   useEffect(() => {
-    setSelectedAttrs({});
-  }, [product?._id]);
+    if (!product) return;
+
+    const initialAttrs = { size: "", color: "", storage: "" };
+
+    if (product.variants?.length > 0) {
+      const defaultVar = product.variants.find((v) => v.stock > 0) || product.variants[0];
+      const attrs = parseAttrs(defaultVar.attributes);
+      Object.entries(attrs).forEach(([k, v]) => {
+        initialAttrs[k.toLowerCase()] = String(v);
+      });
+    } else {
+      if (product.colors?.length) {
+        const c = product.colors[0];
+        initialAttrs.color = typeof c === "object" && c !== null ? c.name : String(c);
+      }
+      if (product.sizes?.length) {
+        const s = product.sizes[0];
+        initialAttrs.size = typeof s === "object" && s !== null ? s.name : String(s);
+      }
+      if (product.patterns?.length) {
+        const p = product.patterns[0];
+        initialAttrs.pattern = typeof p === "object" && p !== null ? p.name : String(p);
+      }
+      if (product.fits?.length) {
+        const f = product.fits[0];
+        initialAttrs.fit = typeof f === "object" && f !== null ? f.name : String(f);
+      }
+      if (product.materials?.length) {
+        const m = product.materials[0];
+        initialAttrs.material = typeof m === "object" && m !== null ? m.name : String(m);
+      }
+      if (product.collars?.length) {
+        const col = product.collars[0];
+        initialAttrs.collar = typeof col === "object" && col !== null ? col.name : String(col);
+      }
+      if (product.globalAttributes?.length) {
+        product.globalAttributes.forEach((attr) => {
+          if (attr.options?.length) {
+            initialAttrs[attr.name.toLowerCase()] = String(attr.options[0]);
+          }
+        });
+      }
+    }
+
+    setSelectedAttributes(initialAttrs);
+  }, [product]);
 
   // ── Construct Available Attributes & Meta ─────────────────────────────────────────
   const { availableAttributes, attributeMeta } = useMemo(() => {
@@ -92,7 +135,6 @@ const ProductDetails = () => {
       }
     };
 
-    // 1. Predefined standard arrays
     if (product?.colors?.length) {
       product.colors.forEach((c) => addOption("color", c, c.hexCode));
     }
@@ -112,7 +154,6 @@ const ProductDetails = () => {
       product.collars.forEach((c) => addOption("collar", c));
     }
 
-    // 2. From globalAttributes
     if (product?.globalAttributes?.length) {
       product.globalAttributes.forEach((attr) => {
         if (attr.options?.length) {
@@ -121,7 +162,6 @@ const ProductDetails = () => {
       });
     }
 
-    // 3. Merge from variants (implicit)
     if (product?.variants?.length) {
       product.variants.forEach((v) => {
         const attrs = parseAttrs(v.attributes);
@@ -134,159 +174,125 @@ const ProductDetails = () => {
     return { availableAttributes: map, attributeMeta: meta };
   }, [product]);
 
-  // ── Find Active Variant ────────────────────────────────────────────────────
-  const activeVariant = useMemo(() => {
+  // ── Variant Matrix Matching Logic ─────────────────────────────────────────
+  const findMatchingVariant = useCallback((currentAttributes) => {
     if (!product?.variants?.length) return null;
-    const selKeys = Object.keys(selectedAttrs);
-    if (selKeys.length === 0) return null;
+    return product.variants.find((v) => {
+      const attrs = parseAttrs(v.attributes);
+      const vKeys = Object.keys(attrs);
+      if (vKeys.length === 0) return false;
+      return vKeys.every((vk) => {
+        const normKey = vk.toLowerCase();
+        const curVal = currentAttributes[normKey];
+        const vVal = attrs[vk];
+        return curVal && vVal && String(curVal).toLowerCase() === String(vVal).toLowerCase();
+      });
+    });
+  }, [product]);
 
-    return (
-      product.variants.find((v) => {
-        const attrs = parseAttrs(v.attributes);
-        const vKeys = Object.keys(attrs);
-        if (vKeys.length !== selKeys.length) return false;
-
-        // Compare keys and values case-insensitively
-        return vKeys.every((vk) => {
-          const sk = selKeys.find((k) => k.toLowerCase() === vk.toLowerCase());
-          if (!sk) return false;
-          const vVal = attrs[vk];
-          const sVal = selectedAttrs[sk];
-          return vVal && sVal && vVal.toLowerCase() === sVal.toLowerCase();
-        });
-      }) ?? null
-    );
-  }, [product, selectedAttrs]);
+  const activeVariant = useMemo(() => {
+    return findMatchingVariant(selectedAttributes);
+  }, [product, selectedAttributes, findMatchingVariant]);
 
   // Reset main image on variant switch
   useEffect(() => {
     setSelectedImage(0);
   }, [activeVariant?._id]);
 
-  // Helper to get default selected attribute value when selectedAttrs is empty
-  const getDefaultAttrVal = useCallback(
-    (attrName) => {
-      const k = attrName.toLowerCase();
-
-      // 1. If a variant is active, use its attribute value
-      if (activeVariant) {
-        const vAttrs = parseAttrs(activeVariant.attributes);
-        // Case-insensitive lookup in variant attributes object
-        const foundKey = Object.keys(vAttrs).find(
-          (key) => key.toLowerCase() === k,
-        );
-        if (foundKey && vAttrs[foundKey]) return vAttrs[foundKey];
-      }
-
-      // 2. If selectedAttrs has a value, use it (case-insensitive lookup)
-      const foundSelKey = Object.keys(selectedAttrs).find(
-        (key) => key.toLowerCase() === k,
-      );
-      if (foundSelKey && selectedAttrs[foundSelKey])
-        return selectedAttrs[foundSelKey];
-
-      // 3. Otherwise, check product standard arrays
-      if (k === "color" && product?.colors?.length) {
-        const c = product.colors[0];
-        return typeof c === "object" && c !== null ? c.name : String(c);
-      }
-      if (k === "size" && product?.sizes?.length) {
-        const s = product.sizes[0];
-        return typeof s === "object" && s !== null ? s.name : String(s);
-      }
-      if (k === "pattern" && product?.patterns?.length) {
-        const p = product.patterns[0];
-        return typeof p === "object" && p !== null ? p.name : String(p);
-      }
-      if (k === "fit" && product?.fits?.length) {
-        const f = product.fits[0];
-        return typeof f === "object" && f !== null ? f.name : String(f);
-      }
-      if (k === "material" && product?.materials?.length) {
-        const m = product.materials[0];
-        return typeof m === "object" && m !== null ? m.name : String(m);
-      }
-      if (k === "collar" && product?.collars?.length) {
-        const col = product.collars[0];
-        return typeof col === "object" && col !== null ? col.name : String(col);
-      }
-      // 4. Fallback to first variant's value if variants exist
-      if (product?.variants?.length > 0) {
-        const firstVarAttrs = parseAttrs(product.variants[0].attributes);
-        const foundFirstKey = Object.keys(firstVarAttrs).find(
-          (key) => key.toLowerCase() === k,
-        );
-        if (foundFirstKey && firstVarAttrs[foundFirstKey])
-          return firstVarAttrs[foundFirstKey];
-      }
-
-      // 5. Check globalAttributes
-      if (product?.globalAttributes?.length) {
-        const match = product.globalAttributes.find(
-          (a) => a.name.toLowerCase() === k,
-        );
-        if (match?.options?.length) return match.options[0];
-      }
-
-      return null;
-    },
-    [product, activeVariant, selectedAttrs],
-  );
-
   // ── Handle Variation Change (Exact Match → Fallback) ───────────────────────
   const handleAttrChange = (attrName, value) => {
-    // Construct merged attributes from current selection + defaults
-    const currentAttrs = {};
-    Object.keys(availableAttributes).forEach((k) => {
-      currentAttrs[k] =
-        selectedAttrs[k] ||
-        selectedAttrs[k.toUpperCase()] ||
-        getDefaultAttrVal(k);
-    });
+    const normName = attrName.toLowerCase();
+    const newAttrs = { ...selectedAttributes, [normName]: value };
 
-    const newAttrs = { ...currentAttrs, [attrName]: value };
-
-    // Find exact match case-insensitively
-    const exact = product.variants.find((v) => {
-      const attrs = parseAttrs(v.attributes);
-      const vKeys = Object.keys(attrs);
-      const newKeys = Object.keys(newAttrs);
-      if (vKeys.length !== newKeys.length) return false;
-
-      return vKeys.every((vk) => {
-        const nk = newKeys.find((k) => k.toLowerCase() === vk.toLowerCase());
-        if (!nk) return false;
-        const vVal = attrs[vk];
-        const nVal = newAttrs[nk];
-        return vVal && nVal && vVal.toLowerCase() === nVal.toLowerCase();
-      });
-    });
-
+    // 1. Try exact match
+    const exact = findMatchingVariant(newAttrs);
     if (exact) {
-      setSelectedAttrs(parseAttrs(exact.attributes));
+      const parsed = parseAttrs(exact.attributes);
+      const updated = { size: "", color: "", storage: "" };
+      Object.entries(parsed).forEach(([k, v]) => {
+        updated[k.toLowerCase()] = String(v);
+      });
+      setSelectedAttributes(updated);
       return;
     }
 
-    // Fallback to any variant containing this option case-insensitively
-    const fallback = product.variants.find((v) => {
+    // 2. Fallback to nearest variant containing the selected option
+    const matchingVariants = product.variants.filter((v) => {
       const attrs = parseAttrs(v.attributes);
       return Object.entries(attrs).some(([vk, vVal]) => {
-        return (
-          vk.toLowerCase() === attrName.toLowerCase() &&
-          vVal &&
-          value &&
-          vVal.toLowerCase() === value.toLowerCase()
-        );
+        return vk.toLowerCase() === normName && vVal && String(vVal).toLowerCase() === String(value).toLowerCase();
       });
     });
 
-    if (fallback) {
-      setSelectedAttrs(parseAttrs(fallback.attributes));
+    if (matchingVariants.length > 0) {
+      let bestVariant = matchingVariants[0];
+      let maxScore = -1;
+      matchingVariants.forEach((v) => {
+        const attrs = parseAttrs(v.attributes);
+        let score = 0;
+        Object.entries(attrs).forEach(([vk, vVal]) => {
+          const k = vk.toLowerCase();
+          if (k !== normName && newAttrs[k] && String(newAttrs[k]).toLowerCase() === String(vVal).toLowerCase()) {
+            score++;
+          }
+        });
+        if (score > maxScore) {
+          maxScore = score;
+          bestVariant = v;
+        }
+      });
+
+      const parsed = parseAttrs(bestVariant.attributes);
+      const updated = { size: "", color: "", storage: "" };
+      Object.entries(parsed).forEach(([k, v]) => {
+        updated[k.toLowerCase()] = String(v);
+      });
+      setSelectedAttributes(updated);
       return;
     }
 
-    // Hard select (e.g. for custom/non-variation attributes)
-    setSelectedAttrs(newAttrs);
+    // 3. Hard select fallback
+    setSelectedAttributes(newAttrs);
+  };
+
+  // ── Amazon/Flipkart Dynamic Availability Evaluator ─────────────────────────
+  const isOptionSelectable = useCallback((attrName, val) => {
+    if (!product?.variants?.length) return true;
+
+    const targetKey = attrName.toLowerCase();
+
+    // To prevent selection lock, primary color chips are always clickable
+    if (targetKey === "color" || targetKey === "colour") {
+      return true;
+    }
+
+    const selectedColor = selectedAttributes.color || selectedAttributes.colour;
+
+    return product.variants.some((v) => {
+      const attrs = parseAttrs(v.attributes);
+
+      const matchesVal = Object.entries(attrs).some(([vk, vVal]) => {
+        return vk.toLowerCase() === targetKey && vVal && String(vVal).toLowerCase() === String(val).toLowerCase();
+      });
+      if (!matchesVal) return false;
+
+      if (selectedColor) {
+        const matchesColor = Object.entries(attrs).some(([vk, vVal]) => {
+          return (vk.toLowerCase() === "color" || vk.toLowerCase() === "colour") && vVal && String(vVal).toLowerCase() === String(selectedColor).toLowerCase();
+        });
+        if (!matchesColor) return false;
+      }
+
+      return true;
+    });
+  }, [product, selectedAttributes]);
+
+  const handleVariantCardClick = (vAttrs) => {
+    const updated = { size: "", color: "", storage: "" };
+    Object.entries(vAttrs).forEach(([k, v]) => {
+      updated[k.toLowerCase()] = String(v);
+    });
+    setSelectedAttributes(updated);
   };
 
   // ── Image Gallery Selector ─────────────────────────────────────────────────
@@ -339,7 +345,7 @@ const ProductDetails = () => {
         null,
         quantity,
         activeVariant?._id || null,
-        selectedAttrs,
+        selectedAttributes,
       );
       setCartSuccess(true);
       setTimeout(() => setCartSuccess(false), 2200);
@@ -558,10 +564,10 @@ const ProductDetails = () => {
                     {/* 1. Original Product Card */}
                     <button
                       type="button"
-                      onClick={() => setSelectedAttrs({})}
+                      onClick={() => setSelectedAttributes({ size: "", color: "", storage: "" })}
                       className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-300 hover:bg-foreground/5
                         ${
-                          Object.keys(selectedAttrs).length === 0
+                          !activeVariant
                             ? "border-accent ring-1 ring-accent bg-accent/5"
                             : "border-border-theme bg-transparent"
                         }`}
@@ -622,7 +628,7 @@ const ProductDetails = () => {
                         <button
                           key={variant._id || idx}
                           type="button"
-                          onClick={() => setSelectedAttrs(vAttrs)}
+                          onClick={() => handleVariantCardClick(vAttrs)}
                           className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-300 hover:bg-foreground/5
                             ${
                               isSelected
@@ -672,12 +678,7 @@ const ProductDetails = () => {
                   attrName.toLowerCase() === "color" ||
                   attrName.toLowerCase() === "colour";
                 const isSize = attrName.toLowerCase() === "size";
-                const foundKey = Object.keys(selectedAttrs).find(
-                  (k) => k.toLowerCase() === attrName.toLowerCase(),
-                );
-                const selected = foundKey
-                  ? selectedAttrs[foundKey]
-                  : getDefaultAttrVal(attrName);
+                const selected = selectedAttributes[attrName.toLowerCase()];
 
                 return (
                   <div key={attrName} className="mb-6">
@@ -711,14 +712,19 @@ const ProductDetails = () => {
                             String(val).toLowerCase();
 
                         // Check if this option has a specific image (for visual swatches)
-                        const matchVar = product.variants?.find(
-                          (v) => parseAttrs(v.attributes)[attrName] === val,
-                        );
+                        const matchVar = product.variants?.find((v) => {
+                          const vAttrs = parseAttrs(v.attributes);
+                          return Object.entries(vAttrs).some(([vk, vVal]) => {
+                            return vk.toLowerCase() === attrName.toLowerCase() && vVal && String(vVal).toLowerCase() === String(val).toLowerCase();
+                          });
+                        });
                         const imgUrl = matchVar?.images?.[0]?.url;
                         const isUniqueImage =
                           imgUrl && imgUrl !== product.images?.[0]?.url;
                         const hexCode =
-                          attributeMeta?.[attrName]?.[val]?.hexCode;
+                          attributeMeta?.[attrName.toLowerCase()]?.[val]?.hexCode;
+
+                        const selectable = isOptionSelectable(attrName, val);
 
                         if (isColor) {
                           if (isUniqueImage) {
@@ -727,7 +733,8 @@ const ProductDetails = () => {
                                 key={val}
                                 onClick={() => handleAttrChange(attrName, val)}
                                 className={`relative w-11 h-11 rounded-full overflow-hidden border transition-all duration-300
-                                  ${isSelected ? "border-accent ring-1 ring-accent scale-105" : "border-border-theme/40 opacity-80 hover:opacity-100 hover:border-border-theme"}`}
+                                  ${isSelected ? "border-accent ring-1 ring-accent scale-105" : "border-border-theme/40 opacity-80 hover:opacity-100 hover:border-border-theme"}
+                                  ${!selectable ? "opacity-35 pointer-events-none" : ""}`}
                                 title={val}
                               >
                                 <img
@@ -735,6 +742,11 @@ const ProductDetails = () => {
                                   alt={val}
                                   className="w-full h-full object-cover object-top"
                                 />
+                                {!selectable && (
+                                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div className="w-[140%] h-[1px] bg-foreground/60 rotate-[135deg]" />
+                                  </div>
+                                )}
                               </button>
                             );
                           } else if (hexCode) {
@@ -742,11 +754,18 @@ const ProductDetails = () => {
                               <button
                                 key={val}
                                 onClick={() => handleAttrChange(attrName, val)}
-                                className={`relative w-9 h-9 rounded-full overflow-hidden border transition-all duration-300
-                                  ${isSelected ? "border-foreground ring-2 ring-offset-2 ring-offset-background scale-105" : "border-border-theme/40 opacity-80 hover:opacity-100"}`}
+                                className={`relative w-9 h-9 rounded-full border transition-all duration-300
+                                  ${isSelected ? "border-foreground ring-2 ring-offset-2 ring-offset-background scale-105" : "border-border-theme/40 opacity-80 hover:opacity-100"}
+                                  ${!selectable ? "opacity-35 pointer-events-none" : ""}`}
                                 style={{ backgroundColor: hexCode }}
                                 title={val}
-                              />
+                              >
+                                {!selectable && (
+                                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div className="w-[140%] h-[1px] bg-foreground/60 rotate-[135deg]" />
+                                  </div>
+                                )}
+                              </button>
                             );
                           }
                         }
@@ -756,10 +775,15 @@ const ProductDetails = () => {
                           <button
                             key={val}
                             onClick={() => handleAttrChange(attrName, val)}
-                            className={`px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-medium transition-all duration-300 border 
-                              ${isSelected ? "border-foreground bg-foreground text-background font-bold" : "border-border-theme text-foreground hover:border-foreground bg-transparent"}`}
+                            className={`relative px-4 py-2 text-[11px] uppercase tracking-[0.15em] font-medium transition-all duration-300 border overflow-hidden
+                              ${!selectable ? "opacity-35 pointer-events-none border-border-theme/40 text-foreground/45 bg-transparent" : isSelected ? "border-foreground bg-foreground text-background font-bold" : "border-border-theme text-foreground hover:border-foreground bg-transparent"}`}
                           >
                             {val}
+                            {!selectable && (
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="w-[120%] h-[1px] bg-foreground/30 rotate-[15deg]" />
+                              </div>
+                            )}
                           </button>
                         );
                       })}
@@ -769,7 +793,7 @@ const ProductDetails = () => {
               })}
 
               {/* Stock info */}
-              <div className="mb-6">
+              <div className="mb-6 flex items-center gap-3">
                 <span
                   className={`text-[10px] uppercase tracking-[0.2em] font-medium ${stock > 0 ? "text-green-500" : "text-red-500"}`}
                 >
@@ -777,6 +801,12 @@ const ProductDetails = () => {
                     ? `${stock} items available`
                     : "Out of stock / Unavailable"}
                 </span>
+                {stock === 0 && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    Out of Stock
+                  </span>
+                )}
               </div>
 
               {/* Quantity Selector */}
@@ -825,7 +855,7 @@ const ProductDetails = () => {
                       ? "Added to Cart"
                       : stock > 0
                         ? "Add to Cart"
-                        : "Unavailable"}
+                        : "Out of Stock"}
                 </button>
 
                 {stock > 0 && (
