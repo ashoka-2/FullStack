@@ -34,8 +34,6 @@ const sellerSizeChartSchema = new Schema<ISellerSizeChart>(
     { timestamps: true }
 );
 
-sellerSizeChartSchema.index({ seller: 1 });
-
 const sellerSizeChartModel: Model<ISellerSizeChart> = mongoose.model<ISellerSizeChart>(
     "SellerSizeChart",
     sellerSizeChartSchema

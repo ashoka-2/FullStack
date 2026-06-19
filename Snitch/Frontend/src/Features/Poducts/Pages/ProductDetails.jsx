@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useProduct } from "../Hooks/useProduct";
 import { useCart } from "../../Cart/Hooks/useCart";
 import { useWishlist } from "../../Wishlist/Hooks/useWishlist";
+import { ProductDetailsSkeleton } from "../../Components/Skeletons";
 
 // Helper/Formatters
 const parseAttrs = (raw) => {
@@ -25,111 +26,8 @@ const fmt = (amount, currency = "INR") =>
     maximumFractionDigits: 0,
   }).format(amount);
 
-// ── Zoom Lens Component ──────────────────────────────────────────────────────
-const ZoomLens = ({ src, alt }) => {
-  const ref = useRef(null);
-  const [lens, setLens] = useState({
-    v: false,
-    x: 0,
-    y: 0,
-    bx: 0,
-    by: 0,
-    bw: 0,
-    bh: 0,
-  });
-  const SZ = 180;
-  const ZF = 3;
-  const onMove = useCallback((e) => {
-    if (!ref.current) return;
-    const r = ref.current.getBoundingClientRect();
-    const x = e.clientX - r.left,
-      y = e.clientY - r.top,
-      h = SZ / 2;
-    const cx = Math.max(h, Math.min(x, r.width - h));
-    const cy = Math.max(h, Math.min(y, r.height - h));
-    setLens({
-      v: true,
-      x: cx,
-      y: cy,
-      bx: -(cx * ZF - h),
-      by: -(cy * ZF - h),
-      bw: r.width * ZF,
-      bh: r.height * ZF,
-    });
-  }, []);
-  const onLeave = useCallback(() => setLens((p) => ({ ...p, v: false })), []);
-  return (
-    <div
-      ref={ref}
-      className="relative w-full h-full overflow-hidden cursor-crosshair select-none"
-      onMouseMove={onMove}
-      onMouseLeave={onLeave}
-    >
-      <img
-        src={src}
-        alt={alt}
-        className="w-full h-full object-cover object-top transition-opacity duration-300"
-        draggable={false}
-      />
-      {lens.v && (
-        <div
-          className="absolute pointer-events-none rounded-full overflow-hidden"
-          style={{
-            width: SZ,
-            height: SZ,
-            left: lens.x - SZ / 2,
-            top: lens.y - SZ / 2,
-            backgroundImage: `url(${src})`,
-            backgroundSize: `${lens.bw}px ${lens.bh}px`,
-            backgroundPosition: `${lens.bx}px ${lens.by}px`,
-            backgroundRepeat: "no-repeat",
-            border: "2px solid var(--color-accent)",
-            boxShadow: "0 8px 45px rgba(0,0,0,0.5)",
-            zIndex: 30,
-          }}
-        >
-          <div
-            className="absolute inset-0 rounded-full"
-            style={{
-              background:
-                "radial-gradient(ellipse at 30% 28%, rgba(255,255,255,0.1) 0%, transparent 60%)",
-            }}
-          />
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ── Accordion Component ──────────────────────────────────────────────────────
-const Accordion = ({ icon, label, children, defaultOpen = false }) => {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="border-b border-border-theme/40 last:border-b-0">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between py-4 text-left group"
-      >
-        <div className="flex items-center gap-2.5">
-          {icon && <i className={`${icon} text-xs text-accent`} />}
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/70 group-hover:text-accent transition-colors">
-            {label}
-          </span>
-        </div>
-        <i
-          className={`ri-arrow-down-s-line text-sm text-foreground/30 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-      <div
-        className={`overflow-hidden transition-all duration-300 ${open ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"}`}
-      >
-        <div className="pb-5 text-[11px] text-foreground/60 leading-relaxed font-medium space-y-2">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-};
+import ZoomLens from "../../Components/ZoomLens";
+import Accordion from "../../Components/Accordion";
 
 // ── Main Component ───────────────────────────────────────────────────────────
 const ProductDetails = () => {
@@ -288,16 +186,30 @@ const ProductDetails = () => {
         return selectedAttrs[foundSelKey];
 
       // 3. Otherwise, check product standard arrays
-      if (k === "color" && product?.colors?.length)
-        return product.colors[0].name;
-      if (k === "size" && product?.sizes?.length) return product.sizes[0].name;
-      if (k === "pattern" && product?.patterns?.length)
-        return product.patterns[0].name;
-      if (k === "fit" && product?.fits?.length) return product.fits[0].name;
-      if (k === "material" && product?.materials?.length)
-        return product.materials[0].name;
-      if (k === "collar" && product?.collars?.length)
-        return product.collars[0].name;
+      if (k === "color" && product?.colors?.length) {
+        const c = product.colors[0];
+        return typeof c === "object" && c !== null ? c.name : String(c);
+      }
+      if (k === "size" && product?.sizes?.length) {
+        const s = product.sizes[0];
+        return typeof s === "object" && s !== null ? s.name : String(s);
+      }
+      if (k === "pattern" && product?.patterns?.length) {
+        const p = product.patterns[0];
+        return typeof p === "object" && p !== null ? p.name : String(p);
+      }
+      if (k === "fit" && product?.fits?.length) {
+        const f = product.fits[0];
+        return typeof f === "object" && f !== null ? f.name : String(f);
+      }
+      if (k === "material" && product?.materials?.length) {
+        const m = product.materials[0];
+        return typeof m === "object" && m !== null ? m.name : String(m);
+      }
+      if (k === "collar" && product?.collars?.length) {
+        const col = product.collars[0];
+        return typeof col === "object" && col !== null ? col.name : String(col);
+      }
       // 4. Fallback to first variant's value if variants exist
       if (product?.variants?.length > 0) {
         const firstVarAttrs = parseAttrs(product.variants[0].attributes);
@@ -452,13 +364,7 @@ const ProductDetails = () => {
 
   // ── Loading Skeleton ──────────────────────────────────────────────────────
   if (currentLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-[10px] uppercase tracking-[0.2em] font-medium text-foreground/40 animate-pulse">
-          Retrieving piece...
-        </p>
-      </div>
-    );
+    return <ProductDetailsSkeleton />;
   }
 
   if (!product && !currentLoading) {
@@ -766,10 +672,12 @@ const ProductDetails = () => {
                   attrName.toLowerCase() === "color" ||
                   attrName.toLowerCase() === "colour";
                 const isSize = attrName.toLowerCase() === "size";
-                const selected =
-                  selectedAttrs[attrName] ||
-                  selectedAttrs[attrName.toLowerCase()] ||
-                  getDefaultAttrVal(attrName);
+                const foundKey = Object.keys(selectedAttrs).find(
+                  (k) => k.toLowerCase() === attrName.toLowerCase(),
+                );
+                const selected = foundKey
+                  ? selectedAttrs[foundKey]
+                  : getDefaultAttrVal(attrName);
 
                 return (
                   <div key={attrName} className="mb-6">

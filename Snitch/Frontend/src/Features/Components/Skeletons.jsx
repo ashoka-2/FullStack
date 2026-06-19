@@ -301,50 +301,168 @@ export const OrdersSkeleton = () => (
 
 // ─── Product Form Skeleton (Create/Edit) ──────────────────────────────────────────
 export const ProductFormSkeleton = () => (
-  <div className="max-w-3xl mx-auto pt-24 pb-20 px-4">
-    <div className="mb-10 space-y-6">
-      <SkeletonBase className="w-24 h-8 rounded-lg" />
-      <SkeletonBase className="w-[400px] h-14 rounded-2xl" />
-    </div>
-
-    <div className="flex items-center gap-4 mb-12">
-      {[1, 2, 3, 4].map((i) => (
-        <React.Fragment key={i}>
-          <SkeletonBase className="w-9 h-9 rounded-full shrink-0" />
-          {i < 4 && <SkeletonBase className="flex-1 h-[2px] rounded-full" />}
-        </React.Fragment>
-      ))}
-    </div>
-
-    <div className="bg-surface/50 border border-border-theme rounded-3xl p-8 md:p-12 shadow-2xl">
-      <div className="flex items-center gap-3 mb-8">
-        <SkeletonBase className="w-7 h-7 rounded-lg" />
-        <SkeletonBase className="w-40 h-7" />
+  <div className="min-h-screen bg-background text-foreground pt-24 pb-20 px-4 md:px-8">
+    <div className="max-w-6xl mx-auto">
+      {/* Header Skeleton */}
+      <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="space-y-3">
+          <SkeletonBase className="w-32 h-6 rounded-lg opacity-35" />
+          <SkeletonBase className="w-[450px] h-12 rounded-2xl" />
+        </div>
+        <div className="flex gap-3">
+          <SkeletonBase className="w-24 h-12 rounded-2xl animate-pulse" />
+          <SkeletonBase className="w-36 h-12 rounded-2xl" />
+        </div>
       </div>
 
-      <div className="space-y-10">
-        <div className="space-y-3">
-          <SkeletonBase className="w-24 h-3 rounded-full opacity-40 ml-1" />
-          <SkeletonBase className="w-full h-14" />
+      {/* Split layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Sidebar Tabs */}
+        <div className="lg:col-span-1 flex flex-col gap-2">
+          {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div key={i} className="w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl border border-border-theme/40 bg-surface/20">
+              <SkeletonBase className="w-5 h-5 rounded-md" />
+              <SkeletonBase className="w-24 h-3 rounded-full opacity-40" />
+            </div>
+          ))}
         </div>
-        <div className="space-y-3">
-          <SkeletonBase className="w-24 h-3 rounded-full opacity-40 ml-1" />
-          <SkeletonBase className="w-full h-40" />
-        </div>
-        <div className="grid grid-cols-2 gap-10">
-          <div className="space-y-3">
-            <SkeletonBase className="w-24 h-3 rounded-full opacity-40 ml-1" />
-            <SkeletonBase className="w-full h-14" />
+
+        {/* Form Content Pane */}
+        <div className="lg:col-span-3 bg-surface/40 border border-border-theme/40 rounded-3xl p-6 md:p-10 space-y-8 animate-pulse">
+          <div className="flex items-center gap-3 pb-4 border-b border-border-theme/40">
+            <SkeletonBase className="w-6 h-6 rounded-md" />
+            <SkeletonBase className="w-40 h-6 rounded-md" />
           </div>
-          <div className="space-y-3">
-            <SkeletonBase className="w-24 h-3 rounded-full opacity-40 ml-1" />
-            <SkeletonBase className="w-full h-14" />
+
+          <div className="space-y-6">
+            <div className="space-y-2.5">
+              <SkeletonBase className="w-28 h-3 rounded-full opacity-40" />
+              <SkeletonBase className="w-full h-12 rounded-xl" />
+            </div>
+            <div className="space-y-2.5">
+              <SkeletonBase className="w-28 h-3 rounded-full opacity-40" />
+              <SkeletonBase className="w-full h-36 rounded-xl" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2.5">
+                <SkeletonBase className="w-28 h-3 rounded-full opacity-40" />
+                <SkeletonBase className="w-full h-12 rounded-xl" />
+              </div>
+              <div className="space-y-2.5">
+                <SkeletonBase className="w-28 h-3 rounded-full opacity-40" />
+                <SkeletonBase className="w-full h-12 rounded-xl" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2.5">
+                <SkeletonBase className="w-28 h-3 rounded-full opacity-40" />
+                <SkeletonBase className="w-full h-12 rounded-xl" />
+              </div>
+              <div className="space-y-2.5">
+                <SkeletonBase className="w-28 h-3 rounded-full opacity-40" />
+                <SkeletonBase className="w-full h-12 rounded-xl" />
+              </div>
+              <div className="space-y-2.5">
+                <SkeletonBase className="w-28 h-3 rounded-full opacity-40" />
+                <SkeletonBase className="w-full h-12 rounded-xl" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 );
+
+// ─── Product Details Page Skeleton ───────────────────────────────────────────
+export const ProductDetailsSkeleton = () => (
+  <div className="min-h-screen pb-24 bg-background text-foreground">
+    <div className="max-w-7xl mx-auto px-6 lg:px-12 xl:px-20 pt-8 lg:pt-14">
+      {/* Breadcrumbs Placeholder */}
+      <div className="flex items-center gap-2 mb-10">
+        <SkeletonBase className="w-16 h-3 rounded-full opacity-35" />
+        <span className="text-foreground/20">/</span>
+        <SkeletonBase className="w-20 h-3 rounded-full opacity-35" />
+        <span className="text-foreground/20">/</span>
+        <SkeletonBase className="w-32 h-3 rounded-full opacity-35" />
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
+        {/* LEFT: Image Gallery */}
+        <div className="w-full lg:w-[65%] flex flex-col-reverse md:flex-row gap-5">
+          {/* Thumbnails */}
+          <div className="flex flex-row md:flex-col gap-3 w-full md:w-20 lg:w-[84px] flex-shrink-0">
+            {[1, 2, 3, 4].map((i) => (
+              <SkeletonBase key={i} className="w-16 md:w-full aspect-[3/4] rounded-lg opacity-40" />
+            ))}
+          </div>
+          {/* Main Image */}
+          <SkeletonBase className="w-full aspect-[3/4] rounded-2xl" />
+        </div>
+
+        {/* RIGHT: Product Details */}
+        <div className="w-full lg:w-[35%] flex flex-col pt-2 space-y-6">
+          <div className="flex items-center gap-2">
+            <SkeletonBase className="w-24 h-4 rounded-full opacity-40" />
+            <SkeletonBase className="w-16 h-4 rounded-full opacity-30" />
+          </div>
+          
+          <SkeletonBase className="w-full h-16 rounded-xl" />
+          
+          <div className="flex items-baseline gap-4">
+            <SkeletonBase className="w-28 h-8 rounded-lg" />
+            <SkeletonBase className="w-16 h-5 rounded-lg opacity-30" />
+          </div>
+
+          <div className="h-px w-full bg-border-theme/40" />
+
+          {/* Variations Cards Grid */}
+          <div className="space-y-3">
+            <SkeletonBase className="w-36 h-4 rounded-full opacity-40" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-border-theme/40 bg-surface/20">
+                  <SkeletonBase className="w-12 h-16 rounded-lg shrink-0" />
+                  <div className="flex-grow space-y-2">
+                    <SkeletonBase className="w-3/4 h-3 rounded-full" />
+                    <SkeletonBase className="w-1/2 h-2.5 rounded-full opacity-40" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Selectors */}
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <SkeletonBase className="w-16 h-3 rounded-full opacity-40" />
+              <div className="flex gap-2.5">
+                {[1, 2, 3, 4].map((i) => (
+                  <SkeletonBase key={i} className="w-10 h-10 rounded-full" />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <SkeletonBase className="w-16 h-3 rounded-full opacity-40" />
+              <div className="flex gap-2.5">
+                {[1, 2, 3, 4].map((i) => (
+                  <SkeletonBase key={i} className="w-12 h-9 rounded-lg" />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="space-y-3 pt-6">
+            <SkeletonBase className="w-full h-14 rounded-xl" />
+            <SkeletonBase className="w-full h-14 rounded-xl opacity-50" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 
 // ─── Admin Users Skeleton ────────────────────────────────────────────────────
 export const AdminUsersSkeleton = () => (
