@@ -30,12 +30,15 @@ import mongoose, {
     QueryWithHelpers,
     HydratedDocument,
 } from "mongoose";
+import priceSchema, { Currency, IPriceBlock } from "./price.schema.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TypeScript interfaces
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type Currency = "USD" | "EUR" | "GBP" | "JPY" | "INR" | "AED" | "SGD";
+// Re-export types from price.schema so existing consumers don't break
+export type { Currency, IPriceBlock } from "./price.schema.js";
+
 export type ProductStatus = "draft" | "pending_approval" | "published" | "active" | "trash";
 export type StockStatus = "instock" | "outofstock" | "onbackorder";
 export type BackorderPolicy = "no" | "notify" | "yes";
@@ -44,18 +47,6 @@ export interface IImage {
     url: string;
     alt?: string;
     isPrimary?: boolean;
-}
-
-export interface IPriceBlock {
-    /** Regular / base price (always required) */
-    amount: number;
-    /** Sale / discounted price — must be < amount when provided */
-    saleAmount?: number;
-    /** ISO 4217 currency code */
-    currency: Currency;
-    /** Optional ISO 8601 date range for a time-boxed sale */
-    saleDateFrom?: Date;
-    saleDateTo?: Date;
 }
 
 export interface IDimensions {
@@ -225,33 +216,7 @@ const imageSchema = new Schema<IImage>(
     { _id: false }
 );
 
-const priceSchema = new Schema<IPriceBlock>(
-    {
-        amount: {
-            type: Number,
-            required: [true, "Price amount is required"],
-            min: [0, "Price cannot be negative"],
-        },
-        saleAmount: {
-            type: Number,
-            min: [0, "Sale price cannot be negative"],
-            validate: {
-                validator(this: IPriceBlock, val: number) {
-                    return val == null || val < this.amount;
-                },
-                message: "Sale price must be less than the regular price",
-            },
-        },
-        currency: {
-            type: String,
-            enum: ["USD", "EUR", "GBP", "JPY", "INR", "AED", "SGD"],
-            default: "INR",
-        },
-        saleDateFrom: { type: Date },
-        saleDateTo: { type: Date },
-    },
-    { _id: false }
-);
+// priceSchema is now imported from ./price.schema.ts
 
 const dimensionsSchema = new Schema<IDimensions>(
     {
