@@ -4,18 +4,15 @@
   /* Tailwind v4 class-based dark mode ke liye ye bohot zaroori hai */
   --variant-dark: selector(.dark);
 
-  /* Soft Eye-friendly white (#FFF ko replace kiya) */
-  --color-white: #f9f9fa;
-
   /* Global Fonts */
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "Fira Code", monospace;
 
   /* Theme variables jo pure Tailwind classes me reuse ho sakein */
-  --background: #fdfdfd;
-  --foreground: #09090b;
-  --border: #efefef;
-  --muted: #f4f4f5;
+  --background: #f4f5f7;
+  --foreground: #18181b;
+  --border: #e2e4e8;
+  --muted: #ebecee;
   --muted-foreground: #71717a;
 }
 
@@ -24,8 +21,8 @@
 @layer base {
   :root {
     color-scheme: light dark;
-    --background: #fdfdfd;
-    --foreground: #09090b;
+    --background: #f4f5f7;
+    --foreground: #18181b;
   }
 
   .dark {
@@ -78,26 +75,29 @@ a, button, [role="button"], .cursor-pointer, .hover\:cursor-pointer:hover {
   }
 }
 
-/* Custom Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+/* ─── Global Scrollbar Concealment ─────────────────────────────────────────────
+   Hides scrollbars across the entire application while preserving scroll functionality.
+   Works on Webkit (Chrome, Safari, Edge) and Firefox. */
+*, *::before, *::after {
+  scrollbar-width: none; /* Firefox */
+}
+*::-webkit-scrollbar {
+  display: none; /* Webkit: Chrome, Safari, Edge */
+}
+html, body {
+  -ms-overflow-style: none; /* IE/Edge legacy */
+  scrollbar-width: none;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 10px;
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #18181b;
-}
-
+/* Legacy class references kept for backward compatibility — they now just inherit global behavior */
+.custom-scrollbar::-webkit-scrollbar,
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
+}
+.custom-scrollbar,
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* GSAP Loading Overlays */
@@ -113,4 +113,97 @@ a, button, [role="button"], .cursor-pointer, .hover\:cursor-pointer:hover {
 
 .max-w-fluid {
   max-width: 1400px;
+}
+
+/* FeralUI & Modern Background Patterns */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+.light .bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+}
+
+.bg-dot-pattern {
+  background-size: 24px 24px;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+}
+.light .bg-dot-pattern {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.07) 1px, transparent 1px);
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(0.8deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.06); }
+}
+
+@keyframes shimmerGlow {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-float {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: pulseGlow 5s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(96,166,175,0) 0%, rgba(96,166,175,0.18) 50%, rgba(96,166,175,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmerGlow 3s infinite linear;
+}
+
+/* ─── Toast Notification Animations ─────────────────────────────────────────── */
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.92);
+  }
+}
+
+.toast-slide-in {
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-slide-out {
+  animation: toastSlideOut 0.28s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+
+/* ─── Dropdown Scale Animation ──────────────────────────────────────────────── */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

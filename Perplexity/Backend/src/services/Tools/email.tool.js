@@ -2,10 +2,10 @@ import { tool } from "@langchain/core/tools";
 import { sendEmail } from "../mail.service.js";
 import * as z from "zod";
 
-// LangChain email tool jo AI ko email bhejne ki capability deta hai
+// LangChain email tool providing AI with email sending capabilities
 export const emailTool = tool(
     async ({ to, subject, html }) => {
-      // mail.service.js ka use karke email bhej rahe hain
+      // Send email using mail.service.js
       const result = await sendEmail({ to, subject, html });
       if (result.error) {
         return `Failed to send email: ${result.message}`;

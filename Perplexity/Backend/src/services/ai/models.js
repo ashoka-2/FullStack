@@ -5,45 +5,53 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatMistralAI } from "@langchain/mistralai";
 
-// ⚠️ IMPORTANT: Hamesha "v1beta" use karo tools/system instructions ke liye!
+// ⚠️ IMPORTANT: Always use "v1beta" for tools and system instructions!
 
-// ── 1. PRIMARY TEXT CHAT (Quota: 500 RPD) ──────────────────
-// Ab hum Gemini 3.1 Flash Lite ko primary rakh rahe hain taki Mistral ka 429 na aaye.
+// ── 1. PRIMARY TEXT CHAT ─────────────────────────────────────
+// Uses Gemini 3.6 Flash (latest production-ready multimodal model)
 export const geminiChatPrimary = new ChatGoogleGenerativeAI({
-  model: "gemini-3.1-flash-lite-preview",
+  model: "gemini-3.6-flash",
   apiKey: process.env.GEMINI_API_KEY,
-  apiVersion: "v1beta", // ✅ Fixed: v1beta required for tools
+  apiVersion: "v1beta",
   maxRetries: 2,
   temperature: 0,
 });
 
-// ── 2. VISION CASCADE (Quota: 20 + 20 = 40 Images/day) ─────
+// ── 2. VISION CASCADE ────────────────────────────────────────
 
-// Vision Tier 1: 2.5-Flash-Lite
+// Vision Tier 1: Gemini 3.6 Flash (Primary Vision Engine)
 export const geminiVision1 = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-flash-lite",
+  model: "gemini-3.6-flash",
   apiKey: process.env.GEMINI_API_KEY,
   apiVersion: "v1beta",
-  maxRetries: 0,
+  maxRetries: 2,
 });
 
-// Vision Tier 2: 1.5-Flash
+// Vision Tier 2: Gemini Flash Latest (High-Speed Fallback)
 export const geminiVision2 = new ChatGoogleGenerativeAI({
-  model: "gemini-1.5-flash", 
+  model: "gemini-flash-latest", 
   apiKey: process.env.GEMINI_API_KEY,
-  apiVersion: "v1beta", // ✅ Fixed: v1beta required
-  maxRetries: 1,
+  apiVersion: "v1beta",
+  maxRetries: 2,
 });
 
+// ── 3. BACKUP MODELS ─────────────────────────────────────────
 
-// ── 3. BACKUP MODELS ───────────────────────────────────────
-
-// Mistral: Ab Backup route mein jayega (Last resort)
-export const mistralModel = new ChatMistralAI({
-  model: "mistral-small-latest",
-  apiKey: process.env.MISTRAL_API_KEY,
+// Fast Gemini fallback
+export const geminiChatFallback = new ChatGoogleGenerativeAI({
+  model: "gemini-flash-latest",
+  apiKey: process.env.GEMINI_API_KEY,
+  apiVersion: "v1beta",
+  maxRetries: 2,
   temperature: 0,
 });
 
-// title.service.js ke liye
+// Mistral: Fallback model (open-mistral-nemo is supported on free tier without 429 rate limit lockouts)
+export const mistralModel = new ChatMistralAI({
+  model: "open-mistral-nemo",
+  apiKey: (process.env.MISTRAL_API_KEY || "").trim(),
+  temperature: 0,
+});
+
+// Export for title.service.js
 export const geminiTextModel = geminiChatPrimary;

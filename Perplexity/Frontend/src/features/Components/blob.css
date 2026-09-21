@@ -1,0 +1,119 @@
+/* Jelly-blob mascot palette - Project Cyan / Blue Theme */
+:root {
+  --jelly-body-top: #bbf2f8;
+  --jelly-body-mid: #4ecde0;
+  --jelly-body-deep: #199eb0;
+  --jelly-body-rim: #92eaf5;
+
+  --jelly-outline: #137785;
+  --jelly-outline-light: #3ac0d2;
+
+  --jelly-arm-light: #b5f0f7;
+  --jelly-arm-mid: #45c8dc;
+  --jelly-arm-deep: #1693a4;
+
+  --jelly-cheek-light: #d6f7fb;
+  --jelly-cheek: #6ce1ee;
+  --jelly-cheek-deep: #22b5c7;
+
+  --jelly-eye-light: #163640;
+  --jelly-eye: #0a1b22;
+  --jelly-eye-deep: #050e12;
+  --jelly-face-ink: #0a1b22;
+  --jelly-face-soft: #163640;
+
+  --jelly-belly-glow: #b2f2fa;
+  --jelly-eye-sparkle: #3be2f6;
+
+  --jelly-shadow: #114c54;
+  --jelly-shadow-light: #1f6b76;
+}
+
+:root[data-theme='light'], .light {
+  --jelly-shadow: #98c6cd;
+  --jelly-shadow-light: #bde1e6;
+}
+
+.blob-bubble {
+  --bubble-fill-top: rgba(56, 55, 63, 0.97);
+  --bubble-fill-bottom: rgba(40, 39, 47, 0.98);
+  --bubble-stroke-top: rgba(255, 255, 255, 0.16);
+  --bubble-stroke-bottom: rgba(255, 255, 255, 0.04);
+
+  position: relative;
+  height: 56px;
+  margin: 0 auto;
+  color: #f7f7fa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  filter:
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.14))
+    drop-shadow(0 4px 10px rgba(0, 0, 0, 0.16));
+  will-change: transform, opacity;
+}
+
+.blob-bubble-shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.blob-bubble-stroke {
+  stroke-width: 1.5;
+}
+
+.blob-bubble-measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.blob-bubble-textwrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.blob-bubble-text {
+  margin: 0;
+  white-space: nowrap;
+}
+
+:root[data-theme='light'] .blob-bubble, .light .blob-bubble {
+  --bubble-fill-top: rgba(255, 255, 255, 0.98);
+  --bubble-fill-bottom: rgba(244, 243, 249, 0.98);
+  --bubble-stroke-top: rgba(20, 16, 40, 0.14);
+  --bubble-stroke-bottom: rgba(20, 16, 40, 0.05);
+
+  color: #2b2735;
+  text-shadow: none;
+  filter: drop-shadow(0 8px 14px rgba(31, 22, 54, 0.12));
+}
+
+@keyframes blobFloatLevitate {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+.blob-floating-levitate {
+  animation: blobFloatLevitate 4.5s ease-in-out infinite;
+}

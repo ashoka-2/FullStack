@@ -4,78 +4,150 @@ import userModel from "../models/user.model.js";
 import messageModel from "../models/message.model.js";
 import { uploadFile } from "../services/imagekit.service.js";
 import { getIO } from "../sockets/server.socket.js";
+import { executeModelChatStream } from "../services/model.service.js";
+import { decryptKey } from "../utils/encryption.utils.js";
+import { generateEmbedding } from "../services/embedding.service.js";
 
 export async function sendMessage(req, res) {
     try {
         const { message, chat: chatId } = req.body;
-        const file = req.file;
+        // Support both req.files (array) and req.file (single)
+        const rawFiles = req.files && req.files.length > 0 ? req.files : (req.file ? [req.file] : []);
+        const uploadedFiles = [];
 
-        // Security Check: Agar response kisi existing chat me jana hai
-        // toh pehle check karo ki kya ye usi user ka chat hai jisne banya tha.
-        // Dusre log sirf shared link dekh sakte hain, reply nahi kar sakte.
-        if (chatId) {
-            const existingChat = await chatModel.findById(chatId);
-            if (!existingChat || existingChat.user.toString() !== req.user.id) {
-                return res.status(403).json({ 
-                    message: "You can only view this shared chat. Sending follow-ups is restricted for guests." 
-                });
-            }
-        }
+        if (rawFiles.length > 0) {
+            for (const f of rawFiles) {
+                try {
+                    let folder = "perplexity/chats";
+                    if (f.mimetype?.startsWith("image/")) {
+                        folder = "perplexity/photos";
+                    } else if (f.mimetype?.startsWith("video/")) {
+                        folder = "perplexity/videos";
+                    } else if (f.mimetype === "application/pdf" || f.mimetype?.startsWith("text/")) {
+                        folder = "perplexity/documents";
+                    }
 
-        let fileDetails = null;
+                    const uploaded = await uploadFile({
+                        buffer: f.buffer,
+                        filename: f.originalname,
+                        folder
+                    });
 
-        if (file) {
-            try {
-                fileDetails = await uploadFile({
-                    buffer: file.buffer,
-                    filename: file.originalname,
-                    folder: "perplexity/chats"
-                });
-            } catch (error) {
-                console.error("Image upload failed:", error);
-                if (!message) {
-                    return res.status(500).json({ message: "Image upload failed" });
+                    if (uploaded) {
+                        uploaded.fileType = f.mimetype?.startsWith("image/") ? "image"
+                            : f.mimetype?.startsWith("video/") ? "video"
+                            : "document";
+                        uploaded.mimetype = f.mimetype;
+                        uploadedFiles.push(uploaded);
+                    }
+                } catch (error) {
+                    console.error("Individual file upload failed for", f.originalname, error);
                 }
             }
+
+            if (uploadedFiles.length === 0 && !message) {
+                return res.status(500).json({ message: "File uploads failed" });
+            }
         }
+
+        const primaryFile = uploadedFiles[0] || null;
 
         let title = null, chat = null;
 
         if (!chatId) {
-            title = await generateChatTitle(message || "Image Upload");
+            const fallbackTitle = primaryFile?.fileType === "video" ? "Video Analysis" 
+                : primaryFile?.fileType === "image" ? (uploadedFiles.length > 1 ? `Album (${uploadedFiles.length} photos)` : "Image Upload")
+                : "New Chat";
+            title = await generateChatTitle(message || fallbackTitle);
             chat = await chatModel.create({
                 user: req.user.id,
                 title
-            })
+            });
         }
+
+        const defaultContent = primaryFile?.fileType === "video" ? "Sent a video" 
+            : primaryFile?.fileType === "image" ? (uploadedFiles.length > 1 ? `Sent ${uploadedFiles.length} photos` : "Sent an image")
+            : "Sent an attachment";
 
         const userMessage = await messageModel.create({
             chat: chatId || chat._id,
-            content: message || "Sent an image",
+            content: message || defaultContent,
             role: "user",
-            file: fileDetails
-        })
+            file: primaryFile,
+            files: uploadedFiles
+        });
 
         const messages = await messageModel.find({ chat: chatId || chat._id });
         
         const io = getIO();
         const socketId = req.body.socketId;
 
-        const fullUser = await userModel.findById(req.user.id).select("instagram.accessToken instagram.userId instagram.isConnected");
-        
-        // Ensure accessToken is included if it was select:false
-        if (!fullUser.instagram?.accessToken) {
-            const userWithToken = await userModel.findById(req.user.id).select("+instagram.accessToken");
-            if (userWithToken.instagram?.accessToken) {
-                fullUser.instagram.accessToken = userWithToken.instagram.accessToken;
-            }
+        const fullUser = await userModel.findById(req.user.id).select("+customApiKeys.apiKey");
+
+        const targetProvider = req.body.provider || fullUser?.selectedModel?.provider || "gemini";
+        const targetModelId = req.body.modelId || fullUser?.selectedModel?.modelId || "gemini-2.5-flash";
+        const isCustom = req.body.isCustom || false;
+        const keyId = req.body.keyId;
+
+        let result = "";
+
+        // Check if user has a custom key for this provider
+        let customKeyEntry = null;
+        if (fullUser && fullUser.customApiKeys && fullUser.customApiKeys.length > 0) {
+            customKeyEntry = fullUser.customApiKeys.find(k => 
+                (keyId && k._id.toString() === keyId.toString()) ||
+                (k.provider === targetProvider && (!req.body.keyName || k.name === req.body.keyName))
+            );
         }
 
-        const result = await generateResponse(messages, (chunk) => {
-            if (socketId) {
-                io.to(socketId).emit("chunk", chunk);
+        const isNonGeminiProvider = targetProvider !== "gemini";
+        const hasCustomKey = Boolean(customKeyEntry && customKeyEntry.apiKey);
+
+        if (hasCustomKey || isNonGeminiProvider) {
+            let decryptedApiKey = "";
+            let targetBaseUrl = "";
+            if (customKeyEntry) {
+                decryptedApiKey = decryptKey(customKeyEntry.apiKey);
+                targetBaseUrl = customKeyEntry.baseUrl;
             }
-        }, fullUser);
+
+            try {
+                // Execute using universal stream engine
+                result = await executeModelChatStream({
+                    provider: targetProvider,
+                    modelId: targetModelId,
+                    apiKey: decryptedApiKey,
+                    baseUrl: targetBaseUrl,
+                    messages: messages.map(m => ({ role: m.role, content: m.content })),
+                    onChunk: (chunk) => {
+                        if (socketId) {
+                            io.to(socketId).emit("chunk", chunk);
+                        }
+                    }
+                });
+            } catch (modelErr) {
+                console.warn(`⚠️ Custom/Provider [${targetProvider} - ${targetModelId}] execution failed:`, modelErr.message);
+                const isOverload = /overload|429|503|quota|resource.*exhaust|high traffic|rate limit|capacity/i.test(modelErr.message);
+                const switchNotice = isOverload
+                    ? `\n\n*(Notice: ${targetProvider} is experiencing high traffic right now. Seamlessly switching to Gemini search...)*\n\n`
+                    : `\n\n*(Notice: ${targetProvider} model returned: "${modelErr.message}". Defaulting to Gemini search)*\n\n`;
+                if (socketId) {
+                    io.to(socketId).emit("chunk", switchNotice);
+                }
+                result = await generateResponse(messages, (chunk) => {
+                    if (socketId) {
+                        io.to(socketId).emit("chunk", chunk);
+                    }
+                }, fullUser);
+            }
+        } else {
+            // Default Gemini pipeline with internet search and LangChain tools
+            result = await generateResponse(messages, (chunk) => {
+                if (socketId) {
+                    io.to(socketId).emit("chunk", chunk);
+                }
+            }, fullUser);
+        }
 
         const aiMessage = await messageModel.create({
             chat: chatId || chat._id,
@@ -89,10 +161,35 @@ export async function sendMessage(req, res) {
             userMessage,
             aiMessage
         })
+
+        // Fire-and-forget: Generate embeddings for both messages (won't slow down response)
+        (async () => {
+            try {
+                const [userEmb, aiEmb] = await Promise.allSettled([
+                    generateEmbedding(userMessage.content),
+                    generateEmbedding(aiMessage.content)
+                ]);
+                if (userEmb.status === 'fulfilled' && userEmb.value) {
+                    await messageModel.updateOne({ _id: userMessage._id }, { $set: { embedding: userEmb.value } });
+                }
+                if (aiEmb.status === 'fulfilled' && aiEmb.value) {
+                    await messageModel.updateOne({ _id: aiMessage._id }, { $set: { embedding: aiEmb.value } });
+                }
+            } catch (embErr) {
+                console.warn("⚠️ Embedding generation skipped:", embErr.message);
+            }
+        })();
     } catch (error) {
         console.error("Error in sendMessage controller:", error);
-        res.status(500).json({
-            message: "Internal server error",
+        const isOverload = /overload|429|503|quota|resource.*exhaust|high traffic|rate limit|capacity|failed to parse stream/i.test(error.message);
+        const statusCode = isOverload ? 429 : 500;
+        const message = isOverload
+            ? "Gemini is experiencing high traffic right now and may take a moment to respond. Please try again shortly or switch to another model."
+            : (error.message || "Internal server error");
+
+        res.status(statusCode).json({
+            message,
+            isOverloaded: isOverload,
             error: error.message
         });
     }
@@ -102,21 +199,32 @@ export async function sendMessage(req, res) {
 
 export async function getChats(req,res){
     const user = req.user;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
 
-    const chats = await chatModel.find({user: user.id}).sort({ updatedAt: -1 })
+    const totalChats = await chatModel.countDocuments({ user: user.id });
+    const chats = await chatModel.find({user: user.id})
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit);
 
     res.status(200).json({
         message: "Chats retrieved successfully",
-        chats
+        chats,
+        totalChats,
+        totalPages: Math.ceil(totalChats / limit),
+        currentPage: page,
+        hasMore: skip + chats.length < totalChats
     });
 }
 
 
 export async function getMessages(req,res){
     const { chatId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
 
-    // Yahan pehle hum "user: req.user.id" check kar rahe the.
-    // Use nikal diya taki agar koi valid link ('chatId') laata hai, toh wo messages padh sake chahe login kisi aur id se ho.
     const chat = await chatModel.findById(chatId);
 
     if(!chat){
@@ -125,17 +233,27 @@ export async function getMessages(req,res){
         })
     }
 
-    const messages = await messageModel.find({ 
-        chat: chatId 
-    });
+    // Total messages count for pagination metadata
+    const totalMessages = await messageModel.countDocuments({ chat: chatId });
+    
+    // Calculate how many to skip from the END (newest messages first loading)
+    // Page 1 = last 10 messages, Page 2 = 10 before that, etc.
+    const skip = Math.max(0, totalMessages - (page * limit));
+    const actualLimit = page * limit > totalMessages ? totalMessages - ((page - 1) * limit) : limit;
+
+    const messages = await messageModel.find({ chat: chatId })
+        .sort({ createdAt: 1 }) // Chronological order
+        .skip(skip)
+        .limit(actualLimit);
 
     res.status(200).json({
         message: "Messages retrieved successfully",
         messages,
-        // Frontend ko batane ke liye ki kya dekhne wala hi asli owner hai?
-        isOwner: chat.user.toString() === req.user.id
+        isOwner: chat.user.toString() === req.user.id,
+        totalMessages,
+        currentPage: page,
+        hasMore: skip > 0
     });
-
 }
 
 export async function deleteChat(req,res){
@@ -185,16 +303,16 @@ export async function getSuggestions(req, res) {
     }
 }
 
-// Ye naya controller library/search page ke liye hai jisse hum chat ke andar ke specifically words dhundh payenge
-// Performance achhi rakhne ke liye hum query text pe limit laga kar (Sirf 20 results) aur sirf active user ke chats me hi dhoondh rahe hain.
+// Controller for library/search page to search for specific words within chat messages
+// Limit to 20 results across active user's chats for performance.
 export async function searchMessages(req, res) {
     try {
-        const { q } = req.query; // 'q' matlab query string jo user ne input me dali hai
+        const { q } = req.query; // Search query string provided by the user
         if (!q) {
             return res.status(200).json({ results: [] });
         }
 
-        // 1. Pehle user ke saare chats ki IDs fetch karte hain
+        // 1. First fetch all chat IDs of the user
         const userChats = await chatModel.find({ user: req.user.id }).select('_id title');
         const chatMap = {};
         const chatIds = userChats.map(c => {
@@ -206,17 +324,17 @@ export async function searchMessages(req, res) {
             return res.status(200).json({ results: [] });
         }
 
-        // 2. Ab messageModel me regex laga ke vo messages uthayenge jisme matching keyword hai 
-        // regex mein 'i' ka matlab case-insensitive (chota bada font dono mach karega)
+        // 2. Query messages matching the keyword using regex in messageModel
+        // 'i' in regex means case-insensitive (matches both uppercase and lowercase)
         const matchedMessages = await messageModel.find({
             chat: { $in: chatIds },
             content: { $regex: q, $options: 'i' }
         })
-        .sort({ createdAt: -1 }) // Naye messages upar aayeinge
-        .limit(20) // Sirf top 20 taaki app ya DB slow na ho (Performance bachane ke liye)
-        .lean(); // Faster JSON object 
+        .sort({ createdAt: -1 }) // New messages appear at the top
+        .limit(20) // Only top 20 to avoid slowing down app or DB (for performance)
+        .lean(); // Faster JSON object
 
-        // Response format karte hain, chat ka title bhi daalte hain taaki frontend per UI achi dhikhe
+        // Format the response and add the chat title for better frontend UI
         const results = matchedMessages.map(msg => ({
             ...msg,
             chatTitle: chatMap[msg.chat.toString()] || "Untitled Chat"

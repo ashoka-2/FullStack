@@ -14,6 +14,14 @@ initSocket(httpServer);
 connectToDB();
 // generateResponse();
 
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('⚠️ [Server Safety] Unhandled Rejection:', reason?.message || reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('⚠️ [Server Safety] Uncaught Exception:', err?.message || err);
+});
+
 httpServer.listen(PORT,()=>{
     console.log(`Server is running on port ${PORT}`);
-})
+})

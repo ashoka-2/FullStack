@@ -1,12 +1,11 @@
-
 import { HumanMessage, SystemMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import axios from "axios";
-import { geminiChatPrimary, geminiVision1, geminiVision2, mistralModel } from "./models.js";
+import { geminiChatPrimary, geminiVision1, geminiVision2, geminiChatFallback, mistralModel } from "./models.js";
 import { searchInternetTool } from "../Tools/search.tool.js";
 import { emailTool } from "../Tools/email.tool.js";
-import { postToInstagramTool } from "../Tools/instagram.tool.js";
+import { postToSocialMediaTool } from "../Tools/socialMedia.tool.js";
 
-// Aaj ki date aur time Indian timezone mein
+// Indian Standard Time context
 const getCurrentTimeContext = () => {
   return new Date().toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
@@ -16,13 +15,14 @@ const getCurrentTimeContext = () => {
 };
 
 const getTools = (userContext) => {
-  const instagramTool = postToInstagramTool(userContext);
+  const socialTool = postToSocialMediaTool(userContext);
   return {
-    tools: [searchInternetTool, emailTool, instagramTool],
+    tools: [searchInternetTool, emailTool, socialTool],
     map: {
       searchInternet: searchInternetTool,
       emailTool,
-      post_to_instagram: instagramTool
+      post_to_social_media: socialTool,
+      post_to_instagram: socialTool // backward compatibility
     }
   };
 };
@@ -64,105 +64,191 @@ async function runModelLoop(currentMessages, onChunk, modelWithTools, toolsMap, 
   }
 
   console.log(`📡 [${label}] Final streaming...`);
-  const stream = await modelWithTools.stream(currentMessages);
   let fullContent = "";
-  for await (const chunk of stream) {
-    fullContent += chunk.content;
-    if (onChunk) onChunk(chunk.content);
+  try {
+    const stream = await modelWithTools.stream(currentMessages);
+    for await (const chunk of stream) {
+      if (chunk.content) {
+        fullContent += chunk.content;
+        if (onChunk) onChunk(chunk.content);
+      }
+    }
+  } catch (streamErr) {
+    console.warn(`⚠️ [${label}] Stream iteration failed (${streamErr.message}), recovering via direct invoke...`);
+    if (!fullContent) {
+      try {
+        const response = await modelWithTools.invoke(currentMessages);
+        fullContent = typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
+        if (onChunk && fullContent) onChunk(fullContent);
+      } catch (invokeErr) {
+        console.error(`❌ [${label}] Direct invoke also failed:`, invokeErr.message);
+        throw invokeErr;
+      }
+    }
   }
   return fullContent;
 }
 
 export async function generateResponse(messages, onChunk, userContext) {
   const today = getCurrentTimeContext();
-  const lastUserMsg = [...messages].reverse().find(msg => msg.role === "user" || msg.role === "human");
-  const hasImage = lastUserMsg?.file?.url;
+
+  // Process message history and attach multimodal vision for ALL uploaded images
+  let hasImage = false;
 
   const history = await Promise.all(messages.map(async (msg) => {
     let content = msg.content || "";
-    if (msg.file?.url) {
-      try {
-        const imageRes = await axios.get(msg.file.url, { responseType: 'arraybuffer', timeout: 8000 });
-        const base64 = Buffer.from(imageRes.data).toString('base64');
-        const mimeType = imageRes.headers['content-type'] || 'image/jpeg';
-        content = [
-          { type: "text", text: `User uploaded: [\nQuestion: ${msg.content || "Analyze this."}` },
-          { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } },
-        ];
-      } catch (error) {
-        content = `${msg.content || ""}\n[Note: Image load failed.]`;
+
+    // Extract all media items from the message
+    const mediaList = [];
+    if (msg.files && Array.isArray(msg.files) && msg.files.length > 0) {
+      mediaList.push(...msg.files.filter(f => f?.url));
+    } else if (msg.file?.url) {
+      mediaList.push(msg.file);
+    }
+
+    if (mediaList.length > 0) {
+      hasImage = true;
+      const contentParts = [
+        { type: "text", text: `[User attached ${mediaList.length} file(s)]\n${msg.content || "Analyze these files."}` }
+      ];
+
+      for (const media of mediaList) {
+        const isVideo = media.fileType === 'video' || media.mimetype?.startsWith('video/') || /\.(mp4|mov|webm)(\?|$)/i.test(media.url);
+        if (!isVideo) {
+          try {
+            const imageRes = await axios.get(media.url, { responseType: 'arraybuffer', timeout: 8000 });
+            const base64 = Buffer.from(imageRes.data).toString('base64');
+            const mimeType = imageRes.headers['content-type'] || 'image/jpeg';
+            contentParts.push({
+              type: "image_url",
+              image_url: { url: `data:${mimeType};base64,${base64}` }
+            });
+          } catch (error) {
+            contentParts.push({ type: "text", text: `[Image: ${media.name || 'attachment'}]` });
+          }
+        } else {
+          contentParts.push({ type: "text", text: `[Video: ${media.name || 'video clip'}]` });
+        }
+      }
+
+      if (contentParts.length > 1) {
+        content = contentParts;
       }
     }
+
     return msg.role === "ai" ? new AIMessage({ content }) : new HumanMessage({ content });
   }));
 
-  const systemContent = `You are a highly advanced AI. Current Date: ${today}.
+  const systemContent = `You are a world-class AI assistant with supercharged multi-platform social media publishing capabilities. Current Date: ${today}.
     
     CRITICAL INSTRUCTIONS:
-    1. Information: Your knowledge is old. ALWAYS hit 'searchInternet' for current events.
-    2. Social Media Automation:
-       - Use 'post_to_instagram' ONLY if the user explicitly asks to post.
-       - IMPORTANT: For 'post_to_instagram', you MUST look through the chat history and provide the EXACT image URL from ImageKit (ik.imagekit.io). Do NOT call the tool with an empty imageUrl.
-       - AIM FOR VIRAL VIRALITY: If the user does not provide a caption, automatically generate a highly engaging, viral caption with relevant emojis and 3-5 trending hashtags BEFORE calling the post_to_instagram tool.
-       - If you posted a mediaId already, do not post it again unless asked.
-    3. Formatting: Output in clean Markdown.`;
+    1. Real-Time Information: ALWAYS use 'searchInternet' for current events, news, stock quotes, or real-time data.
+    
+    2. Universal Social Media Publishing ('post_to_social_media'):
+       Users can connect and publish content to:
+       - **Instagram** (Photos, Video Reels, Carousel Albums)
+       - **Facebook** (Posts, Photos, Multi-Photo Albums, Videos)
+       - **Twitter / X** (Tweets with single or up to 4 media attachments)
+       - **LinkedIn** (Professional posts & media)
+       - **Pinterest** (Pins to boards)
+       - **TikTok** (Short-form videos)
+       - **YouTube** (Videos & Shorts)
+       
+       When the user asks to post or upload to social media:
+       - Identify target platforms from their prompt (e.g., 'instagram', 'facebook', 'twitter', 'linkedin', or multiple platforms like ['instagram', 'twitter']).
+       - If user says 'all my accounts' or 'everywhere', pass platforms: ['all_connected'].
+       - ALWAYS call 'post_to_social_media'. The tool will automatically check which accounts are connected.
+       - If any requested platform is NOT connected, the tool returns a clear explanation which you MUST relay to the user:
+         "The {platform} account is not connected, so couldn't post to it. Please connect your {platform} account in Social Hub (/social-connections)."
+       - If the platform IS connected, the tool publishes the post and returns the media ID and confirmation.
+
+    3. Carousel (Together) vs Separate Posting Modes:
+       - **Together / Carousel**: If user says "upload together", "as a carousel", "in an album", or attaches multiple images without specifying, set postMode: 'together'.
+         - On Instagram: Publishes as a swipeable Carousel Album.
+         - On Facebook: Publishes as a multi-photo post.
+         - On Twitter: Attaches all photos into a single tweet.
+       - **Separately / One by One**: If user says "upload separately", "one by one", or "individually", set postMode: 'separately'.
+         - The tool uploads each media item as an individual post.
+
+    4. AI Vision & Caption Intelligence:
+       - **AI-Crafted Captions**: When user says "add captions/tags by your own" or doesn't specify a caption:
+         - Inspect ALL uploaded images thoroughly using Vision.
+         - Detect what the image is about (subjects, background, vibe, lighting, aesthetic).
+         - Craft a highly engaging, viral caption tailored for the target platform(s) with 3-5 trending hashtags and appropriate emojis.
+       - **User-Provided Captions**: If the user provides their OWN caption or hashtags, RESPECT them and use them directly.
+       - **AI-Refined Captions**: If the user writes a draft caption and asks "enhance this", "improve my caption", or "look at this caption and create one using AI":
+         - Read the user's caption, polish the tone, fix grammar, enhance the hook, add trending hashtags, and use that refined caption.
+
+    5. Clean Markdown Output: Format your explanations with clean, readable Markdown, emojis, and clear status summaries.`;
 
   if (hasImage) {
     const geminiMessages = history.map((msg, idx) => {
       if (idx === 0 && msg instanceof HumanMessage) {
         const originalContent = msg.content;
-        const newContent = Array.isArray(originalContent) ? [{ type: "text", text: systemContent }, ...originalContent] : `${systemContent}\n\nUser Question: ${originalContent}`;
+        const newContent = Array.isArray(originalContent)
+          ? [{ type: "text", text: systemContent }, ...originalContent]
+          : `${systemContent}\n\nUser Question: ${originalContent}`;
         return new HumanMessage({ content: newContent });
       }
       return msg;
     });
-    if (!(geminiMessages[0] instanceof HumanMessage)) geminiMessages.unshift(new HumanMessage({ content: systemContent }));
 
-    const { tools, map } = getTools(userContext);
+// Detect if error is caused by model overload, rate limits, or capacity limits
+function getModelOverloadNotice(error, modelName = "Gemini") {
+  const errMsg = error?.message || String(error);
+  const isHighLoad = /overload|429|503|quota|resource.*exhaust|high traffic|rate limit|failed to parse stream|capacity|temporarily unavailable/i.test(errMsg);
+  if (isHighLoad) {
+    return `${modelName} is experiencing high traffic right now and may take a moment to respond. Please try again in a few moments, or select another model from the dropdown.`;
+  }
+  return "I'm having trouble connecting to the AI services right now. Please try your request again in a few moments.";
+}
 
-    const visionModels = [
-      { model: geminiVision1, name: "Gemini 2.5-Flash-Lite" },
-      { model: geminiVision2, name: "Gemini 1.5-Flash" },
-    ];
+    const primaryTools = getTools(userContext);
+    const primaryModelWithTools = geminiVision1.bindTools(primaryTools.tools);
 
-    for (const { model, name } of visionModels) {
+    try {
+      return await runModelLoop(geminiMessages, onChunk, primaryModelWithTools, primaryTools.map, "Gemini Vision");
+    } catch (visionErr) {
+      console.warn("⚠️ Vision primary failed, falling back to geminiVision2:", visionErr.message);
       try {
-        console.log(`📸 [Vision] Attempting tool execution with ${name}...`);
-        const visionWithTools = model.bindTools(tools);
-        return await runModelLoop(geminiMessages, onChunk, visionWithTools, map, name);
-      } catch (err) {
-        console.warn(`⚠️ [Vision] ${name} failed: ${err.message?.substring(0, 50)}...`);
+        const fallbackTools = getTools(userContext);
+        const fallbackModelWithTools = geminiVision2.bindTools(fallbackTools.tools);
+        return await runModelLoop(geminiMessages, onChunk, fallbackModelWithTools, fallbackTools.map, "Gemini Vision Fallback");
+      } catch (fallbackErr) {
+        console.error("❌ Both Gemini Vision tiers failed:", fallbackErr.message);
+        const safeMsg = getModelOverloadNotice(fallbackErr, "Gemini Vision");
+        if (onChunk) onChunk(safeMsg);
+        return safeMsg;
       }
     }
-    
-    // No Vision models worked → Fallback to Text-only Mistral
-    const sanitizedHistory = history.map(msg => {
-      if (Array.isArray(msg.content)) {
-        const textOnly = msg.content.filter(i => i.type === "text").map(i => i.text).join("\n");
-        return msg instanceof AIMessage ? new AIMessage({ content: textOnly }) : new HumanMessage({ content: textOnly });
-      }
-      return msg;
-    });
-    return await runModelLoop([new SystemMessage({ content: systemContent }), ...sanitizedHistory], onChunk, mistralModel.bindTools(tools), map, "Mistral-Image-Fallback");
   }
 
-  // ── TEXT ROUTE: 3.1 FLASH-LITE PRIMARY ───────────────────────
-  console.log("📝 [Text] Attempting with Gemini 3.1 Flash-Lite (Primary)...");
-  const textMessages = [new SystemMessage({ content: systemContent }), ...history];
-  const { tools, map } = getTools(userContext);
-  
+  // Text-only pipeline
+  const systemMessage = new SystemMessage(systemContent);
+  const primaryTools = getTools(userContext);
+  const primaryModelWithTools = geminiChatPrimary.bindTools(primaryTools.tools);
+
   try {
-    // Gemini 3.1 Primary (with Tools) 
-    const geminiWithTools = geminiChatPrimary.bindTools(tools);
-    return await runModelLoop(textMessages, onChunk, geminiWithTools, map, "Gemini-Primary");
-  } catch (err) {
-    // If Gemini 3.1 fails or 429s → Fallback to Mistral
-    console.warn("⏳ [Text] Gemini Primary failed. Falling back to Mistral...");
+    return await runModelLoop([systemMessage, ...history], onChunk, primaryModelWithTools, primaryTools.map, "Primary");
+  } catch (primaryError) {
+    console.warn("⚠️ Primary Gemini failed, falling back to geminiChatFallback:", primaryError.message);
     try {
-      const mistralWithTools = mistralModel.bindTools(tools);
-      return await runModelLoop(textMessages, onChunk, mistralWithTools, map, "Mistral-Fallback");
-    } catch (err2) {
-      throw err2;
+      const fallbackTools = getTools(userContext);
+      const fallbackModelWithTools = geminiChatFallback.bindTools(fallbackTools.tools);
+      return await runModelLoop([systemMessage, ...history], onChunk, fallbackModelWithTools, fallbackTools.map, "Gemini Flash Fallback");
+    } catch (fallbackError) {
+      console.warn("⚠️ Gemini Flash Fallback failed, attempting Mistral:", fallbackError.message);
+      try {
+        const mistralTools = getTools(userContext);
+        const mistralModelWithTools = mistralModel.bindTools(mistralTools.tools);
+        return await runModelLoop([systemMessage, ...history], onChunk, mistralModelWithTools, mistralTools.map, "Mistral Fallback");
+      } catch (mistralError) {
+        console.error("❌ All AI models failed:", mistralError.message);
+        const safeMsg = getModelOverloadNotice(primaryError || fallbackError || mistralError, "Gemini");
+        if (onChunk) onChunk(safeMsg);
+        return safeMsg;
+      }
     }
   }
 }
+

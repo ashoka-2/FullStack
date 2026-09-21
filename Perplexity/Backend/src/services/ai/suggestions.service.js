@@ -88,8 +88,7 @@ async function getLiveDailyNewsSuggestions() {
   }
 }
 
-// Controller yahan se call karta hai — chat context
-// ignore karo, hamesha live news hi return karo (Mistral tokens bachao!)
+// Called by controller — returns live news suggestions to optimize token consumption
 export async function generateSuggestions(messages = []) {
   const logMsg = messages.length === 0
     ? "Empty chat → Returning live news suggestions."

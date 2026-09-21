@@ -29,7 +29,10 @@ const ProductCardItem = ({ product }) => {
       } finally {
         setTimeout(() => {
           setIsDragged(false);
-          controls.start({ x: 0, transition: { type: "spring", stiffness: 300, damping: 20 } });
+          controls.start({
+            x: 0,
+            transition: { type: "spring", stiffness: 300, damping: 20 },
+          });
         }, 1500);
       }
     }
@@ -40,12 +43,21 @@ const ProductCardItem = ({ product }) => {
       handleAddToCart();
       controls.start({ x: dragContainerRef.current.clientWidth - 40 });
     } else {
-      controls.start({ x: 0, transition: { type: "spring", stiffness: 400, damping: 25 } });
+      controls.start({
+        x: 0,
+        transition: { type: "spring", stiffness: 400, damping: 25 },
+      });
     }
   };
 
-  const hasDiscount = product.price?.saleAmount && product.price?.saleAmount < product.price?.amount;
-  const badgeText = hasDiscount ? "SALE" : product.stock <= 0 ? "OUT OF STOCK" : "NEW";
+  const hasDiscount =
+    product.price?.saleAmount &&
+    product.price?.saleAmount < product.price?.amount;
+  const badgeText = hasDiscount
+    ? "SALE"
+    : product.stock <= 0
+      ? "OUT OF STOCK"
+      : "NEW";
   const displayImage =
     product.images?.[0]?.url ||
     "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
@@ -72,8 +84,12 @@ const ProductCardItem = ({ product }) => {
         </div>
       </div>
       <div className="px-2 pb-2 text-center">
-        <h4 className="font-bold text-sm mb-0.5 tracking-tight">{product.title}</h4>
-        <p className="text-[10px] text-gray-500 font-serif italic mb-4">{displaySubtitle}</p>
+        <h4 className="font-bold text-sm mb-0.5 tracking-tight">
+          {product.title}
+        </h4>
+        <p className="text-[10px] text-gray-500 font-serif italic mb-4">
+          {displaySubtitle}
+        </p>
 
         {/* Draggable Slide-to-Cart Button */}
         <div
@@ -107,7 +123,9 @@ const ProductCardItem = ({ product }) => {
           >
             <i
               className={
-                isDragged ? "ri-check-line text-lg font-black" : "ri-arrow-right-s-line text-lg pointer-events-none"
+                isDragged
+                  ? "ri-check-line text-lg font-black"
+                  : "ri-arrow-right-s-line text-lg pointer-events-none"
               }
             ></i>
           </motion.div>
@@ -136,7 +154,7 @@ const FeatureCard = () => {
       gsap.fromTo(
         desktopCardRef.current,
         { opacity: 0, y: 15, scale: 0.98 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out" }
+        { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out" },
       );
     }
   }, [currentIndex, featuredProducts.length]);
@@ -145,7 +163,9 @@ const FeatureCard = () => {
     return (
       <div className="flex flex-col items-center lg:items-end mt-auto relative z-20 pb-8 lg:pb-0 w-full overflow-hidden">
         <div className="w-[240px] p-6 text-center border border-dashed border-white/20 rounded-[2.5rem]">
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Loading Drops...</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+            Loading Drops...
+          </p>
         </div>
       </div>
     );
@@ -162,7 +182,10 @@ const FeatureCard = () => {
       {/* Desktop View: Auto-carousel with single card */}
       <div className="hidden lg:flex flex-col items-end">
         <div ref={desktopCardRef}>
-          <ProductCardItem product={featuredProducts[currentIndex]} isDesktop={true} />
+          <ProductCardItem
+            product={featuredProducts[currentIndex]}
+            isDesktop={true}
+          />
         </div>
         <div className="flex gap-2 mt-4 justify-center w-[240px]">
           {featuredProducts.map((_, idx) => (
@@ -200,9 +223,14 @@ const RightInfo = ({
     <div className="w-full flex flex-col lg:text-white text-foreground z-10 relative lg:items-end">
       <div className="flex justify-center lg:justify-between gap-10 sm:gap-14 lg:gap-0 mt-0 lg:mt-0 mb-4 lg:mb-4 px-2 lg:px-0 lg:w-[240px]">
         {features.map((feature, idx) => (
-          <div key={idx} className="flex flex-col items-center gap-2 group cursor-pointer lg:w-1/3">
+          <div
+            key={idx}
+            className="flex flex-col items-center gap-2 group cursor-pointer lg:w-1/3"
+          >
             <div className="lg:bg-white/10 bg-accent/10 dark:bg-accent/10 w-16 h-16 lg:w-11 lg:h-11 rounded-[16px] lg:rounded-full group-hover:bg-white/20 transition-colors backdrop-blur-md shadow-sm border border-border-theme flex items-center justify-center">
-              <i className={`${feature.iconClass} text-2xl lg:text-lg lg:text-white text-accent dark:text-accent`}></i>
+              <i
+                className={`${feature.iconClass} text-2xl lg:text-lg lg:text-white text-accent dark:text-accent`}
+              ></i>
             </div>
             <p className="text-[9px] lg:text-[7px] text-center font-black opacity-80 lg:text-white/80 dark:text-gray-400 tracking-[0.2em] whitespace-pre-line uppercase">
               {feature.title}

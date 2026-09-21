@@ -14,22 +14,25 @@ import {
   RiDeleteBinLine,
   RiSunLine,
   RiMoonClearLine,
-  RiInstagramLine
+  RiApps2Line
 } from '@remixicon/react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { setUser } from '../auth/auth.slice';
 import PerplexityIcon from './PerplexityIcon';
 import { useChat } from '../chat/hook/useChat';
 import { useAuth } from '../auth/hook/useAuth';
 import { SidebarSkeleton } from '../chat/components/Skeletons';
 import ConfirmationModal from './ConfirmationModal';
+import { RiLoginCircleLine, RiSparkling2Line } from '@remixicon/react';
+import { triggerBlobSidebarNav, triggerBlobChatSelect, triggerBlobChatDeleteHover, triggerBlobChatDeleted } from '../../utils/blobReactions';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const user = useSelector(state => state.auth.user);
   const chats = useSelector(state => state.chat.chats);
   const loading = useSelector(state => state.chat.loading);
   const location = useLocation();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { handleGetChats, handleDeleteChat, isCreating } = useChat();
   const { handleLogout } = useAuth();
@@ -49,26 +52,24 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Is function ko Skiper26 ke native transition jaisa banaya gaya hai. Ye click origin property extract karta hai
-  // aur Native browser View Transitions API ko start karta hai smooth circle opening reveal animation ke liye!
+  // Native View Transitions API for circular reveal animation
   const toggleTheme = (e) => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
     
-    // Fallback: Agar kisi user ka browser bahut purana hai jisme ViewTransition support nahi hai 
+    // Fallback: If browser lacks View Transitions support
     if (!document.startViewTransition) {
         setTheme(nextTheme);
         return;
     }
 
-    // CSS variables document ki x y coordinates se set ho rhi hai 
-    // Isse animation jahan click kiya hai wahen se gol (circle) expand hona shuru hoga!
+    // Set origin coordinates for expanding circular transition
     const x = e.clientX || window.innerWidth / 2;
     const y = e.clientY || window.innerHeight / 2;
     document.documentElement.style.setProperty('--click-x', `${x}px`);
     document.documentElement.style.setProperty('--click-y', `${y}px`);
 
     document.startViewTransition(() => {
-        // flushSync react state ko immediately screen render pr force karta hai startViewTransition ke liye
+        // flushSync forces React state update synchronously for startViewTransition
         flushSync(() => {
             setTheme(nextTheme);
         });
@@ -82,26 +83,30 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   }, [user]);
 
   const menuItems = [
-    { icon: PerplexityIcon, label: 'Search', path: '/', active: location.pathname === '/' },
-    { icon: RiHistoryLine, label: 'Chats', path: '/library', active: location.pathname === '/library' },
-    { icon: RiInstagramLine, label: 'Insta Post', path: '/connect-instagram', active: location.pathname === '/connect-instagram' },
+    { icon: PerplexityIcon, label: 'Search', path: '/', active: location.pathname === '/', isProtected: false },
+    { icon: RiHistoryLine, label: 'Chats', path: '/library', active: location.pathname === '/library', isProtected: true },
+    { icon: RiApps2Line, label: 'Social Hub', path: '/social-connections', active: location.pathname === '/social-connections', isProtected: true },
+    { icon: RiSettings4Line, label: 'Settings', path: '/settings', active: location.pathname === '/settings', isProtected: true },
   ];
 
-  const secondaryItems = [
-    // { icon: RiLineChartLine, label: 'Finance', path: '/finance' },
-  ];
+  const handleNavClick = (e, item) => {
+    if (item.isProtected && !user) {
+      e.preventDefault();
+      navigate('/auth');
+    }
+  };
 
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 z-50 w-56 h-screen flex flex-col bg-zinc-50 dark:bg-[#050505] text-zinc-500 dark:text-zinc-400 p-3 transition-transform duration-300 ease-in-out shrink-0
+        className={`fixed top-0 left-0 z-50 w-56 h-screen flex flex-col bg-[#ebecee] dark:bg-[#050505] text-zinc-600 dark:text-zinc-400 p-3 transition-transform duration-300 ease-in-out shrink-0 border-r border-zinc-300/70 dark:border-white/5
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Mobile Close Button */}
         <div className="lg:hidden flex justify-end mb-2">
           <button
             onClick={() => setIsOpen(false)}
-            className="p-2 text-zinc-500 hover:text-white transition-colors"
+            className="p-2 text-zinc-500 hover:text-white transition-colors cursor-pointer"
           >
             <RiSettings4Line className="rotate-45" size={20} />
           </button>
@@ -113,8 +118,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <Link
               key={idx}
               to={item.path}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group
-                ${item.active ? 'bg-zinc-200 dark:bg-[#1a1a1a] text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:bg-zinc-100 dark:hover:bg-[#121212] hover:text-zinc-700 dark:hover:text-zinc-200'}`}
+              onMouseEnter={() => triggerBlobSidebarNav(item.label)}
+              onClick={(e) => {
+                triggerBlobSidebarNav(item.label);
+                handleNavClick(e, item);
+              }}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group cursor-pointer
+                ${item.active ? 'bg-white dark:bg-[#1a1a1a] text-zinc-950 dark:text-zinc-100 shadow-xs border border-zinc-200/80 dark:border-transparent' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/70 dark:hover:bg-[#121212] hover:text-zinc-950 dark:hover:text-zinc-200'}`}
             >
               <item.icon size={18} className={item.active ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-500'} />
               <span className="text-sm font-medium">{item.label}</span>
@@ -123,10 +133,21 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         </nav>
 
         {/* New Chat Button */}
-        <Link to="/" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-[#1a1a1a] transition-all group mb-4">
+        <button 
+          onMouseEnter={() => triggerBlobSidebarNav('new chat')}
+          onClick={() => {
+            triggerBlobSidebarNav('new chat');
+            if (!user) {
+              navigate('/auth');
+              return;
+            }
+            navigate('/');
+          }}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-200/70 dark:hover:bg-[#1a1a1a] transition-all group mb-4 cursor-pointer text-left"
+        >
           <RiAddLine size={18} className="text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300" />
           <span className="text-sm font-medium">New Chat</span>
-        </Link>
+        </button>
 
         {/* Recent Section */}
         <div className="flex-1 overflow-hidden flex flex-col min-h-0">
@@ -135,7 +156,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-0.5 custom-scrollbar pb-4 pr-1">
-            {loading && chats.length === 0 ? (
+            {!user ? (
+              <div className="p-3 mx-1 my-2 rounded-xl bg-white/70 dark:bg-white/5 border border-zinc-200/80 dark:border-white/5 text-center shadow-2xs">
+                <p className="text-[11px] text-zinc-500 mb-2 leading-relaxed">Sign in to save and access your past chats.</p>
+                <Link 
+                  to="/auth" 
+                  className="inline-flex items-center justify-center gap-1 w-full py-1.5 px-3 rounded-lg bg-[#20b8cd] text-zinc-950 font-bold text-xs hover:bg-[#1da9bc] transition-all cursor-pointer"
+                >
+                  <span>Sign In</span>
+                </Link>
+              </div>
+            ) : loading && chats.length === 0 ? (
               <SidebarSkeleton />
             ) : (
               <>
@@ -148,17 +179,21 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   <div key={thread._id} className="group flex items-center gap-1">
                     <Link
                       to={`/chat/${thread._id}`}
-                      className={`flex-1 block text-left px-3 py-1.5 rounded-lg text-[13px] truncate transition-all font-medium 
-                      ${location.pathname === `/chat/${thread._id}` ? 'text-zinc-900 dark:text-zinc-100 bg-zinc-200 dark:bg-[#1a1a1a]' : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-[#121212]'}`}
+                      onMouseEnter={() => triggerBlobChatSelect()}
+                      onClick={() => triggerBlobChatSelect()}
+                      className={`flex-1 block text-left px-3 py-1.5 rounded-lg text-[13px] truncate transition-all font-medium cursor-pointer
+                      ${location.pathname === `/chat/${thread._id}` ? 'text-zinc-950 dark:text-zinc-100 bg-white dark:bg-[#1a1a1a] shadow-xs border border-zinc-200/80 dark:border-transparent' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200 hover:bg-zinc-200/70 dark:hover:bg-[#121212]'}`}
                     >
                       {thread.title || 'Untitled Chat'}
                     </Link>
                     <button 
+                      onMouseEnter={() => triggerBlobChatDeleteHover()}
                       onClick={() => {
+                        triggerBlobChatDeleteHover();
                         setTargetId(thread._id);
                         setModalType('delete');
                       }}
-                      className="p-1 text-zinc-400 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 transition-all shrink-0"
+                      className="p-1 text-zinc-400 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 transition-all shrink-0 cursor-pointer"
                     >
                       <RiDeleteBinLine size={14} />
                     </button>
@@ -167,7 +202,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 {chats.length > 0 && (
                   <Link
                     to="/library"
-                    className="px-3 py-1.5 text-[11px] font-bold text-[#60A6AF] hover:text-[#60A6AF]/80 uppercase tracking-wider block w-fit transition-colors"
+                    className="px-3 py-1.5 text-[11px] font-bold text-[#60A6AF] hover:text-[#60A6AF]/80 uppercase tracking-wider block w-fit transition-colors cursor-pointer"
                   >
                     View All
                   </Link>
@@ -180,14 +215,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </div>
         </div>
 
-
         {/* Footer Area */}
-        <div className="mt-auto space-y-4 pt-4 border-t border-zinc-900/50 dark:border-zinc-900/50 border-zinc-200">
+        <div className="mt-auto space-y-3 pt-3 border-t border-zinc-300/70 dark:border-zinc-800/80">
           
           {/* Theme Toggle Button */}
           <button 
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-[#1a1a1a] transition-all group"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-zinc-200/70 dark:hover:bg-[#1a1a1a] transition-all group cursor-pointer"
           >
             {theme === 'dark' ? (
                 <>
@@ -202,27 +236,75 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             )}
           </button>
 
-          {/* User Profile */}
-          <div className="flex items-center justify-between px-2 pb-2">
-            <div className="flex items-center gap-2 group max-w-[140px]">
-              <div className="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                {user?.username?.[0]?.toUpperCase() || 'A'}
-              </div>
-              <span className="text-xs font-bold text-zinc-900 dark:text-zinc-200 truncate group-hover:text-zinc-700 dark:group-hover:text-white transition-colors">
-                {user?.username || 'Guest'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <RiNotification3Line size={16} className="text-zinc-600 hover:text-zinc-300 cursor-pointer" />
-              <button
-                onClick={handleLogout}
-                className="text-zinc-600 hover:text-red-400 transition-colors"
-                title="Logout"
+          {/* User Profile or Guest Login CTA */}
+          {user ? (
+            <div className="flex items-center justify-between px-2 pb-1">
+              <Link 
+                to="/settings"
+                title="Profile & Settings"
+                className="flex items-center gap-2 group max-w-[140px] cursor-pointer"
               >
-                <RiLogoutBoxRLine size={16} />
-              </button>
+                {user?.profilePic ? (
+                  <img 
+                    src={user.profilePic} 
+                    alt={user.username} 
+                    className="w-6 h-6 rounded-full object-cover border border-zinc-200 dark:border-white/10 shrink-0"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                    {user?.username?.[0]?.toUpperCase() || 'A'}
+                  </div>
+                )}
+                <span className="text-xs font-bold text-zinc-900 dark:text-zinc-200 truncate group-hover:text-[#20b8cd] transition-colors">
+                  {user?.username || 'User'}
+                </span>
+              </Link>
+              <div className="flex items-center gap-2">
+                <RiNotification3Line size={16} className="text-zinc-600 hover:text-zinc-300 cursor-pointer" />
+                <button
+                  onClick={handleLogout}
+                  onMouseEnter={() => {
+                    window.dispatchEvent(
+                      new CustomEvent('blob_trigger_mood', {
+                        detail: {
+                          mood: 'sad',
+                          speech: "Please don't go! 🥺 Stay with me...",
+                          revert: false
+                        }
+                      })
+                    );
+                  }}
+                  onMouseLeave={() => {
+                    window.dispatchEvent(
+                      new CustomEvent('blob_trigger_mood', {
+                        detail: {
+                          mood: 'happy',
+                          speech: "Yay! Let's build and create something awesome! ✨🚀",
+                          duration: 4000,
+                          celebrate: true,
+                          revert: true
+                        }
+                      })
+                    );
+                  }}
+                  className="text-zinc-600 hover:text-red-400 transition-colors cursor-pointer"
+                  title="Logout"
+                >
+                  <RiLogoutBoxRLine size={16} />
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="px-1 pb-1">
+              <Link
+                to="/auth"
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-gradient-to-r from-[#20b8cd] to-[#1da9bc] text-zinc-950 font-bold text-xs shadow-md shadow-[#20b8cd]/15 hover:opacity-95 transition-all transform hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+              >
+                <RiLoginCircleLine size={15} />
+                <span>Log In / Sign Up</span>
+              </Link>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -230,7 +312,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         isOpen={modalType === 'delete'}
         onClose={() => setModalType(null)}
         onConfirm={() => {
-            if (targetId) handleDeleteChat(targetId);
+            if (targetId) {
+              handleDeleteChat(targetId);
+              triggerBlobChatDeleted();
+            }
         }}
         title="Delete Chat"
         message="This chat session and its messages will be permanently deleted."

@@ -9,6 +9,11 @@ const chatSlice = createSlice({
         loading: false,
         isCreating: false,
         error: null,
+        // ─── Pagination state ──────────────────────────────────────
+        hasMoreMessages: false,
+        messagesPage: 1,
+        totalMessages: 0,
+        isLoadingMore: false, // For scroll-up older message loading
     },
     reducers: {
         setChats: (state, action) => {
@@ -16,6 +21,10 @@ const chatSlice = createSlice({
         },
         setMessages: (state, action) => {
             state.messages = action.payload;
+        },
+        // Prepend older messages at the top (for scroll-up pagination)
+        prependMessages: (state, action) => {
+            state.messages = [...action.payload, ...state.messages];
         },
         addMessage: (state, action) => {
             state.messages.push(action.payload);
@@ -36,15 +45,35 @@ const chatSlice = createSlice({
             state.chats = [];
             state.messages = [];
             state.currentChatId = null;
+            state.hasMoreMessages = false;
+            state.messagesPage = 1;
+            state.totalMessages = 0;
         },
         appendChunk: (state, action) => {
             const lastMessage = state.messages[state.messages.length - 1];
             if (lastMessage && lastMessage.role === "ai" && lastMessage.isStreaming) {
                 lastMessage.content += action.payload;
             }
-        }
+        },
+        // ─── Pagination reducers ──────────────────────────────────
+        setHasMoreMessages: (state, action) => {
+            state.hasMoreMessages = action.payload;
+        },
+        setMessagesPage: (state, action) => {
+            state.messagesPage = action.payload;
+        },
+        setTotalMessages: (state, action) => {
+            state.totalMessages = action.payload;
+        },
+        setIsLoadingMore: (state, action) => {
+            state.isLoadingMore = action.payload;
+        },
     }
 });
 
-export const { setChats, setMessages, addMessage, setCurrentChatId, setLoading, setError, setIsCreating, clearChat, appendChunk } = chatSlice.actions;
+export const { 
+    setChats, setMessages, addMessage, setCurrentChatId, 
+    setLoading, setError, setIsCreating, clearChat, appendChunk,
+    prependMessages, setHasMoreMessages, setMessagesPage, setTotalMessages, setIsLoadingMore
+} = chatSlice.actions;
 export default chatSlice.reducer;

@@ -18,32 +18,84 @@ import {
   RiGlobalLine,
   RiMagicLine,
   RiInstagramLine,
-  RiMailSendLine
+  RiMailSendLine,
+  RiImageLine,
+  RiVideoLine,
+  RiFilePdfLine,
+  RiExpandUpDownLine,
+  RiContractUpDownLine,
+  RiCodeSSlashLine
 } from '@remixicon/react';
 import { useChat } from '../hook/useChat';
 import { useNavigate } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
-import Toast from '../../Components/Toast';
+import Footer from '../../Components/Footer';
 import { setError, setMessages } from '../chat.slice';
 import PerplexityIcon from '../../Components/PerplexityIcon';
+import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
+import ModelSelectorDropdown from './ModelSelectorDropdown';
+import AttachmentPreviewStrip from './AttachmentPreviewStrip';
+import { triggerBlobInteraction, triggerBlobTyping } from '../../../utils/blobReactions';
 
 const ChatArea = () => {
-  // Input message store karne ke liye
+  // Input message state
   const [input, setInput] = useState('');
   
-  // Agar user koi file ya image attach karta hai toh usko isme store karte hain
+  // Attached files and media items
   const [files, setFiles] = useState([]);
   
-  // Drag and drop UI toggle ke liye flag
+  // Drag and drop UI state
   const [isDragging, setIsDragging] = useState(false);
+
+  // Selected AI Model
+  const [selectedModel, setSelectedModel] = useState(null);
   
-  // Custom hook se function le rahe hain jo chat bhejne aur suggestions lane me madad karega
+  // Chat custom hook functions
   const { handleSendMessage, handleGetSuggestions, loading } = useChat();
   
-  // Global error state laye hain Redux se, taaki upar Toast me dikha sakein
+  // Global error state from Redux
   const error = useSelector(state => state.chat.error);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // JellyBlob mascot reactive states
+  const [blobMood, setBlobMood] = useState('curious');
+  const [blobGaze, setBlobGaze] = useState({ x: 0, y: 0 });
+  const [isTyping, setIsTyping] = useState(false);
+  const [celebrateCount, setCelebrateCount] = useState(0);
+  const typingTimerRef = useRef(null);
+
+  // Textarea resizing & code formatting state
+  const textareaRef = useRef(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Detect whether pasted or typed content is code
+  const isCodeContent = Boolean(
+    input && (
+      input.includes('```') ||
+      (input.includes('\n') && (
+        /^(import|export|const|let|var|function|class|def|public|private|protected|interface|type|return|<[a-zA-Z]+|\/\/|\/\*|#include|package|func|select|from|where)\b/im.test(input) ||
+        /[{}();=>\[\]]/.test(input)
+      ))
+    )
+  );
+
+  // Auto-grow textarea with content up to maximum threshold or expanded height
+  useEffect(() => {
+    if (!textareaRef.current) return;
+    textareaRef.current.style.height = 'auto';
+    const targetMin = isExpanded ? 240 : 56;
+    const targetMax = isExpanded ? 520 : 260;
+    const scrollH = textareaRef.current.scrollHeight;
+    const nextH = Math.min(Math.max(scrollH, targetMin), targetMax);
+    textareaRef.current.style.height = `${nextH}px`;
+  }, [input, isExpanded]);
+
+  const triggerTyping = () => {
+    setIsTyping(true);
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => setIsTyping(false), 500);
+  };
   
   // Naye AI suggestions (pills, queries, topics) store karne ke liye
   const [aiSuggestions, setAiSuggestions] = useState(null);
@@ -51,21 +103,43 @@ const ChatArea = () => {
   // Initial suggestions laate waqt skeleton dikhane ke liye loading flag
   const [suggestionsLoading, setSuggestionsLoading] = useState(true);
 
-  // Hidden file input element ka reference taaki attachment button se waha click karwa sakein
+  // File input refs for photo, video, and documents
   const fileInputRef = useRef(null);
+  const videoInputRef = useRef(null);
+  const docInputRef = useRef(null);
+  const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
 
-  // Jaise hi component pehli baar load ho, default suggestions backend se fetch karo
+  const handleFileUpload = (e) => {
+    const uploadedFiles = Array.from(e.target.files);
+    setFiles(prev => [...prev, ...uploadedFiles.map(f => ({ name: f.name, isLink: false, fileObject: f }))]);
+    setIsUploadMenuOpen(false);
+  };
+
+  const removeFile = (index) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const getFileIcon = (file) => {
+    if (file.isLink) return <RiAttachment2 size={13} className="text-[#60A6AF]" />;
+    const name = file.name?.toLowerCase() || '';
+    if (name.match(/\.(mp4|webm|mov|avi|mkv)$/)) return <RiVideoLine size={13} className="text-purple-400" />;
+    if (name.match(/\.(pdf)$/)) return <RiFilePdfLine size={13} className="text-red-400" />;
+    if (name.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/)) return <RiImageLine size={13} className="text-emerald-400" />;
+    return <RiFileTextLine size={13} className="text-[#60A6AF]" />;
+  };
+
+  // Fetch default suggestions from backend when component mounts
   useEffect(() => {
     const fetchSuggestions = async () => {
       setSuggestionsLoading(true);
       const data = await handleGetSuggestions();
-      if (data) setAiSuggestions(data); // Agar data aaya toh state update kardo
+      if (data) setAiSuggestions(data); // Update state if data is received
       setSuggestionsLoading(false);
     };
     fetchSuggestions();
   }, []);
 
-  // Icon ka dictionary taaki backend se sirf string (jaise 'robot') aaye aur hum proper icon dikha sakein
+  // Icon dictionary to map backend string to proper icon component
   const iconMap = {
     global: RiGlobalLine,
     robot: RiRobot2Line,
@@ -76,8 +150,8 @@ const ChatArea = () => {
     heart: RiHeart2Line
   };
 
-  // AI ke extra capabilities ko yaha dynamic array mein rakha gaya hai
-  // Taaki future mein naye tools aane par simply yahan unhe joda ja sake bina UI code badle
+  // Dynamic array of extra AI capabilities
+  // For future extensibility without changing UI code
   const capabilities = [
     {
        title: "Post to Instagram",
@@ -95,33 +169,43 @@ const ChatArea = () => {
     }
   ];
 
-  // Jab user Enter dabaye, send button dabaye ya koi suggestion click kare
+  // Global auth state
+  const user = useSelector(state => state.auth.user);
+
+  // Handle message submission on Enter, send button, or suggestion click
   const onSubmit = async (e, text = null) => {
     if (e) e.preventDefault();
+
+    // Guest protection: Redirect unauthenticated users to login immediately
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     
-    // Agar func ko naya text mila hai (matlab user ne suggestion click kiya) toh usa use karo warna input box ka text
+    // Use passed text (suggestion click) or input box text
     const messageToSend = text || input;
     
-    // Abhi ke liye sirf pehli file bhej rahe hain backend ko (Single file attachment support)
-    const file = files[0]; 
+    // Extract all attached file objects (supports up to 10 files)
+    const fileObjects = files.map(f => f.fileObject).filter(Boolean);
+    const filesToSend = fileObjects.length > 1 ? fileObjects : (fileObjects[0] || null); 
     
-    // Agar type bhi nahi kiya aur file bhi select nahi ki toh send nahi karenge. Ya fir agar pehle se message jaa raha ho (loading) to rokenge
-    if ((!messageToSend.trim() && !file) || loading) return;
+    // Do not send if neither text nor file is present, or if already loading
+    if ((!messageToSend.trim() && !filesToSend) || loading) return;
 
     try {
-      // Input box box ko immediately khali karna zaruri hai taki user dohra type na kare
+      // Clear input box immediately
       setInput('');
       setFiles([]);
       
-      // Purane stored messages saaf kar do taaki new page pe pichle chat ki baatein na aayen
+      // Clear previous stored messages
       dispatch(setMessages([]));
       
-      // Optimistic Routing: Server ki response ka wait karne ke bajaye user ko turant new chat screen pe bhej do
+      // Optimistic Routing: Navigate immediately to new chat screen
       navigate('/chat/new');
       
-      // Asynchronously handle message sending, hum yahan await nahi laga rahe taaki ui fass na jaye
-      handleSendMessage(messageToSend, null, file).then(response => {
-        // Ek baar server se asli chat _id aa gayi, tab silently URL ko update kardo (replace: true ensures strict history)
+      // Asynchronously handle message sending with selected model
+      handleSendMessage(messageToSend, null, filesToSend, selectedModel).then(response => {
+        // Silently update URL once real chat ID is received
         if (response && response.chat) {
           navigate(`/chat/${response.chat._id}`, { replace: true });
         }
@@ -134,27 +218,41 @@ const ChatArea = () => {
     }
   };
 
-  // Keyboard 'Enter' se message send karne ke liye function
+  // Function to handle keyboard events (Enter to send, Tab to indent code)
   const handleKeyDown = (e) => {
+    // Indent code or text with Tab key
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const textarea = e.target;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const value = textarea.value;
+
+      const newValue = value.substring(0, start) + '  ' + value.substring(end);
+      setInput(newValue);
+
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + 2;
+        }
+      });
+      return;
+    }
+
     if (e.key === 'Enter') {
-      // Agar user shift ya ctrl daba ke enter mare toh usko new line samajhenge (Message na bhejeyngy)
+      // Treat shift/ctrl/meta + enter as newline
       if (e.ctrlKey || e.metaKey || e.shiftKey) {
         return;
       }
-      e.preventDefault(); // Default line skip rokna
+      e.preventDefault(); // Prevent default line skip
+
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
       onSubmit(e); // Message bhejna start
     }
-  };
-
-  // Attachment button ke zariye aayi files state me set karna
-  const handleFileUpload = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    setFiles(prev => [...prev, ...selectedFiles]); // Purani plus nayi file add
-  };
-
-  // Selected file array me se particular index wali file udana
-  const removeFile = (index) => {
-    setFiles(files.filter((_, i) => i !== index));
   };
 
   // Drag start (jab screen par file laaye)
@@ -173,21 +271,24 @@ const ChatArea = () => {
     e.preventDefault();
     setIsDragging(false); // Drop ho gaya UI wapas normal kardo
     
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
     // Drop ki gyi files state me save kar lo
     const droppedFiles = Array.from(e.dataTransfer.files);
     if (droppedFiles.length > 0) {
-      setFiles(prev => [...prev, ...droppedFiles]);
+      setFiles(prev => [...prev, ...droppedFiles.map(f => ({ name: f.name, isLink: false, fileObject: f }))]);
     }
   };
 
   return (
-    <main className="flex-1 w-full flex flex-col items-center bg-white dark:bg-[#050505] relative overflow-x-hidden overflow-y-auto custom-scrollbar pb-80 md:pb-32"
+    <main data-lenis-prevent className="flex-1 w-full flex flex-col items-center bg-[#f4f5f7] dark:bg-[#050505] relative overflow-x-hidden overflow-y-auto custom-scrollbar pb-80 md:pb-32"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <Toast message={error} type="error" onClose={() => dispatch(setError(null))} />
-
       {/* Drag Overlay */}
       {isDragging && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-6">
@@ -215,8 +316,26 @@ const ChatArea = () => {
               return (
                 <button 
                   key={i} 
-                  onClick={(e) => onSubmit(e, pillLabel)}
-                  className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-transparent border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-600 dark:text-zinc-500 text-[13px] font-medium transition-all group"
+                  onClick={(e) => {
+                    if (!user) {
+                      setBlobMood('surprised');
+                      navigate('/login');
+                      return;
+                    }
+                    setBlobMood('hmm');
+                    onSubmit(e, pillLabel);
+                  }}
+                  onMouseEnter={() => {
+                    setBlobMood('happy');
+                    setBlobGaze({ x: (i - 1.5) * 6, y: 12 });
+                  }}
+                  onMouseLeave={() => {
+                    if (!loading) {
+                      setBlobMood('neutral');
+                      setBlobGaze({ x: 0, y: 0 });
+                    }
+                  }}
+                  className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-transparent border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-600 dark:text-zinc-500 text-[13px] font-medium transition-all group cursor-pointer"
                 >
                   <Icon size={14} className="text-zinc-500 mr-2 group-hover:text-zinc-900 dark:group-hover:text-zinc-300" />
                   <span>{pillLabel}</span>
@@ -227,51 +346,219 @@ const ChatArea = () => {
         </div>
 
         {/* Search Input Box */}
-        <div className="w-full md:relative md:block fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 md:p-0 bg-gradient-to-t from-[#f3f4f6] dark:from-[#050505] via-[#f3f4f6]/95 dark:via-[#050505]/95 md:bg-transparent md:dark:bg-transparent to-transparent backdrop-blur-[2px] md:backdrop-blur-0">
-          <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[#121212] border ${isDragging ? 'border-[#60A6AF]' : 'border-zinc-200 dark:border-[#2d2e2e]'} focus-within:border-zinc-300 dark:focus-within:border-zinc-700 rounded-[28px] px-5 md:px-6 py-4 md:py-5 transition-all duration-300 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
+        <div className="w-full md:relative md:block fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 md:p-0 bg-gradient-to-t from-[#f4f5f7] dark:from-[#050505] via-[#f4f5f7]/95 dark:via-[#050505]/95 md:bg-transparent md:dark:bg-transparent to-transparent backdrop-blur-[2px] md:backdrop-blur-0">
+          <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[#121212] border ${isDragging ? 'border-[#60A6AF]' : 'border-zinc-200/90 dark:border-[#2d2e2e]'} focus-within:border-[#60A6AF]/60 dark:focus-within:border-[#60A6AF]/60 focus-within:ring-2 focus-within:ring-[#60A6AF]/20 rounded-[28px] px-5 md:px-6 py-4 md:py-5 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
 
-            {files.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {files.map((file, i) => (
-                  <div key={i} className="flex items-center gap-2 px-3 py-1 bg-zinc-200 dark:bg-[#1a1a1a] border border-zinc-300 dark:border-white/5 rounded-lg animate-in zoom-in duration-300">
-                    {file.isLink ? <RiAttachment2 size={12} className="text-[#60A6AF]" /> : <RiFileTextLine size={12} className="text-[#60A6AF]" />}
-                    <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 truncate max-w-[120px]">{file.name}</span>
-                    <button onClick={() => removeFile(i)} className="text-zinc-400 dark:text-zinc-600 hover:text-red-400 transition-colors">
-                      <RiCloseLine size={14} />
-                    </button>
-                  </div>
-                ))}
+            {/* Rich Attachment Preview Strip */}
+            <AttachmentPreviewStrip files={files} onRemove={removeFile} />
+
+            {/* Multi-line or Code Information & Quick Expand Header */}
+            {(isCodeContent || (input && input.split('\n').length > 2)) && (
+              <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-zinc-200/60 dark:border-zinc-800/60 text-xs text-zinc-500 dark:text-zinc-400 select-none animate-in fade-in duration-200">
+                <div className="flex items-center gap-2">
+                  {isCodeContent && (
+                    <span className="flex items-center gap-1 text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-[#60A6AF]/15 text-[#296f79] dark:text-[#7fd4df] border border-[#60A6AF]/25">
+                      <RiCodeSSlashLine size={12} />
+                      Code format preserved
+                    </span>
+                  )}
+                  <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                    {input.split('\n').length} lines • {input.length} characters
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(prev => !prev)}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-[#60A6AF] hover:text-[#418690] dark:hover:text-[#90e2ee] transition-colors cursor-pointer"
+                  title={isExpanded ? "Collapse input size" : "Expand input size to see and edit full prompt"}
+                >
+                  {isExpanded ? (
+                    <>
+                      <RiContractUpDownLine size={13} />
+                      <span>Collapse size</span>
+                    </>
+                  ) : (
+                    <>
+                      <RiExpandUpDownLine size={13} />
+                      <span>Expand size</span>
+                    </>
+                  )}
+                </button>
               </div>
             )}
 
             <textarea
+              ref={textareaRef}
+              rows="1"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                if (!user) {
+                  setBlobMood('surprised');
+                  navigate('/login');
+                  return;
+                }
+                setInput(e.target.value);
+                triggerTyping();
+                triggerBlobTyping();
+              }}
+              onMouseEnter={() => {
+                triggerBlobInteraction('hover');
+              }}
+              onFocus={() => {
+                if (!user) {
+                  setBlobMood('surprised');
+                  navigate('/login');
+                  return;
+                }
+                setBlobMood('curious');
+                setBlobGaze({ x: 0, y: 16 });
+                triggerBlobInteraction('focus');
+              }}
+              onBlur={() => {
+                if (!loading) {
+                  setBlobMood('neutral');
+                  setBlobGaze({ x: 0, y: 0 });
+                }
+              }}
+              onClick={() => {
+                if (!user) {
+                  setBlobMood('surprised');
+                  navigate('/login');
+                  return;
+                }
+                triggerBlobInteraction('click');
+              }}
               onKeyDown={handleKeyDown}
-              placeholder="Ask anything..."
-              className="w-full bg-transparent border-none outline-none text-zinc-900 dark:text-zinc-100 text-[17px] md:text-[18px] placeholder:text-zinc-400 dark:placeholder:text-zinc-500 resize-none min-h-[40px] md:min-h-[60px] leading-snug md:leading-relaxed font-sans font-medium"
+              spellCheck={!isCodeContent}
+              style={{
+                whiteSpace: 'pre-wrap',
+                tabSize: 2,
+                MozTabSize: 2
+              }}
+              placeholder={user ? "Ask anything or paste code..." : "Click or sign in to start a new chat..."}
+              className={`w-full bg-transparent border-none outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 custom-scrollbar transition-all resize-y ${
+                isCodeContent 
+                  ? 'font-mono text-[14px] md:text-[15px] leading-relaxed' 
+                  : 'font-sans font-medium text-[17px] md:text-[18px] leading-snug md:leading-relaxed'
+              } ${
+                isExpanded ? 'min-h-[240px] md:min-h-[300px] max-h-[75vh]' : 'min-h-[44px] md:min-h-[58px] max-h-[260px]'
+              } cursor-text`}
             />
 
             <div className="flex items-center justify-between mt-4">
-              <div className="relative">
-                <button
-                  onClick={() => fileInputRef.current.click()}
-                  className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 bg-zinc-100 dark:bg-transparent hover:bg-zinc-200 dark:hover:bg-zinc-800/50 transition-all"
-                >
-                  <RiAddLine size={18} />
-                </button>
-                <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" multiple />
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      if (!user) {
+                        navigate('/login');
+                        return;
+                      }
+                      setIsUploadMenuOpen(!isUploadMenuOpen);
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 bg-zinc-100 dark:bg-transparent hover:bg-zinc-200 dark:hover:bg-zinc-800/50 transition-all text-xs font-semibold cursor-pointer"
+                    title="Attach photo, video or document"
+                  >
+                    <RiAddLine size={16} />
+                    <span>Attach</span>
+                  </button>
+
+                  {isUploadMenuOpen && (
+                    <div className="absolute bottom-full left-0 mb-3 w-56 bg-white dark:bg-[#1a1a1a] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2">
+                      {/* Upload Photo */}
+                      <button 
+                        onClick={() => { fileInputRef.current.click(); setIsUploadMenuOpen(false); }} 
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[13px] font-bold transition-all group cursor-pointer"
+                      >
+                        <RiImageLine size={18} className="text-emerald-400 group-hover:text-emerald-300" />
+                        <span>Upload Photo</span>
+                      </button>
+                      {/* Upload Video */}
+                      <button 
+                        onClick={() => { videoInputRef.current.click(); setIsUploadMenuOpen(false); }} 
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[13px] font-bold transition-all group cursor-pointer"
+                      >
+                        <RiVideoLine size={18} className="text-purple-400 group-hover:text-purple-300" />
+                        <span>Upload Video</span>
+                      </button>
+                      {/* Upload Document */}
+                      <button 
+                        onClick={() => { docInputRef.current.click(); setIsUploadMenuOpen(false); }} 
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[13px] font-bold transition-all group cursor-pointer"
+                      >
+                        <RiFilePdfLine size={18} className="text-red-400 group-hover:text-red-300" />
+                        <span>Upload Document</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Hidden inputs */}
+                  <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" multiple />
+                  <input type="file" ref={videoInputRef} onChange={handleFileUpload} className="hidden" accept="video/*" multiple />
+                  <input type="file" ref={docInputRef} onChange={handleFileUpload} className="hidden" accept=".pdf,.txt,.md,.doc,.docx" multiple />
+                </div>
+
+                <ModelSelectorDropdown
+                  selectedModel={selectedModel}
+                  onModelChange={setSelectedModel}
+                />
               </div>
 
               <div className="flex items-center gap-2">
-                <button className="p-1.5 text-zinc-500 hover:text-zinc-100 transition-colors">
+                {/* Increase/Decrease Input Size Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(prev => !prev)}
+                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    isExpanded 
+                      ? 'text-[#60A6AF] bg-[#60A6AF]/15 dark:bg-[#60A6AF]/25' 
+                      : 'text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                  }`}
+                  title={isExpanded ? "Collapse input size" : "Expand input size (edit large prompt or code)"}
+                >
+                  {isExpanded ? <RiContractUpDownLine size={18} /> : <RiExpandUpDownLine size={18} />}
+                </button>
+
+                <button 
+                  onClick={() => {
+                    if (!user) {
+                      navigate('/login');
+                      return;
+                    }
+                  }}
+                  className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
+                  title="Voice input"
+                >
                   <RiMicLine size={18} />
                 </button>
 
                 <button
-                  onClick={onSubmit}
-                  disabled={!input.trim() && files.length === 0}
-                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${input.trim() || files.length > 0 ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg shadow-black/10' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600 opacity-50'}`}
+                  onClick={(e) => {
+                    if (!user) {
+                      setBlobMood('surprised');
+                      navigate('/login');
+                      return;
+                    }
+                    setBlobMood('hmm');
+                    onSubmit(e);
+                  }}
+                  onMouseEnter={() => {
+                    if (!user || input.trim() || files.length > 0) {
+                      setBlobMood('happy');
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (!loading) {
+                      setBlobMood(input.trim() ? 'curious' : 'neutral');
+                    }
+                  }}
+                  disabled={user && (!input.trim() && files.length === 0)}
+                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-all cursor-pointer ${
+                    !user || input.trim() || files.length > 0 
+                      ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg shadow-black/10 hover:scale-105' 
+                      : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600 opacity-50'
+                  }`}
+                  title="Send message"
                 >
                   <RiArrowUpLine size={18} />
                 </button>
@@ -279,6 +566,14 @@ const ChatArea = () => {
             </div>
           </div>
         </div>
+
+        {/* Guest prompt indicator */}
+        {!user && (
+          <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 dark:bg-zinc-900/60 border border-zinc-200 dark:border-white/5 text-xs text-zinc-500 animate-in fade-in duration-500">
+            <span className="w-2 h-2 rounded-full bg-[#20b8cd] animate-pulse" />
+            <span>Sign in to save chat history, analyze files, and publish to social networks.</span>
+          </div>
+        )}
 
         {/* Suggested Queries List */}
         <div className="w-full max-w-[800px] mt-10 space-y-4">
@@ -296,8 +591,14 @@ const ChatArea = () => {
             ]).map((query, i) => (
               <button 
                 key={i} 
-                onClick={(e) => onSubmit(e, query)}
-                className="w-full text-left px-4 py-2.5 text-[14px] text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all border-b border-zinc-100 dark:border-zinc-900/50 block font-medium break-words whitespace-normal"
+                onClick={(e) => {
+                  if (!user) {
+                    navigate('/login');
+                    return;
+                  }
+                  onSubmit(e, query);
+                }}
+                className="w-full text-left px-4 py-2.5 text-[14px] text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all border-b border-zinc-100 dark:border-zinc-900/50 block font-medium break-words whitespace-normal cursor-pointer"
               >
                 {query}
               </button>
@@ -321,8 +622,14 @@ const ChatArea = () => {
               return (
                 <button 
                     key={i} 
-                    onClick={(e) => onSubmit(e, topic.label)}
-                    className="flex flex-col gap-3 p-5 bg-zinc-50 dark:bg-zinc-900/30 border border-zinc-200 dark:border-white/5 rounded-2xl hover:border-zinc-300 dark:hover:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/30 transition-all text-left group shadow-sm dark:shadow-none"
+                    onClick={(e) => {
+                      if (!user) {
+                        navigate('/login');
+                        return;
+                      }
+                      onSubmit(e, topic.label);
+                    }}
+                    className="flex flex-col gap-3 p-5 bg-zinc-50 dark:bg-zinc-900/30 border border-zinc-200 dark:border-white/5 rounded-2xl hover:border-zinc-300 dark:hover:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/30 transition-all text-left group shadow-sm dark:shadow-none cursor-pointer"
                 >
                   <div className="flex items-center justify-between w-full">
                     <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 transition-colors">
@@ -352,9 +659,9 @@ const ChatArea = () => {
             {capabilities.map((cap, i) => {
                const Icon = cap.icon;
                return (
-                 <div key={i} className={`flex flex-col gap-2 p-4 bg-zinc-50 dark:bg-[#121212]/50 border border-zinc-200 dark:border-white/5 rounded-2xl transition-all cursor-default ${cap.bgHover}`}>
+                 <div key={i} className={`flex flex-col gap-2 p-4 bg-white dark:bg-[#121212]/50 border border-zinc-200/90 dark:border-white/5 rounded-2xl transition-all cursor-default shadow-2xs ${cap.bgHover}`}>
                    <div className="flex items-center gap-3">
-                     <div className={`w-8 h-8 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shadow-sm ${cap.colorClass}`}>
+                     <div className={`w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shadow-xs ${cap.colorClass}`}>
                         <Icon size={16} />
                      </div>
                      <span className="text-[14px] font-extrabold text-zinc-800 dark:text-zinc-200">{cap.title}</span>
@@ -366,6 +673,11 @@ const ChatArea = () => {
                )
             })}
           </div>
+        </div>
+
+        {/* Footer */}
+        <div className="w-full max-w-[800px] mt-12 mb-8 px-1">
+          <Footer />
         </div>
 
         {/* Mobile Spacer to prevent overlap with fixed search bar */}

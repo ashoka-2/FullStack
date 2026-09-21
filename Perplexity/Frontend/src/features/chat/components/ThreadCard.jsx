@@ -2,12 +2,13 @@ import React from 'react';
 import { Link } from 'react-router';
 import { RiMoreFill, RiShareLine, RiDeleteBinLine } from '@remixicon/react';
 import PerplexityIcon from '../../Components/PerplexityIcon';
-
+import { triggerBlobChatSelect, triggerBlobChatDeleteHover } from '../../../utils/blobReactions';
 
 const ThreadCard = ({ thread, viewMode, onDelete }) => {
     const onDeleteClick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        triggerBlobChatDeleteHover();
         onDelete();
     };
 
@@ -15,7 +16,9 @@ const ThreadCard = ({ thread, viewMode, onDelete }) => {
         return (
             <Link 
                 to={`/chat/${thread.id}`}
-                className="group flex flex-col p-5 bg-zinc-50 dark:bg-[#0a0a0a] border border-zinc-200 dark:border-white/5 rounded-3xl hover:border-zinc-300 dark:hover:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/10 transition-all text-left relative"
+                onMouseEnter={() => triggerBlobChatSelect()}
+                onClick={() => triggerBlobChatSelect()}
+                className="group flex flex-col p-5 bg-white dark:bg-[#0a0a0a] border border-zinc-200/90 dark:border-white/5 rounded-3xl hover:border-zinc-300 dark:hover:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/10 shadow-2xs transition-all text-left relative"
             >
                 <div className="flex justify-between items-start mb-4">
                     <div className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
@@ -24,7 +27,8 @@ const ThreadCard = ({ thread, viewMode, onDelete }) => {
                     <div className="flex items-center gap-2">
                         <button 
                             onClick={onDeleteClick}
-                            className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all text-zinc-400 dark:text-zinc-600 hover:text-red-400 dark:hover:text-red-400"
+                            onMouseEnter={() => triggerBlobChatDeleteHover()}
+                            className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all text-zinc-400 dark:text-zinc-600 hover:text-red-400 dark:hover:text-red-400 cursor-pointer"
                         >
                             <RiDeleteBinLine size={16} />
                         </button>
@@ -50,7 +54,9 @@ const ThreadCard = ({ thread, viewMode, onDelete }) => {
     return (
         <Link 
             to={`/chat/${thread.id}`}
-            className="group flex items-center justify-between p-4 bg-zinc-50 dark:bg-[#0a0a0a] border border-zinc-200 dark:border-white/5 rounded-2xl hover:border-zinc-300 dark:hover:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/10 transition-all"
+            onMouseEnter={() => triggerBlobChatSelect()}
+            onClick={() => triggerBlobChatSelect()}
+            className="group flex items-center justify-between p-4 bg-white dark:bg-[#0a0a0a] border border-zinc-200/90 dark:border-white/5 rounded-2xl hover:border-zinc-300 dark:hover:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/10 shadow-2xs transition-all cursor-pointer"
         >
             <div className="flex items-center gap-4 min-w-0">
                 <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 flex items-center justify-center text-zinc-500 group-hover:text-[#60A6AF] transition-colors shrink-0">
@@ -62,8 +68,14 @@ const ThreadCard = ({ thread, viewMode, onDelete }) => {
                 </div>
             </div>
             <div className="flex items-center gap-2 transition-all">
-                <button className="p-2 text-zinc-400 dark:text-zinc-600 hover:text-zinc-900 dark:hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}><RiShareLine size={18} /></button>
-                <button className="p-2 text-zinc-400 dark:text-zinc-600 hover:text-red-400 transition-colors" onClick={onDeleteClick}><RiDeleteBinLine size={18} /></button>
+                <button className="p-2 text-zinc-400 dark:text-zinc-600 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}><RiShareLine size={18} /></button>
+                <button 
+                    onMouseEnter={() => triggerBlobChatDeleteHover()}
+                    className="p-2 text-zinc-400 dark:text-zinc-600 hover:text-red-400 transition-colors cursor-pointer" 
+                    onClick={onDeleteClick}
+                >
+                    <RiDeleteBinLine size={18} />
+                </button>
             </div>
         </Link>
     );

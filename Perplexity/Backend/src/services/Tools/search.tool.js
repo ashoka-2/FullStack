@@ -2,18 +2,18 @@ import { tool } from "@langchain/core/tools";
 import { tavily } from "@tavily/core";
 import * as z from "zod";
 
-// Tavily search engine ka client initialize kar rahe hain
+// Initialize Tavily search engine client
 const tvly = new tavily(process.env.TAVILY_API_KEY);
 
-// LangChain tool jo internet pe search karne ke kaam aata hai
+// LangChain tool for performing internet search
 export const searchInternetTool = tool(
     async ({ query }) => {
       try {
-        // Tavily se search karwa rahe hain, top 3 results utha rahe hain
+        // Query Tavily and retrieve top 3 search results
         const data = await tvly.search(query, { searchDepth: "basic", maxResults: 3 });
         return data.results.map(r => `Title: ${r.title}\nDetails: ${r.content}`).join("\n\n");
       } catch (error) {
-        // Agar internet search down hai toh fallback message bhej rahe hain
+        // Fallback message if web search fails
         console.error("Search Tool Error:", error.message);
         return "Search is temporarily unavailable. Answer based on your knowledge.";
       }

@@ -1,4 +1,6 @@
 import userModel from "../models/user.model.js";
+import chatModel from "../models/chat.model.js";
+import SocialConnection from "../models/social.model.js";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../services/mail.service.js";
 
@@ -47,7 +49,7 @@ export async function registerUser(req, res) {
               <p style="color: #a1a1aa; font-size: 16px; line-height: 24px; margin-bottom: 32px;">
                 Welcome to <strong style="color: #fff;">Perplexity</strong>, ${username}. We're excited to have you join our community of curious minds. Please click below to verify your account.
               </p>
-              <a href="${process.env.BACKEND_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${emailVerificationToken}" 
+              <a href="${(process.env.BACKEND_URL || 'https://perplexity-mfk0.onrender.com').replace(/\/+$/, '')}/api/auth/verify-email?token=${emailVerificationToken}" 
                  style="display: inline-block; background-color: #20b8cd; color: #000; padding: 16px 40px; border-radius: 14px; font-size: 16px; font-weight: 700; text-decoration: none; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 20px rgba(32, 184, 205, 0.15);">
                 Verify Email Address
               </a>
@@ -135,7 +137,7 @@ export async function resendVerificationEmail(req, res) {
               <p style="color: #a1a1aa; font-size: 16px; line-height: 24px; margin-bottom: 32px;">
                 Hi ${user.username}, you requested a new verification link for your Perplexity account. This link will expire in 1 hour.
               </p>
-              <a href="${process.env.BACKEND_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${emailVerificationToken}" 
+              <a href="${(process.env.BACKEND_URL || 'https://perplexity-mfk0.onrender.com').replace(/\/+$/, '')}/api/auth/verify-email?token=${emailVerificationToken}" 
                  style="display: inline-block; background-color: #20b8cd; color: #000; padding: 16px 40px; border-radius: 14px; font-size: 16px; font-weight: 700; text-decoration: none; box-shadow: 0 10px 20px rgba(32, 184, 205, 0.15);">
                 Verify Email Address
               </a>
@@ -190,8 +192,7 @@ export async function verifyEmail(req, res) {
     });
   }
 
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-
+  const frontendUrl = (process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? "https://perplexity-cohort.vercel.app" : "http://localhost:5173")).replace(/\/+$/, "");
 
   if (user.verified) {
     return res.status(200).send(`
@@ -220,7 +221,7 @@ export async function verifyEmail(req, res) {
               </div>
               <h1>Already verified!</h1>
               <p>Hi ${user.username}, your account is already set up and ready to go. You don't need to do anything else.</p>
-              <a href="${frontendUrl}/login" class="btn">Log In Here</a>
+              <a href="${frontendUrl}/auth" class="btn">Log In Here</a>
           </div>
       </body>
       </html>
@@ -256,7 +257,7 @@ export async function verifyEmail(req, res) {
               </div>
               <h1>You're verified!</h1>
               <p>Welcome aboard, ${user.username}. Your email has been successfully verified. You can now explore everything Perplexity has to offer.</p>
-              <a href="${frontendUrl}/login" class="btn">Start Discovering</a>
+              <a href="${frontendUrl}/auth" class="btn">Start Discovering</a>
           </div>
       </body>
       </html>
@@ -290,9 +291,15 @@ export async function verifyEmail(req, res) {
 export async function loginUser(req, res) {
   const { username, email, password } = req.body;
 
+  const cleanEmail = email ? email.trim().toLowerCase() : undefined;
+  const cleanUsername = username ? username.trim() : undefined;
+
   const user = await userModel
     .findOne({
-      $or: [{ username }, { email }],
+      $or: [
+        ...(cleanUsername ? [{ username: cleanUsername }] : []),
+        ...(cleanEmail ? [{ email: cleanEmail }, { alternateEmails: cleanEmail }] : []),
+      ],
     })
     .select("+password");
 
@@ -344,6 +351,7 @@ export async function loginUser(req, res) {
   res.status(200).json({
     success: true,
     message: "User logged in successfully",
+    token,
     user:{
         id: user._id,
         username: user.username,
@@ -385,44 +393,387 @@ export async function logoutUser(req, res) {
   });
 }
 
-export async function connectInstagram(req, res) {
-  try {
-    const { accessToken, userId } = req.body;
+// ============================================================
+// GOOGLE OAUTH CALLBACK (Passport Integration matching Scapegoat)
+// ============================================================
 
-    if (!accessToken || !userId) {
-      return res.status(400).json({
-        success: false,
-        message: "Access token and User ID are required",
+export async function googleCallback(req, res) {
+  const passportUser = req.user;
+  const frontendUrl = (process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? "https://perplexity-cohort.vercel.app" : "http://localhost:5173")).replace(/\/+$/, "");
+
+  if (!passportUser) {
+    return res.redirect(`${frontendUrl}/auth?error=auth_failed`);
+  }
+
+  const { id, displayName, emails, photos } = passportUser;
+  const rawEmail = emails && emails.length > 0 ? emails[0].value : null;
+  const email = rawEmail ? rawEmail.trim().toLowerCase() : null;
+  const profilePic = photos && photos.length > 0 ? photos[0].value : undefined;
+
+  if (!email) {
+    return res.redirect(`${frontendUrl}/auth?error=google_no_email`);
+  }
+
+  try {
+    // 1. Check if user exists by googleId
+    const userByGoogle = await userModel.findOne({ googleId: id });
+
+    // 2. Check if user exists by primary email or alternateEmails
+    const userByEmail = await userModel.findOne({
+      $or: [{ email }, { alternateEmails: email }]
+    });
+
+    let user;
+
+    if (userByGoogle && userByEmail && userByGoogle._id.toString() !== userByEmail._id.toString()) {
+      // CASE 1: Two separate accounts exist for the same user! Consolidate into userByEmail.
+      const primaryUser = userByEmail;
+      const secondaryUser = userByGoogle;
+
+      // Migrate all chats from secondary to primary
+      await chatModel.updateMany(
+        { user: secondaryUser._id },
+        { $set: { user: primaryUser._id } }
+      );
+
+      // Migrate all social connections
+      await SocialConnection.updateMany(
+        { user: secondaryUser._id },
+        { $set: { user: primaryUser._id } }
+      );
+
+      // Save secondary's email as an alternate email of primary
+      if (!primaryUser.alternateEmails) primaryUser.alternateEmails = [];
+      if (secondaryUser.email && !primaryUser.alternateEmails.includes(secondaryUser.email.toLowerCase())) {
+        primaryUser.alternateEmails.push(secondaryUser.email.toLowerCase());
+      }
+
+      // Delete secondary user first so unique googleId constraint isn't violated
+      await userModel.deleteOne({ _id: secondaryUser._id });
+
+      primaryUser.googleId = id;
+      primaryUser.authProvider = "google";
+      primaryUser.verified = true;
+      if (profilePic && (!primaryUser.profilePic || primaryUser.profilePic.includes("pixabay"))) {
+        primaryUser.profilePic = profilePic;
+      }
+      await primaryUser.save();
+      user = primaryUser;
+
+    } else if (userByEmail) {
+      // CASE 2: User exists with this email/alternateEmail -> Link Google ID and chats
+      user = userByEmail;
+      user.googleId = id;
+      user.authProvider = "google";
+      user.verified = true;
+      if (profilePic && (!user.profilePic || user.profilePic.includes("pixabay"))) {
+        user.profilePic = profilePic;
+      }
+      await user.save();
+
+    } else if (userByGoogle) {
+      // CASE 3: User exists with this googleId, but email changed in Google profile
+      user = userByGoogle;
+      if (user.email.toLowerCase() !== email) {
+        if (!user.alternateEmails) user.alternateEmails = [];
+        if (!user.alternateEmails.includes(user.email.toLowerCase())) {
+          user.alternateEmails.push(user.email.toLowerCase());
+        }
+        user.email = email;
+      }
+      user.verified = true;
+      if (profilePic && (!user.profilePic || user.profilePic.includes("pixabay"))) {
+        user.profilePic = profilePic;
+      }
+      await user.save();
+
+    } else {
+      // CASE 4: Brand new user
+      const baseUsername = displayName?.replace(/\s+/g, '_').toLowerCase() || email.split('@')[0];
+      let cleanUsername = baseUsername.replace(/[^a-zA-Z0-9_]/g, '');
+      if (!cleanUsername) cleanUsername = "user";
+      let username = cleanUsername;
+      let counter = 1;
+      while (await userModel.findOne({ username })) {
+        username = `${cleanUsername}_${counter++}`;
+      }
+
+      user = await userModel.create({
+        username,
+        email,
+        googleId: id,
+        authProvider: "google",
+        profilePic,
+        verified: true
       });
     }
 
-    const user = await userModel.findById(req.user.id);
+    const token = jwt.sign(
+      { id: user._id, username: user.username, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    // Pass token in URL parameter like Scapegoat so cross-origin requests have Bearer token
+    res.redirect(`${frontendUrl}/auth?token=${token}`);
+  } catch (error) {
+    console.error("Google OAuth Callback Error:", error);
+    res.redirect(`${frontendUrl}/auth?error=server_error`);
+  }
+}
+
+
+export async function updateProfile(req, res) {
+  try {
+    const userId = req.user.id || req.user._id;
+    const { username, profilePic, preferredModel } = req.body;
+
+    const user = await userModel.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    user.instagram = {
-      accessToken,
-      userId,
-      isConnected: true,
-    };
+    if (username && username.trim()) {
+      const trimmed = username.trim();
+      if (trimmed !== user.username) {
+        const existing = await userModel.findOne({ username: trimmed, _id: { $ne: userId } });
+        if (existing) {
+          return res.status(400).json({ success: false, message: "Username is already taken" });
+        }
+        user.username = trimmed;
+      }
+    }
 
+    if (profilePic !== undefined && profilePic.trim()) {
+      user.profilePic = profilePic.trim();
+    }
+
+    if (preferredModel !== undefined) {
+      user.preferredModel = preferredModel;
+    }
+
+    // Email is strictly read-only and preserved per requirements
     await user.save();
 
     res.status(200).json({
       success: true,
-      message: "Instagram account connected successfully",
-      instagram: {
-          userId: user.instagram.userId,
-          isConnected: true
+      message: "Profile updated successfully",
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        profilePic: user.profilePic,
+        authProvider: user.authProvider,
+        verified: user.verified,
+        preferredModel: user.preferredModel,
+        createdAt: user.createdAt
       }
     });
-  } catch (error) {
-    console.error("Connect Instagram Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to connect Instagram account",
-      error: error.message,
+  } catch (err) {
+    console.error("Update profile error:", err);
+    res.status(500).json({ success: false, message: "Failed to update profile", error: err.message });
+  }
+}
+
+// ============================================================
+// FORGOT & RESET PASSWORD (OTP FLOW)
+// ============================================================
+
+export async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await userModel.findOne({
+      $or: [{ email: cleanEmail }, { alternateEmails: cleanEmail }]
     });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "No account found with this email address"
+      });
+    }
+
+    // Generate 6-digit numeric OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordOtp = otp;
+    user.resetPasswordOtpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    await user.save();
+
+    await sendEmail({
+      to: user.email,
+      subject: "Perplexity - Password Reset Verification Code",
+      html: `
+        <div style="background-color: #000000; padding: 40px 20px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100%;">
+          <div style="background-color: #0a0a0a; max-width: 500px; margin: 0 auto; border-radius: 24px; border: 1px solid #2d2e2e; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <div style="padding: 48px; text-align: center;">
+              <div style="width: 56px; height: 56px; background-color: #1a1a1a; border-radius: 16px; margin: 0 auto 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #333;">
+                 <span style="font-size: 28px;">🔐</span>
+              </div>
+              <h1 style="color: #ffffff; font-size: 26px; font-weight: 800; margin: 0 0 16px; letter-spacing: -0.025em;">Password Reset Code</h1>
+              <p style="color: #a1a1aa; font-size: 15px; line-height: 24px; margin-bottom: 32px;">
+                Hi <strong style="color: #fff;">${user.username}</strong>, use the 6-digit verification code below to reset your password. This code will expire in <strong>10 minutes</strong>.
+              </p>
+              <div style="display: inline-block; background-color: #161616; border: 1px solid rgba(32, 184, 205, 0.4); padding: 18px 36px; border-radius: 16px; margin-bottom: 28px;">
+                <span style="font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #20b8cd; font-family: monospace;">
+                  ${otp}
+                </span>
+              </div>
+              <p style="color: #71717a; font-size: 13px; line-height: 20px; margin: 0;">
+                If you didn't request a password reset, you can safely ignore this email.
+              </p>
+            </div>
+          </div>
+        </div>
+      `
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `A 6-digit verification code has been sent to ${user.email}`
+    });
+  } catch (err) {
+    console.error("Forgot password error:", err);
+    res.status(500).json({ success: false, message: "Failed to send reset code", error: err.message });
+  }
+}
+
+export async function verifyOtp(req, res) {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: "Email and OTP code are required" });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await userModel.findOne({
+      $or: [{ email: cleanEmail }, { alternateEmails: cleanEmail }]
+    }).select("+resetPasswordOtp +resetPasswordOtpExpires");
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (!user.resetPasswordOtp || user.resetPasswordOtp !== otp.trim()) {
+      return res.status(400).json({ success: false, message: "Invalid verification code. Please check and try again." });
+    }
+
+    if (!user.resetPasswordOtpExpires || user.resetPasswordOtpExpires < new Date()) {
+      return res.status(400).json({ success: false, message: "Verification code has expired. Please request a new code." });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Code verified successfully"
+    });
+  } catch (err) {
+    console.error("Verify OTP error:", err);
+    res.status(500).json({ success: false, message: "Failed to verify code", error: err.message });
+  }
+}
+
+export async function resetPassword(req, res) {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ success: false, message: "Email, OTP code, and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters long" });
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      return res.status(400).json({ success: false, message: "Password must contain at least one uppercase letter (A-Z)" });
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      return res.status(400).json({ success: false, message: "Password must contain at least one number (0-9)" });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await userModel.findOne({
+      $or: [{ email: cleanEmail }, { alternateEmails: cleanEmail }]
+    }).select("+resetPasswordOtp +resetPasswordOtpExpires +password");
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (!user.resetPasswordOtp || user.resetPasswordOtp !== otp.trim()) {
+      return res.status(400).json({ success: false, message: "Invalid verification code" });
+    }
+
+    if (!user.resetPasswordOtpExpires || user.resetPasswordOtpExpires < new Date()) {
+      return res.status(400).json({ success: false, message: "Verification code has expired. Please request a new one." });
+    }
+
+    user.password = newPassword;
+    user.resetPasswordOtp = undefined;
+    user.resetPasswordOtpExpires = undefined;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successfully! You can now log in with your new password."
+    });
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).json({ success: false, message: "Failed to reset password", error: err.message });
+  }
+}
+
+export async function changePassword(req, res) {
+  try {
+    const userId = req.user.id || req.user._id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "Current password and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "New password must be at least 6 characters long" });
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      return res.status(400).json({ success: false, message: "New password must contain at least one uppercase letter" });
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      return res.status(400).json({ success: false, message: "New password must contain at least one number" });
+    }
+
+    const user = await userModel.findById(userId).select("+password");
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (!user.password) {
+      return res.status(400).json({
+        success: false,
+        message: "You are logged in via Google OAuth. To set a password, please use the forgot password flow."
+      });
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: "Current password is incorrect" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password changed successfully"
+    });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(500).json({ success: false, message: "Failed to change password", error: err.message });
   }
 }

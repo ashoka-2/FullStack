@@ -3,7 +3,7 @@ import { google } from 'googleapis';
 
 const OAuth2 = google.auth.OAuth2;
 
-// Gmail API aur OAuth2 ko initialize kar rahe hain
+// Initialize Gmail API client with OAuth2 credentials
 const createGmailClient = () => {
     const oauth2Client = new OAuth2(
         (process.env.GOOGLE_CLIENT_ID || "").trim(),
@@ -11,7 +11,7 @@ const createGmailClient = () => {
         "https://developers.google.com/oauthplayground"
     );
 
-    // Refresh token set kar rahe hain taaki login baar-baar na mangna pade or app publish bhi kar diya hai google console mein
+    // Set refresh token for persistent authentication without repeated login prompts
     oauth2Client.setCredentials({
         refresh_token: (process.env.GOOGLE_REFRESH_TOKEN || "").trim()
     });
@@ -19,7 +19,7 @@ const createGmailClient = () => {
     return google.gmail({ version: 'v1', auth: oauth2Client });
 };
 
-// Email ka body structure taiyar kar rahe hain (Base64url safe format mein)
+// Build email body in URL-safe base64 format for the Gmail API
 const makeBody = (to, from, subject, message) => {
     const str = [
         `To: ${to}`,
@@ -31,7 +31,7 @@ const makeBody = (to, from, subject, message) => {
         message
     ].join('\n');
 
-    // Gmail API ko base64 format mein hi data chahiye hota hai
+    // Gmail API requires base64url-encoded data
     return Buffer.from(str)
         .toString('base64')
         .replace(/\+/g, '-')
@@ -41,12 +41,12 @@ const makeBody = (to, from, subject, message) => {
 
 export async function sendEmail({ to, subject, html, text = "" }) {
     try {
-        console.log(`⏳ Bhejne ki koshish kar rahe hain: ${to}`);
+        console.log(`⏳ Attempting to send email to: ${to}`);
         
         const gmail = createGmailClient();
         const rawMessage = makeBody(to, process.env.GOOGLE_USER, subject, html || text);
 
-        // Gmail API ko hit kar rahe hain email send karne ke liye
+        // Send message using the Gmail API
         const res = await gmail.users.messages.send({
             userId: 'me',
             requestBody: {
@@ -54,10 +54,10 @@ export async function sendEmail({ to, subject, html, text = "" }) {
             }
         });
 
-        console.log("✅ BOOM! Email sent successfully via Gmail HTTP API! ID:", res.data.id);
+        console.log("✅ Email sent successfully via Gmail API! ID:", res.data.id);
         return { success: true, message: "Email sent" };
     } catch (error) {
-        // Agar refresh token expired hai ya permission nahi hai toh error yahan aayega
+        // Handle expired refresh token or insufficient permissions
         console.error("❌ Gmail HTTP API Error:", error.message);
         return { error: true, message: error.message };
     }

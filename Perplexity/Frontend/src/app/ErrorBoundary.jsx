@@ -2,9 +2,9 @@ import React from 'react';
 import { useRouteError, useNavigate } from 'react-router';
 import { RiErrorWarningLine, RiArrowLeftLine, RiRefreshLine } from '@remixicon/react';
 
-// Yeh Error Boundary saare app-level crashes ko rokkega taaki app puri tarah white screen ya toot na jaaye
+// Global Error Boundary to catch uncaught route and rendering errors
 const ErrorBoundary = () => {
-    // react-router hook jo current path ka error laake deta hai
+    // react-router hook to capture route errors
     const error = useRouteError();
     const navigate = useNavigate();
 
@@ -15,10 +15,10 @@ const ErrorBoundary = () => {
                     <RiErrorWarningLine size={32} className="text-red-500" />
                 </div>
                 
-                <h1 className="text-2xl font-bold mb-3 tracking-tight">Oops! Kuch galat ho gaya</h1>
+                <h1 className="text-2xl font-bold mb-3 tracking-tight">Oops! Something went wrong!</h1>
                 
                 <p className="text-zinc-500 dark:text-zinc-400 text-[15px] font-medium leading-relaxed mb-8">
-                    {error?.statusText || error?.message || "App me ek anjaan technical error aayi hai. Kripya page refresh karein ya home par wapas jayein."}
+                    {error?.statusText || error?.message || "An unknown technical error occurred in the app. Please refresh the page or go back home."}
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full">
