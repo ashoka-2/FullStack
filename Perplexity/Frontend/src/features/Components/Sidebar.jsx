@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import {
   RiSearchLine,
@@ -103,6 +103,85 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       navigate('/auth');
     }
   };
+
+  // Touch swipe gesture handling for mobile navigation drawer
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0, isValid: false });
+
+  useEffect(() => {
+    // Only active on mobile viewports (< 1024px)
+    const handleTouchStart = (e) => {
+      if (window.innerWidth >= 1024) return;
+      if (e.touches.length !== 1) return;
+
+      const touch = e.touches[0];
+      const target = e.target;
+
+      // Exclusion: Ignore touches on inputs, textareas, buttons, selectors, or interactive elements
+      if (
+        target &&
+        (target.closest('input, textarea, button, select, [contenteditable="true"], pre, code, [role="button"], .no-swipe') ||
+         target.tagName === 'INPUT' ||
+         target.tagName === 'TEXTAREA' ||
+         target.tagName === 'BUTTON' ||
+         target.tagName === 'SELECT')
+      ) {
+        touchStartRef.current.isValid = false;
+        return;
+      }
+
+      // If drawer is closed: only trigger when starting from the left edge region (<= 75px)
+      if (!isOpen && touch.clientX > 75) {
+        touchStartRef.current.isValid = false;
+        return;
+      }
+
+      touchStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        time: Date.now(),
+        isValid: true,
+      };
+    };
+
+    const handleTouchEnd = (e) => {
+      if (!touchStartRef.current.isValid) return;
+      if (e.changedTouches.length !== 1) return;
+
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStartRef.current.x;
+      const deltaY = touch.clientY - touchStartRef.current.y;
+      const deltaTime = Date.now() - touchStartRef.current.time;
+
+      touchStartRef.current.isValid = false;
+
+      // Ignore if vertical scrolling was the dominant motion
+      if (Math.abs(deltaY) > Math.abs(deltaX) * 0.75) {
+        return;
+      }
+
+      // Quick flick or substantial swipe distance
+      const isQuickFlick = deltaTime < 400 && Math.abs(deltaX) > 40;
+      const isLongSwipe = Math.abs(deltaX) > 65;
+
+      if (isQuickFlick || isLongSwipe) {
+        if (!isOpen && deltaX > 0) {
+          // Swipe from left to right -> open drawer
+          setIsOpen(true);
+        } else if (isOpen && deltaX < 0) {
+          // Swipe from right to left -> close drawer
+          setIsOpen(false);
+        }
+      }
+    };
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isOpen, setIsOpen]);
 
   return (
     <>
@@ -353,13 +432,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       />
 
       {/* Mobile Drawer Overlay */}
-      {isOpen && (
-        <div
-          onClick={() => setIsOpen(false)}
-          className="lg:hidden fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[9985] transition-opacity duration-300"
-          aria-label="Close navigation backdrop"
-        />
-      )}
+      <div
+        onClick={() => setIsOpen(false)}
+        className={`lg:hidden fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[9985] transition-opacity duration-300 ${
+          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        aria-label="Close navigation backdrop"
+      />
     </>
   );
 };
