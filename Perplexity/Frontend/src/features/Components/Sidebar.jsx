@@ -107,18 +107,32 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 z-50 w-56 h-screen flex flex-col bg-[#ebecee] dark:bg-[#050505] text-zinc-600 dark:text-zinc-400 p-3 transition-transform duration-300 ease-in-out shrink-0 border-r border-zinc-300/70 dark:border-white/5
+        data-lenis-prevent="true"
+        className={`fixed top-0 left-0 z-[9990] w-[280px] xs:w-[290px] lg:w-56 h-[100dvh] flex flex-col bg-[#ebecee] dark:bg-[#070809] text-zinc-600 dark:text-zinc-400 p-3 sm:p-3.5 transition-transform duration-300 ease-in-out shrink-0 border-r border-zinc-300/70 dark:border-white/5 shadow-2xl lg:shadow-none
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
-        {/* Mobile Close Button */}
-        <div className="lg:hidden flex justify-end mb-2">
+        {/* Sidebar Header: Brand Mark, Name & Mobile Close Button */}
+        <div className="flex items-center justify-between px-1.5 pt-0.5 pb-3 mb-2 border-b border-zinc-300/70 dark:border-zinc-800/80 shrink-0">
+          <Link
+            to="/"
+            onClick={closeMobileSidebar}
+            className="flex items-center gap-2.5 group cursor-pointer"
+          >
+            <PerplexityIcon className="w-6 h-6 text-zinc-900 dark:text-white group-hover:scale-105 transition-transform shrink-0" />
+            <span className="font-bold text-[16px] sm:text-[17px] tracking-tight text-zinc-900 dark:text-white">
+              Perplexity
+            </span>
+          </Link>
+
+          {/* Mobile Close Button */}
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-zinc-200/80 dark:hover:bg-zinc-800"
+            className="lg:hidden w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/80 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
             title="Close navigation"
+            aria-label="Close navigation"
           >
-            <RiCloseLine size={22} />
+            <RiCloseLine size={20} />
           </button>
         </div>
 
@@ -233,7 +247,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         </div>
 
         {/* Footer Area */}
-        <div className="mt-auto space-y-3 pt-3 border-t border-zinc-300/70 dark:border-zinc-800/80">
+        <div className="mt-auto space-y-2.5 pt-2.5 pb-5 sm:pb-2 border-t border-zinc-300/70 dark:border-zinc-800/80 shrink-0">
           
           {/* Theme Toggle Button */}
           <button 
@@ -342,7 +356,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}
-          className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-30 transition-opacity duration-300"
+          className="lg:hidden fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[9985] transition-opacity duration-300"
+          aria-label="Close navigation backdrop"
         />
       )}
     </>
