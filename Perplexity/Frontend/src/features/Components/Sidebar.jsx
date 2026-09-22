@@ -197,7 +197,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             onClick={closeMobileSidebar}
             className="flex items-center gap-2.5 group cursor-pointer"
           >
-            <PerplexityIcon className="w-6 h-6 text-zinc-900 dark:text-white group-hover:scale-105 transition-transform shrink-0" />
+            <PerplexityIcon className="w-6 h-6 text-[#20b8cd] group-hover:scale-105 transition-transform shrink-0" />
             <span className="font-bold text-[16px] sm:text-[17px] tracking-tight text-zinc-900 dark:text-white">
               Perplexity
             </span>

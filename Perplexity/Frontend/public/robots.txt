@@ -1,0 +1,25 @@
+# Perplexity AI — robots.txt
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /privacy
+Allow: /terms
+Allow: /faq
+Allow: /contact
+
+# Disallow authenticated/private routes
+Disallow: /
+Disallow: /chat/
+Disallow: /library
+Disallow: /settings
+Disallow: /social-connections
+Disallow: /auth
+
+# Allow the public landing for unauthenticated users
+Allow: /$
+
+# Sitemaps
+Sitemap: https://perplexity.app/sitemap.xml
+
+# Crawl delay (be polite to crawlers)
+Crawl-delay: 1

@@ -202,21 +202,21 @@ const SocialConnections = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#f4f5f7] dark:bg-[#020202] flex items-center justify-center">
-                <RiLoader4Line className="animate-spin w-8 h-8 text-[#60A6AF]" />
+            <div className="h-[100dvh] bg-[#f4f5f7] dark:bg-[#020202] flex items-center justify-center">
+                <RiLoader4Line className="animate-spin w-8 h-8 text-[#20b8cd]" />
             </div>
         );
     }
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#020202] min-h-[100dvh] text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30 overflow-hidden">
+        <div className="flex bg-[#f4f5f7] dark:bg-[#020202] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30">
             {/* Quick Switch Sidebar */}
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-h-[100dvh] lg:pl-56 overflow-y-auto custom-scrollbar transition-all duration-300">
-                {/* Sticky Header with Hamburger on Mobile */}
-                <header className="sticky top-0 z-30 bg-[#f4f5f7]/85 dark:bg-[#020202]/80 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/5 px-3.5 sm:px-8 h-12 sm:h-16 flex items-center justify-between">
+            {/* Main Content Column — NO overflow here */}
+            <div className="flex-1 flex flex-col min-h-0 lg:pl-56 transition-all duration-300">
+                {/* Header — shrink-0: naturally pinned, column never scrolls */}
+                <header className="shrink-0 z-30 bg-[#f4f5f7]/90 dark:bg-[#020202]/85 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/5 px-3.5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
                     <div className="flex items-center gap-2 sm:gap-3">
                         <button
                             type="button"
@@ -237,7 +237,9 @@ const SocialConnections = () => {
                     </div>
                 </header>
 
-                <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 md:px-12 py-6 sm:py-10">
+                {/* Scrollable Content — only this area scrolls */}
+                <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
+                <main className="max-w-5xl w-full mx-auto px-4 sm:px-8 md:px-12 py-6 sm:py-10">
                     <div ref={containerRef}>
                         {/* Hero Section */}
                         <div className="mb-12">
@@ -311,8 +313,8 @@ const SocialConnections = () => {
                         </div>
                     </div>
                 </main>
-
                 <Footer />
+                </div>{/* end scrollable */}
             </div>
 
             {/* Manual Connect Modal */}

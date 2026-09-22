@@ -365,7 +365,7 @@ const ChatPage2 = () => {
 
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] min-h-screen text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30 overflow-hidden">
+        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             <div className={`flex-1 flex flex-col h-[100dvh] lg:pl-56 overflow-hidden relative transition-all duration-300`}>
@@ -382,7 +382,7 @@ const ChatPage2 = () => {
                                 <RiMenuLine size={20} />
                             </button>
                             <div className="lg:hidden flex items-center gap-1.5 shrink-0">
-                                <PerplexityIcon className="w-5 h-5 text-zinc-900 dark:text-white shrink-0" />
+                                <PerplexityIcon className="w-5 h-5 text-[#20b8cd] shrink-0" />
                                 <span className="font-bold text-sm text-zinc-900 dark:text-white truncate">Perplexity</span>
                             </div>
                             <button className="hidden sm:flex items-center gap-2 text-[13px] font-bold text-zinc-900 dark:text-zinc-100 border-b-2 border-zinc-900 dark:border-white pb-3 mt-3 shrink-0">

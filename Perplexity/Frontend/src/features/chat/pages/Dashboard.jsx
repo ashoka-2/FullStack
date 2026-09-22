@@ -32,7 +32,7 @@ const Dashboard = () => {
     }, [error, dispatch])
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] min-h-screen text-zinc-900 dark:text-zinc-100 overflow-hidden font-sans selection:bg-[#60A6AF]/30">
+        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
 
@@ -49,7 +49,7 @@ const Dashboard = () => {
                             <RiMenuLine size={20} />
                         </button>
                         <div className="lg:hidden flex items-center gap-2">
-                            <PerplexityIcon className="w-5 h-5 text-zinc-900 dark:text-white" />
+                            <PerplexityIcon className="w-5 h-5 text-[#20b8cd]" />
                             <span className="font-bold text-sm text-zinc-900 dark:text-white tracking-tight">Perplexity</span>
                         </div>
                     </div>

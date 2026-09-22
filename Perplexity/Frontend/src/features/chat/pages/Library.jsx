@@ -193,31 +193,35 @@ const Library = () => {
     };
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] min-h-screen text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30 overflow-x-hidden relative w-full">
+        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30 w-full">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-
-            <div className="flex-1 lg:pl-56 min-w-0 transition-all duration-300 w-full relative">
-                <main className="max-w-[1000px] mx-auto px-4 md:px-6 py-8 md:py-12">
-
-                    {/* Mobile Menu Toggle - Sticky Header */}
-                    <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between h-12 bg-[#f4f5f7]/95 dark:bg-[#050505]/95 backdrop-blur-md px-3 border-b border-zinc-200/80 dark:border-white/10 mb-4 -mx-4 -mt-8">
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setIsSidebarOpen(true)}
-                                className="p-1.5 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all rounded-lg active:scale-95 cursor-pointer"
-                                aria-label="Open sidebar"
-                            >
-                                <RiMenuLine size={20} />
-                            </button>
-                            <span className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
-                                <RiHistoryLine size={17} className="text-[#60A6AF]" /> Chats
-                            </span>
-                        </div>
+            <div className="flex-1 flex flex-col h-full lg:pl-56 min-w-0 transition-all duration-300 w-full overflow-hidden">
+                {/* Sticky Header - always pinned, never scrolls away */}
+                <header className="shrink-0 h-12 sm:h-14 bg-[#f4f5f7]/90 dark:bg-[#050505]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-white/5 flex items-center justify-between px-3 sm:px-6 z-40">
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="lg:hidden p-1.5 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all rounded-lg active:scale-95 cursor-pointer"
+                            aria-label="Open sidebar"
+                        >
+                            <RiMenuLine size={20} />
+                        </button>
+                        <span className="lg:hidden text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                            <RiHistoryLine size={17} className="text-[#20b8cd]" /> Chats
+                        </span>
+                        <span className="hidden lg:flex items-center gap-2 text-sm font-bold text-zinc-900 dark:text-white">
+                            <RiHistoryLine size={17} className="text-[#20b8cd]" /> Chats
+                        </span>
                     </div>
+                </header>
+
+                {/* Scrollable content — only this area scrolls */}
+                <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
+                <main className="max-w-[1000px] mx-auto px-4 md:px-6 py-6 md:py-10">
  
                     <div className="hidden lg:flex items-center gap-3 mb-10 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#60A6AF] to-[#4a8a92] flex items-center justify-center text-zinc-950 shrink-0 shadow-lg shadow-[#60A6AF]/10">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#20b8cd] to-[#1da9bc] flex items-center justify-center text-zinc-950 shrink-0 shadow-lg shadow-[#20b8cd]/20">
                             <RiHistoryLine size={22} />
                         </div>
                         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white shrink-0">Chats</h1>
@@ -348,7 +352,8 @@ const Library = () => {
                 </main>
 
                 <Footer />
-            </div>
+                </div>{/* end scrollable content */}
+            </div>{/* end inner column */}
 
             {isSidebarOpen && (
                 <div onClick={() => setIsSidebarOpen(false)} className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]" />

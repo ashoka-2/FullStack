@@ -7,8 +7,8 @@ import Footer from '../Components/Footer';
 /**
  * InfoPageLayout
  * Reusable layout for informational and legal pages (Privacy, Terms, About, Contact, FAQ).
- * Provides the global Sidebar for quick switching, mobile hamburger navigation,
- * responsive container, and consistent footer branding.
+ * App Shell pattern: outer = h-[100dvh] overflow-hidden, inner column = flex-col min-h-0 (no overflow),
+ * header = shrink-0 (pinned naturally at top), scroller = flex-1 overflow-y-auto min-h-0.
  */
 export default function InfoPageLayout({ 
     title, 
@@ -19,16 +19,16 @@ export default function InfoPageLayout({
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] min-h-screen text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30 overflow-hidden">
+        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30">
             {/* Shared Application Sidebar */}
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            {/* Main Page Body */}
-            <div className="flex-1 flex flex-col min-h-screen lg:pl-56 overflow-y-auto custom-scrollbar transition-all duration-300">
-                {/* Sticky Header */}
-                <header className="sticky top-0 z-30 bg-[#f4f5f7]/85 dark:bg-[#050505]/80 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/5 px-4 sm:px-8 h-16 flex items-center justify-between">
+            {/* Main Page Body — flex column, NO overflow here */}
+            <div className="flex-1 flex flex-col min-h-0 lg:pl-56 transition-all duration-300">
+
+                {/* Header — shrink-0 pins it; column doesn't scroll so header stays fixed */}
+                <header className="shrink-0 z-30 bg-[#f4f5f7]/90 dark:bg-[#050505]/85 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/5 px-4 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        {/* Mobile Sidebar Toggle Button */}
                         <button
                             type="button"
                             onClick={() => setIsSidebarOpen(true)}
@@ -67,13 +67,13 @@ export default function InfoPageLayout({
                     )}
                 </header>
 
-                {/* Page Body Container */}
-                <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
-                    {children}
-                </main>
-
-                {/* Footer with Perplexity Branding */}
-                <Footer />
+                {/* Scrollable Content — only this area scrolls */}
+                <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
+                    <main className="w-full max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
+                        {children}
+                    </main>
+                    <Footer />
+                </div>
             </div>
 
             {/* Mobile Backdrop Overlay */}
@@ -86,3 +86,4 @@ export default function InfoPageLayout({
         </div>
     );
 }
+
