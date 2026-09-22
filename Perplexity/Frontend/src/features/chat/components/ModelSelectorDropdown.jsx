@@ -82,7 +82,7 @@ export default function ModelSelectorDropdown({
     function updateCoords() {
       if (!dropdownRef.current) return;
       const rect = dropdownRef.current.getBoundingClientRect();
-      const popoverWidth = Math.min(384, window.innerWidth - 32);
+      const popoverWidth = Math.min(384, window.innerWidth - 20);
       
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
@@ -95,10 +95,10 @@ export default function ModelSelectorDropdown({
       }
 
       let left = rect.left;
-      if (left + popoverWidth > window.innerWidth - 16) {
-        left = window.innerWidth - popoverWidth - 16;
+      if (left + popoverWidth > window.innerWidth - 10) {
+        left = window.innerWidth - popoverWidth - 10;
       }
-      left = Math.max(16, left);
+      left = Math.max(10, left);
 
       let top = openUp ? rect.top - 8 : rect.bottom + 8;
 
@@ -244,7 +244,7 @@ export default function ModelSelectorDropdown({
           )}
         </div>
 
-        <span className="font-medium truncate max-w-[130px] sm:max-w-[160px]">
+        <span className="font-medium truncate max-w-[85px] xs:max-w-[120px] sm:max-w-[160px]">
           {activeModel.name}
         </span>
 

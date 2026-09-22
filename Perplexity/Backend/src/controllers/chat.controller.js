@@ -100,6 +100,46 @@ export async function sendMessage(req, res) {
             );
         }
 
+        // Web Search evaluation (Tavily live search vs pure AI model knowledge)
+        const isWebSearch = req.body.webSearch === 'true' || req.body.webSearch === true;
+        let webSearchContext = "";
+
+        if (isWebSearch && (message || userMessage.content)) {
+            try {
+                const { tavily } = await import("@tavily/core");
+                const tvly = new tavily(process.env.TAVILY_API_KEY);
+                const query = message || userMessage.content;
+                const searchResults = await tvly.search(query, { searchDepth: "basic", maxResults: 4 });
+                if (searchResults?.results?.length > 0) {
+                    webSearchContext = `\n\n--- REAL-TIME INTERNET SEARCH RESULTS (via Tavily) ---\n` +
+                        searchResults.results.map(r => `• Title: ${r.title}\n  Source: ${r.url}\n  Snippet: ${r.content}`).join("\n\n") +
+                        `\n------------------------------------------------------\nUse these fresh internet facts to provide an accurate, up-to-date answer.`;
+                }
+            } catch (tavilyErr) {
+                console.warn("⚠️ Tavily web search error in chat.controller:", tavilyErr.message);
+            }
+        }
+
+        // ── User Feedback Adaptation ──────────────────────────────────────────
+        // Inspect historical messages in this chat to adapt response based on user like/dislike feedback
+        let feedbackInstruction = "";
+        const dislikedMessages = messages.filter(m => m.role === 'ai' && m.feedback === 'dislike');
+        const likedMessages = messages.filter(m => m.role === 'ai' && m.feedback === 'like');
+
+        if (dislikedMessages.length > 0) {
+            feedbackInstruction += `\n\n[USER PREFERENCE - DISLIKED PRIOR RESPONSE]: The user disliked previous response(s) in this chat. Avoid what caused their dissatisfaction: provide clearer explanations, be direct, accurate, well-structured, and eliminate fluff or inaccuracies.`;
+        }
+        if (likedMessages.length > 0) {
+            feedbackInstruction += `\n\n[USER PREFERENCE - LIKED PRIOR RESPONSE]: The user liked previous response(s) in this chat. Maintain this clear, engaging, well-structured, and high-quality tone.`;
+        }
+
+        const userContextWithSearch = {
+            ...(fullUser?.toObject ? fullUser.toObject() : fullUser),
+            webSearch: isWebSearch,
+            webSearchContext,
+            feedbackInstruction
+        };
+
         const isNonGeminiProvider = targetProvider !== "gemini";
         const hasCustomKey = Boolean(customKeyEntry && customKeyEntry.apiKey);
 
@@ -112,13 +152,23 @@ export async function sendMessage(req, res) {
             }
 
             try {
+                // Prepare message payload: inject real-time Tavily search context and feedback instruction into latest user message
+                const chatHistoryForModel = messages.map(m => ({ role: m.role, content: m.content }));
+                const extraContext = (webSearchContext ? webSearchContext : "") + (feedbackInstruction ? feedbackInstruction : "");
+                if (extraContext && chatHistoryForModel.length > 0) {
+                    const lastUserIndex = chatHistoryForModel.map(m => m.role).lastIndexOf("user");
+                    if (lastUserIndex !== -1) {
+                        chatHistoryForModel[lastUserIndex].content += extraContext;
+                    }
+                }
+
                 // Execute using universal stream engine
                 result = await executeModelChatStream({
                     provider: targetProvider,
                     modelId: targetModelId,
                     apiKey: decryptedApiKey,
                     baseUrl: targetBaseUrl,
-                    messages: messages.map(m => ({ role: m.role, content: m.content })),
+                    messages: chatHistoryForModel,
                     onChunk: (chunk) => {
                         if (socketId) {
                             io.to(socketId).emit("chunk", chunk);
@@ -138,7 +188,7 @@ export async function sendMessage(req, res) {
                     if (socketId) {
                         io.to(socketId).emit("chunk", chunk);
                     }
-                }, fullUser);
+                }, userContextWithSearch);
             }
         } else {
             // Default Gemini pipeline with internet search and LangChain tools
@@ -146,7 +196,7 @@ export async function sendMessage(req, res) {
                 if (socketId) {
                     io.to(socketId).emit("chunk", chunk);
                 }
-            }, fullUser);
+            }, userContextWithSearch);
         }
 
         const aiMessage = await messageModel.create({
@@ -349,6 +399,40 @@ export async function searchMessages(req, res) {
         console.error("Error in searchMessages controller:", error);
         res.status(500).json({
             message: "Global search failed",
+            error: error.message
+        });
+    }
+}
+
+// Controller to record user feedback ('like' | 'dislike' | null) on an AI message
+export async function rateMessageFeedback(req, res) {
+    try {
+        const { messageId } = req.params;
+        const { feedback } = req.body;
+
+        if (feedback !== null && !['like', 'dislike'].includes(feedback)) {
+            return res.status(400).json({ message: "Invalid feedback value. Must be 'like', 'dislike', or null." });
+        }
+
+        const message = await messageModel.findByIdAndUpdate(
+            messageId,
+            { feedback },
+            { new: true }
+        );
+
+        if (!message) {
+            return res.status(404).json({ message: "Message not found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            feedback: message.feedback,
+            messageId: message._id
+        });
+    } catch (error) {
+        console.error("Error in rateMessageFeedback controller:", error);
+        res.status(500).json({
+            message: "Failed to record message feedback",
             error: error.message
         });
     }

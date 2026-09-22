@@ -35,6 +35,11 @@ const messageSchema = new mongoose.Schema({
         caption: String,
         postedAt: { type: Date, default: Date.now }
     }],
+    feedback: {
+        type: String,
+        enum: ['like', 'dislike', null],
+        default: null
+    },
     // Vector embedding for semantic search (RAG)
     embedding: {
         type: [Number],

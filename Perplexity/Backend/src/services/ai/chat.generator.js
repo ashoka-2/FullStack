@@ -16,15 +16,20 @@ const getCurrentTimeContext = () => {
 
 const getTools = (userContext) => {
   const socialTool = postToSocialMediaTool(userContext);
-  return {
-    tools: [searchInternetTool, emailTool, socialTool],
-    map: {
-      searchInternet: searchInternetTool,
-      emailTool,
-      post_to_social_media: socialTool,
-      post_to_instagram: socialTool // backward compatibility
-    }
+  const tools = [emailTool, socialTool];
+  const map = {
+    emailTool,
+    post_to_social_media: socialTool,
+    post_to_instagram: socialTool // backward compatibility
   };
+
+  // Only bind searchInternetTool if web search is enabled (default true)
+  if (userContext?.webSearch !== false) {
+    tools.unshift(searchInternetTool);
+    map.searchInternet = searchInternetTool;
+  }
+
+  return { tools, map };
 };
 
 async function runModelLoop(currentMessages, onChunk, modelWithTools, toolsMap, label = "AI") {
@@ -139,10 +144,29 @@ export async function generateResponse(messages, onChunk, userContext) {
     return msg.role === "ai" ? new AIMessage({ content }) : new HumanMessage({ content });
   }));
 
+  // If Tavily web search results were prefetched and provided in userContext, append to last user message
+  if (userContext?.webSearchContext && history.length > 0) {
+    const lastMsg = history[history.length - 1];
+    if (lastMsg instanceof HumanMessage) {
+      if (typeof lastMsg.content === 'string') {
+        lastMsg.content += `\n\n${userContext.webSearchContext}`;
+      } else if (Array.isArray(lastMsg.content)) {
+        lastMsg.content.push({ type: "text", text: userContext.webSearchContext });
+      }
+    }
+  }
+
+  const isWebSearchEnabled = userContext?.webSearch !== false;
+  const webSearchInstruction = isWebSearchEnabled
+    ? "1. Real-Time Information (Web Search: ON): ALWAYS use 'searchInternet' for current events, news, stock quotes, or real-time data."
+    : "1. Real-Time Information (Web Search: OFF): Web search is disabled by user preference. Answer directly using your internal knowledge without searching the internet.";
+
+  const feedbackNotes = userContext?.feedbackInstruction ? `\n    ${userContext.feedbackInstruction}` : "";
+
   const systemContent = `You are a world-class AI assistant with supercharged multi-platform social media publishing capabilities. Current Date: ${today}.
     
     CRITICAL INSTRUCTIONS:
-    1. Real-Time Information: ALWAYS use 'searchInternet' for current events, news, stock quotes, or real-time data.
+    ${webSearchInstruction}${feedbackNotes}
     
     2. Universal Social Media Publishing ('post_to_social_media'):
        Users can connect and publish content to:

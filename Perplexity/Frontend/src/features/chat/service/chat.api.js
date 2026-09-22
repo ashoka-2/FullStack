@@ -2,10 +2,11 @@ import api from "../../../utils/axios.js";
 
 export { api };
 
-export async function sendMessage(message, chatId, fileOrFiles, socketId, modelOptions = null) {
+export async function sendMessage(message, chatId, fileOrFiles, socketId, modelOptions = null, webSearch = false) {
     const formData = new FormData();
     formData.append("message", message);
     if (chatId) formData.append("chat", chatId);
+    if (webSearch) formData.append("webSearch", "true");
     if (fileOrFiles) {
         if (Array.isArray(fileOrFiles)) {
             fileOrFiles.forEach(f => {
@@ -21,6 +22,7 @@ export async function sendMessage(message, chatId, fileOrFiles, socketId, modelO
         if (modelOptions.provider) formData.append("provider", modelOptions.provider);
         if (modelOptions.isCustom) formData.append("isCustom", "true");
         if (modelOptions.keyId) formData.append("keyId", modelOptions.keyId);
+        if (modelOptions.webSearch) formData.append("webSearch", "true");
     }
 
     const response = await api.post("/api/chats/message", formData, {
@@ -80,5 +82,11 @@ export async function searchDocuments(query) {
     const response = await api.get("/api/documents/search", {
         params: { q: query }
     });
+    return response.data;
+}
+
+// Record message feedback ('like' | 'dislike' | null)
+export async function sendFeedback(messageId, feedback) {
+    const response = await api.post(`/api/chats/message/${messageId}/feedback`, { feedback });
     return response.data;
 }

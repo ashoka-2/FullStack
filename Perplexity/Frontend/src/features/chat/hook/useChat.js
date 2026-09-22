@@ -12,6 +12,7 @@ import {
     setMessages, 
     addMessage, 
     setLoading, 
+    setIsGenerating,
     setError, 
     setCurrentChatId,
     setIsCreating,
@@ -31,10 +32,11 @@ export const useChat = () => {
     const navigate = useNavigate(); // For navigating across pages
 
     // Sends user message, creates chat if needed, and sets up optimistic streaming
-    async function handleSendMessage(message, chatId, file, modelOptions = null) {
+    async function handleSendMessage(message, chatId, file, modelOptions = null, webSearch = false) {
         try {
             dispatch(setError(null));
             dispatch(setLoading(true));
+            dispatch(setIsGenerating(true));
             
             // If there is no chatId, a new chat is being created
             if (!chatId) {
@@ -66,7 +68,7 @@ export const useChat = () => {
 
             // Obtain socket instance for receiving token streams
             const socket = getSocket();
-            const response = await sendMessage(message, chatId, file, socket?.id, modelOptions);
+            const response = await sendMessage(message, chatId, file, socket?.id, modelOptions, webSearch);
             
             // If a new chat was created, update current active chat ID and refresh list
             if (response.chat) {
@@ -96,6 +98,7 @@ export const useChat = () => {
             throw error;
         } finally {
             dispatch(setLoading(false));
+            dispatch(setIsGenerating(false));
             dispatch(setIsCreating(false));
         }
     }
@@ -213,6 +216,7 @@ export const useChat = () => {
         handleLoadMoreMessages,
         initializeSocketConnection,
         loading: useSelector(state => state.chat.loading),
+        isGenerating: useSelector(state => state.chat.isGenerating),
         isCreating: useSelector(state => state.chat.isCreating)
     };
 };

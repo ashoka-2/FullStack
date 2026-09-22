@@ -39,7 +39,7 @@ const ChatPage2 = () => {
     const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false); // Attachment picker toggle
     
     // Chat custom hook functions
-    const { handleGetMessages, handleSendMessage, handleLoadMoreMessages, loading } = useChat();
+    const { handleGetMessages, handleSendMessage, handleLoadMoreMessages, loading, isGenerating } = useChat();
 
     // Redux selectors for messages, pagination, and error states
     const messages = useSelector(state => state.chat.messages);
@@ -51,6 +51,20 @@ const ChatPage2 = () => {
     const [latestMessageId, setLatestMessageId] = useState(null);
     const [showScrollButton, setShowScrollButton] = useState(false);
 
+    // Web Search toggle (Tavily search vs pure AI)
+    const [webSearch, setWebSearch] = useState(() => {
+        const saved = localStorage.getItem("perplexity_web_search");
+        return saved !== null ? saved === "true" : true; // Default ON
+    });
+
+    const handleToggleWebSearch = () => {
+        setWebSearch(prev => {
+            const next = !prev;
+            localStorage.setItem("perplexity_web_search", String(next));
+            return next;
+        });
+    };
+
     // Share link button state
     const [isCopied, setIsCopied] = useState(false);
 
@@ -58,23 +72,23 @@ const ChatPage2 = () => {
     const [blobMood, setBlobMood] = useState('curious');
     const [blobGaze, setBlobGaze] = useState({ x: 0, y: 0 });
     const [celebrateCount, setCelebrateCount] = useState(0);
-    const prevLoadingRef = useRef(loading);
+    const prevGeneratingRef = useRef(isGenerating);
 
     useEffect(() => {
-        if (loading) {
+        if (isGenerating) {
             setBlobMood('hmm');
             setBlobGaze({ x: 0, y: 0 });
             window.dispatchEvent(
                 new CustomEvent('blob_trigger_mood', {
                     detail: {
                         mood: 'hmm',
-                        speech: "Thinking... Let me check! 🔍",
+                        speech: webSearch ? "Searching web & generating... 🔍" : "Thinking... Let me check! 🧠",
                         duration: 3500,
                         revert: true
                     }
                 })
             );
-        } else if (prevLoadingRef.current && !loading) {
+        } else if (prevGeneratingRef.current && !isGenerating) {
             setBlobMood('happy');
             setCelebrateCount(c => c + 1);
             window.dispatchEvent(
@@ -93,8 +107,8 @@ const ChatPage2 = () => {
             }, 2500);
             return () => clearTimeout(timer);
         }
-        prevLoadingRef.current = loading;
-    }, [loading]);
+        prevGeneratingRef.current = isGenerating;
+    }, [isGenerating, webSearch]);
 
     useEffect(() => {
         if (error) {
@@ -236,8 +250,8 @@ const ChatPage2 = () => {
 
         const currentInput = input;
 
-        // If AI is currently responding, add message to queue!
-        if (loading) {
+        // If AI is currently generating response, add message to queue!
+        if (isGenerating) {
             const queueItem = {
                 id: Date.now().toString(),
                 chatId: id,
@@ -245,7 +259,8 @@ const ChatPage2 = () => {
                 text: currentInput,
                 files: [...files],
                 fileObjects: filesToSend,
-                model: selectedModel
+                model: selectedModel,
+                webSearch: webSearch
             };
             setMessageQueue(prev => [...prev, queueItem]);
             saveQueueItem(queueItem);
@@ -259,7 +274,7 @@ const ChatPage2 = () => {
         setFiles([]);
 
         try {
-            const response = await handleSendMessage(currentInput, id, filesToSend, selectedModel);
+            const response = await handleSendMessage(currentInput, id, filesToSend, selectedModel, webSearch);
             if (response && response.aiMessage) {
                 setLatestMessageId(response.aiMessage._id);
                 setTimeout(scrollToBottom, 100);
@@ -272,13 +287,19 @@ const ChatPage2 = () => {
 
     // Auto-process message queue once active AI response is finished
     useEffect(() => {
-        if (!loading && messageQueue.length > 0) {
+        if (!isGenerating && messageQueue.length > 0) {
             const nextItem = messageQueue[0];
             setMessageQueue(prev => prev.slice(1));
             removeQueueItem(nextItem.id);
             (async () => {
                 try {
-                    const response = await handleSendMessage(nextItem.text, id, nextItem.fileObjects, nextItem.model || selectedModel);
+                    const response = await handleSendMessage(
+                        nextItem.text, 
+                        id, 
+                        nextItem.fileObjects, 
+                        nextItem.model || selectedModel,
+                        nextItem.webSearch !== undefined ? nextItem.webSearch : webSearch
+                    );
                     if (response && response.aiMessage) {
                         setLatestMessageId(response.aiMessage._id);
                         setTimeout(scrollToBottom, 100);
@@ -288,7 +309,7 @@ const ChatPage2 = () => {
                 }
             })();
         }
-    }, [loading, messageQueue, id, selectedModel]);
+    }, [isGenerating, messageQueue, id, selectedModel, webSearch]);
 
     // Queue management actions
     const handleEditQueuedMessage = (item, index) => {
@@ -311,6 +332,7 @@ const ChatPage2 = () => {
     };
 
     const handleStopGenerating = () => {
+        dispatch(setIsGenerating(false));
         dispatch(setLoading(false));
         setBlobMood('surprised');
         dispatch(addToast({ message: "Stopped AI response.", type: "info" }));
@@ -335,20 +357,21 @@ const ChatPage2 = () => {
 
                 {/* Header Container */}
                 <header className={`h-14 bg-[#f4f5f7] dark:bg-[#050505] z-30 shrink-0 transition-all duration-300 ${isScrolled ? 'border-b border-zinc-200 dark:border-zinc-900 shadow-xs bg-[#f4f5f7]/95 dark:bg-[#050505]/95 backdrop-blur-md' : ''}`}>
-                    <div className="max-w-[800px] mx-auto h-full flex items-center justify-between px-6">
-                        <div className="flex items-center gap-4 md:gap-6 overflow-hidden">
+                    <div className="max-w-[800px] mx-auto h-full flex items-center justify-between px-2.5 sm:px-6">
+                        <div className="flex items-center gap-1.5 sm:gap-4 overflow-hidden min-w-0">
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className="lg:hidden p-2 -ml-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all"
+                                className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all rounded-lg shrink-0"
+                                aria-label="Open sidebar"
                             >
                                 <RiMenuLine size={20} />
                             </button>
-                            <button className="flex items-center gap-2 text-[13px] font-bold text-zinc-900 dark:text-zinc-100 border-b-2 border-zinc-900 dark:border-white pb-3 mt-3 shrink-0">
+                            <button className="hidden sm:flex items-center gap-2 text-[13px] font-bold text-zinc-900 dark:text-zinc-100 border-b-2 border-zinc-900 dark:border-white pb-3 mt-3 shrink-0">
                                 Knowledge
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                             <ModelSelectorDropdown
                                 selectedModel={selectedModel}
                                 onModelChange={setSelectedModel}
@@ -358,14 +381,15 @@ const ChatPage2 = () => {
 
                             <button 
                                 onClick={handleShare}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-[11px] font-bold shrink-0 border
+                                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl transition-all text-[11px] font-bold shrink-0 border
                                         ${isCopied 
                                             ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400' 
                                             : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200'
                                         }`}
+                                title="Share conversation"
                             >
-                                {isCopied ? <RiCheckLine size={12} /> : <RiShareLine size={12} />}
-                                <span className="hidden sm:inline">{isCopied ? "Copied" : "Share"}</span>
+                                {isCopied ? <RiCheckLine size={13} /> : <RiShareLine size={13} />}
+                                <span className="hidden md:inline">{isCopied ? "Copied" : "Share"}</span>
                             </button>
                         </div>
                     </div>
@@ -448,11 +472,13 @@ const ChatPage2 = () => {
                     handleFileUpload={handleFileUpload}
                     selectedModel={selectedModel}
                     onModelChange={setSelectedModel}
-                    isResponding={loading}
+                    isResponding={isGenerating}
                     queue={messageQueue}
                     onStopGenerating={handleStopGenerating}
                     onEditQueuedMessage={handleEditQueuedMessage}
                     onDeleteQueuedMessage={handleDeleteQueuedMessage}
+                    webSearch={webSearch}
+                    onToggleWebSearch={handleToggleWebSearch}
                 />
 
                 {isSidebarOpen && (

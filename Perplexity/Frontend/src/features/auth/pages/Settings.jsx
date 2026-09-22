@@ -7,6 +7,7 @@ import ProfileSettingsForm from '../components/ProfileSettingsForm';
 import PasswordChangeForm from '../components/PasswordChangeForm';
 import MascotCompanionSettings from '../components/MascotCompanionSettings';
 import CustomKeyManager from '../components/CustomKeyManager';
+import VoiceSettingsForm from '../components/VoiceSettingsForm';
 import { RiMenuLine } from '@remixicon/react';
 
 const Settings = () => {
@@ -66,10 +67,22 @@ const Settings = () => {
             setPreviewMood={setPreviewMood}
             celebrateCount={celebrateCount}
           />
+
+          {/* Section 5: AI Voice & Speech Settings */}
+          <VoiceSettingsForm 
+            onSuccess={triggerCelebrate}
+          />
         </div>
 
         <Footer />
       </div>
+
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
+        />
+      )}
     </div>
   );
 };

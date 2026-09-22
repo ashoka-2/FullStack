@@ -14,7 +14,8 @@ import {
   RiDeleteBinLine,
   RiSunLine,
   RiMoonClearLine,
-  RiApps2Line
+  RiApps2Line,
+  RiCloseLine
 } from '@remixicon/react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router';
@@ -38,6 +39,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const { handleLogout } = useAuth();
   const [modalType, setModalType] = useState(null); // 'delete'
   const [targetId, setTargetId] = useState(null);
+
+  // Helper to auto-close mobile drawer upon clicking any link or action
+  const closeMobileSidebar = () => {
+    if (typeof setIsOpen === 'function' && window.innerWidth < 1024) {
+      setIsOpen(false);
+    }
+  };
 
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
@@ -105,10 +113,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {/* Mobile Close Button */}
         <div className="lg:hidden flex justify-end mb-2">
           <button
+            type="button"
             onClick={() => setIsOpen(false)}
-            className="p-2 text-zinc-500 hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-zinc-200/80 dark:hover:bg-zinc-800"
+            title="Close navigation"
           >
-            <RiSettings4Line className="rotate-45" size={20} />
+            <RiCloseLine size={22} />
           </button>
         </div>
 
@@ -122,6 +132,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               onClick={(e) => {
                 triggerBlobSidebarNav(item.label);
                 handleNavClick(e, item);
+                closeMobileSidebar();
               }}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group cursor-pointer
                 ${item.active ? 'bg-white dark:bg-[#1a1a1a] text-zinc-950 dark:text-zinc-100 shadow-xs border border-zinc-200/80 dark:border-transparent' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/70 dark:hover:bg-[#121212] hover:text-zinc-950 dark:hover:text-zinc-200'}`}
@@ -137,6 +148,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           onMouseEnter={() => triggerBlobSidebarNav('new chat')}
           onClick={() => {
             triggerBlobSidebarNav('new chat');
+            closeMobileSidebar();
             if (!user) {
               navigate('/auth');
               return;
@@ -161,6 +173,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 <p className="text-[11px] text-zinc-500 mb-2 leading-relaxed">Sign in to save and access your past chats.</p>
                 <Link 
                   to="/auth" 
+                  onClick={closeMobileSidebar}
                   className="inline-flex items-center justify-center gap-1 w-full py-1.5 px-3 rounded-lg bg-[#20b8cd] text-zinc-950 font-bold text-xs hover:bg-[#1da9bc] transition-all cursor-pointer"
                 >
                   <span>Sign In</span>
@@ -180,7 +193,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     <Link
                       to={`/chat/${thread._id}`}
                       onMouseEnter={() => triggerBlobChatSelect()}
-                      onClick={() => triggerBlobChatSelect()}
+                      onClick={() => {
+                        triggerBlobChatSelect();
+                        closeMobileSidebar();
+                      }}
                       className={`flex-1 block text-left px-3 py-1.5 rounded-lg text-[13px] truncate transition-all font-medium cursor-pointer
                       ${location.pathname === `/chat/${thread._id}` ? 'text-zinc-950 dark:text-zinc-100 bg-white dark:bg-[#1a1a1a] shadow-xs border border-zinc-200/80 dark:border-transparent' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200 hover:bg-zinc-200/70 dark:hover:bg-[#121212]'}`}
                     >
@@ -202,6 +218,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 {chats.length > 0 && (
                   <Link
                     to="/library"
+                    onClick={closeMobileSidebar}
                     className="px-3 py-1.5 text-[11px] font-bold text-[#60A6AF] hover:text-[#60A6AF]/80 uppercase tracking-wider block w-fit transition-colors cursor-pointer"
                   >
                     View All

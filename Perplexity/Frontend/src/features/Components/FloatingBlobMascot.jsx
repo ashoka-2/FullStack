@@ -103,6 +103,46 @@ const FloatingBlobMascot = () => {
     };
   }, []);
 
+  // Listen for AI speech synthesis (Text-To-Speech) state to animate mascot speaking
+  useEffect(() => {
+    let speakInterval = null;
+
+    const handleSpeechState = (e) => {
+      const { speaking, text } = e.detail || {};
+
+      if (speaking) {
+        isInteractingRef.current = true;
+        setSpeechText(text || 'Speaking AI response... 🔊');
+        setMood('happy');
+        setCelebrate((prev) => prev + 1);
+
+        let toggle = false;
+        if (speakInterval) clearInterval(speakInterval);
+        speakInterval = setInterval(() => {
+          toggle = !toggle;
+          setMood(toggle ? 'wave' : 'happy');
+          setGaze({
+            x: (Math.random() - 0.5) * 10,
+            y: (Math.random() - 0.5) * 6
+          });
+        }, 500);
+      } else {
+        if (speakInterval) clearInterval(speakInterval);
+        speakInterval = null;
+        isInteractingRef.current = false;
+        setSpeechText('');
+        setMood('curious');
+        setGaze({ x: 0, y: 0 });
+      }
+    };
+
+    window.addEventListener('blob_speech_state', handleSpeechState);
+    return () => {
+      window.removeEventListener('blob_speech_state', handleSpeechState);
+      if (speakInterval) clearInterval(speakInterval);
+    };
+  }, []);
+
   // Idle ambient mood cycle
   useEffect(() => {
     if (!isVisible || isAuthPage) return;
@@ -179,6 +219,19 @@ const FloatingBlobMascot = () => {
     }, 3500);
   };
 
+  // Track screen size for mobile responsive placement
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 640 : false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const activeSize = isMobile ? Math.min(size, 72) : size;
+
   if (isAuthPage || !isVisible) {
     return null;
   }
@@ -187,10 +240,10 @@ const FloatingBlobMascot = () => {
     <motion.div
       drag
       dragMomentum={false}
-      className="fixed bottom-6 right-6 z-[10000] flex flex-col items-center select-none cursor-grab active:cursor-grabbing touch-none"
+      className="fixed bottom-24 right-4 sm:bottom-6 sm:right-6 z-[10000] flex flex-col items-center select-none cursor-grab active:cursor-grabbing touch-none"
       style={{
-        width: `${size}px`,
-        height: `${size}px`
+        width: `${activeSize}px`,
+        height: `${activeSize}px`
       }}
       whileDrag={{ scale: 1.05 }}
     >

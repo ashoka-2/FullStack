@@ -5,6 +5,7 @@ import {
   RiAddLine,
   RiArrowDownSLine,
   RiMicLine,
+  RiMicFill,
   RiFileList3Line,
   RiBookOpenLine,
   RiBriefcaseLine,
@@ -24,13 +25,15 @@ import {
   RiFilePdfLine,
   RiExpandUpDownLine,
   RiContractUpDownLine,
-  RiCodeSSlashLine
+  RiCodeSSlashLine,
+  RiCameraLine
 } from '@remixicon/react';
 import { useChat } from '../hook/useChat';
 import { useNavigate } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import Footer from '../../Components/Footer';
 import { setError, setMessages } from '../chat.slice';
+import { addToast } from '../../../utils/toast.slice';
 import PerplexityIcon from '../../Components/PerplexityIcon';
 import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
 import ModelSelectorDropdown from './ModelSelectorDropdown';
@@ -91,6 +94,99 @@ const ChatArea = () => {
     textareaRef.current.style.height = `${nextH}px`;
   }, [input, isExpanded]);
 
+  // Speech Recognition (Voice to Text) state
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const handleToggleVoiceInput = () => {
+    if (!user) {
+      setBlobMood('surprised');
+      navigate('/login');
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      dispatch(addToast({
+        type: 'warning',
+        message: 'Speech recognition is not supported in this browser. Please use Chrome, Edge, or Brave.'
+      }));
+      return;
+    }
+
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        triggerBlobInteraction('curious');
+        dispatch(addToast({
+          type: 'info',
+          message: 'Listening... Speak your prompt 🎙️'
+        }));
+      };
+
+      recognition.onresult = (event) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          }
+        }
+        if (finalTranscript.trim()) {
+          setInput(prev => {
+            const trimmed = prev.trim();
+            return trimmed ? `${trimmed} ${finalTranscript.trim()}` : finalTranscript.trim();
+          });
+          triggerTyping();
+          triggerBlobTyping();
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error);
+        if (event.error !== 'no-speech') {
+          dispatch(addToast({
+            type: 'error',
+            message: `Mic error: ${event.error || 'Check microphone permissions'}`
+          }));
+        }
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+      recognitionRef.current = recognition;
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err);
+      setIsListening(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
   const triggerTyping = () => {
     setIsTyping(true);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
@@ -103,11 +199,26 @@ const ChatArea = () => {
   // Initial suggestions laate waqt skeleton dikhane ke liye loading flag
   const [suggestionsLoading, setSuggestionsLoading] = useState(true);
 
-  // File input refs for photo, video, and documents
+  // File input refs for photo, video, camera and documents
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
   const videoInputRef = useRef(null);
   const docInputRef = useRef(null);
   const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
+
+  // Web Search toggle (Tavily search vs pure AI)
+  const [webSearch, setWebSearch] = useState(() => {
+    const saved = localStorage.getItem("perplexity_web_search");
+    return saved !== null ? saved === "true" : true; // Default ON
+  });
+
+  const handleToggleWebSearch = () => {
+    setWebSearch(prev => {
+      const next = !prev;
+      localStorage.setItem("perplexity_web_search", String(next));
+      return next;
+    });
+  };
 
   const handleFileUpload = (e) => {
     const uploadedFiles = Array.from(e.target.files);
@@ -203,8 +314,8 @@ const ChatArea = () => {
       // Optimistic Routing: Navigate immediately to new chat screen
       navigate('/chat/new');
       
-      // Asynchronously handle message sending with selected model
-      handleSendMessage(messageToSend, null, filesToSend, selectedModel).then(response => {
+      // Asynchronously handle message sending with selected model and webSearch flag
+      handleSendMessage(messageToSend, null, filesToSend, selectedModel, webSearch).then(response => {
         // Silently update URL once real chat ID is received
         if (response && response.chat) {
           navigate(`/chat/${response.chat._id}`, { replace: true });
@@ -299,13 +410,13 @@ const ChatArea = () => {
         </div>
       )}
 
-      <div className="w-full max-w-fluid flex flex-col items-center relative z-10 px-4 md:px-0 pt-12 md:pt-[15vh]">
-        <h1 className="text-[3.5rem] md:text-[5.5rem] font-extralight text-zinc-900 dark:text-white tracking-tighter mb-8 md:mb-12 text-center opacity-90 transition-opacity hover:opacity-100 flex items-center gap-2">
-         <PerplexityIcon size={50}/> Perplexity
+      <div className="w-full max-w-fluid flex flex-col items-center relative z-10 px-4 md:px-0 pt-8 sm:pt-12 md:pt-[15vh]">
+        <h1 className="text-3xl sm:text-5xl md:text-[5.5rem] font-extralight text-zinc-900 dark:text-white tracking-tighter mb-6 md:mb-12 text-center opacity-90 transition-opacity hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3">
+         <PerplexityIcon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 shrink-0" /> <span>Perplexity</span>
         </h1>
 
-        {/* Assistant Suggestions Pills ab heading ke theek niche hain */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-8 px-1 max-w-[800px] mx-auto w-full">
+        {/* Assistant Suggestions Pills */}
+        <div className="flex items-center justify-start sm:justify-center gap-2 mb-6 md:mb-8 px-2 max-w-[800px] mx-auto w-full overflow-x-auto sm:overflow-visible no-scrollbar pb-1">
           {suggestionsLoading ? (
             [1, 2, 3, 4].map(i => (
               <div key={i} className="flex-shrink-0 w-24 h-8 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-pulse" />
@@ -335,9 +446,9 @@ const ChatArea = () => {
                       setBlobGaze({ x: 0, y: 0 });
                     }
                   }}
-                  className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-transparent border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-600 dark:text-zinc-500 text-[13px] font-medium transition-all group cursor-pointer"
+                  className="flex-shrink-0 flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full bg-transparent border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-600 dark:text-zinc-500 text-xs sm:text-[13px] font-medium transition-all group cursor-pointer whitespace-nowrap"
                 >
-                  <Icon size={14} className="text-zinc-500 mr-2 group-hover:text-zinc-900 dark:group-hover:text-zinc-300" />
+                  <Icon size={14} className="text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-300" />
                   <span>{pillLabel}</span>
                 </button>
               );
@@ -346,8 +457,8 @@ const ChatArea = () => {
         </div>
 
         {/* Search Input Box */}
-        <div className="w-full md:relative md:block fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 md:p-0 bg-gradient-to-t from-[#f4f5f7] dark:from-[#050505] via-[#f4f5f7]/95 dark:via-[#050505]/95 md:bg-transparent md:dark:bg-transparent to-transparent backdrop-blur-[2px] md:backdrop-blur-0">
-          <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[#121212] border ${isDragging ? 'border-[#60A6AF]' : 'border-zinc-200/90 dark:border-[#2d2e2e]'} focus-within:border-[#60A6AF]/60 dark:focus-within:border-[#60A6AF]/60 focus-within:ring-2 focus-within:ring-[#60A6AF]/20 rounded-[28px] px-5 md:px-6 py-4 md:py-5 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
+        <div className="w-full md:relative md:block fixed bottom-0 left-0 right-0 z-50 p-2.5 pb-5 sm:p-4 sm:pb-8 md:p-0 bg-gradient-to-t from-[#f4f5f7] dark:from-[#050505] via-[#f4f5f7]/95 dark:via-[#050505]/95 md:bg-transparent md:dark:bg-transparent to-transparent backdrop-blur-[2px] md:backdrop-blur-0">
+          <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[#121212] border ${isDragging ? 'border-[#60A6AF]' : 'border-zinc-200/90 dark:border-[#2d2e2e]'} focus-within:border-[#60A6AF]/60 dark:focus-within:border-[#60A6AF]/60 focus-within:ring-2 focus-within:ring-[#60A6AF]/20 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-5 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
 
             {/* Rich Attachment Preview Strip */}
             <AttachmentPreviewStrip files={files} onRemove={removeFile} />
@@ -445,10 +556,12 @@ const ChatArea = () => {
               } cursor-text`}
             />
 
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-2">
-                <div className="relative">
+            <div className="flex items-center justify-between mt-3 sm:mt-4 gap-1.5 sm:gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 overflow-x-auto no-scrollbar py-0.5">
+                {/* Apple-style Circular Attach Button (+ icon only) */}
+                <div className="relative shrink-0">
                   <button
+                    type="button"
                     onClick={() => {
                       if (!user) {
                         navigate('/login');
@@ -456,18 +569,18 @@ const ChatArea = () => {
                       }
                       setIsUploadMenuOpen(!isUploadMenuOpen);
                     }}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 bg-zinc-100 dark:bg-transparent hover:bg-zinc-200 dark:hover:bg-zinc-800/50 transition-all text-xs font-semibold cursor-pointer"
-                    title="Attach photo, video or document"
+                    className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] hover:bg-zinc-200 dark:hover:bg-white/[0.12] text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all duration-200 shadow-xs active:scale-95 cursor-pointer shrink-0"
+                    title="Attach files (Photos, Videos, Documents)"
+                    aria-label="Attach files"
                   >
-                    <RiAddLine size={16} />
-                    <span>Attach</span>
+                    <RiAddLine size={18} className="shrink-0" />
                   </button>
 
                   {isUploadMenuOpen && (
                     <div className="absolute bottom-full left-0 mb-3 w-56 bg-white dark:bg-[#1a1a1a] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2">
                       {/* Upload Photo */}
                       <button 
-                        onClick={() => { fileInputRef.current.click(); setIsUploadMenuOpen(false); }} 
+                        onClick={() => { fileInputRef.current?.click(); setIsUploadMenuOpen(false); }} 
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[13px] font-bold transition-all group cursor-pointer"
                       >
                         <RiImageLine size={18} className="text-emerald-400 group-hover:text-emerald-300" />
@@ -475,7 +588,7 @@ const ChatArea = () => {
                       </button>
                       {/* Upload Video */}
                       <button 
-                        onClick={() => { videoInputRef.current.click(); setIsUploadMenuOpen(false); }} 
+                        onClick={() => { videoInputRef.current?.click(); setIsUploadMenuOpen(false); }} 
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[13px] font-bold transition-all group cursor-pointer"
                       >
                         <RiVideoLine size={18} className="text-purple-400 group-hover:text-purple-300" />
@@ -483,7 +596,7 @@ const ChatArea = () => {
                       </button>
                       {/* Upload Document */}
                       <button 
-                        onClick={() => { docInputRef.current.click(); setIsUploadMenuOpen(false); }} 
+                        onClick={() => { docInputRef.current?.click(); setIsUploadMenuOpen(false); }} 
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[13px] font-bold transition-all group cursor-pointer"
                       >
                         <RiFilePdfLine size={18} className="text-red-400 group-hover:text-red-300" />
@@ -491,17 +604,51 @@ const ChatArea = () => {
                       </button>
                     </div>
                   )}
-
-                  {/* Hidden inputs */}
-                  <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" multiple />
-                  <input type="file" ref={videoInputRef} onChange={handleFileUpload} className="hidden" accept="video/*" multiple />
-                  <input type="file" ref={docInputRef} onChange={handleFileUpload} className="hidden" accept=".pdf,.txt,.md,.doc,.docx" multiple />
                 </div>
+
+                {/* Camera Capture Button */}
+                <button 
+                  type="button"
+                  onClick={() => {
+                    if (!user) {
+                      navigate('/login');
+                      return;
+                    }
+                    cameraInputRef.current?.click();
+                  }}
+                  className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] hover:bg-zinc-200 dark:hover:bg-white/[0.12] text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all duration-200 shadow-xs active:scale-95 cursor-pointer shrink-0"
+                  title="Take photo using camera"
+                  aria-label="Take photo with camera"
+                >
+                  <RiCameraLine size={17} />
+                </button>
+
+                {/* Web Search Toggle Pill Button (Tavily search vs pure AI) */}
+                <button
+                  type="button"
+                  onClick={handleToggleWebSearch}
+                  className={`h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border flex items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
+                    webSearch 
+                      ? 'bg-[#20b8cd]/15 border-[#20b8cd]/40 text-[#148393] dark:text-[#5ce1f2] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
+                      : 'bg-zinc-100/90 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+                  }`}
+                  title={webSearch ? "Web Search: ON (Using Tavily for live internet facts)" : "Web Search: OFF (Pure AI model knowledge)"}
+                >
+                  <RiGlobalLine size={14} className={webSearch ? "text-[#20b8cd]" : "text-zinc-400 dark:text-zinc-500"} />
+                  <span className="text-[11px] sm:text-xs">Web</span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[#20b8cd] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
+                </button>
 
                 <ModelSelectorDropdown
                   selectedModel={selectedModel}
                   onModelChange={setSelectedModel}
                 />
+
+                {/* Hidden inputs */}
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" multiple />
+                <input type="file" ref={cameraInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" capture="environment" />
+                <input type="file" ref={videoInputRef} onChange={handleFileUpload} className="hidden" accept="video/*" multiple />
+                <input type="file" ref={docInputRef} onChange={handleFileUpload} className="hidden" accept=".pdf,.txt,.md,.doc,.docx" multiple />
               </div>
 
               <div className="flex items-center gap-2">
@@ -520,16 +667,16 @@ const ChatArea = () => {
                 </button>
 
                 <button 
-                  onClick={() => {
-                    if (!user) {
-                      navigate('/login');
-                      return;
-                    }
-                  }}
-                  className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
-                  title="Voice input"
+                  type="button"
+                  onClick={handleToggleVoiceInput}
+                  className={`p-1.5 rounded-full transition-all cursor-pointer ${
+                    isListening 
+                      ? 'text-rose-500 bg-rose-500/15 animate-pulse ring-2 ring-rose-500/30' 
+                      : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                  }`}
+                  title={isListening ? "Listening... Click to stop" : "Voice input (Speech to text)"}
                 >
-                  <RiMicLine size={18} />
+                  {isListening ? <RiMicFill size={18} className="text-rose-500" /> : <RiMicLine size={18} />}
                 </button>
 
                 <button

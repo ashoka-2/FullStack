@@ -653,11 +653,11 @@ const Auth = ({ initialMode }) => {
         {/* ============================================================ */}
         {/* LEFT COLUMN: THE INTERACTIVE JELLYBLOB MASCOT STAGE */}
         {/* ============================================================ */}
-        <div className="w-full lg:w-[48%] flex flex-col items-center justify-center py-4 lg:py-8 select-none">
+        <div className="w-full lg:w-[48%] flex flex-col items-center justify-center py-2 sm:py-4 lg:py-8 select-none">
           
           {/* Reactive Speech Bubble (Like Floating Mascot) */}
-          <div className="mb-4 sm:mb-6 min-h-[44px] flex items-center justify-center">
-            <div className="px-4 py-2 rounded-2xl bg-white/90 dark:bg-[#15171a]/90 backdrop-blur-md border border-cyan-500/25 shadow-lg shadow-cyan-500/5 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 text-center animate-in fade-in zoom-in-95 duration-200 max-w-[340px] flex items-center gap-2">
+          <div className="mb-3 sm:mb-6 min-h-[36px] sm:min-h-[44px] flex items-center justify-center">
+            <div className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl bg-white/90 dark:bg-[#15171a]/90 backdrop-blur-md border border-cyan-500/25 shadow-lg shadow-cyan-500/5 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 text-center animate-in fade-in zoom-in-95 duration-200 max-w-[280px] sm:max-w-[340px] flex items-center gap-2">
               <RiSparklingFill className="w-4 h-4 text-[#20b8cd] shrink-0" />
               <span>{bubbleText}</span>
             </div>
@@ -666,7 +666,7 @@ const Auth = ({ initialMode }) => {
           {/* Large Interactive Blob Canvas */}
           <div 
             onClick={handleBlobPoke}
-            className="w-64 h-64 sm:w-76 sm:h-76 md:w-84 md:h-84 lg:w-92 lg:h-92 xl:w-96 xl:h-96 relative flex items-center justify-center cursor-pointer group transition-transform duration-300 hover:scale-[1.03]"
+            className="w-40 h-40 xs:w-48 xs:h-48 sm:w-72 sm:h-72 md:w-84 md:h-84 lg:w-92 lg:h-92 xl:w-96 xl:h-96 relative flex items-center justify-center cursor-pointer group transition-transform duration-300 hover:scale-[1.03]"
             title="Click to interact with mascot!"
           >
             {/* Blob Ambient Underglow */}
@@ -703,7 +703,7 @@ const Auth = ({ initialMode }) => {
         {/* RIGHT COLUMN: THE SLEEK AUTH FORM CARD */}
         {/* ============================================================ */}
         <div className="w-full lg:w-[52%] max-w-[480px]">
-          <div className="bg-white/90 dark:bg-[#111214]/90 backdrop-blur-2xl border border-zinc-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl transition-all duration-300">
+          <div className="bg-white/90 dark:bg-[#111214]/90 backdrop-blur-2xl border border-zinc-200/90 dark:border-white/10 rounded-3xl p-4 xs:p-6 sm:p-8 shadow-2xl transition-all duration-300">
             
             {isRegistered ? (
               /* Dedicated Email Verification Stage */

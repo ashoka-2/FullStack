@@ -3,7 +3,12 @@ import {
   RiFileCopyLine, 
   RiRefreshLine, 
   RiThumbUpLine, 
+  RiThumbUpFill,
   RiThumbDownLine,
+  RiThumbDownFill,
+  RiVolumeUpLine,
+  RiVolumeUpFill,
+  RiVolumeMuteLine,
   RiCheckLine,
   RiInstagramLine,
   RiFacebookCircleLine,
@@ -25,6 +30,9 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import { publishMedia, generateCaption } from '../../auth/service/social.api';
+import { sendFeedback } from '../service/chat.api';
+import { useDispatch } from 'react-redux';
+import { addToast } from '../../../utils/toast.slice';
 
 const CodeBlock = ({ code, language, ...props }) => {
     const [copied, setCopied] = useState(false);
@@ -36,8 +44,8 @@ const CodeBlock = ({ code, language, ...props }) => {
     };
 
     return (
-        <div className="relative group my-6 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-[#0d0d0d]">
-            <div className="flex items-center justify-between px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="relative group my-4 sm:my-6 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-[#0d0d0d] max-w-full">
+            <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
                 <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">{language}</span>
                 <button 
                     onClick={handleCopy}
@@ -53,21 +61,23 @@ const CodeBlock = ({ code, language, ...props }) => {
                     )}
                 </button>
             </div>
-            <SyntaxHighlighter
-                style={vscDarkPlus}
-                language={language}
-                PreTag="div"
-                customStyle={{
-                    margin: 0,
-                    padding: '1.25rem',
-                    background: 'transparent',
-                    fontSize: '13px',
-                    lineHeight: '1.6'
-                }}
-                {...props}
-            >
-                {code}
-            </SyntaxHighlighter>
+            <div className="overflow-x-auto custom-scrollbar w-full">
+                <SyntaxHighlighter
+                    style={vscDarkPlus}
+                    language={language}
+                    PreTag="div"
+                    customStyle={{
+                        margin: 0,
+                        padding: '1rem',
+                        background: 'transparent',
+                        fontSize: '12.5px',
+                        lineHeight: '1.6'
+                    }}
+                    {...props}
+                >
+                    {code}
+                </SyntaxHighlighter>
+            </div>
         </div>
     );
 };
@@ -106,9 +116,16 @@ const isRawCodeBlock = (text) => {
 
 const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
     const isUser = msg.role === 'user';
+    const dispatch = useDispatch();
     const [displayedContent, setDisplayedContent] = useState(msg.content);
     const [isTyping, setIsTyping] = useState(false);
     const [copied, setCopied] = useState(false);
+
+    // Feedback State ('like' | 'dislike' | null)
+    const [feedback, setFeedback] = useState(msg.feedback || null);
+
+    // Text-to-speech Speaking State
+    const [isSpeaking, setIsSpeaking] = useState(false);
 
     // Social Sharing Modal State
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -136,6 +153,116 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
             setCaptionText(msg.content);
         }
     }, [msg.content]);
+
+    useEffect(() => {
+        if (msg.feedback !== undefined) {
+            setFeedback(msg.feedback);
+        }
+    }, [msg.feedback]);
+
+    // Cancel speech if another message starts speaking
+    useEffect(() => {
+        const handleCancelSpeech = (e) => {
+            if (e.detail?.activeId !== msg._id && isSpeaking) {
+                setIsSpeaking(false);
+            }
+        };
+        window.addEventListener('cancel_all_message_speech', handleCancelSpeech);
+        return () => window.removeEventListener('cancel_all_message_speech', handleCancelSpeech);
+    }, [isSpeaking, msg._id]);
+
+    // Handle like / dislike response rating
+    const handleFeedback = async (type) => {
+        const nextFeedback = feedback === type ? null : type;
+        setFeedback(nextFeedback);
+
+        if (nextFeedback === 'like') {
+            window.dispatchEvent(
+                new CustomEvent('blob_trigger_mood', {
+                    detail: { mood: 'love', speech: "Glad you liked this answer! ❤️✨", duration: 2500, revert: true }
+                })
+            );
+            dispatch(addToast({ message: "Marked as good response! AI will prioritize this quality.", type: "success" }));
+        } else if (nextFeedback === 'dislike') {
+            window.dispatchEvent(
+                new CustomEvent('blob_trigger_mood', {
+                    detail: { mood: 'sad', speech: "Noted! I'll improve the next response. 🥺", duration: 2500, revert: true }
+                })
+            );
+            dispatch(addToast({ message: "Marked as bad response. AI will refine its answers next time.", type: "info" }));
+        }
+
+        if (msg._id && !String(msg._id).startsWith('temp-') && !String(msg._id).startsWith('streaming-')) {
+            try {
+                await sendFeedback(msg._id, nextFeedback);
+            } catch (err) {
+                console.warn("Feedback sync failed:", err);
+            }
+        }
+    };
+
+    // Handle Text-to-Speech playback & mascot speech sync
+    const handleToggleSpeech = () => {
+        if (!('speechSynthesis' in window)) {
+            dispatch(addToast({ message: "Speech Synthesis is not supported in this browser.", type: "warning" }));
+            return;
+        }
+
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+            window.dispatchEvent(new CustomEvent('blob_speech_state', { detail: { speaking: false } }));
+            return;
+        }
+
+        window.speechSynthesis.cancel();
+        window.dispatchEvent(new CustomEvent('cancel_all_message_speech', { detail: { activeId: msg._id } }));
+
+        // Strip markdown syntax for natural reading
+        const rawText = msg.content || "";
+        const cleanText = rawText
+            .replace(/```[\s\S]*?```/g, "Code block omitted.")
+            .replace(/`([^`]+)`/g, "$1")
+            .replace(/https?:\/\/\S+/g, "link")
+            .replace(/[*_~#\[\]()]/g, "")
+            .trim();
+
+        if (!cleanText) return;
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+
+        const savedVoiceURI = localStorage.getItem("perplexity_tts_voice");
+        const savedRate = parseFloat(localStorage.getItem("perplexity_tts_rate") || "1");
+        const savedPitch = parseFloat(localStorage.getItem("perplexity_tts_pitch") || "1");
+
+        const voices = window.speechSynthesis.getVoices();
+        if (savedVoiceURI && voices.length > 0) {
+            const matchedVoice = voices.find(v => v.voiceURI === savedVoiceURI || v.name === savedVoiceURI);
+            if (matchedVoice) utterance.voice = matchedVoice;
+        }
+
+        utterance.rate = isNaN(savedRate) ? 1 : savedRate;
+        utterance.pitch = isNaN(savedPitch) ? 1 : savedPitch;
+
+        utterance.onstart = () => {
+            setIsSpeaking(true);
+            window.dispatchEvent(new CustomEvent('blob_speech_state', {
+                detail: { speaking: true, text: "Speaking AI response... 🔊" }
+            }));
+        };
+
+        utterance.onend = () => {
+            setIsSpeaking(false);
+            window.dispatchEvent(new CustomEvent('blob_speech_state', { detail: { speaking: false } }));
+        };
+
+        utterance.onerror = () => {
+            setIsSpeaking(false);
+            window.dispatchEvent(new CustomEvent('blob_speech_state', { detail: { speaking: false } }));
+        };
+
+        window.speechSynthesis.speak(utterance);
+    };
 
     const handleCopy = () => {
         if (msg.content) {
@@ -570,6 +697,23 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                     h1: ({children}) => <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white mt-10 mb-6 tracking-tight">{children}</h1>,
                                     h2: ({children}) => <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-white mt-8 mb-4 tracking-tight">{children}</h2>,
                                     h3: ({children}) => <h3 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white mt-6 mb-3 tracking-tight">{children}</h3>,
+                                    table: ({children}) => (
+                                        <div className="w-full overflow-x-auto my-6 rounded-xl border border-zinc-200 dark:border-zinc-800 custom-scrollbar">
+                                            <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[360px]">
+                                                {children}
+                                            </table>
+                                        </div>
+                                    ),
+                                    th: ({children}) => (
+                                        <th className="px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-800/80 font-bold text-xs text-zinc-700 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-700">
+                                            {children}
+                                        </th>
+                                    ),
+                                    td: ({children}) => (
+                                        <td className="px-3.5 py-2 text-xs border-b border-zinc-100 dark:border-zinc-800/60 text-zinc-600 dark:text-zinc-300">
+                                            {children}
+                                        </td>
+                                    ),
                                 }}
                             >
                                 {contentToRender}
@@ -577,24 +721,78 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                         </div>
                     )}
                     {msg.content && (
-                        <div className="flex items-center gap-5 pt-4 border-t border-zinc-200 dark:border-zinc-900/50 opacity-40 hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-3.5 sm:gap-4 pt-4 border-t border-zinc-200 dark:border-zinc-900/50 opacity-60 hover:opacity-100 transition-opacity">
+                            {/* Copy Message */}
                             <button 
                                 onClick={handleCopy}
-                                className="flex items-center gap-1.5 group transition-colors cursor-pointer"
+                                className="flex items-center gap-1.5 p-1 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-all cursor-pointer"
+                                title="Copy response text"
                             >
                                 {copied ? (
                                     <>
-                                        <span className="text-[12px] font-bold text-emerald-500">Copied!</span>
-                                        <RiCheckLine size={18} className="text-emerald-500" />
+                                        <span className="text-[11px] font-bold text-emerald-500">Copied!</span>
+                                        <RiCheckLine size={16} className="text-emerald-500" />
                                     </>
                                 ) : (
-                                    <RiFileCopyLine size={18} className="text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-100" />
+                                    <RiFileCopyLine size={16} />
                                 )}
                             </button>
-                            <RiRefreshLine size={18} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer" />
+
+                            {/* Speaker / Read Aloud Button */}
+                            <button
+                                onClick={handleToggleSpeech}
+                                className={`flex items-center gap-1 p-1 rounded-md transition-all cursor-pointer ${
+                                    isSpeaking 
+                                        ? 'text-[#20b8cd] bg-[#20b8cd]/15 ring-1 ring-[#20b8cd]/30 scale-105' 
+                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'
+                                }`}
+                                title={isSpeaking ? "Stop Speaking" : "Read Aloud (Voice Output)"}
+                            >
+                                {isSpeaking ? (
+                                    <>
+                                        <RiVolumeUpFill size={16} className="text-[#20b8cd] animate-pulse" />
+                                        <span className="text-[11px] font-bold text-[#20b8cd] hidden xs:inline">Speaking</span>
+                                    </>
+                                ) : (
+                                    <RiVolumeUpLine size={16} />
+                                )}
+                            </button>
+
                             <div className="flex-1" />
-                            <RiThumbUpLine size={18} className="text-zinc-700 hover:text-[#60A6AF] cursor-pointer" />
-                            <RiThumbDownLine size={18} className="text-zinc-700 hover:text-red-500 cursor-pointer" />
+
+                            {/* Like / Good Response Button */}
+                            <button 
+                                onClick={() => handleFeedback('like')}
+                                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                                    feedback === 'like'
+                                        ? 'text-[#20b8cd] bg-[#20b8cd]/15 ring-1 ring-[#20b8cd]/40 scale-110 shadow-xs'
+                                        : 'text-zinc-400 dark:text-zinc-500 hover:text-[#20b8cd] hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                                }`}
+                                title={feedback === 'like' ? "Remove Like" : "Good response (AI will learn your preference)"}
+                            >
+                                {feedback === 'like' ? (
+                                    <RiThumbUpFill size={16} className="text-[#20b8cd]" />
+                                ) : (
+                                    <RiThumbUpLine size={16} />
+                                )}
+                            </button>
+
+                            {/* Dislike / Bad Response Button */}
+                            <button 
+                                onClick={() => handleFeedback('dislike')}
+                                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                                    feedback === 'dislike'
+                                        ? 'text-rose-500 bg-rose-500/15 ring-1 ring-rose-500/40 scale-110 shadow-xs'
+                                        : 'text-zinc-400 dark:text-zinc-500 hover:text-rose-500 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                                }`}
+                                title={feedback === 'dislike' ? "Remove Dislike" : "Bad response (AI will improve next time)"}
+                            >
+                                {feedback === 'dislike' ? (
+                                    <RiThumbDownFill size={16} className="text-rose-500" />
+                                ) : (
+                                    <RiThumbDownLine size={16} />
+                                )}
+                            </button>
                         </div>
                     )}
                 </div>

@@ -12,10 +12,20 @@ export const initializeSocketConnection = () => {
 
     socket = io(socketUrl, {
         withCredentials: true,
+        reconnectionAttempts: 8,
+        reconnectionDelay: 3000,
+        reconnectionDelayMax: 10000,
+        timeout: 7000,
+        transports: ['websocket', 'polling'], // Prefer WebSocket first, avoiding excessive polling requests
     });
 
     socket.on("connect", () => {
         console.log("Connected to Socket.io server", socket.id);
+    });
+
+    socket.on("connect_error", (err) => {
+        // Suppress noisy uncaught console dumps when local backend server is offline or restarting
+        // ConnectionMonitor handles the network/offline UI state
     });
 
     return socket;

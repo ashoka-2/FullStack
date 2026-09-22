@@ -7,6 +7,7 @@ const chatSlice = createSlice({
         messages: [],
         currentChatId: null,
         loading: false,
+        isGenerating: false,
         isCreating: false,
         error: null,
         // ─── Pagination state ──────────────────────────────────────
@@ -35,6 +36,9 @@ const chatSlice = createSlice({
         setLoading: (state, action) => {
             state.loading = action.payload;
         },
+        setIsGenerating: (state, action) => {
+            state.isGenerating = action.payload;
+        },
         setIsCreating: (state, action) => {
             state.isCreating = action.payload;
         },
@@ -45,6 +49,7 @@ const chatSlice = createSlice({
             state.chats = [];
             state.messages = [];
             state.currentChatId = null;
+            state.isGenerating = false;
             state.hasMoreMessages = false;
             state.messagesPage = 1;
             state.totalMessages = 0;
@@ -73,7 +78,7 @@ const chatSlice = createSlice({
 
 export const { 
     setChats, setMessages, addMessage, setCurrentChatId, 
-    setLoading, setError, setIsCreating, clearChat, appendChunk,
+    setLoading, setIsGenerating, setError, setIsCreating, clearChat, appendChunk,
     prependMessages, setHasMoreMessages, setMessagesPage, setTotalMessages, setIsLoadingMore
 } = chatSlice.actions;
 export default chatSlice.reducer;
