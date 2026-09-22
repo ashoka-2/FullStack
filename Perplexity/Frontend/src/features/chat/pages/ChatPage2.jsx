@@ -444,7 +444,7 @@ const ChatPage2 = () => {
                                 {messages.map((msg, index) => (
                                     <ChatMessage 
                                         key={msg._id} 
-                                        msg={{ ...msg, content: msg.content, role: msg.role === 'ai' ? 'assistant' : 'user' }} 
+                                        msg={msg} 
                                         isLatest={index === messages.length - 1}
                                         isNewMessage={msg._id === latestMessageId}
                                     />

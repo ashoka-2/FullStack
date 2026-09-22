@@ -128,10 +128,11 @@ Perplexity is an AI-powered conversational search platform and social media comm
 │               ├── hook/                # useChat hook
 │               ├── pages/               # Dashboard (home) & ChatPage2 (active thread)
 │               └── components/
-│                   ├── ChatArea.jsx     # Main prompt input with resize & code preservation
-│                   ├── FollowUpInput.jsx# Thread follow-up bar with queue & resizer
-│                   ├── ChatMessage.jsx  # Markdown/CodeBlock renderer with social sharing
-│                   ├── ModelSelectorDropdown.jsx # Portaled dropdown (z-[9990]) with Lenis isolation
+│                   ├── ChatArea.jsx     # Main prompt input with auto-grow & full-screen studio
+│                   ├── FollowUpInput.jsx# Thread follow-up bar with queue & full-screen studio
+│                   ├── ChatMessage.jsx  # Memoized Markdown/CodeBlock renderer with 70-line folding
+│                   ├── ModelSelectorDropdown.jsx # Portaled dropdown (z-[9990]) with mobile short brand names
+│                   ├── AddToChatSheet.jsx# Framer Motion animated bottom sheet with drag-to-dismiss & mobile fullscreen
 │                   ├── MessageQueueTray.jsx # Queued prompts tray
 │                   └── AttachmentPreviewStrip.jsx # Multi-media attachment bar
 ```

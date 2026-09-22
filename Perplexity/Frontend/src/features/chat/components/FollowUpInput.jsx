@@ -11,10 +11,9 @@ import {
     RiVideoLine,
     RiFilePdfLine,
     RiPlayListAddLine,
-    RiExpandUpDownLine,
-    RiContractUpDownLine,
+    RiFullscreenLine,
+    RiFullscreenExitLine,
     RiCodeSSlashLine,
-    RiCameraLine,
     RiGlobalLine
 } from '@remixicon/react';
 import ModelSelectorDropdown from './ModelSelectorDropdown';
@@ -152,7 +151,7 @@ const FollowUpInput = ({
 
     // Textarea resizing & code formatting state
     const textareaRef = useRef(null);
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [isFullScreenEditor, setIsFullScreenEditor] = useState(false);
 
     // Detect whether pasted or typed content is code
     const isCodeContent = Boolean(
@@ -165,16 +164,14 @@ const FollowUpInput = ({
         )
     );
 
-    // Auto-grow textarea with content up to threshold or expanded height
+    // Auto-grow textarea naturally based on input text content
     useEffect(() => {
         if (!textareaRef.current) return;
         textareaRef.current.style.height = 'auto';
-        const targetMin = isExpanded ? 240 : 44;
-        const targetMax = isExpanded ? 520 : 240;
         const scrollH = textareaRef.current.scrollHeight;
-        const nextH = Math.min(Math.max(scrollH, targetMin), targetMax);
+        const nextH = Math.min(Math.max(scrollH, 40), 260);
         textareaRef.current.style.height = `${nextH}px`;
-    }, [input, isExpanded]);
+    }, [input]);
 
     const handleKeyDown = (e) => {
         // Tab key for code indentation
@@ -261,7 +258,7 @@ const FollowUpInput = ({
                         </div>
                     )}
 
-                    {/* Multi-line or Code Information & Quick Expand Header */}
+                    {/* Multi-line or Code Information & Quick Fullscreen Header */}
                     {(isCodeContent || (input && input.split('\n').length > 2)) && (
                         <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-200/60 dark:border-zinc-800/60 text-xs text-zinc-500 dark:text-zinc-400 select-none animate-in fade-in duration-200">
                             <div className="flex items-center gap-2">
@@ -277,21 +274,12 @@ const FollowUpInput = ({
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setIsExpanded(prev => !prev)}
-                                className="flex items-center gap-1 text-[11px] font-semibold text-[#20b8cd] hover:text-[#1892a3] dark:hover:text-[#6ee6f5] transition-colors cursor-pointer"
-                                title={isExpanded ? "Collapse input size" : "Expand input size to see and edit full prompt"}
+                                onClick={() => setIsFullScreenEditor(true)}
+                                className="flex items-center gap-1 text-[11px] font-semibold text-[#20b8cd] hover:text-[#1892a3] dark:hover:text-[#6ee6f5] transition-colors cursor-pointer px-2 py-0.5 rounded-md hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"
+                                title="Open full-screen prompt and code editor"
                             >
-                                {isExpanded ? (
-                                    <>
-                                        <RiContractUpDownLine size={13} />
-                                        <span>Collapse size</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <RiExpandUpDownLine size={13} />
-                                        <span>Expand size</span>
-                                    </>
-                                )}
+                                <RiFullscreenLine size={13} />
+                                <span>Full screen</span>
                             </button>
                         </div>
                     )}
@@ -315,13 +303,11 @@ const FollowUpInput = ({
                             MozTabSize: 2
                         }}
                         placeholder={isResponding ? "Add a follow-up or code snippet to queue..." : "Ask a follow-up or paste code..."}
-                        className={`w-full bg-transparent border-none outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 custom-scrollbar mb-2 sm:mb-3 py-1 transition-all resize-y ${
+                        className={`w-full bg-transparent border-none outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 custom-scrollbar mb-2 sm:mb-3 py-1 transition-all resize-none ${
                             isCodeContent 
                                 ? 'font-mono text-[13px] sm:text-[14px] md:text-[15px] leading-relaxed' 
                                 : 'font-sans font-medium text-[16px] sm:text-[18px] md:text-[20px]'
-                        } ${
-                            isExpanded ? 'min-h-[200px] md:min-h-[280px] max-h-[75vh]' : 'min-h-[40px] max-h-[240px]'
-                        } cursor-text`}
+                        } min-h-[40px] max-h-[260px] cursor-text`}
                     />
 
                     <div className="flex items-center justify-between gap-1.5 sm:gap-2">
@@ -354,22 +340,11 @@ const FollowUpInput = ({
                                 />
                             </div>
 
-                            {/* Camera Capture Button */}
-                            <button 
-                                type="button"
-                                onClick={() => cameraInputRef.current?.click()}
-                                className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] hover:bg-zinc-200 dark:hover:bg-white/[0.12] text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all duration-200 shadow-xs active:scale-95 cursor-pointer shrink-0"
-                                title="Take photo using camera"
-                                aria-label="Take photo with camera"
-                            >
-                                <RiCameraLine size={17} />
-                            </button>
-
-                            {/* Web Search Toggle Pill Button (Tavily search vs pure AI) */}
+                            {/* Web Search Toggle Pill Button (Desktop only on input bar; kept in sheet on mobile) */}
                             <button
                                 type="button"
                                 onClick={onToggleWebSearch}
-                                className={`h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border flex items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
+                                className={`hidden sm:flex h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
                                     webSearch 
                                         ? 'bg-[#20b8cd]/15 border-[#20b8cd]/40 text-[#148393] dark:text-[#5ce1f2] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
                                         : 'bg-zinc-100/90 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -391,19 +366,17 @@ const FollowUpInput = ({
 
                         {/* Right Side Actions */}
                         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                            {/* Increase/Decrease Input Size Toggle Button */}
-                            <button 
-                                type="button"
-                                onClick={() => setIsExpanded(prev => !prev)}
-                                className={`p-1.5 sm:p-2 rounded-lg transition-all cursor-pointer ${
-                                    isExpanded 
-                                        ? 'text-[#20b8cd] bg-[#20b8cd]/15 dark:bg-[#20b8cd]/25' 
-                                        : 'text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
-                                }`}
-                                title={isExpanded ? "Collapse input height" : "Expand input height to view full code/prompt"}
-                            >
-                                {isExpanded ? <RiContractUpDownLine size={16} /> : <RiExpandUpDownLine size={16} />}
-                            </button>
+                            {/* Full-Screen Prompt Editor Button if text or code is long */}
+                            {(input.length > 50 || input.includes('\n')) && (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsFullScreenEditor(true)}
+                                    className="p-1.5 sm:p-2 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-all cursor-pointer"
+                                    title="Open full-screen prompt and code editor"
+                                >
+                                    <RiFullscreenLine size={16} />
+                                </button>
+                            )}
 
                             <button 
                                 type="button"
@@ -449,6 +422,75 @@ const FollowUpInput = ({
 
                 </div>
             </div>
+
+            {/* Full-Screen Prompt & Code Editor Modal */}
+            {isFullScreenEditor && (
+                <div className="fixed inset-0 z-[9998] bg-[#0d0e11] text-zinc-100 flex flex-col pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+                    <div className="h-14 px-4 sm:px-6 border-b border-zinc-800 flex items-center justify-between bg-[#131418] shrink-0">
+                        <div className="flex items-center gap-3">
+                            <div className="p-1.5 rounded-lg bg-[#20b8cd]/15 text-[#20b8cd]">
+                                {isCodeContent ? <RiCodeSSlashLine size={18} /> : <RiFileTextLine size={18} />}
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-zinc-100">Full-Screen Prompt & Code Editor</h3>
+                                <p className="text-[11px] text-zinc-400 font-mono">
+                                    {input.split('\n').length} lines • {input.length} characters {isCodeContent ? '• Code format preserved' : ''}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    navigator.clipboard.writeText(input);
+                                    dispatch(addToast({ message: "Prompt copied to clipboard!", type: "info" }));
+                                }}
+                                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition-colors cursor-pointer"
+                            >
+                                Copy
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsFullScreenEditor(false)}
+                                className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-[#20b8cd] hover:bg-[#1bb3c7] text-zinc-950 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+                            >
+                                <RiFullscreenExitLine size={16} />
+                                <span>Done</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div className="flex-1 p-4 sm:p-6 overflow-hidden flex flex-col">
+                        <textarea
+                            autoFocus
+                            value={input}
+                            onChange={(e) => {
+                                setInput(e.target.value);
+                                triggerBlobTyping();
+                            }}
+                            onKeyDown={handleKeyDown}
+                            spellCheck={!isCodeContent}
+                            style={{ whiteSpace: 'pre-wrap', tabSize: 2, MozTabSize: 2 }}
+                            placeholder="Type or paste your follow-up, code or instructions..."
+                            className="w-full flex-1 bg-transparent border-none outline-none resize-none font-mono text-sm sm:text-base leading-relaxed text-zinc-100 placeholder:text-zinc-600 custom-scrollbar p-2"
+                        />
+                    </div>
+                    <div className="h-12 px-4 sm:px-6 border-t border-zinc-800/80 bg-[#131418] flex items-center justify-between text-xs text-zinc-400 shrink-0">
+                        <span className="hidden sm:inline">Press Tab for 2-space indentation • Press Esc or click Done to return</span>
+                        <span className="sm:hidden">Full-screen prompt mode</span>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                setIsFullScreenEditor(false);
+                                onSubmit(e);
+                            }}
+                            disabled={!input.trim()}
+                            className="px-4 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs shadow-md transition-transform active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            Send Prompt
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

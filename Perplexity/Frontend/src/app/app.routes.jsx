@@ -51,6 +51,10 @@ export const router = createBrowserRouter([
                 element: <Protected><SocialConnections /></Protected>
             },
             {
+                path: "/socials",
+                element: <Navigate to="/social-connections" replace />
+            },
+            {
                 path: "/settings",
                 element: <Protected><Settings /></Protected>
             },

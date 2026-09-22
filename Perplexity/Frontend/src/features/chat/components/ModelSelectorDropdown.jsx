@@ -28,6 +28,22 @@ const PROVIDER_THEMES = {
   custom: { color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/30", label: "Custom" }
 };
 
+const getShortBrandName = (model) => {
+  if (!model) return "AI";
+  const p = (model.provider || "").toLowerCase();
+  const n = (model.name || model.id || "").toLowerCase();
+  if (p === 'gemini' || n.includes('gemini')) return 'Gemini';
+  if (p === 'mistral' || n.includes('mistral') || n.includes('codestral')) return 'Mistral';
+  if (p === 'groq' || n.includes('groq')) return 'Groq';
+  if (p === 'deepseek' || n.includes('deepseek')) return 'DeepSeek';
+  if (p === 'anthropic' || n.includes('claude')) return 'Claude';
+  if (p === 'openai' || n.includes('gpt') || n.includes('o1') || n.includes('o3')) return 'OpenAI';
+  if (p === 'nvidia' || n.includes('nvidia')) return 'NVIDIA';
+  if (p === 'openrouter') return 'OpenRouter';
+  if (model.provider) return model.provider.charAt(0).toUpperCase() + model.provider.slice(1);
+  return (model.name || "AI").split(' ')[0];
+};
+
 export default function ModelSelectorDropdown({
   selectedModel,
   onModelChange,
@@ -244,7 +260,13 @@ export default function ModelSelectorDropdown({
           )}
         </div>
 
-        <span className="font-medium truncate max-w-[85px] xs:max-w-[120px] sm:max-w-[160px]">
+        {/* On mobile: short brand name (Gemini, Mistral, Groq, DeepSeek, Claude, etc.) */}
+        <span className="font-medium sm:hidden truncate max-w-[65px] xs:max-w-[85px]">
+          {getShortBrandName(activeModel)}
+        </span>
+
+        {/* On desktop: full model name */}
+        <span className="font-medium hidden sm:inline truncate max-w-[160px]">
           {activeModel.name}
         </span>
 

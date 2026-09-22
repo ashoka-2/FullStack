@@ -49,10 +49,18 @@
 - Complete data isolation: bypasses all routers, blocks `auth.handleGetMe()`, disconnects WebSockets, and blocks outgoing Axios requests.
 - Dedicated interactive `MaintenanceMode.jsx` page featuring the JellyBlob mascot, status cards, and live refresh checker.
 
-### 5. Legal & Info Pages + Scapegoat-Grade Toast System
-- Dedicated public routes: `/privacy`, `/terms`, `/about`, `/contact`, `/faq`, `/maintenance`.
-- Redux-backed Scapegoat-grade Toast system (`toast.slice.js`, `Toast.jsx`).
-- Shared footer component with Perplexity branding and social links.
+### 6. Chat Loading Lag & Heavy Code Rendering Optimization
+- **Prism Syntax Lexer Optimization**: Long code generation or pasted code (up to 2000 lines) previously caused synchronous AST parsing freezes. In `ChatMessage.jsx`, `CodeBlock` renders an initial 70 lines with an expanding gradient button (`Show all {totalLines} lines (+hidden lines)`).
+- **Full Code Preservation**: Copying copies 100% of the entire code snippet regardless of whether it is collapsed or expanded.
+- **Component Memoization (`React.memo`)**: Wrapped `CodeBlock` and `ChatMessage` in `React.memo`. Normalized `isUser` logic internally so `ChatPage2.jsx` passes stable references `msg={msg}` rather than reconstructing objects `{ ...msg }` on every keystroke.
+
+### 7. Animated Framer Motion Sheet & Mobile Responsive Input
+- **Animated AddToChatSheet**: Built with Framer Motion (`motion/react`) spring physics (`y: '100%'` to `y: 0`). Supports drag-to-dismiss gesture by sliding downwards.
+- **Mobile Full-Screen Mode**: In `AddToChatSheet.jsx`, mobile displays a full-screen toggle (`RiFullscreenLine`) expanding to 100dvh, while desktop retains the clean centered modal.
+- **Connectors Integration**: Removed the "Add to project" button; clicking "Connectors" navigates to `/social-connections`. Added `/socials` redirect alias in `app.routes.jsx`.
+- **Streamlined Toolbar**: Removed standalone camera icon button from input bars (camera is cleanly housed inside the sheet).
+- **Mobile Model Names**: In `ModelSelectorDropdown.jsx`, shows compact brand names on mobile (`Gemini`, `Mistral`, `Groq`, `DeepSeek`, `Claude`, `OpenAI`) via `getShortBrandName()` and full model names on desktop.
+- **Full-Screen Prompt & Code Editor**: Textareas auto-expand with content; users can trigger a dedicated Full-Screen Prompt & Code Studio modal to comfortably write, indent, and format large prompts and code.
 
 ---
 

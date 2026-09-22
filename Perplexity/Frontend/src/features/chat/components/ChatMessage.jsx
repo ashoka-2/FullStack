@@ -34,11 +34,20 @@ import { sendFeedback } from '../service/chat.api';
 import { useDispatch } from 'react-redux';
 import { addToast } from '../../../utils/toast.slice';
 
-const CodeBlock = ({ code, language, ...props }) => {
+const CodeBlock = React.memo(({ code, language, ...props }) => {
     const [copied, setCopied] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const safeCode = typeof code === 'string' ? code : String(code || '');
+    const lines = safeCode.split('\n');
+    const totalLines = lines.length;
+    // For large code snippets (70+ lines), render first 70 lines to prevent AST highlighter freezing the UI
+    const isLarge = totalLines > 70;
+    const displayedCode = isLarge && !isExpanded ? lines.slice(0, 70).join('\n') : safeCode;
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(code);
+        // Always copy the 100% complete code
+        navigator.clipboard.writeText(safeCode);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
@@ -46,25 +55,32 @@ const CodeBlock = ({ code, language, ...props }) => {
     return (
         <div className="relative group my-4 sm:my-6 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-[#0d0d0d] max-w-full">
             <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
-                <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">{language}</span>
-                <button 
-                    onClick={handleCopy}
-                    className="flex items-center gap-1.5 p-1.5 rounded-md hover:bg-zinc-800 text-zinc-500 hover:text-zinc-200 transition-all cursor-pointer"
-                >
-                    {copied ? (
-                        <>
-                            <span className="text-[10px] font-bold text-emerald-500">Copied!</span>
-                            <RiCheckLine size={14} className="text-emerald-500" />
-                        </>
-                    ) : (
-                        <RiFileCopyLine size={14} />
-                    )}
-                </button>
+                <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">{language || 'code'}</span>
+                    <span className="text-[10px] text-zinc-400 font-mono">({totalLines} lines)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    
+                    <button 
+                        onClick={handleCopy}
+                        className="flex items-center gap-1.5 p-1.5 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 hover:text-zinc-200 transition-all cursor-pointer"
+                        title="Copy full code snippet"
+                    >
+                        {copied ? (
+                            <>
+                                <span className="text-[10px] font-bold text-emerald-500">Copied!</span>
+                                <RiCheckLine size={14} className="text-emerald-500" />
+                            </>
+                        ) : (
+                            <RiFileCopyLine size={14} />
+                        )}
+                    </button>
+                </div>
             </div>
-            <div className="overflow-x-auto custom-scrollbar w-full">
+            <div className="relative overflow-x-auto custom-scrollbar w-full">
                 <SyntaxHighlighter
                     style={vscDarkPlus}
-                    language={language}
+                    language={language || 'text'}
                     PreTag="div"
                     customStyle={{
                         margin: 0,
@@ -75,12 +91,25 @@ const CodeBlock = ({ code, language, ...props }) => {
                     }}
                     {...props}
                 >
-                    {code}
+                    {displayedCode}
                 </SyntaxHighlighter>
+
+                {isLarge && !isExpanded && (
+                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/85 to-transparent flex items-end justify-center pb-3 pointer-events-auto">
+                        <button
+                            type="button"
+                            onClick={() => setIsExpanded(true)}
+                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#20b8cd] hover:bg-[#1bb3c7] text-zinc-950 text-xs font-bold shadow-lg transition-transform active:scale-95 cursor-pointer"
+                        >
+                            <span>Show all {totalLines} lines</span>
+                            <span className="text-[10px] opacity-75 font-mono">(+{totalLines - 70} hidden)</span>
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
-};
+});
 
 const SOCIAL_PLATFORMS_LIST = [
     { id: 'instagram', name: 'Instagram', icon: RiInstagramLine, color: '#E1306C' },
@@ -115,7 +144,7 @@ const isRawCodeBlock = (text) => {
 };
 
 const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
-    const isUser = msg.role === 'user';
+    const isUser = msg.role === 'user' || (msg.role !== 'assistant' && msg.role !== 'ai');
     const dispatch = useDispatch();
     const [displayedContent, setDisplayedContent] = useState(msg.content);
     const [isTyping, setIsTyping] = useState(false);
@@ -801,4 +830,4 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
     );
 };
 
-export default ChatMessage;
+export default React.memo(ChatMessage);
