@@ -65,6 +65,20 @@ const ChatPage2 = () => {
         });
     };
 
+    // Cross-Chat Memory toggle (read & recall across other chats)
+    const [memoryEnabled, setMemoryEnabled] = useState(() => {
+        const saved = localStorage.getItem("perplexity_memory_enabled");
+        return saved !== null ? saved === "true" : true; // Default ON
+    });
+
+    const handleToggleMemory = () => {
+        setMemoryEnabled(prev => {
+            const next = !prev;
+            localStorage.setItem("perplexity_memory_enabled", String(next));
+            return next;
+        });
+    };
+
     // Share link button state
     const [isCopied, setIsCopied] = useState(false);
 
@@ -274,7 +288,7 @@ const ChatPage2 = () => {
         setFiles([]);
 
         try {
-            const response = await handleSendMessage(currentInput, id, filesToSend, selectedModel, webSearch);
+            const response = await handleSendMessage(currentInput, id, filesToSend, selectedModel, webSearch, memoryEnabled);
             if (response && response.aiMessage) {
                 setLatestMessageId(response.aiMessage._id);
                 setTimeout(scrollToBottom, 100);
@@ -479,6 +493,8 @@ const ChatPage2 = () => {
                     onDeleteQueuedMessage={handleDeleteQueuedMessage}
                     webSearch={webSearch}
                     onToggleWebSearch={handleToggleWebSearch}
+                    memoryEnabled={memoryEnabled}
+                    onToggleMemory={handleToggleMemory}
                 />
 
                 {isSidebarOpen && (

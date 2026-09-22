@@ -187,3 +187,36 @@
   - Dances and oscillates between `happy` and `wave` moods with randomized eye gaze movements.
   - When speech concludes (`speaking: false`), restores ambient idle state.
 
+---
+
+## 11. Premium 'Add to chat' Sheet, Live Voice Captioning & Cross-Chat Vector Memory
+
+### 1. Premium 'Add to chat' Sheet (`AddToChatSheet.jsx`)
+- **Native Mobile Bottom Sheet & Apple-Grade Modal**:
+  - Replicates the exact mobile UI with rounded drag handle, `✕` close button, and centered `Add to chat` header.
+  - **4 Media Action Cards**:
+    - 📷 **Camera**: Triggers direct device camera capture.
+    - 🖼️ **Photos**: Photo gallery upload (`image/*`).
+    - 🎥 **Videos**: Dedicated video upload (`video/*`).
+    - 📁 **Files**: Document & code file upload (`.pdf, .txt, .md, .doc, .docx`).
+  - **Option Rows**:
+    - 📦 **Add to project**: Displays project status / selector.
+    - 🌐 **Web search**: iOS-style toggle switch controlling real-time Tavily search.
+    - 〰️ **Connectors**: Direct link to `/socials` integration hub.
+    - 🧠 **Memory**: iOS-style toggle switch controlling cross-chat memory retrieval.
+
+### 2. Live Voice Captioning Stream
+- **Real-Time Word-by-Word Captioning**:
+  - In `ChatArea.jsx` and `FollowUpInput.jsx`, speech recognition captures `interimTranscript` alongside `finalTranscript`.
+  - Displays a dedicated glassmorphism **Live Speech Caption Bar** directly above the input box during microphone recording.
+  - Features an animated 4-bar audio equalizer waveform, pulsing recording beacon, live streaming transcript text, and a "Done" button.
+
+### 3. Cross-Chat Vector Memory Engine
+- **Mechanism**:
+  - Toggle persisted in `localStorage` (`perplexity_memory_enabled`).
+  - When enabled, `sendMessage` in `chat.controller.js` retrieves past messages from all other conversation threads belonging to the same user.
+  - Uses `generateEmbedding` with `text-embedding-004` and `cosineSimilarity` (`embedding.service.js`) to semantically match the user's prompt against prior conversations.
+  - Extracts the top 3-4 concise memory snippets (~1-2 sentences each) and injects them into Gemini's `systemContent` and model context.
+  - Asynchronously saves 768-dimension vectors for every user and AI message into MongoDB (`message.embedding`), saving tokens and providing instant context across all chats.
+
+

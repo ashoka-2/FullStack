@@ -32,7 +32,7 @@ export const useChat = () => {
     const navigate = useNavigate(); // For navigating across pages
 
     // Sends user message, creates chat if needed, and sets up optimistic streaming
-    async function handleSendMessage(message, chatId, file, modelOptions = null, webSearch = false) {
+    async function handleSendMessage(message, chatId, file, modelOptions = null, webSearch = false, memory = true) {
         try {
             dispatch(setError(null));
             dispatch(setLoading(true));
@@ -68,7 +68,7 @@ export const useChat = () => {
 
             // Obtain socket instance for receiving token streams
             const socket = getSocket();
-            const response = await sendMessage(message, chatId, file, socket?.id, modelOptions, webSearch);
+            const response = await sendMessage(message, chatId, file, socket?.id, modelOptions, webSearch, memory);
             
             // If a new chat was created, update current active chat ID and refresh list
             if (response.chat) {

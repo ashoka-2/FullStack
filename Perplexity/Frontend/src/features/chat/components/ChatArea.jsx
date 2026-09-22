@@ -38,6 +38,7 @@ import PerplexityIcon from '../../Components/PerplexityIcon';
 import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
 import ModelSelectorDropdown from './ModelSelectorDropdown';
 import AttachmentPreviewStrip from './AttachmentPreviewStrip';
+import AddToChatSheet from './AddToChatSheet';
 import { triggerBlobInteraction, triggerBlobTyping } from '../../../utils/blobReactions';
 
 const ChatArea = () => {
@@ -94,8 +95,9 @@ const ChatArea = () => {
     textareaRef.current.style.height = `${nextH}px`;
   }, [input, isExpanded]);
 
-  // Speech Recognition (Voice to Text) state
+  // Speech Recognition (Voice to Text) state & Live Caption
   const [isListening, setIsListening] = useState(false);
+  const [liveCaption, setLiveCaption] = useState('');
   const recognitionRef = useRef(null);
 
   const handleToggleVoiceInput = () => {
@@ -120,6 +122,7 @@ const ChatArea = () => {
         recognitionRef.current = null;
       }
       setIsListening(false);
+      setLiveCaption('');
       return;
     }
 
@@ -131,20 +134,24 @@ const ChatArea = () => {
 
       recognition.onstart = () => {
         setIsListening(true);
+        setLiveCaption('Listening to your speech... Speak now 🎙️');
         triggerBlobInteraction('curious');
-        dispatch(addToast({
-          type: 'info',
-          message: 'Listening... Speak your prompt 🎙️'
-        }));
       };
 
       recognition.onresult = (event) => {
+        let currentInterim = '';
         let finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
             finalTranscript += transcript + ' ';
+          } else {
+            currentInterim += transcript;
           }
+        }
+        const fullLive = (finalTranscript + currentInterim).trim();
+        if (fullLive) {
+          setLiveCaption(fullLive);
         }
         if (finalTranscript.trim()) {
           setInput(prev => {
@@ -165,10 +172,12 @@ const ChatArea = () => {
           }));
         }
         setIsListening(false);
+        setLiveCaption('');
       };
 
       recognition.onend = () => {
         setIsListening(false);
+        setLiveCaption('');
       };
 
       recognition.start();
@@ -176,6 +185,7 @@ const ChatArea = () => {
     } catch (err) {
       console.error('Failed to start speech recognition:', err);
       setIsListening(false);
+      setLiveCaption('');
     }
   };
 
@@ -216,6 +226,20 @@ const ChatArea = () => {
     setWebSearch(prev => {
       const next = !prev;
       localStorage.setItem("perplexity_web_search", String(next));
+      return next;
+    });
+  };
+
+  // Cross-Chat Memory toggle (read & recall across other chats)
+  const [memoryEnabled, setMemoryEnabled] = useState(() => {
+    const saved = localStorage.getItem("perplexity_memory_enabled");
+    return saved !== null ? saved === "true" : true; // Default ON
+  });
+
+  const handleToggleMemory = () => {
+    setMemoryEnabled(prev => {
+      const next = !prev;
+      localStorage.setItem("perplexity_memory_enabled", String(next));
       return next;
     });
   };
@@ -314,8 +338,8 @@ const ChatArea = () => {
       // Optimistic Routing: Navigate immediately to new chat screen
       navigate('/chat/new');
       
-      // Asynchronously handle message sending with selected model and webSearch flag
-      handleSendMessage(messageToSend, null, filesToSend, selectedModel, webSearch).then(response => {
+      // Asynchronously handle message sending with selected model, webSearch, and cross-chat memory
+      handleSendMessage(messageToSend, null, filesToSend, selectedModel, webSearch, memoryEnabled).then(response => {
         // Silently update URL once real chat ID is received
         if (response && response.chat) {
           navigate(`/chat/${response.chat._id}`, { replace: true });
@@ -463,6 +487,34 @@ const ChatArea = () => {
             {/* Rich Attachment Preview Strip */}
             <AttachmentPreviewStrip files={files} onRemove={removeFile} />
 
+            {/* Live Voice Captioning Stream */}
+            {isListening && (
+              <div className="flex items-center gap-3 px-3.5 py-2 mb-2 rounded-xl bg-zinc-900/95 dark:bg-[#18181b]/95 border border-[#20b8cd]/40 text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="w-1 h-3 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:0ms]" />
+                  <span className="w-1 h-5 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1 h-2 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:300ms]" />
+                  <span className="w-1 h-4 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:450ms]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+                    <span className="text-[10px] font-bold text-[#5ce1f2] uppercase tracking-wider">Live Speech Caption</span>
+                  </div>
+                  <p className="text-[13px] text-zinc-100 font-medium truncate italic mt-0.5">
+                    {liveCaption || 'Listening to your voice... Speak now'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleVoiceInput}
+                  className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 cursor-pointer shrink-0"
+                >
+                  Done
+                </button>
+              </div>
+            )}
+
             {/* Multi-line or Code Information & Quick Expand Header */}
             {(isCodeContent || (input && input.split('\n').length > 2)) && (
               <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-zinc-200/60 dark:border-zinc-800/60 text-xs text-zinc-500 dark:text-zinc-400 select-none animate-in fade-in duration-200">
@@ -567,43 +619,28 @@ const ChatArea = () => {
                         navigate('/login');
                         return;
                       }
-                      setIsUploadMenuOpen(!isUploadMenuOpen);
+                      setIsUploadMenuOpen(true);
                     }}
                     className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] hover:bg-zinc-200 dark:hover:bg-white/[0.12] text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all duration-200 shadow-xs active:scale-95 cursor-pointer shrink-0"
-                    title="Attach files (Photos, Videos, Documents)"
-                    aria-label="Attach files"
+                    title="Add to chat (Photos, Videos, Files, Memory)"
+                    aria-label="Add to chat"
                   >
                     <RiAddLine size={18} className="shrink-0" />
                   </button>
 
-                  {isUploadMenuOpen && (
-                    <div className="absolute bottom-full left-0 mb-3 w-56 bg-white dark:bg-[#1a1a1a] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2">
-                      {/* Upload Photo */}
-                      <button 
-                        onClick={() => { fileInputRef.current?.click(); setIsUploadMenuOpen(false); }} 
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[13px] font-bold transition-all group cursor-pointer"
-                      >
-                        <RiImageLine size={18} className="text-emerald-400 group-hover:text-emerald-300" />
-                        <span>Upload Photo</span>
-                      </button>
-                      {/* Upload Video */}
-                      <button 
-                        onClick={() => { videoInputRef.current?.click(); setIsUploadMenuOpen(false); }} 
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[13px] font-bold transition-all group cursor-pointer"
-                      >
-                        <RiVideoLine size={18} className="text-purple-400 group-hover:text-purple-300" />
-                        <span>Upload Video</span>
-                      </button>
-                      {/* Upload Document */}
-                      <button 
-                        onClick={() => { docInputRef.current?.click(); setIsUploadMenuOpen(false); }} 
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[13px] font-bold transition-all group cursor-pointer"
-                      >
-                        <RiFilePdfLine size={18} className="text-red-400 group-hover:text-red-300" />
-                        <span>Upload Document</span>
-                      </button>
-                    </div>
-                  )}
+                  {/* Premium 'Add to chat' Mobile Bottom Sheet & Desktop Modal */}
+                  <AddToChatSheet
+                    isOpen={isUploadMenuOpen}
+                    onClose={() => setIsUploadMenuOpen(false)}
+                    onPickCamera={() => cameraInputRef.current?.click()}
+                    onPickPhotos={() => fileInputRef.current?.click()}
+                    onPickVideos={() => videoInputRef.current?.click()}
+                    onPickFiles={() => docInputRef.current?.click()}
+                    webSearch={webSearch}
+                    onToggleWebSearch={handleToggleWebSearch}
+                    memoryEnabled={memoryEnabled}
+                    onToggleMemory={handleToggleMemory}
+                  />
                 </div>
 
                 {/* Camera Capture Button */}

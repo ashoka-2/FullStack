@@ -212,3 +212,17 @@ Perplexity is an AI-powered conversational search platform and social media comm
   - Global mascot listens to `blob_speech_state` events.
   - When AI speech playback starts, the mascot displays a speech bubble ("Speaking AI response... 🔊") and animates expressions (happy/wave) with dynamic gaze movements in synchronization with audio playback.
 
+### 9. 'Add to chat' Mobile Bottom Sheet, Live Speech Captions & Vector Memory
+- **'Add to chat' Bottom Sheet (`AddToChatSheet.jsx`)**:
+  - Exact recreation of the mobile sheet screenshot with drag handle, close button, and 4 media cards: Camera, Photos, Videos, and Files.
+  - Option rows for project linking, web search toggle, connector integration, and cross-chat memory toggle.
+  - Seamlessly functions as a mobile slide-up drawer and a desktop Apple-style sheet.
+- **Live Voice Captioning**:
+  - Captures real-time streaming speech recognition tokens.
+  - Renders a floating live captioning equalizer bubble above the input box while user is speaking.
+- **Cross-Chat Memory & Vector Database (RAG)**:
+  - Generates 768-dimension embeddings using `text-embedding-004`.
+  - Performs semantic cosine similarity search across user's other conversation threads in MongoDB.
+  - Injects top 3-4 concise recalled context snippets into Gemini and open models to maintain continuous memory across all chats with minimal token footprint.
+
+

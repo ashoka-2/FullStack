@@ -6,7 +6,7 @@ import { uploadFile } from "../services/imagekit.service.js";
 import { getIO } from "../sockets/server.socket.js";
 import { executeModelChatStream } from "../services/model.service.js";
 import { decryptKey } from "../utils/encryption.utils.js";
-import { generateEmbedding } from "../services/embedding.service.js";
+import { generateEmbedding, cosineSimilarity } from "../services/embedding.service.js";
 
 export async function sendMessage(req, res) {
     try {
@@ -133,11 +133,77 @@ export async function sendMessage(req, res) {
             feedbackInstruction += `\n\n[USER PREFERENCE - LIKED PRIOR RESPONSE]: The user liked previous response(s) in this chat. Maintain this clear, engaging, well-structured, and high-quality tone.`;
         }
 
+        // ── Cross-Chat Memory (Vector Semantic Retrieval) ─────────────────────
+        const isMemoryEnabled = req.body.memory !== 'false' && req.body.memory !== false;
+        let memoryContext = "";
+
+        if (isMemoryEnabled && req.user?._id) {
+            try {
+                const currentChatId = chatId || chat._id;
+                const otherChats = await chatModel.find({
+                    user: req.user._id,
+                    _id: { $ne: currentChatId }
+                }).select('_id title').limit(20);
+
+                if (otherChats.length > 0) {
+                    const otherChatIds = otherChats.map(c => c._id);
+                    const pastMessages = await messageModel.find({
+                        chat: { $in: otherChatIds }
+                    })
+                    .select('+embedding content role chat createdAt')
+                    .sort({ createdAt: -1 })
+                    .limit(40);
+
+                    if (pastMessages.length > 0) {
+                        const promptText = message || userMessage.content;
+                        const promptVector = await generateEmbedding(promptText);
+
+                        let scored = [];
+                        for (const pm of pastMessages) {
+                            if (!pm.content || pm.content.length < 5) continue;
+                            let score = 0;
+                            if (promptVector && pm.embedding && pm.embedding.length > 0) {
+                                score = cosineSimilarity(promptVector, pm.embedding);
+                            } else {
+                                // Fast keyword fallback if embedding not yet generated
+                                const words = promptText.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+                                let matches = 0;
+                                const contentLower = pm.content.toLowerCase();
+                                for (const w of words) {
+                                    if (contentLower.includes(w)) matches++;
+                                }
+                                score = words.length > 0 ? (matches / words.length) * 0.5 : 0;
+                            }
+                            scored.push({ message: pm, score });
+                        }
+
+                        scored.sort((a, b) => b.score - a.score);
+                        const topMemories = scored.filter(item => item.score > 0.4).slice(0, 3);
+
+                        if (topMemories.length > 0) {
+                            const chatTitleMap = new Map(otherChats.map(c => [c._id.toString(), c.title || 'Previous Chat']));
+                            memoryContext = `\n\n--- RECALLED CROSS-CHAT MEMORY (Across User's Other Chats) ---\n` +
+                                `The user has enabled memory across chats. Relevant context and facts recalled from their previous conversations:\n` +
+                                topMemories.map(({ message: pm }) => {
+                                    const title = chatTitleMap.get(pm.chat.toString()) || 'Other Chat';
+                                    const excerpt = pm.content.length > 180 ? pm.content.slice(0, 177) + '...' : pm.content;
+                                    return `• [Chat: "${title}"]: ${excerpt}`;
+                                }).join("\n") +
+                                `\n--------------------------------------------------------------\nUse this context naturally to answer smartly without explicitly saying "According to your other chat" unless asked.`;
+                        }
+                    }
+                }
+            } catch (memErr) {
+                console.warn("⚠️ Cross-chat memory retrieval warning:", memErr.message);
+            }
+        }
+
         const userContextWithSearch = {
             ...(fullUser?.toObject ? fullUser.toObject() : fullUser),
             webSearch: isWebSearch,
             webSearchContext,
-            feedbackInstruction
+            feedbackInstruction,
+            memoryContext
         };
 
         const isNonGeminiProvider = targetProvider !== "gemini";
@@ -154,7 +220,9 @@ export async function sendMessage(req, res) {
             try {
                 // Prepare message payload: inject real-time Tavily search context and feedback instruction into latest user message
                 const chatHistoryForModel = messages.map(m => ({ role: m.role, content: m.content }));
-                const extraContext = (webSearchContext ? webSearchContext : "") + (feedbackInstruction ? feedbackInstruction : "");
+                const extraContext = (webSearchContext ? webSearchContext : "") + 
+                    (feedbackInstruction ? feedbackInstruction : "") + 
+                    (memoryContext ? memoryContext : "");
                 if (extraContext && chatHistoryForModel.length > 0) {
                     const lastUserIndex = chatHistoryForModel.map(m => m.role).lastIndexOf("user");
                     if (lastUserIndex !== -1) {

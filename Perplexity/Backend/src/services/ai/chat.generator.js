@@ -162,11 +162,12 @@ export async function generateResponse(messages, onChunk, userContext) {
     : "1. Real-Time Information (Web Search: OFF): Web search is disabled by user preference. Answer directly using your internal knowledge without searching the internet.";
 
   const feedbackNotes = userContext?.feedbackInstruction ? `\n    ${userContext.feedbackInstruction}` : "";
+  const memoryNotes = userContext?.memoryContext ? `\n    ${userContext.memoryContext}` : "";
 
   const systemContent = `You are a world-class AI assistant with supercharged multi-platform social media publishing capabilities. Current Date: ${today}.
     
     CRITICAL INSTRUCTIONS:
-    ${webSearchInstruction}${feedbackNotes}
+    ${webSearchInstruction}${feedbackNotes}${memoryNotes}
     
     2. Universal Social Media Publishing ('post_to_social_media'):
        Users can connect and publish content to:
