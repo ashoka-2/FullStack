@@ -24,6 +24,7 @@ import {
   RiRefreshLine,
   RiAlertLine
 } from '@remixicon/react';
+import PerplexityIcon from '../../Components/PerplexityIcon';
 import '../../Components/blob.css';
 
 const Auth = ({ initialMode }) => {
@@ -635,7 +636,7 @@ const Auth = ({ initialMode }) => {
   };
 
   return (
-    <main className="min-h-screen bg-[#f4f5f7] dark:bg-[#07080a] text-zinc-900 dark:text-zinc-100 flex items-center justify-center p-4 sm:p-6 lg:p-12 relative overflow-hidden selection:bg-[#20b8cd]/30 transition-colors duration-300">
+    <main className="min-h-[100dvh] bg-[#f4f5f7] dark:bg-[#07080a] text-zinc-900 dark:text-zinc-100 flex flex-col items-center justify-between p-3 xs:p-4 sm:p-6 lg:p-10 relative overflow-y-auto overflow-x-hidden selection:bg-[#20b8cd]/30 transition-colors duration-300">
       {/* Toast Notification Container */}
       <Toast 
         message={toast.message} 
@@ -644,33 +645,52 @@ const Auth = ({ initialMode }) => {
       />
       
       {/* Ambient Atmospheric Glows */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#4ecde0]/15 dark:bg-[#199eb0]/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 dark:bg-cyan-600/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-72 sm:w-96 h-72 sm:h-96 bg-[#4ecde0]/15 dark:bg-[#199eb0]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-blue-500/10 dark:bg-cyan-600/10 rounded-full blur-[140px] pointer-events-none" />
+
+      {/* Top Header: Brand & Back to Home */}
+      <div className="w-full max-w-5xl mx-auto flex items-center justify-between py-1 sm:py-2 mb-2 sm:mb-4 z-10 shrink-0">
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer px-2.5 py-1.5 rounded-xl hover:bg-zinc-200/60 dark:hover:bg-white/5"
+        >
+          <RiArrowLeftLine size={16} />
+          <span>Home</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
+            <PerplexityIcon size={16} className="text-white" />
+          </div>
+          <span className="text-sm font-bold tracking-tight text-zinc-900 dark:text-white">Perplexity</span>
+        </div>
+      </div>
 
       {/* Main Single Page Grid: Left Blob, Right Form */}
-      <div className="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12 relative z-10">
+      <div className="w-full max-w-5xl mx-auto flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-4 sm:gap-8 lg:gap-12 relative z-10 my-auto py-2">
         
         {/* ============================================================ */}
         {/* LEFT COLUMN: THE INTERACTIVE JELLYBLOB MASCOT STAGE */}
         {/* ============================================================ */}
-        <div className="w-full lg:w-[48%] flex flex-col items-center justify-center py-2 sm:py-4 lg:py-8 select-none">
+        <div className="w-full lg:w-[48%] flex flex-col items-center justify-center py-1 sm:py-3 lg:py-6 select-none shrink-0">
           
           {/* Reactive Speech Bubble (Like Floating Mascot) */}
-          <div className="mb-3 sm:mb-6 min-h-[36px] sm:min-h-[44px] flex items-center justify-center">
-            <div className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl bg-white/90 dark:bg-[#15171a]/90 backdrop-blur-md border border-cyan-500/25 shadow-lg shadow-cyan-500/5 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 text-center animate-in fade-in zoom-in-95 duration-200 max-w-[280px] sm:max-w-[340px] flex items-center gap-2">
-              <RiSparklingFill className="w-4 h-4 text-[#20b8cd] shrink-0" />
-              <span>{bubbleText}</span>
+          <div className="mb-2 sm:mb-4 min-h-[30px] sm:min-h-[44px] flex items-center justify-center">
+            <div className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-2xl bg-white/90 dark:bg-[#15171a]/90 backdrop-blur-md border border-cyan-500/25 shadow-md shadow-cyan-500/5 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 text-center animate-in fade-in zoom-in-95 duration-200 max-w-[260px] sm:max-w-[340px] flex items-center gap-1.5 sm:gap-2">
+              <RiSparklingFill className="w-3.5 h-3.5 text-[#20b8cd] shrink-0" />
+              <span className="truncate">{bubbleText}</span>
             </div>
           </div>
 
-          {/* Large Interactive Blob Canvas */}
+          {/* Responsive Blob Canvas */}
           <div 
             onClick={handleBlobPoke}
-            className="w-40 h-40 xs:w-48 xs:h-48 sm:w-72 sm:h-72 md:w-84 md:h-84 lg:w-92 lg:h-92 xl:w-96 xl:h-96 relative flex items-center justify-center cursor-pointer group transition-transform duration-300 hover:scale-[1.03]"
+            className="w-24 h-24 xs:w-28 xs:h-28 sm:w-60 sm:h-60 md:w-72 md:h-72 lg:w-84 lg:h-84 relative flex items-center justify-center cursor-pointer group transition-transform duration-300 hover:scale-[1.03]"
             title="Click to interact with mascot!"
           >
             {/* Blob Ambient Underglow */}
-            <div className="absolute inset-0 bg-[#4ecde0]/20 dark:bg-[#199eb0]/15 rounded-full blur-3xl group-hover:bg-[#4ecde0]/30 transition-all pointer-events-none" />
+            <div className="absolute inset-0 bg-[#4ecde0]/20 dark:bg-[#199eb0]/15 rounded-full blur-2xl sm:blur-3xl group-hover:bg-[#4ecde0]/30 transition-all pointer-events-none" />
 
             {/* Mascot Element with levitation and physical leaning towards form */}
             <div 
@@ -695,15 +715,13 @@ const Auth = ({ initialMode }) => {
               />
             </div>
           </div>
-
-         
         </div>
 
         {/* ============================================================ */}
         {/* RIGHT COLUMN: THE SLEEK AUTH FORM CARD */}
         {/* ============================================================ */}
-        <div className="w-full lg:w-[52%] max-w-[480px]">
-          <div className="bg-white/90 dark:bg-[#111214]/90 backdrop-blur-2xl border border-zinc-200/90 dark:border-white/10 rounded-3xl p-4 xs:p-6 sm:p-8 shadow-2xl transition-all duration-300">
+        <div className="w-full lg:w-[52%] max-w-[460px] shrink-0">
+          <div className="bg-white/90 dark:bg-[#111214]/90 backdrop-blur-2xl border border-zinc-200/90 dark:border-white/10 rounded-2xl sm:rounded-3xl p-4 xs:p-6 sm:p-8 shadow-2xl transition-all duration-300">
             
             {isRegistered ? (
               /* Dedicated Email Verification Stage */

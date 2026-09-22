@@ -25,26 +25,26 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex bg-[#f4f5f7] dark:bg-[#050505] min-h-screen text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#20b8cd]/30">
+    <div className="flex bg-[#f4f5f7] dark:bg-[#050505] min-h-[100dvh] text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#20b8cd]/30">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div className="flex-1 flex flex-col min-h-screen lg:pl-56 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 flex flex-col min-h-[100dvh] lg:pl-56 overflow-y-auto custom-scrollbar">
         {/* Header */}
-        <header className="flex items-center justify-between px-4 sm:px-8 h-16 bg-[#f4f5f7]/85 dark:bg-[#050505]/80 backdrop-blur-md sticky top-0 z-30 border-b border-zinc-200 dark:border-white/5">
-          <div className="flex items-center gap-3">
+        <header className="flex items-center justify-between px-3.5 sm:px-8 h-12 sm:h-16 bg-[#f4f5f7]/85 dark:bg-[#050505]/80 backdrop-blur-md sticky top-0 z-30 border-b border-zinc-200 dark:border-white/5">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 -ml-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer"
+              className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer rounded-lg active:scale-95"
               aria-label="Open navigation menu"
             >
               <RiMenuLine size={20} />
             </button>
-            <h1 className="text-lg font-bold text-zinc-900 dark:text-white">Settings & Profile</h1>
+            <h1 className="text-sm sm:text-lg font-bold text-zinc-900 dark:text-white">Settings & Profile</h1>
           </div>
         </header>
 
         {/* Content Container */}
-        <div className="max-w-4xl w-full mx-auto px-4 sm:px-8 py-8 space-y-8 pb-32">
+        <div className="max-w-4xl w-full mx-auto px-3.5 sm:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 pb-32">
           {/* Section 1: User Profile Settings */}
           <ProfileSettingsForm 
             user={user} 

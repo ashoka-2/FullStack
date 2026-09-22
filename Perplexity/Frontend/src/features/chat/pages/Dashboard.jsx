@@ -7,6 +7,7 @@ import { RiMenuLine, RiLoginCircleLine, RiUserAddLine, RiSparkling2Line } from '
 import { setError } from '../chat.slice'
 import { useDispatch } from 'react-redux'
 import { Link } from 'react-router'
+import PerplexityIcon from '../../Components/PerplexityIcon'
 import { addToast } from '../../../utils/toast.slice'
 
 const Dashboard = () => {
@@ -35,17 +36,22 @@ const Dashboard = () => {
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
 
-            <div className={`flex-1 flex flex-col h-screen overflow-hidden relative lg:pl-56 transition-all duration-300 ${isSidebarOpen ? 'opacity-50 blur-sm pointer-events-none lg:opacity-100 lg:blur-none lg:pointer-events-auto' : ''}`}>
+            <div className={`flex-1 flex flex-col h-[100dvh] overflow-hidden relative lg:pl-56 transition-all duration-300 ${isSidebarOpen ? 'opacity-50 blur-sm pointer-events-none lg:opacity-100 lg:blur-none lg:pointer-events-auto' : ''}`}>
 
-                {/* Header (Responsive: Mobile hamburger + Auth actions for guests) */}
-                <header className="flex items-center justify-between px-4 sm:px-6 h-14 bg-[#f4f5f7]/85 dark:bg-[#050505]/80 backdrop-blur-md shrink-0 z-40 border-b border-zinc-200 dark:border-white/5">
+                {/* Header (Responsive: Mobile brand + hamburger + Auth actions) */}
+                <header className="flex items-center justify-between px-3 sm:px-6 h-12 sm:h-14 bg-[#f4f5f7]/90 dark:bg-[#050505]/85 backdrop-blur-md shrink-0 z-40 border-b border-zinc-200/80 dark:border-white/5">
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-2 -ml-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer"
+                            className="lg:hidden p-2 -ml-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all rounded-lg active:scale-95 cursor-pointer"
+                            aria-label="Open sidebar"
                         >
                             <RiMenuLine size={20} />
                         </button>
+                        <div className="lg:hidden flex items-center gap-2">
+                            <PerplexityIcon className="w-5 h-5 text-zinc-900 dark:text-white" />
+                            <span className="font-bold text-sm text-zinc-900 dark:text-white tracking-tight">Perplexity</span>
+                        </div>
                     </div>
 
                     {/* Top Right Guest Bar */}

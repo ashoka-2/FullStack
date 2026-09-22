@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router';
 import { 
     RiInstagramLine, 
     RiShieldLine, 
@@ -10,6 +11,7 @@ import {
     RiUser6Line,
     RiQuestionLine,
     RiArrowRightLine,
+    RiArrowLeftLine,
     RiSettings4Line,
     RiFacebookCircleLine
 } from '@remixicon/react';
@@ -49,25 +51,35 @@ const ConnectInstagram = () => {
     };
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-[#020202] pt-24 pb-20 px-6 md:px-12 selection:bg-[#20b8cd]/30">
+        <div className="min-h-[100dvh] bg-zinc-50 dark:bg-[#020202] pt-6 sm:pt-12 pb-20 px-4 sm:px-8 md:px-12 selection:bg-[#20b8cd]/30">
             <div className="max-w-4xl mx-auto">
+                {/* Back to Social Hub Navigation */}
+                <div className="mb-6">
+                    <Link
+                        to="/social-connections"
+                        className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors px-3 py-1.5 rounded-xl hover:bg-zinc-200/60 dark:hover:bg-white/5"
+                    >
+                        <RiArrowLeftLine size={16} />
+                        <span>Back to Social Hub</span>
+                    </Link>
+                </div>
                 
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-                    <div className="flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-[24px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center text-white shadow-[0_8px_30px_rgb(238,42,123,0.3)] animate-in zoom-in duration-700">
-                            <RiInstagramLine size={36} />
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-12">
+                    <div className="flex items-center gap-3.5 sm:gap-5">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[18px] sm:rounded-[24px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center text-white shadow-[0_8px_30px_rgb(238,42,123,0.3)] animate-in zoom-in duration-700 shrink-0">
+                            <RiInstagramLine className="w-6 h-6 sm:w-9 sm:h-9" />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
+                            <h1 className="text-2xl sm:text-4xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
                                 Instagram <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">Automation</span>
                             </h1>
-                            <p className="text-zinc-500 dark:text-zinc-400 font-medium text-lg">Connect your profile to enable AI-powered posting</p>
+                            <p className="text-zinc-500 dark:text-zinc-400 font-medium text-xs sm:text-lg mt-0.5">Connect your profile to enable AI-powered posting</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10">
                     
                     {/* Left Column: Form & Info */}
                     <div className="lg:col-span-7 space-y-8">

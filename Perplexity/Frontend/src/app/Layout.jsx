@@ -50,7 +50,7 @@ const Layout = () => {
             }}
         >
             <ConnectionMonitor>
-                <div className={`bg-[#f4f5f7] dark:bg-[#050505] text-zinc-900 dark:text-zinc-100 transition-colors duration-300 min-h-screen relative ${isOverlayActive ? 'h-screen overflow-hidden' : ''}`}>
+                <div className={`bg-[#f4f5f7] dark:bg-[#050505] text-zinc-900 dark:text-zinc-100 transition-colors duration-300 min-h-screen relative ${isOverlayActive ? 'h-[100dvh] overflow-hidden' : ''}`}>
                     {/* Animated initial loading curtain */}
                     {isOverlayActive && (
                         <Loading onFinished={() => setLoaderFinished(true)} authReady={authWaitDone} />

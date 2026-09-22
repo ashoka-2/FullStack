@@ -200,21 +200,21 @@ const Library = () => {
             <div className="flex-1 lg:pl-56 min-w-0 transition-all duration-300 w-full relative">
                 <main className="max-w-[1000px] mx-auto px-4 md:px-6 py-8 md:py-12">
 
-                    {/* Mobile Menu Toggle - Fixed Header */}
-                    <div className="lg:hidden fixed top-0 left-0 right-0 z-30 flex items-center py-4 bg-[#f4f5f7]/95 dark:bg-[#050505]/95 backdrop-blur-md px-4 border-b border-zinc-200 dark:border-white/10 shadow-sm dark:shadow-none">
-                        <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="p-2 -ml-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all bg-white/70 dark:bg-zinc-900/50 rounded-lg"
-                        >
-                            <RiMenuLine size={24} />
-                        </button>
-                        <span className="text-lg font-bold text-zinc-900 dark:text-white ml-2 flex items-center gap-2">
-                            <RiHistoryLine size={20} className="text-[#60A6AF]" /> Chats
-                        </span>
+                    {/* Mobile Menu Toggle - Sticky Header */}
+                    <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between h-12 bg-[#f4f5f7]/95 dark:bg-[#050505]/95 backdrop-blur-md px-3 border-b border-zinc-200/80 dark:border-white/10 mb-4 -mx-4 -mt-8">
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="p-1.5 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all rounded-lg active:scale-95 cursor-pointer"
+                                aria-label="Open sidebar"
+                            >
+                                <RiMenuLine size={20} />
+                            </button>
+                            <span className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                                <RiHistoryLine size={17} className="text-[#60A6AF]" /> Chats
+                            </span>
+                        </div>
                     </div>
-
-                    {/* Spacer for fixed header */}
-                    <div className="h-8 lg:hidden w-full" />
  
                     <div className="hidden lg:flex items-center gap-3 mb-10 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
                         <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#60A6AF] to-[#4a8a92] flex items-center justify-center text-zinc-950 shrink-0 shadow-lg shadow-[#60A6AF]/10">

@@ -209,19 +209,19 @@ const SocialConnections = () => {
     }
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#020202] min-h-screen text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30 overflow-hidden">
+        <div className="flex bg-[#f4f5f7] dark:bg-[#020202] min-h-[100dvh] text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30 overflow-hidden">
             {/* Quick Switch Sidebar */}
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-h-screen lg:pl-56 overflow-y-auto custom-scrollbar transition-all duration-300">
+            <div className="flex-1 flex flex-col min-h-[100dvh] lg:pl-56 overflow-y-auto custom-scrollbar transition-all duration-300">
                 {/* Sticky Header with Hamburger on Mobile */}
-                <header className="sticky top-0 z-30 bg-[#f4f5f7]/85 dark:bg-[#020202]/80 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/5 px-4 sm:px-8 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                <header className="sticky top-0 z-30 bg-[#f4f5f7]/85 dark:bg-[#020202]/80 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/5 px-3.5 sm:px-8 h-12 sm:h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-2 sm:gap-3">
                         <button
                             type="button"
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-2 -ml-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer rounded-xl hover:bg-zinc-200/60 dark:hover:bg-white/5"
+                            className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer rounded-xl hover:bg-zinc-200/60 dark:hover:bg-white/5 active:scale-95"
                             title="Open Sidebar"
                         >
                             <RiMenuLine size={20} />
@@ -231,13 +231,13 @@ const SocialConnections = () => {
                         </h1>
                     </div>
 
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-white/10 text-xs font-bold shadow-xs">
-                        <div className={`w-2.5 h-2.5 rounded-full ${connectedCount > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-500'}`} />
+                    <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-white/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-white/10 text-[11px] sm:text-xs font-bold shadow-xs">
+                        <div className={`w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full ${connectedCount > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-500'}`} />
                         <span>{connectedCount} of {PLATFORMS.length} Connected</span>
                     </div>
                 </header>
 
-                <main className="flex-1 max-w-5xl w-full mx-auto px-6 md:px-12 py-10">
+                <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 md:px-12 py-6 sm:py-10">
                     <div ref={containerRef}>
                         {/* Hero Section */}
                         <div className="mb-12">

@@ -840,7 +840,7 @@ const ChatArea = () => {
       {isFullScreenEditor && typeof document !== 'undefined' && createPortal(
         <div 
           data-lenis-prevent="true"
-          className="fixed inset-0 z-[10005] bg-[#0c0d10] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200"
+          className="fixed inset-0 lg:left-56 z-[9980] bg-[#0c0d10] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200 border-l border-zinc-800/80 shadow-2xl"
           onWheel={(e) => e.stopPropagation()}
         >
           {/* Studio Header */}

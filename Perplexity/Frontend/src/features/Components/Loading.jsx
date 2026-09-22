@@ -88,7 +88,7 @@ const Loading = ({ onFinished, authReady = true }) => {
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 z-[9999] overflow-hidden pointer-events-none"
+      className="fixed inset-0 z-[99999] w-screen h-[100dvh] overflow-hidden pointer-events-auto"
     >
       {/* 5 vertical backdrop bars */}
       <div className="absolute inset-0 flex pointer-events-auto bg-transparent">
@@ -104,17 +104,19 @@ const Loading = ({ onFinished, authReady = true }) => {
       {/* Percentage Counter in bottom-left */}
       <div
         ref={counterContainerRef}
-        className="absolute bottom-10 left-10 md:bottom-20 md:left-20 z-50 pointer-events-none"
+        className="absolute bottom-10 left-6 sm:left-10 md:bottom-20 md:left-20 z-50 pointer-events-none"
       >
         <div className="flex flex-col gap-0">
-          <div className="flex items-baseline gap-2 overflow-hidden">
+          <div className="flex items-baseline justify-between gap-3 bg-black border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl w-[190px] sm:w-[230px] md:w-[330px] select-none">
             <span 
               ref={counterTextRef}
-              className="text-white text-7xl md:text-[8rem] font-black tracking-tighter leading-none tabular-nums italic drop-shadow-xl"
+              className="text-white text-6xl sm:text-7xl md:text-[7.5rem] font-black tracking-tighter leading-none tabular-nums italic drop-shadow-xl inline-block text-right flex-1"
             >
               0
             </span>
-            <span className="text-[#60A6AF] text-3xl md:text-5xl font-light opacity-90 drop-shadow-xl">%</span>
+            <span className="text-[#60A6AF] text-3xl sm:text-4xl md:text-5xl font-light opacity-90 drop-shadow-xl shrink-0">
+              %
+            </span>
           </div>
         </div>
       </div>

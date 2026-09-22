@@ -7,6 +7,7 @@ import {
     RiCheckLine
 } from '@remixicon/react';
 import Sidebar from '../../Components/Sidebar';
+import PerplexityIcon from '../../Components/PerplexityIcon';
 import ChatMessage from '../components/ChatMessage';
 import FollowUpInput from '../components/FollowUpInput';
 import { useChat } from '../hook/useChat';
@@ -367,19 +368,23 @@ const ChatPage2 = () => {
         <div className="flex bg-[#f4f5f7] dark:bg-[#050505] min-h-screen text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30 overflow-hidden">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            <div className={`flex-1 flex flex-col h-screen lg:pl-56 overflow-hidden relative transition-all duration-300`}>
+            <div className={`flex-1 flex flex-col h-[100dvh] lg:pl-56 overflow-hidden relative transition-all duration-300`}>
 
                 {/* Header Container */}
-                <header className={`h-14 bg-[#f4f5f7] dark:bg-[#050505] z-30 shrink-0 transition-all duration-300 ${isScrolled ? 'border-b border-zinc-200 dark:border-zinc-900 shadow-xs bg-[#f4f5f7]/95 dark:bg-[#050505]/95 backdrop-blur-md' : ''}`}>
+                <header className={`h-12 sm:h-14 bg-[#f4f5f7] dark:bg-[#050505] z-30 shrink-0 transition-all duration-300 ${isScrolled ? 'border-b border-zinc-200 dark:border-zinc-900 shadow-xs bg-[#f4f5f7]/95 dark:bg-[#050505]/95 backdrop-blur-md' : ''}`}>
                     <div className="max-w-[800px] mx-auto h-full flex items-center justify-between px-2.5 sm:px-6">
-                        <div className="flex items-center gap-1.5 sm:gap-4 overflow-hidden min-w-0">
+                        <div className="flex items-center gap-2 sm:gap-4 overflow-hidden min-w-0">
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all rounded-lg shrink-0"
+                                className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all rounded-lg shrink-0 active:scale-95"
                                 aria-label="Open sidebar"
                             >
                                 <RiMenuLine size={20} />
                             </button>
+                            <div className="lg:hidden flex items-center gap-1.5 shrink-0">
+                                <PerplexityIcon className="w-5 h-5 text-zinc-900 dark:text-white shrink-0" />
+                                <span className="font-bold text-sm text-zinc-900 dark:text-white truncate">Perplexity</span>
+                            </div>
                             <button className="hidden sm:flex items-center gap-2 text-[13px] font-bold text-zinc-900 dark:text-zinc-100 border-b-2 border-zinc-900 dark:border-white pb-3 mt-3 shrink-0">
                                 Knowledge
                             </button>
