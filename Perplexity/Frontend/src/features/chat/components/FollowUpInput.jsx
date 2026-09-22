@@ -22,6 +22,7 @@ import MessageQueueTray from './MessageQueueTray';
 import AddToChatSheet from './AddToChatSheet';
 import { triggerBlobInteraction, triggerBlobTyping } from '../../../utils/blobReactions';
 import { useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch } from 'react-redux';
 import { addToast } from '../../../utils/toast.slice';
 
@@ -423,29 +424,46 @@ const FollowUpInput = ({
                 </div>
             </div>
 
-            {/* Full-Screen Prompt & Code Editor Modal */}
-            {isFullScreenEditor && (
-                <div className="fixed inset-0 z-[9998] bg-[#0d0e11] text-zinc-100 flex flex-col pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
-                    <div className="h-14 px-4 sm:px-6 border-b border-zinc-800 flex items-center justify-between bg-[#131418] shrink-0">
-                        <div className="flex items-center gap-3">
+            {/* Full-Screen Prompt & Code Editor Studio via React Portal */}
+            {isFullScreenEditor && typeof document !== 'undefined' && createPortal(
+                <div 
+                    data-lenis-prevent="true"
+                    className="fixed inset-0 z-[10005] bg-[#0c0d10] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200"
+                    onWheel={(e) => e.stopPropagation()}
+                >
+                    {/* Studio Header */}
+                    <div className="h-14 px-4 sm:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#111216] shrink-0">
+                        <div className="flex items-center gap-2.5">
                             <div className="p-1.5 rounded-lg bg-[#20b8cd]/15 text-[#20b8cd]">
                                 {isCodeContent ? <RiCodeSSlashLine size={18} /> : <RiFileTextLine size={18} />}
                             </div>
                             <div>
-                                <h3 className="text-sm font-semibold text-zinc-100">Full-Screen Prompt & Code Editor</h3>
+                                <h3 className="text-sm font-semibold text-zinc-100">Full-Screen Prompt Studio</h3>
                                 <p className="text-[11px] text-zinc-400 font-mono">
                                     {input.split('\n').length} lines • {input.length} characters {isCodeContent ? '• Code format preserved' : ''}
                                 </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
+                            {input && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setInput('');
+                                        dispatch(addToast({ message: "Prompt cleared", type: "info" }));
+                                    }}
+                                    className="px-2.5 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700 text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+                                >
+                                    Clear
+                                </button>
+                            )}
                             <button
                                 type="button"
                                 onClick={() => {
                                     navigator.clipboard.writeText(input);
                                     dispatch(addToast({ message: "Prompt copied to clipboard!", type: "info" }));
                                 }}
-                                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition-colors cursor-pointer"
+                                className="px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition-colors cursor-pointer"
                             >
                                 Copy
                             </button>
@@ -453,13 +471,16 @@ const FollowUpInput = ({
                                 type="button"
                                 onClick={() => setIsFullScreenEditor(false)}
                                 className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-[#20b8cd] hover:bg-[#1bb3c7] text-zinc-950 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+                                title="Exit full-screen mode"
                             >
                                 <RiFullscreenExitLine size={16} />
                                 <span>Done</span>
                             </button>
                         </div>
                     </div>
-                    <div className="flex-1 p-4 sm:p-6 overflow-hidden flex flex-col">
+
+                    {/* Textarea Area */}
+                    <div className="flex-1 p-4 sm:p-6 overflow-hidden flex flex-col min-h-0 bg-[#0c0d10]">
                         <textarea
                             autoFocus
                             value={input}
@@ -470,26 +491,130 @@ const FollowUpInput = ({
                             onKeyDown={handleKeyDown}
                             spellCheck={!isCodeContent}
                             style={{ whiteSpace: 'pre-wrap', tabSize: 2, MozTabSize: 2 }}
-                            placeholder="Type or paste your follow-up, code or instructions..."
+                            placeholder={isResponding ? "Add a follow-up or code snippet to queue..." : "Type or paste your prompt, code or instructions..."}
                             className="w-full flex-1 bg-transparent border-none outline-none resize-none font-mono text-sm sm:text-base leading-relaxed text-zinc-100 placeholder:text-zinc-600 custom-scrollbar p-2"
                         />
                     </div>
-                    <div className="h-12 px-4 sm:px-6 border-t border-zinc-800/80 bg-[#131418] flex items-center justify-between text-xs text-zinc-400 shrink-0">
-                        <span className="hidden sm:inline">Press Tab for 2-space indentation • Press Esc or click Done to return</span>
-                        <span className="sm:hidden">Full-screen prompt mode</span>
-                        <button
-                            type="button"
-                            onClick={(e) => {
-                                setIsFullScreenEditor(false);
-                                onSubmit(e);
-                            }}
-                            disabled={!input.trim()}
-                            className="px-4 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs shadow-md transition-transform active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                            Send Prompt
-                        </button>
+
+                    {/* Live Voice Captioning Stream in Studio */}
+                    {isListening && (
+                        <div className="mx-4 sm:mx-6 mb-2 px-3.5 py-2 rounded-xl bg-zinc-900/95 border border-[#20b8cd]/40 text-white shadow-xl backdrop-blur-md flex items-center gap-3">
+                            <div className="flex items-center gap-1 shrink-0">
+                                <span className="w-1 h-3 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:0ms]" />
+                                <span className="w-1 h-5 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:150ms]" />
+                                <span className="w-1 h-2 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:300ms]" />
+                                <span className="w-1 h-4 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:450ms]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <span className="text-[10px] font-bold text-[#5ce1f2] uppercase tracking-wider block">Live Voice Caption</span>
+                                <p className="text-[13px] text-zinc-100 font-medium truncate italic mt-0.5">
+                                    {liveCaption || 'Listening to your voice... Speak now'}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleToggleVoiceInput}
+                                className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 cursor-pointer shrink-0"
+                            >
+                                Done
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Rich Bottom Toolbar Options (Attach, Web Search, Models, Mic, Queue/Send) */}
+                    <div className="border-t border-zinc-800/80 bg-[#111216] px-4 sm:px-6 py-3 shrink-0 flex flex-col gap-2.5">
+                        {/* Attachments Preview Strip */}
+                        <AttachmentPreviewStrip files={files} onRemove={removeFile} />
+
+                        <div className="flex items-center justify-between gap-2">
+                            {/* Left Side Actions */}
+                            <div className="flex items-center gap-2 min-w-0 overflow-x-auto no-scrollbar py-0.5">
+                                {/* Attach Button */}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsUploadMenuOpen(true)}
+                                    className="w-8.5 h-8.5 rounded-full border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] text-zinc-200 flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer shrink-0"
+                                    title="Add to chat (Photos, Videos, Files, Memory)"
+                                    aria-label="Add to chat"
+                                >
+                                    <RiAddLine size={18} className="shrink-0" />
+                                </button>
+
+                                {/* Web Search Toggle */}
+                                <button
+                                    type="button"
+                                    onClick={onToggleWebSearch}
+                                    className={`h-8.5 px-3 rounded-full border flex items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
+                                        webSearch 
+                                            ? 'bg-[#20b8cd]/15 border-[#20b8cd]/40 text-[#5ce1f2] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
+                                            : 'bg-white/[0.06] border-white/15 text-zinc-400 hover:text-zinc-200'
+                                    }`}
+                                    title={webSearch ? "Web Search: ON (Using Tavily for live internet facts)" : "Web Search: OFF (Pure AI model knowledge)"}
+                                >
+                                    <RiGlobalLine size={14} className={webSearch ? "text-[#20b8cd]" : "text-zinc-400"} />
+                                    <span className="text-xs">Web</span>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[#20b8cd] animate-pulse' : 'bg-zinc-600'}`} />
+                                </button>
+
+                                {/* Model Selector */}
+                                <ModelSelectorDropdown
+                                    selectedModel={selectedModel}
+                                    onModelChange={onModelChange}
+                                    compact={true}
+                                    placement="top"
+                                />
+                            </div>
+
+                            {/* Right Side Actions */}
+                            <div className="flex items-center gap-2 shrink-0">
+                                {/* Microphone Button */}
+                                <button
+                                    type="button"
+                                    onClick={handleToggleVoiceInput}
+                                    className={`p-2 rounded-full transition-all cursor-pointer ${
+                                        isListening 
+                                            ? 'text-rose-500 bg-rose-500/15 animate-pulse ring-2 ring-rose-500/30' 
+                                            : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'
+                                    }`}
+                                    title={isListening ? "Listening... Click to stop" : "Voice input (Speech to text)"}
+                                >
+                                    {isListening ? <RiMicFill size={19} className="text-rose-500" /> : <RiMicLine size={19} />}
+                                </button>
+
+                                {/* Send / Queue Button */}
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        setIsFullScreenEditor(false);
+                                        onSubmit(e);
+                                    }}
+                                    disabled={!input.trim() && files.length === 0}
+                                    className={`px-4 py-2 h-9 flex items-center justify-center rounded-full transition-all gap-1.5 text-xs font-bold ${
+                                        input.trim() || files.length > 0 
+                                            ? isResponding
+                                                ? 'bg-[#20b8cd] hover:bg-[#1ca6b9] text-zinc-950 shadow-md cursor-pointer'
+                                                : 'bg-white text-black hover:bg-zinc-200 shadow-lg hover:scale-105 cursor-pointer' 
+                                            : 'bg-zinc-800 text-zinc-600 opacity-50 cursor-not-allowed'
+                                    }`}
+                                    title={isResponding ? "Add message to queue" : "Send message"}
+                                >
+                                    {isResponding ? (
+                                        <>
+                                            <RiPlayListAddLine size={15} />
+                                            <span>Queue</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>Send</span>
+                                            <RiArrowUpLine size={16} />
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
