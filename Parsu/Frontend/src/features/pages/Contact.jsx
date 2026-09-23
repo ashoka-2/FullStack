@@ -16,6 +16,7 @@ import {
 import InfoPageLayout from './InfoPageLayout';
 import { useDispatch } from 'react-redux';
 import { addToast } from '../../utils/toast.slice';
+import customAxios from '../../utils/axios';
 
 const ContactCard = ({ icon: Icon, title, description, action, gradient }) => (
   <div className="group p-5 rounded-2xl bg-white dark:bg-[#0e0f10] border border-zinc-200/60 dark:border-white/5 hover:border-cyan-500/30 dark:hover:border-cyan-500/20 transition-all shadow-sm">
@@ -32,16 +33,25 @@ const Contact = () => {
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) {
       dispatch(addToast({ message: 'Please fill in all required fields.', type: 'error' }));
       return;
     }
-    // Simulate form submission
-    setSubmitted(true);
-    dispatch(addToast({ message: 'Message sent successfully! We\'ll get back to you soon.', type: 'success' }));
+
+    setSubmitting(true);
+    try {
+      await customAxios.post('/api/contact', formData);
+      setSubmitted(true);
+      dispatch(addToast({ message: 'Message sent successfully! We\'ll get back to you soon.', type: 'success' }));
+    } catch (err) {
+      dispatch(addToast({ message: err.response?.data?.message || 'Failed to send message. Please try again.', type: 'error' }));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

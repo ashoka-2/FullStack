@@ -72,7 +72,7 @@ const TermsOfService = () => {
           </Section>
 
           <Section icon={RiCopyrightLine} title="5. Intellectual Property">
-            <p>The Parsu platform, including its design, code, and brand assets, is protected by intellectual property laws.</p>
+            <p>The PARSU AI platform, including its design, code, and brand assets, is protected by intellectual property laws.</p>
             <p>You retain full ownership of your uploaded documents, images, videos, and chat content.</p>
             <p>Vector embeddings generated from your documents are considered derived data and are treated with the same privacy as the source material.</p>
           </Section>

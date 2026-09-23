@@ -663,7 +663,10 @@ const Auth = ({ initialMode }) => {
           <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
             <ParsuLogo size={16} className="text-white" />
           </div>
-          <span className="text-sm font-bold tracking-tight text-zinc-900 dark:text-white">Parsu</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-extrabold tracking-tight text-zinc-900 dark:text-white">PARSU</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[#20b8cd] px-1 rounded">AI</span>
+          </div>
         </div>
       </div>
 

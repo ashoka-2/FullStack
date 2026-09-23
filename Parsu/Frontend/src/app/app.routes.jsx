@@ -15,6 +15,7 @@ import PasswordSettingsPage from "../features/auth/pages/settings/PasswordSettin
 import ApiKeysSettingsPage from "../features/auth/pages/settings/ApiKeysSettingsPage";
 import MascotSettingsPage from "../features/auth/pages/settings/MascotSettingsPage";
 import VoiceSettingsPage from "../features/auth/pages/settings/VoiceSettingsPage";
+import SubscriptionSettingsPage from "../features/auth/pages/settings/SubscriptionSettingsPage";
 
 // Info Pages
 import PrivacyPolicy from "../features/pages/PrivacyPolicy";
@@ -22,16 +23,21 @@ import TermsOfService from "../features/pages/TermsOfService";
 import About from "../features/pages/About";
 import Contact from "../features/pages/Contact";
 import FAQ from "../features/pages/FAQ";
+import Pricing from "../features/pages/Pricing";
+import SystemStatus from "../features/pages/SystemStatus";
+import Changelog from "../features/pages/Changelog";
+import NotFound from "../features/pages/NotFound";
 import MaintenanceMode from "../features/pages/MaintenanceMode";
+import AdminLayout from "../features/admin/components/AdminLayout";
+import AdminDashboardPage from "../features/admin/pages/AdminDashboardPage";
+import AdminUsersPage from "../features/admin/pages/AdminUsersPage";
+import AdminNewsletterPage from "../features/admin/pages/AdminNewsletterPage";
+import AdminContactsPage from "../features/admin/pages/AdminContactsPage";
+import AdminApiUsagePage from "../features/admin/pages/AdminApiUsagePage";
+import AdminPricingPage from "../features/admin/pages/AdminPricingPage";
+import AdminProtected from "../features/admin/components/AdminProtected";
 
-import { useSelector } from "react-redux";
 import LandingPage from "../features/pages/LandingPage";
-
-// Conditional root page: shows Dashboard for logged-in users, LandingPage for guests/Google reviewers
-const RootPage = () => {
-    const user = useSelector((state) => state.auth.user);
-    return user ? <Dashboard /> : <LandingPage />;
-};
 
 export const router = createBrowserRouter([
     {
@@ -52,11 +58,19 @@ export const router = createBrowserRouter([
             },
             {
                 path: "/",
-                element: <RootPage />
+                element: <LandingPage />
+            },
+            {
+                path: "/ai",
+                element: <Dashboard />
+            },
+            {
+                path: "/dashboard",
+                element: <Navigate to="/ai" replace />
             },
             {
                 path: "/welcome",
-                element: <LandingPage />
+                element: <Navigate to="/" replace />
             },
             {
                 path: "/chat/:id",
@@ -78,6 +92,19 @@ export const router = createBrowserRouter([
                 path: "/settings",
                 element: <Protected><Settings /></Protected>
             },
+            {
+                path: "/admin",
+                element: <AdminProtected><AdminLayout /></AdminProtected>,
+                children: [
+                    { index: true, element: <Navigate to="/admin/dashboard" replace /> },
+                    { path: "dashboard", element: <AdminDashboardPage /> },
+                    { path: "users", element: <AdminUsersPage /> },
+                    { path: "pricing", element: <AdminPricingPage /> },
+                    { path: "newsletter", element: <AdminNewsletterPage /> },
+                    { path: "contacts", element: <AdminContactsPage /> },
+                    { path: "api-usage", element: <AdminApiUsagePage /> }
+                ]
+            },
             // Settings Sub-Pages
             {
                 path: "/settings/profile",
@@ -98,6 +125,10 @@ export const router = createBrowserRouter([
             {
                 path: "/settings/voice",
                 element: <Protected><VoiceSettingsPage /></Protected>
+            },
+            {
+                path: "/settings/subscription",
+                element: <Protected><SubscriptionSettingsPage /></Protected>
             },
             // Info / Legal Pages (public)
             {
@@ -121,6 +152,18 @@ export const router = createBrowserRouter([
                 element: <FAQ />
             },
             {
+                path: "/pricing",
+                element: <Pricing />
+            },
+            {
+                path: "/status",
+                element: <SystemStatus />
+            },
+            {
+                path: "/changelog",
+                element: <Changelog />
+            },
+            {
                 path: "/maintenance",
                 element: <MaintenanceMode />
             },
@@ -134,8 +177,12 @@ export const router = createBrowserRouter([
                 element: <Navigate to="/social-connections" />
             },
             {
+                path: "/404",
+                element: <NotFound />
+            },
+            {
                 path: "*",
-                element: <Navigate to="/" />
+                element: <NotFound />
             }
         ]
     }

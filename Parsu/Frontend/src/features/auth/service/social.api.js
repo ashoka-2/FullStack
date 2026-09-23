@@ -20,7 +20,7 @@ export async function connectManual({ platform, accessToken, userId, username })
     return response.data;
 }
 
-export async function publishMedia({ platform, platforms, mediaUrl, mediaUrls, caption, messageId, postMode = "together", isVideo }) {
+export async function publishMedia({ platform, platforms, mediaUrl, mediaUrls, caption, messageId, postMode = "together", isVideo, scheduledTime = null }) {
     const response = await api.post("/api/social/publish", { 
         platform, 
         platforms: platforms || (platform ? [platform] : ["instagram"]),
@@ -29,7 +29,8 @@ export async function publishMedia({ platform, platforms, mediaUrl, mediaUrls, c
         caption, 
         messageId, 
         postMode, 
-        isVideo 
+        isVideo,
+        scheduledTime
     });
     return response.data;
 }
@@ -44,3 +45,14 @@ export async function generateCaption({ mediaUrl, mediaUrls, context, platform, 
     });
     return response.data;
 }
+
+export async function uploadSocialMediaFiles(files) {
+    const formData = new FormData();
+    const fileList = Array.isArray(files) ? files : [files];
+    fileList.forEach(f => formData.append("files", f));
+    const response = await api.post("/api/social/upload-media", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
+    return response.data;
+}
+

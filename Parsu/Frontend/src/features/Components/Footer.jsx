@@ -18,7 +18,10 @@ import {
   RiLinkedinBoxLine,
   RiYoutubeLine,
   RiDiscordLine,
-  RiCheckboxCircleLine
+  RiCheckboxCircleLine,
+  RiPriceTag3Line,
+  RiPulseLine,
+  RiHistoryLine
 } from '@remixicon/react';
 
 import ParsuLogo from './ParsuLogo';
@@ -28,8 +31,10 @@ const Footer = () => {
 
   const productLinks = [
     { to: '/', label: 'Search', icon: RiSearchLine },
+    { to: '/pricing', label: 'Pricing Plans', icon: RiPriceTag3Line },
     { to: '/library', label: 'Library', icon: RiBookOpenLine },
     { to: '/social-connections', label: 'Social Hub', icon: RiShareLine },
+    { to: '/changelog', label: 'Changelog', icon: RiHistoryLine },
     { to: '/settings', label: 'Settings', icon: RiSettings3Line },
   ];
 
@@ -42,6 +47,7 @@ const Footer = () => {
     { to: '/about', label: 'About Us', icon: RiInformationLine },
     { to: '/contact', label: 'Contact', icon: RiMailLine },
     { to: '/faq', label: 'FAQ', icon: RiQuestionLine },
+    { to: '/status', label: 'System Status', icon: RiPulseLine },
   ];
 
   const socialLinks = [
@@ -66,18 +72,25 @@ const Footer = () => {
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white">
                 <ParsuLogo size={19} className="text-white" />
               </div>
-              <span className="text-base font-bold text-zinc-900 dark:text-white tracking-tight">Parsu</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-base font-extrabold text-zinc-900 dark:text-white tracking-tight">PARSU</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[#20b8cd] px-1.5 py-0.5 rounded">AI</span>
+              </div>
             </div>
             <p className="text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-xs mb-5">
               AI-powered research assistant with multi-model intelligence, RAG search, and universal social publishing.
             </p>
             
-            {/* System Status Indicator */}
+            {/* System Status Indicator — clickable to /status */}
             <div className="flex items-center gap-2 text-[11px] text-zinc-400 dark:text-zinc-500">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                <RiCheckboxCircleLine className="w-3 h-3 text-emerald-500" />
+              <Link 
+                to="/status" 
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all cursor-pointer group"
+                title="View live service uptime & health"
+              >
+                <RiCheckboxCircleLine className="w-3 h-3 text-emerald-500 group-hover:scale-110 transition-transform" />
                 <span className="text-emerald-600 dark:text-emerald-400 font-semibold">All Systems Operational</span>
-              </div>
+              </Link>
             </div>
           </div>
 

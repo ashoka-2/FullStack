@@ -3,6 +3,7 @@ import chatModel from "../models/chat.model.js";
 import SocialConnection from "../models/social.model.js";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../services/mail.service.js";
+import redisClient, { isRedisReady } from "../config/redis.js";
 
 export async function registerUser(req, res) {
   try {
@@ -334,6 +335,7 @@ export async function loginUser(req, res) {
       id: user._id,
       username: user.username,
       email: user.email,
+      role: user.role || "user",
     },
     process.env.JWT_SECRET,
     {
@@ -382,15 +384,48 @@ export async function getMe(req,res){
 }
 
 export async function logoutUser(req, res) {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-  });
-  res.status(200).json({
-    success: true,
-    message: "User logged out successfully",
-  });
+  const bearer =
+    req.headers.authorization && req.headers.authorization.startsWith("Bearer ")
+      ? req.headers.authorization.slice(7)
+      : null;
+  const token = req.cookies?.token || bearer || req.body?.token;
+
+  try {
+    if (token && redisClient && isRedisReady()) {
+      let ttl = 7 * 24 * 60 * 60; // 7 days fallback
+      try {
+        const decoded = jwt.decode(token);
+        if (decoded && decoded.exp) {
+          const remaining = decoded.exp - Math.floor(Date.now() / 1000);
+          if (remaining > 0) ttl = remaining;
+        }
+      } catch (e) {
+        // use default 7 days TTL
+      }
+      await redisClient.set(`blacklist_${token}`, "true", "EX", ttl);
+      console.log(`✅ [Auth] Token blacklisted successfully in Redis (TTL: ${ttl}s)`);
+    }
+
+    const isProd = process.env.NODE_ENV === "production";
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+    });
+    res.clearCookie("token");
+
+    res.status(200).json({
+      success: true,
+      message: "User logged out successfully",
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error during logout",
+      error: error.message,
+    });
+  }
 }
 
 // ============================================================
@@ -509,7 +544,7 @@ export async function googleCallback(req, res) {
     }
 
     const token = jwt.sign(
-      { id: user._id, username: user.username, email: user.email },
+      { id: user._id, username: user.username, email: user.email, role: user.role || "user" },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );

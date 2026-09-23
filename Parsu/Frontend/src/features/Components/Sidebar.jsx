@@ -15,7 +15,8 @@ import {
   RiSunLine,
   RiMoonClearLine,
   RiApps2Line,
-  RiCloseLine
+  RiCloseLine,
+  RiShieldUserLine
 } from '@remixicon/react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router';
@@ -91,10 +92,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   }, [user]);
 
   const menuItems = [
-    { icon: ParsuLogo, label: 'Search', path: '/', active: location.pathname === '/', isProtected: false },
+    { icon: ParsuLogo, label: 'Search', path: '/ai', active: location.pathname === '/', isProtected: false },
     { icon: RiHistoryLine, label: 'Chats', path: '/library', active: location.pathname === '/library', isProtected: true },
     { icon: RiApps2Line, label: 'Social Hub', path: '/social-connections', active: location.pathname === '/social-connections', isProtected: true },
     { icon: RiSettings4Line, label: 'Settings', path: '/settings', active: location.pathname === '/settings', isProtected: true },
+    ...(user?.role === 'admin' ? [{ icon: RiShieldUserLine, label: 'Admin Portal', path: '/admin', active: location.pathname === '/admin', isProtected: true }] : []),
   ];
 
   const handleNavClick = (e, item) => {
@@ -195,12 +197,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           <Link
             to="/"
             onClick={closeMobileSidebar}
-            className="flex items-center gap-2.5 group cursor-pointer"
+            className="flex items-center gap-2 group cursor-pointer"
           >
             <ParsuLogo className="w-6 h-6 text-[#20b8cd] group-hover:scale-105 transition-transform shrink-0" />
-            <span className="font-bold text-[16px] sm:text-[17px] tracking-tight text-zinc-900 dark:text-white">
-              Parsu
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-[16px] sm:text-[17px] tracking-tight text-zinc-900 dark:text-white">
+                PARSU
+              </span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-black tracking-wider text-black bg-[#20b8cd] shadow-xs">
+                AI
+              </span>
+            </div>
           </Link>
 
           {/* Mobile Close Button */}

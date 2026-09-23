@@ -1,4 +1,5 @@
 import React from 'react';
+import MatrixOrb from '../../Components/rare-ui/MatrixOrb';
 
 const PulseBase = ({ className }) => (
     <div className={`bg-zinc-800/40 rounded animate-pulse ${className}`} />
@@ -45,16 +46,21 @@ export const MessagesSkeleton = () => (
 );
 
 export const ThinkingSkeleton = () => (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="flex flex-col items-center sm:items-start gap-4 py-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-[#60A6AF]/20 flex items-center justify-center">
-                 <div className="w-2 h-2 rounded-full bg-[#60A6AF] animate-ping" />
+            <MatrixOrb size={44} state="thinking" color="#20b8cd" dots={10} />
+            <div className="flex flex-col">
+                <span className="text-[13px] font-bold text-zinc-800 dark:text-zinc-200 tracking-wide">
+                    Parsu AI is thinking...
+                </span>
+                <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
+                    Reasoning and formulating response
+                </span>
             </div>
-            <span className="text-[14px] font-bold text-zinc-500 uppercase tracking-widest animate-pulse">Thinking...</span>
         </div>
-        <div className="space-y-3 pl-9">
-            <PulseBase className="w-full h-4 rounded-lg" />
-            <PulseBase className="w-[90%] h-4 rounded-lg" />
+        <div className="space-y-2.5 w-full pl-0 sm:pl-14">
+            <PulseBase className="w-full h-3.5 rounded-lg" />
+            <PulseBase className="w-[85%] h-3.5 rounded-lg" />
         </div>
     </div>
 );

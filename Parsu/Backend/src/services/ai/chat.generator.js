@@ -2,7 +2,7 @@ import { HumanMessage, SystemMessage, AIMessage, ToolMessage } from "@langchain/
 import axios from "axios";
 import { geminiChatPrimary, geminiVision1, geminiVision2, geminiChatFallback, mistralModel } from "./models.js";
 import { searchInternetTool } from "../Tools/search.tool.js";
-import { emailTool } from "../Tools/email.tool.js";
+import { emailTool, createEmailTool } from "../Tools/email.tool.js";
 import { postToSocialMediaTool } from "../Tools/socialMedia.tool.js";
 
 // Indian Standard Time context
@@ -15,10 +15,11 @@ const getCurrentTimeContext = () => {
 };
 
 const getTools = (userContext) => {
+  const userEmailTool = createEmailTool(userContext);
   const socialTool = postToSocialMediaTool(userContext);
-  const tools = [emailTool, socialTool];
+  const tools = [userEmailTool, socialTool];
   const map = {
-    emailTool,
+    emailTool: userEmailTool,
     post_to_social_media: socialTool,
     post_to_instagram: socialTool // backward compatibility
   };
@@ -177,15 +178,22 @@ export async function generateResponse(messages, onChunk, userContext) {
        - **LinkedIn** (Professional posts & media)
        - **Pinterest** (Pins to boards)
        - **TikTok** (Short-form videos)
-       - **YouTube** (Videos & Shorts)
+       - **YouTube** (Videos & Shorts — Note: YouTube API supports video/shorts uploads with native scheduling; Community Tab text posts are not supported by YouTube's API)
        
        When the user asks to post or upload to social media:
-       - Identify target platforms from their prompt (e.g., 'instagram', 'facebook', 'twitter', 'linkedin', or multiple platforms like ['instagram', 'twitter']).
+       - Identify target platforms from their prompt (e.g., 'youtube', 'instagram', 'facebook', 'twitter', 'linkedin', or multiple platforms like ['youtube', 'twitter']).
        - If user says 'all my accounts' or 'everywhere', pass platforms: ['all_connected'].
        - ALWAYS call 'post_to_social_media'. The tool will automatically check which accounts are connected.
-       - If any requested platform is NOT connected, the tool returns a clear explanation which you MUST relay to the user:
-         "The {platform} account is not connected, so couldn't post to it. Please connect your {platform} account in Social Hub (/social-connections)."
-       - If the platform IS connected, the tool publishes the post and returns the media ID and confirmation.
+       - **Scheduling (Native Platform Scheduled Releases)**:
+         - If the user specifies a future time or date to post (e.g., "post to YouTube tomorrow at 5pm", "schedule this video for Friday 10 AM"):
+         - Parse the future time into an ISO 8601 string (e.g., "2026-09-24T17:00:00Z") and pass it as 'scheduledTime'.
+         - For YouTube, this uses YouTube's native scheduled release feature: YouTube accepts the video upload right now and automatically publishes it publicly at that exact time.
+       - **CRITICAL ANTI-HALLUCINATION & LIVE LINKS**:
+         - NEVER claim a post or video was uploaded unless the tool returned 'SUCCESS'.
+         - ALWAYS provide the exact clickable live link returned by the tool (e.g. https://www.youtube.com/watch?v=... or https://x.com/...) in your response so the user can verify their post immediately!
+         - If any requested platform is NOT connected, the tool returns a clear explanation which you MUST relay to the user:
+           "The {platform} account is not connected, so couldn't post to it. Please connect your {platform} account in Social Hub (/social-connections)."
+         - If the platform IS connected, the tool publishes the post and returns the media ID, scheduled time (if any), and live link.
 
     3. Carousel (Together) vs Separate Posting Modes:
        - **Together / Carousel**: If user says "upload together", "as a carousel", "in an album", or attaches multiple images without specifying, set postMode: 'together'.

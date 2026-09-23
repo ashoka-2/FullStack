@@ -5,7 +5,7 @@ import SocialConnection from "../../models/social.model.js";
 import * as z from "zod";
 
 export const postToSocialMediaTool = (userContext) => tool(
-  async ({ platforms, mediaUrls, postMode = "together", caption }) => {
+  async ({ platforms, mediaUrls, postMode = "together", caption, scheduledTime }) => {
     try {
       const userId = userContext?._id?.toString() || userContext?.id;
       if (!userId) {
@@ -55,13 +55,14 @@ export const postToSocialMediaTool = (userContext) => tool(
         }
       }
 
-      console.log(`🚀 [Social-Tool] Invoked for platforms: [${targetPlatforms.join(", ")}], Mode: ${postMode}, Media Count: ${resolvedMediaItems.length}`);
+      console.log(`🚀 [Social-Tool] Invoked for platforms: [${targetPlatforms.join(", ")}], Mode: ${postMode}, Media Count: ${resolvedMediaItems.length}, Scheduled: ${scheduledTime || 'none'}`);
 
       // Finalize caption with relevant tags if missing
       let finalCaption = caption || "Posted via Parsu AI 🚀";
       if (!finalCaption.includes("#")) {
         const platformTags = targetPlatforms.includes("instagram") ? "#Reels #Trending #Viral" 
           : targetPlatforms.includes("twitter") ? "#AI #Trending" 
+          : targetPlatforms.includes("youtube") ? "#Shorts #Video #Trending"
           : "#SocialMedia #Update";
         finalCaption += `\n\n${platformTags} #Parsu`;
       }
@@ -72,6 +73,7 @@ export const postToSocialMediaTool = (userContext) => tool(
         mediaItems: resolvedMediaItems,
         caption: finalCaption,
         postMode: postMode || "together",
+        scheduledTime: scheduledTime || null,
         userId,
         messageId: null
       });
@@ -81,7 +83,9 @@ export const postToSocialMediaTool = (userContext) => tool(
 
       if (results.successful?.length > 0) {
         results.successful.forEach(s => {
-          outputLines.push(`✅ SUCCESS: The content was successfully posted to **${s.platform.toUpperCase()}**! (ID: \`${s.mediaId}\` - Mode: ${s.postType})`);
+          const liveLink = s.url ? `\n🔗 **Live Post Link:** [${s.url}](${s.url})` : '';
+          const schedNotice = s.scheduledAt ? ` (Scheduled to go live at: ${s.scheduledAt})` : '';
+          outputLines.push(`✅ **${s.platform.toUpperCase()}**: Successfully uploaded and published! (ID: \`${s.mediaId}\`${schedNotice})${liveLink}`);
         });
       }
 
@@ -110,12 +114,13 @@ export const postToSocialMediaTool = (userContext) => tool(
   },
   {
     name: "post_to_social_media",
-    description: "Publishes photos, videos, or carousel albums to one or multiple connected social media platforms (Instagram, Facebook, Twitter/X, LinkedIn, Pinterest, TikTok, YouTube). Automatically detects uploaded images/videos from the chat. Supports posting together as a Carousel/Album or separately one-by-one. Informs the user clearly if any requested platform is not connected.",
+    description: "Publishes photos, videos, or carousel albums to one or multiple connected social media platforms (Instagram, Facebook, Twitter/X, LinkedIn, Pinterest, TikTok, YouTube). Supports native platform scheduling (e.g. YouTube scheduled video release). Informs the user clearly with the exact live link upon success.",
     schema: z.object({
-      platforms: z.array(z.string()).describe("List of target platforms (e.g. ['instagram', 'facebook'], ['twitter'], or ['all_connected'])"),
+      platforms: z.array(z.string()).describe("List of target platforms (e.g. ['youtube'], ['instagram', 'facebook'], ['twitter'], or ['all_connected'])"),
       mediaUrls: z.array(z.string()).optional().describe("Array of media URLs to publish. If omitted, automatically uses all uploaded photos/videos in the chat."),
       postMode: z.enum(["together", "separately"]).default("together").describe("Whether to post images together as a Carousel/Album ('together') or upload them separately one-by-one ('separately')."),
-      caption: z.string().describe("A captivating, viral caption with relevant trending hashtags (either user's caption or AI-crafted based on image contents).")
+      caption: z.string().describe("A captivating, viral caption with relevant trending hashtags (either user's caption or AI-crafted based on image contents)."),
+      scheduledTime: z.string().optional().describe("Optional ISO timestamp or future date/time for scheduled release (e.g. YouTube scheduled video release).")
     })
   }
 );

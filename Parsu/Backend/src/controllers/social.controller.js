@@ -3,6 +3,7 @@ import messageModel from "../models/message.model.js";
 import { postMediaToInstagram } from "../services/instagram.service.js";
 import { publishToSocialPlatforms } from "../services/socialPublisher.service.js";
 import { geminiChatPrimary } from "../services/ai/models.js";
+import { uploadFile } from "../services/imagekit.service.js";
 import axios from "axios";
 
 // ============================================================
@@ -92,19 +93,65 @@ const PLATFORMS = {
             const ch = res.data.items?.[0];
             return { id: ch?.id || "", username: ch?.snippet?.title || "", picture: ch?.snippet?.thumbnails?.default?.url || "" };
         }
+    },
+    google: {
+        name: "Google Workspace",
+        authUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+        tokenUrl: "https://oauth2.googleapis.com/token",
+        scopes: "openid profile email https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.file",
+        getProfile: async (accessToken) => {
+            const res = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            return { id: res.data.id, username: res.data.email || res.data.name, picture: res.data.picture || "" };
+        }
     }
 };
 
 // Map platform → env var keys
 function getClientCredentials(platform) {
+    const backendUrl = (process.env.BACKEND_URL || (process.env.NODE_ENV === 'production' ? "https://parsuai.onrender.com" : "http://localhost:3000")).replace(/\/+$/, "");
     const map = {
-        instagram: { clientId: process.env.META_APP_ID, clientSecret: process.env.META_APP_SECRET, redirectUri: process.env.META_REDIRECT_URI },
-        facebook: { clientId: process.env.META_APP_ID, clientSecret: process.env.META_APP_SECRET, redirectUri: process.env.FACEBOOK_REDIRECT_URI },
-        pinterest: { clientId: process.env.PINTEREST_CLIENT_ID, clientSecret: process.env.PINTEREST_CLIENT_SECRET, redirectUri: process.env.PINTEREST_REDIRECT_URI },
-        twitter: { clientId: process.env.TWITTER_CLIENT_ID, clientSecret: process.env.TWITTER_CLIENT_SECRET, redirectUri: process.env.TWITTER_REDIRECT_URI },
-        tiktok: { clientId: process.env.TIKTOK_CLIENT_KEY, clientSecret: process.env.TIKTOK_CLIENT_SECRET, redirectUri: process.env.TIKTOK_REDIRECT_URI },
-        linkedin: { clientId: process.env.LINKEDIN_CLIENT_ID, clientSecret: process.env.LINKEDIN_CLIENT_SECRET, redirectUri: process.env.LINKEDIN_REDIRECT_URI },
-        youtube: { clientId: process.env.YOUTUBE_CLIENT_ID, clientSecret: process.env.YOUTUBE_CLIENT_SECRET, redirectUri: process.env.YOUTUBE_REDIRECT_URI }
+        instagram: { 
+            clientId: process.env.META_APP_ID, 
+            clientSecret: process.env.META_APP_SECRET, 
+            redirectUri: process.env.META_REDIRECT_URI || `${backendUrl}/api/social/callback/instagram` 
+        },
+        facebook: { 
+            clientId: process.env.META_APP_ID, 
+            clientSecret: process.env.META_APP_SECRET, 
+            redirectUri: process.env.FACEBOOK_REDIRECT_URI || `${backendUrl}/api/social/callback/facebook` 
+        },
+        pinterest: { 
+            clientId: process.env.PINTEREST_CLIENT_ID, 
+            clientSecret: process.env.PINTEREST_CLIENT_SECRET, 
+            redirectUri: process.env.PINTEREST_REDIRECT_URI || `${backendUrl}/api/social/callback/pinterest` 
+        },
+        twitter: { 
+            clientId: process.env.TWITTER_CLIENT_ID, 
+            clientSecret: process.env.TWITTER_CLIENT_SECRET, 
+            redirectUri: process.env.TWITTER_REDIRECT_URI || `${backendUrl}/api/social/callback/twitter` 
+        },
+        tiktok: { 
+            clientId: process.env.TIKTOK_CLIENT_KEY, 
+            clientSecret: process.env.TIKTOK_CLIENT_SECRET, 
+            redirectUri: process.env.TIKTOK_REDIRECT_URI || `${backendUrl}/api/social/callback/tiktok` 
+        },
+        linkedin: { 
+            clientId: process.env.LINKEDIN_CLIENT_ID, 
+            clientSecret: process.env.LINKEDIN_CLIENT_SECRET, 
+            redirectUri: process.env.LINKEDIN_REDIRECT_URI || `${backendUrl}/api/social/callback/linkedin` 
+        },
+        youtube: { 
+            clientId: process.env.YOUTUBE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID, 
+            clientSecret: process.env.YOUTUBE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET, 
+            redirectUri: process.env.YOUTUBE_REDIRECT_URI || `${backendUrl}/api/social/callback/youtube` 
+        },
+        google: { 
+            clientId: process.env.GOOGLE_CLIENT_ID, 
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET, 
+            redirectUri: process.env.GOOGLE_WORKSPACE_REDIRECT_URI || `${backendUrl}/api/social/callback/google` 
+        }
     };
     return map[platform] || {};
 }
@@ -175,7 +222,7 @@ export async function startOAuthFlow(req, res) {
             authUrl += "&access_type=offline&prompt=consent";
         }
 
-        res.status(200).json({ success: true, authUrl });
+        res.status(200).json({ success: true, authUrl, url: authUrl });
     } catch (error) {
         console.error("Start OAuth Flow Error:", error);
         res.status(500).json({ success: false, message: "Failed to start OAuth flow" });
@@ -190,7 +237,7 @@ export async function handleOAuthCallback(req, res) {
     try {
         const { platform } = req.params;
         const { code, state } = req.query;
-        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        const frontendUrl = (process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? "https://parsuai.vercel.app" : "http://localhost:5173")).replace(/\/+$/, "");
 
         if (!code || !state) {
             return res.redirect(`${frontendUrl}/social-connections?error=missing_code`);
@@ -396,7 +443,7 @@ async function exchangeCodeForToken(platform, code, creds, config) {
  */
 export async function publishContent(req, res) {
     try {
-        const { platform, platforms, mediaUrl, mediaUrls, caption, messageId, postMode = "together" } = req.body;
+        const { platform, platforms, mediaUrl, mediaUrls, caption, messageId, postMode = "together", scheduledTime = null } = req.body;
         const userId = req.user.id || req.user._id;
 
         // Resolve media items
@@ -418,6 +465,7 @@ export async function publishContent(req, res) {
             mediaItems: resolvedMediaItems,
             caption: caption || "Shared via Parsu AI 🚀",
             postMode,
+            scheduledTime,
             userId,
             messageId
         });
@@ -488,3 +536,50 @@ Return ONLY the ready-to-post caption text, without any quotes, markdown headers
         return res.status(500).json({ success: false, message: err.message || "Failed to generate caption" });
     }
 }
+
+/**
+ * POST /api/social/upload-media
+ * Uploads media files (photos/videos) to ImageKit CDN specifically for social publishing
+ */
+export async function uploadSocialMedia(req, res) {
+    try {
+        const files = req.files || (req.file ? [req.file] : []);
+        if (!files || files.length === 0) {
+            return res.status(400).json({ success: false, message: "No media files provided" });
+        }
+
+        const uploadedMedia = [];
+        for (const file of files) {
+            const isVideo = file.mimetype?.startsWith("video/");
+            const folder = isVideo ? "parsu/videos" : "parsu/photos";
+            const uploadRes = await uploadFile({
+                buffer: file.buffer,
+                filename: file.originalname,
+                folder
+            });
+
+            if (uploadRes?.url) {
+                uploadedMedia.push({
+                    url: uploadRes.url,
+                    fileType: isVideo ? "video" : "image",
+                    mimetype: file.mimetype,
+                    name: file.originalname
+                });
+            }
+        }
+
+        if (uploadedMedia.length === 0) {
+            return res.status(500).json({ success: false, message: "Failed to upload any media files to CDN." });
+        }
+
+        return res.status(200).json({
+            success: true,
+            media: uploadedMedia,
+            url: uploadedMedia[0]?.url || ""
+        });
+    } catch (err) {
+        console.error("Social media upload error:", err);
+        return res.status(500).json({ success: false, message: err.message || "Failed to upload media" });
+    }
+}
+

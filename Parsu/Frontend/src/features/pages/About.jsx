@@ -29,7 +29,7 @@ const About = () => {
   return (
     <InfoPageLayout 
       title="About Us" 
-      subtitle="The Story & Technology Behind Parsu" 
+      subtitle="The Story & Technology Behind PARSU AI" 
       badge="Full-Stack AI Platform"
     >
 

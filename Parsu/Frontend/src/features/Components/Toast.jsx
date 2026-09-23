@@ -2,128 +2,174 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeToast } from '../../utils/toast.slice';
 import {
-  RiErrorWarningFill,
-  RiCheckboxCircleFill,
-  RiInformationFill,
-  RiCloseLine
+  RiErrorWarningLine,
+  RiCheckboxCircleLine,
+  RiInformationLine,
+  RiAlertLine,
+  RiCloseLine,
+  RiHardDrive2Line,
+  RiUserSharedLine,
+  RiArrowRightSLine
 } from '@remixicon/react';
 
-const Toast = ({ id, message, type }) => {
-    const dispatch = useDispatch();
-    const [isExiting, setIsExiting] = useState(false);
+/**
+ * HeroUI Pro Style Toast Component
+ * Features title, rich multi-line description, contextual indicator icon,
+ * soft variant styling (default, accent/info, success, warning, danger),
+ * and interactive action buttons at bottom-right.
+ */
+const ToastItem = ({ id, message, description, title, type = 'default', action, duration = 4500 }) => {
+  const dispatch = useDispatch();
+  const [isExiting, setIsExiting] = useState(false);
 
-    useEffect(() => {
-        const exitTimer = setTimeout(() => {
-            setIsExiting(true);
-        }, 2700); // Trigger exit animation slightly before 3000ms removal
+  useEffect(() => {
+    const exitTimer = setTimeout(() => {
+      setIsExiting(true);
+    }, Math.max(1000, duration - 300));
 
-        const removeTimer = setTimeout(() => {
-            dispatch(removeToast(id));
-        }, 3000); // 3000ms auto-dismiss lifecycle
+    const removeTimer = setTimeout(() => {
+      dispatch(removeToast(id));
+    }, duration);
 
-        return () => {
-            clearTimeout(exitTimer);
-            clearTimeout(removeTimer);
+    return () => {
+      clearTimeout(exitTimer);
+      clearTimeout(removeTimer);
+    };
+  }, [dispatch, id, duration]);
+
+  const handleDismiss = () => {
+    setIsExiting(true);
+    setTimeout(() => {
+      dispatch(removeToast(id));
+    }, 250);
+  };
+
+  const getVariantStyles = () => {
+    switch (type) {
+      case 'success':
+        return {
+          card: 'bg-white/95 dark:bg-[#121417]/95 border-emerald-500/30 dark:border-emerald-500/20 shadow-[0_12px_32px_rgba(16,185,129,0.12)]',
+          indicator: 'bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/15 border-emerald-500/20',
+          title: 'text-emerald-700 dark:text-emerald-400',
+          actionBtn: 'bg-emerald-500 text-white hover:bg-emerald-600 dark:bg-emerald-500/90 dark:hover:bg-emerald-500 text-white shadow-xs',
+          icon: <RiCheckboxCircleLine size={16} />
         };
-    }, [dispatch, id]);
+      case 'warning':
+        return {
+          card: 'bg-white/95 dark:bg-[#121417]/95 border-amber-500/30 dark:border-amber-500/20 shadow-[0_12px_32px_rgba(245,158,11,0.12)]',
+          indicator: 'bg-amber-500/10 text-amber-500 dark:bg-amber-500/15 border-amber-500/20',
+          title: 'text-amber-700 dark:text-amber-400',
+          actionBtn: 'bg-amber-500 text-black hover:bg-amber-600 font-bold shadow-xs',
+          icon: <RiAlertLine size={16} />
+        };
+      case 'danger':
+      case 'error':
+        return {
+          card: 'bg-white/95 dark:bg-[#121417]/95 border-rose-500/30 dark:border-rose-500/20 shadow-[0_12px_32px_rgba(244,63,94,0.12)]',
+          indicator: 'bg-rose-500/10 text-rose-500 dark:bg-rose-500/15 border-rose-500/20',
+          title: 'text-rose-700 dark:text-rose-400',
+          actionBtn: 'bg-rose-500 text-white hover:bg-rose-600 shadow-xs',
+          icon: <RiHardDrive2Line size={16} />
+        };
+      case 'info':
+      case 'accent':
+        return {
+          card: 'bg-white/95 dark:bg-[#121417]/95 border-cyan-500/30 dark:border-cyan-500/20 shadow-[0_12px_32px_rgba(32,184,205,0.14)]',
+          indicator: 'bg-cyan-500/10 text-[#20b8cd] dark:bg-cyan-500/15 border-cyan-500/20',
+          title: 'text-[#20b8cd]',
+          actionBtn: 'bg-[#20b8cd] text-black hover:bg-[#1da9bc] font-bold shadow-xs',
+          icon: <RiInformationLine size={16} />
+        };
+      default:
+        return {
+          card: 'bg-white/95 dark:bg-[#121417]/95 border-zinc-200/80 dark:border-white/10 shadow-[0_12px_32px_rgba(0,0,0,0.15)]',
+          indicator: 'bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-300 border-zinc-200 dark:border-white/10',
+          title: 'text-zinc-900 dark:text-white',
+          actionBtn: 'bg-zinc-200 text-zinc-800 hover:bg-zinc-300 dark:bg-white/10 dark:text-white dark:hover:bg-white/15',
+          icon: <RiUserSharedLine size={16} />
+        };
+    }
+  };
 
-    const handleManualDismiss = () => {
-        setIsExiting(true);
-        setTimeout(() => {
-            dispatch(removeToast(id));
-        }, 300); // wait for exit animation
-    };
+  const v = getVariantStyles();
+  const displayTitle = title || (type === 'error' ? 'Alert' : type === 'success' ? 'Success' : type === 'warning' ? 'Warning' : 'Notification');
+  const mainText = message || description || 'Operation completed';
+  const subText = description && message !== description ? description : null;
 
-    const getToastStyles = () => {
-        switch (type) {
-            case 'error':
-                return 'bg-white/95 dark:bg-neutral-900/95 border-red-500/40 text-zinc-900 dark:text-neutral-100 shadow-[0_10px_35px_rgba(239,68,68,0.15)]';
-            case 'success':
-                return 'bg-white/95 dark:bg-neutral-900/95 border-emerald-500/40 text-zinc-900 dark:text-neutral-100 shadow-[0_10px_35px_rgba(16,185,129,0.15)]';
-            case 'info':
-                return 'bg-white/95 dark:bg-neutral-900/95 border-blue-500/40 text-zinc-900 dark:text-neutral-100 shadow-[0_10px_35px_rgba(59,130,246,0.15)]';
-            default:
-                return 'bg-white/95 dark:bg-neutral-900/95 border-zinc-300/60 dark:border-zinc-700 text-zinc-900 dark:text-neutral-100 shadow-[0_10px_35px_rgba(0,0,0,0.1)]';
-        }
-    };
+  return (
+    <div
+      role="alert"
+      className={`relative pointer-events-auto flex items-start gap-3 p-3.5 sm:p-4 rounded-2xl border backdrop-blur-2xl transition-all duration-300 w-full sm:w-auto min-w-0 sm:min-w-[320px] max-w-[94vw] sm:max-w-[400px] ${
+        isExiting
+          ? 'opacity-0 translate-x-4 scale-95'
+          : 'opacity-100 translate-x-0 scale-100 animate-in fade-in slide-in-from-bottom-2'
+      } ${v.card}`}
+    >
+      {/* Leading Indicator Icon */}
+      <div className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center border ${v.indicator}`}>
+        {v.icon}
+      </div>
 
-    const getBadgeStyles = () => {
-        switch (type) {
-            case 'error':
-                return 'text-red-600 dark:text-red-400';
-            case 'success':
-                return 'text-emerald-600 dark:text-emerald-400';
-            case 'info':
-                return 'text-blue-600 dark:text-blue-400';
-            default:
-                return 'text-zinc-500 dark:text-zinc-400';
-        }
-    };
-
-    const getIconContainerStyles = () => {
-        switch (type) {
-            case 'error':
-                return 'bg-red-500/10 border-red-500/25 text-red-500';
-            case 'success':
-                return 'bg-emerald-500/10 border-emerald-500/25 text-emerald-500';
-            case 'info':
-                return 'bg-blue-500/10 border-blue-500/25 text-blue-500';
-            default:
-                return 'bg-zinc-500/10 border-zinc-500/25 text-zinc-500';
-        }
-    };
-
-    const getIcon = () => {
-        switch (type) {
-            case 'error':
-                return <RiErrorWarningFill className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />;
-            case 'success':
-                return <RiCheckboxCircleFill className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />;
-            case 'info':
-                return <RiInformationFill className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />;
-            default:
-                return <RiInformationFill className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />;
-        }
-    };
-
-    return (
-        <div 
-            className={`relative pointer-events-auto flex items-center gap-3 p-3 sm:p-3.5 pr-9 sm:pr-10 rounded-2xl border backdrop-blur-2xl transition-all duration-300 w-full sm:w-auto min-w-0 sm:min-w-[270px] max-w-[92vw] sm:max-w-[390px] shadow-xl ${
-                isExiting ? 'toast-slide-out' : 'toast-slide-in'
-            } ${getToastStyles()}`}
-        >
-            <div className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-xl border ${getIconContainerStyles()}`}>
-                {getIcon()}
-            </div>
-            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                <span className={`text-[9px] sm:text-[10px] font-sans uppercase font-black tracking-widest ${getBadgeStyles()}`}>
-                    {type === 'error' ? 'Alert' : type === 'success' ? 'Success' : 'Notice'}
-                </span>
-                <p className="text-[11px] sm:text-xs font-bold leading-snug font-sans break-words text-zinc-800 dark:text-neutral-200">
-                    {message}
-                </p>
-            </div>
-            <button 
-                onClick={handleManualDismiss}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer"
-                title="Dismiss"
-            >
-                <RiCloseLine className="w-4 h-4" />
-            </button>
+      {/* Content Area */}
+      <div className="flex-1 min-w-0 pr-6">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <span className={`text-xs font-bold tracking-tight ${v.title}`}>
+            {displayTitle}
+          </span>
         </div>
-    );
+        <p className="text-xs text-zinc-800 dark:text-zinc-200 font-medium leading-relaxed break-words">
+          {mainText}
+        </p>
+        {subText && (
+          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-normal break-words">
+            {subText}
+          </p>
+        )}
+
+        {/* Action Button (e.g., "Upgrade", "Billing", "Dismiss") */}
+        {action && (
+          <div className="mt-2.5 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                action.onPress?.();
+                handleDismiss();
+              }}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${v.actionBtn}`}
+            >
+              <span>{action.label || 'Action'}</span>
+              <RiArrowRightSLine size={13} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Dismiss button */}
+      <button
+        type="button"
+        onClick={handleDismiss}
+        className="absolute right-2.5 top-2.5 w-6 h-6 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+        aria-label="Dismiss notification"
+      >
+        <RiCloseLine size={15} />
+      </button>
+    </div>
+  );
 };
 
 export const ToastContainer = () => {
-    const toasts = useSelector((state) => state.toast.toasts);
+  const toasts = useSelector((state) => state.toast.toasts);
 
-    return (
-        <div className="fixed bottom-4 sm:bottom-6 left-3 right-3 sm:left-auto sm:right-6 z-[9999] pointer-events-none flex flex-col items-center sm:items-end gap-2">
-            {toasts.map((toast) => (
-                <Toast key={toast.id} {...toast} />
-            ))}
-        </div>
-    );
+  return (
+    <div 
+      aria-live="polite" 
+      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] pointer-events-none flex flex-col items-end gap-2.5 max-h-[85vh] overflow-hidden"
+    >
+      {toasts.map((t) => (
+        <ToastItem key={t.id} {...t} />
+      ))}
+    </div>
+  );
 };
 
-export default Toast;
+export default ToastItem;

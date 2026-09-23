@@ -1,4 +1,5 @@
 import { Router } from "express";
+import multer from "multer";
 import { authUser } from "../middlewares/auth.middleware.js";
 import {
     getConnectedAccounts,
@@ -7,8 +8,14 @@ import {
     disconnectAccount,
     connectManual,
     publishContent,
-    generateCaption
+    generateCaption,
+    uploadSocialMedia
 } from "../controllers/social.controller.js";
+
+const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit for high-res video
+});
 
 const socialRouter = Router();
 
@@ -19,6 +26,7 @@ socialRouter.get("/connect/:platform", authUser, startOAuthFlow);
 socialRouter.post("/connect-manual", authUser, connectManual);
 socialRouter.post("/publish", authUser, publishContent);
 socialRouter.post("/generate-caption", authUser, generateCaption);
+socialRouter.post("/upload-media", authUser, upload.array("files", 10), uploadSocialMedia);
 
 // OAuth callbacks (no auth middleware — user returns from external platform)
 socialRouter.get("/callback/:platform", handleOAuthCallback);

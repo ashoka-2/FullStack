@@ -43,6 +43,43 @@ const userSchema = new mongoose.Schema({
         type:Boolean,
         default:false
     },
+    role:{
+        type:String,
+        enum:["user","admin"],
+        default:"user"
+    },
+    subscription: {
+        plan: {
+            type: String,
+            enum: ['free', 'starter', 'pro', 'enterprise'],
+            default: 'free'
+        },
+        billingCycle: {
+            type: String,
+            enum: ['monthly', 'annual', 'lifetime', 'none'],
+            default: 'none'
+        },
+        status: {
+            type: String,
+            enum: ['active', 'inactive', 'cancelled', 'past_due'],
+            default: 'active'
+        },
+        startDate: { type: Date, default: Date.now },
+        endDate: { type: Date },
+        razorpayOrderId: { type: String, default: '' },
+        razorpayPaymentId: { type: String, default: '' },
+        amount: { type: Number, default: 0 },
+        currency: { type: String, default: 'INR' }
+    },
+    usageQuotas: {
+        queriesToday: { type: Number, default: 0 },
+        queriesLimit: { type: Number, default: 50 }, // 50 for free, -1 for unlimited
+        lastQueryReset: { type: Date, default: Date.now },
+        documentUploadsToday: { type: Number, default: 0 },
+        documentUploadsLimit: { type: Number, default: 2 }, // 2 for free, 50 for pro, -1 for enterprise
+        socialPostsThisMonth: { type: Number, default: 0 },
+        socialPostsLimit: { type: Number, default: 10 } // 10 for free, -1 for pro
+    },
     resetPasswordOtp: {
         type: String,
         select: false,

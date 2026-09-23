@@ -103,17 +103,35 @@ export function useAuth(){
     async function handleLogout(){
         try{
             dispatch(setLoading(true));
-            const response = await logout();
+            try {
+                await logout();
+            } catch (err) {
+                console.warn("Backend logout network notification:", err);
+            }
             try {
                 localStorage.removeItem(AUTH_TOKEN_KEY);
+                localStorage.removeItem("perplexity_auth_token");
+                localStorage.removeItem("parsu_auth_token");
+                sessionStorage.clear();
             } catch (e) {}
             dispatch(setUser(null));
             dispatch(clearChat());
-            return response;
+            if (typeof window !== "undefined") {
+                window.location.href = "/auth";
+            }
+            return { success: true };
         }catch(error){
             try {
                 localStorage.removeItem(AUTH_TOKEN_KEY);
+                localStorage.removeItem("perplexity_auth_token");
+                localStorage.removeItem("parsu_auth_token");
+                sessionStorage.clear();
             } catch (e) {}
+            dispatch(setUser(null));
+            dispatch(clearChat());
+            if (typeof window !== "undefined") {
+                window.location.href = "/auth";
+            }
             dispatch(setError(error.response?.data?.message || "Failed to logout"));
             throw error;
         }finally{

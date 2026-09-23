@@ -358,6 +358,85 @@ async function publishToPinterest(mediaItems, caption, connection) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// YOUTUBE PUBLISHING (Shorts & Standard Video Upload via YouTube Data API v3)
+// ─────────────────────────────────────────────────────────────────────────────
+async function publishToYouTube(mediaItems, caption, connection, scheduledTime = null) {
+    const accessToken = connection.accessToken?.trim();
+    if (!accessToken) throw new Error("YouTube access token missing.");
+
+    // Find first video item
+    const videoItem = mediaItems.find(item => isVideoUrl(item.url, item));
+    if (!videoItem || !videoItem.url) {
+        throw new Error("YouTube only supports video uploads (Shorts or Videos). Please attach an MP4/MOV/WebM video file for YouTube.");
+    }
+
+    const videoUrl = cleanMediaUrl(videoItem.url, true);
+
+    // Fetch video stream/buffer
+    const videoResponse = await axios.get(videoUrl, { responseType: "arraybuffer", timeout: 60000 });
+    const videoBuffer = Buffer.from(videoResponse.data);
+
+    // Extract title (first line up to 90 chars) and tags
+    const lines = caption.split("\n").filter(l => l.trim().length > 0);
+    const title = (lines[0] || "New Video via Parsu AI").slice(0, 95);
+    const description = caption;
+
+    // Detect if valid future scheduled time provided
+    let isoScheduledTime = null;
+    if (scheduledTime) {
+        const d = new Date(scheduledTime);
+        if (!isNaN(d.getTime()) && d.getTime() > Date.now()) {
+            isoScheduledTime = d.toISOString();
+        }
+    }
+
+    // Step 1: Initiate Resumable Upload Session
+    const initRes = await axios.post(
+        "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+        {
+            snippet: {
+                title,
+                description,
+                tags: ["ParsuAI", "Shorts"],
+                categoryId: "22"
+            },
+            status: {
+                privacyStatus: isoScheduledTime ? "private" : "public",
+                publishAt: isoScheduledTime || undefined,
+                selfDeclaredMadeForKids: false
+            }
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+                "X-Upload-Content-Length": videoBuffer.length,
+                "X-Upload-Content-Type": "video/mp4"
+            }
+        }
+    );
+
+    const uploadUrl = initRes.headers.location;
+    if (!uploadUrl) throw new Error("Failed to initialize YouTube video upload.");
+
+    // Step 2: Stream Video Buffer to Resumable URL
+    const uploadRes = await axios.put(uploadUrl, videoBuffer, {
+        headers: {
+            "Content-Type": "video/mp4",
+            "Content-Length": videoBuffer.length
+        }
+    });
+
+    const videoId = uploadRes.data?.id;
+    return { 
+        mediaId: videoId || "youtube_video", 
+        postType: isoScheduledTime ? "scheduled_video" : "video",
+        url: videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined,
+        scheduledAt: isoScheduledTime
+    };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // UNIVERSAL PUBLISHER ORCHESTRATOR
 // ─────────────────────────────────────────────────────────────────────────────
 /**
@@ -367,6 +446,7 @@ async function publishToPinterest(mediaItems, caption, connection) {
  * @param {Array<{url: string, name?: string, fileType?: string}>} options.mediaItems - Array of media objects
  * @param {string} options.caption - Caption text with emojis/tags
  * @param {string} options.postMode - "together" (carousel/album) or "separately" (individual posts)
+ * @param {string|Date} [options.scheduledTime] - Optional scheduled future date/time
  * @param {string} options.userId - Authenticated user ID
  * @param {string} [options.messageId] - Optional message ID to save post results to
  */
@@ -375,6 +455,7 @@ export async function publishToSocialPlatforms({
     mediaItems = [],
     caption = "",
     postMode = "together",
+    scheduledTime = null,
     userId,
     messageId = null
 }) {
@@ -431,14 +512,27 @@ export async function publishToSocialPlatforms({
                 resData = await publishToLinkedIn(mediaItems, caption, connection);
             } else if (platform === "pinterest") {
                 resData = await publishToPinterest(mediaItems, caption, connection);
+            } else if (platform === "youtube") {
+                resData = await publishToYouTube(mediaItems, caption, connection, scheduledTime);
             } else {
                 throw new Error(`Direct publishing to ${platform} is in progress.`);
             }
+
+            const liveUrl = resData.url || (
+                platform === "youtube" ? `https://www.youtube.com/watch?v=${resData.mediaId}`
+                : platform === "twitter" ? `https://x.com/i/status/${resData.mediaId}`
+                : platform === "facebook" ? `https://www.facebook.com/${resData.mediaId}`
+                : platform === "linkedin" ? `https://www.linkedin.com/feed/update/${resData.mediaId}`
+                : platform === "pinterest" ? `https://www.pinterest.com/pin/${resData.mediaId}`
+                : null
+            );
 
             results.successful.push({
                 platform,
                 mediaId: resData.mediaId,
                 postType: resData.postType || postMode,
+                url: liveUrl,
+                scheduledAt: resData.scheduledAt || null,
                 message: `Successfully posted to ${platform}!`
             });
 

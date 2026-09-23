@@ -94,12 +94,20 @@ app.get(["/health", "/api/health"], (req, res) => {
 });
 
 import modelRouter from "./routes/model.routes.js";
+import adminRouter from "./routes/admin.routes.js";
+import contactRouter from "./routes/contact.routes.js";
+import newsletterRouter from "./routes/newsletter.routes.js";
+import subscriptionRouter from "./routes/subscription.routes.js";
 
 app.use("/api/auth", authRouter)
 app.use("/api/chats", chatRouter)
 app.use("/api/social", socialRouter)
 app.use("/api/models", modelRouter)
 app.use("/api/documents", documentRouter)
+app.use("/api/admin", adminRouter)
+app.use("/api/contact", contactRouter)
+app.use("/api/newsletter", newsletterRouter)
+app.use("/api/subscription", subscriptionRouter)
 
 export default app;
 

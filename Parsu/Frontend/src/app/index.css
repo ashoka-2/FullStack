@@ -23,16 +23,37 @@
     color-scheme: light dark;
     --background: #f4f5f7;
     --foreground: #18181b;
+    --bg-primary: #f4f5f7;
+    --bg-secondary: #ffffff;
+    --bg-surface: #f0f1f3;
+    --border-primary: #e2e4e8;
+    --accent-cyan: #20b8cd;
+    --accent-cyan-glow: rgba(32, 184, 205, 0.25);
   }
 
   .dark {
-    --background: #050505;
+    --background: #0e100f;
     --foreground: #f4f4f5;
+    --bg-primary: #0e100f;
+    --bg-secondary: #161718;
+    --bg-surface: #191a1b;
+    --border-primary: #262729;
+    --accent-cyan: #20b8cd;
+    --accent-cyan-glow: rgba(32, 184, 205, 0.35);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
     background-color: var(--background);
     color: var(--foreground);
+    overscroll-behavior-y: none;
+  }
+
+  button, a, [role="button"] {
+    touch-action: manipulation;
   }
 }
 
@@ -163,6 +184,32 @@ html, body {
   background: linear-gradient(90deg, rgba(96,166,175,0) 0%, rgba(96,166,175,0.18) 50%, rgba(96,166,175,0) 100%);
   background-size: 200% 100%;
   animation: shimmerGlow 3s infinite linear;
+}
+
+@keyframes waveFlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(0.6deg);
+  }
+}
+
+@keyframes waveFlowSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(14px) rotate(-0.5deg);
+  }
+}
+
+.animate-wave-flow {
+  animation: waveFlow 8s ease-in-out infinite;
+}
+
+.animate-wave-flow-slow {
+  animation: waveFlowSlow 11s ease-in-out infinite;
 }
 
 /* ─── Toast Notification Animations ─────────────────────────────────────────── */

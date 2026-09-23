@@ -6,8 +6,9 @@ import { JellyBlobMascot } from './JellyBlobMascot';
 const FloatingBlobMascot = () => {
   const location = useLocation();
 
-  // Hidden on Auth pages because Auth has its own form-interactive mascot
-  const isAuthPage = location.pathname.startsWith('/auth') || location.pathname === '/login' || location.pathname === '/register';
+  // Hidden on Auth pages and Admin pages
+  const isAdminPage = location.pathname.startsWith('/admin');
+  const isAuthPage = location.pathname.startsWith('/auth') || location.pathname === '/login' || location.pathname === '/register' || isAdminPage;
 
   // Visibility state from localStorage (default: true)
   const [isVisible, setIsVisible] = useState(() => {

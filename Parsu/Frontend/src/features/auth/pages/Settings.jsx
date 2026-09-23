@@ -14,9 +14,18 @@ import {
     RiSettingsLine,
     RiApps2Line,
     RiShieldCheckLine,
+    RiVipCrownLine
 } from '@remixicon/react';
 
 const SETTING_CARDS = [
+    {
+        to: '/settings/subscription',
+        icon: RiVipCrownLine,
+        title: 'Plan & Quotas',
+        description: 'View your active plan, monitor daily query limits, and upgrade via Razorpay.',
+        color: '#10b981',
+        glow: 'rgba(16,185,129,0.15)',
+    },
     {
         to: '/settings/profile',
         icon: RiUserLine,
@@ -105,9 +114,18 @@ const Settings = () => {
                                     <p className="font-bold text-zinc-900 dark:text-white truncate">{user.name || user.username}</p>
                                     <p className="text-xs text-zinc-500 truncate">{user.email}</p>
                                 </div>
-                                <div className="ml-auto flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/8 border border-emerald-500/15 px-2.5 py-1 rounded-full shrink-0">
-                                    <RiShieldCheckLine size={12} />
-                                    Active
+                                <div className="ml-auto flex items-center gap-2 shrink-0">
+                                    <Link
+                                        to="/settings/subscription"
+                                        className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 transition-all flex items-center gap-1"
+                                    >
+                                        <RiVipCrownLine size={12} />
+                                        <span>{(user.subscription?.plan || 'free').toUpperCase()}</span>
+                                    </Link>
+                                    <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/8 border border-emerald-500/15 px-2.5 py-1 rounded-full">
+                                        <RiShieldCheckLine size={12} />
+                                        <span>Active</span>
+                                    </div>
                                 </div>
                             </div>
                         )}

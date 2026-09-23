@@ -48,9 +48,10 @@ const Dashboard = () => {
                         >
                             <RiMenuLine size={20} />
                         </button>
-                        <div className="lg:hidden flex items-center gap-2">
+                        <div className="lg:hidden flex items-center gap-1.5">
                             <ParsuLogo className="w-5 h-5 text-[#20b8cd]" />
-                            <span className="font-bold text-sm text-zinc-900 dark:text-white tracking-tight">Parsu</span>
+                            <span className="font-extrabold text-sm text-zinc-900 dark:text-white tracking-tight">PARSU</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[#20b8cd] px-1 rounded">AI</span>
                         </div>
                     </div>
 

@@ -39,6 +39,7 @@ import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
 import ModelSelectorDropdown from './ModelSelectorDropdown';
 import AttachmentPreviewStrip from './AttachmentPreviewStrip';
 import AddToChatSheet from './AddToChatSheet';
+import MatrixOrb from '../../Components/rare-ui/MatrixOrb';
 import { triggerBlobInteraction, triggerBlobTyping } from '../../../utils/blobReactions';
 
 const ChatArea = () => {
@@ -333,8 +334,15 @@ const ChatArea = () => {
       // Clear previous stored messages
       dispatch(setMessages([]));
       
-      // Optimistic Routing: Navigate immediately to new chat screen
-      navigate('/chat/new');
+      // Dispatch Blake Bowen organic SVG liquid page transition
+      window.dispatchEvent(new CustomEvent('trigger_liquid_transition', {
+        detail: {
+          onNavigate: () => {
+            // Optimistic Routing: Navigate when screen is enveloped by the organic wave
+            navigate('/chat/new');
+          }
+        }
+      }));
       
       // Asynchronously handle message sending with selected model, webSearch, and cross-chat memory
       handleSendMessage(messageToSend, null, filesToSend, selectedModel, webSearch, memoryEnabled).then(response => {
@@ -432,49 +440,69 @@ const ChatArea = () => {
         </div>
       )}
 
-      <div className="w-full max-w-fluid flex flex-col items-center relative z-10 px-4 md:px-0 pt-8 sm:pt-12 md:pt-[15vh]">
-        <h1 className="text-3xl sm:text-5xl md:text-[5.5rem] font-extralight text-zinc-900 dark:text-white tracking-tighter mb-6 md:mb-12 text-center opacity-90 transition-opacity hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3">
-         <ParsuLogo className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 shrink-0" /> <span>Parsu</span>
-        </h1>
+      <div className="w-full max-w-fluid flex flex-col items-center relative z-10 px-4 md:px-0 pt-6 sm:pt-10 md:pt-12">
+        
+        {/* Brand header */}
+        <div className="flex items-center gap-2 mb-4 opacity-90 hover:opacity-100 transition-opacity">
+          <ParsuLogo className="w-7 h-7 sm:w-8 sm:h-8 text-[#20b8cd] shrink-0" />
+          <span className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+            Parsu <span className="text-[#20b8cd]">AI</span>
+          </span>
+        </div>
 
-        {/* Assistant Suggestions Pills */}
-        <div className="flex items-center justify-start sm:justify-center gap-2 mb-6 md:mb-8 px-2 max-w-[800px] mx-auto w-full overflow-x-auto sm:overflow-visible no-scrollbar pb-1">
-          {suggestionsLoading ? (
-            [1, 2, 3, 4].map(i => (
-              <div key={i} className="flex-shrink-0 w-24 h-8 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-pulse" />
-            ))
-          ) : (
-              (aiSuggestions?.pills || ['For you', 'Study guide', 'Business', 'Health']).map((pillLabel, i) => {
-              const Icon = iconMap[aiSuggestions?.topics?.[i]?.iconType] || RiCompass3Line;
-              return (
-                <button 
-                  key={i} 
-                  onClick={(e) => {
-                    if (!user) {
-                      setBlobMood('surprised');
-                      navigate('/login');
-                      return;
-                    }
-                    setBlobMood('hmm');
-                    onSubmit(e, pillLabel);
-                  }}
-                  onMouseEnter={() => {
-                    setBlobMood('happy');
-                    setBlobGaze({ x: (i - 1.5) * 6, y: 12 });
-                  }}
-                  onMouseLeave={() => {
-                    if (!loading) {
-                      setBlobMood('neutral');
-                      setBlobGaze({ x: 0, y: 0 });
-                    }
-                  }}
-                  className="flex-shrink-0 flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full bg-transparent border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-600 dark:text-zinc-500 text-xs sm:text-[13px] font-medium transition-all group cursor-pointer whitespace-nowrap"
-                >
-                  <Icon size={14} className="text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-300" />
-                  <span>{pillLabel}</span>
-                </button>
-              );
-            })
+        {/* HeroUI Pro AI Showcase Header & Suggestions Grid */}
+        <div className="w-full max-w-[800px] mx-auto text-left mb-6 px-1 sm:px-2">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-2">
+            What do you want to work on?
+          </h2>
+          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-6 font-normal">
+            Ask a question or start from one of the suggestions below. Powered by Parsu AI autonomous intelligence.
+          </p>
+
+          {/* 6 Suggestion Cards (2 cols x 3 rows) matching HeroUI Pro showcase */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            {[
+              "Summarize this week's product and design updates into a team-ready status note.",
+              "Turn a rough product brief into a launch checklist with owners and deadlines.",
+              "Rewrite this paragraph for a skeptical executive who cares about ROI.",
+              "Brainstorm onboarding flow names for a data-heavy analytics product.",
+              "Draft a weekly 1:1 agenda that surfaces blockers and growth goals.",
+              "Compare three pricing models and recommend one for a usage-based SaaS."
+            ].map((promptText, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={(e) => {
+                  if (!user) {
+                    setBlobMood('surprised');
+                    navigate('/login');
+                    return;
+                  }
+                  setInput(promptText);
+                  onSubmit(e, promptText);
+                }}
+                className="p-3.5 sm:p-4 rounded-2xl bg-white/90 dark:bg-[#121316]/90 border border-zinc-200/90 dark:border-white/10 hover:border-[#20b8cd]/60 hover:bg-zinc-50/80 dark:hover:bg-white/[0.04] text-left text-xs sm:text-[13px] text-zinc-700 dark:text-zinc-300 font-medium leading-relaxed transition-all shadow-xs cursor-pointer group active:scale-[0.99]"
+              >
+                <p className="group-hover:text-zinc-950 dark:group-hover:text-white transition-colors">
+                  {promptText}
+                </p>
+              </button>
+            ))}
+          </div>
+
+          {/* Rare UI MatrixOrb when AI is thinking & formulating response */}
+          {loading && (
+            <div className="flex flex-col items-center justify-center gap-3 py-6 my-2 bg-zinc-100/60 dark:bg-white/[0.03] border border-cyan-500/20 rounded-3xl backdrop-blur-md animate-in fade-in zoom-in duration-300">
+              <MatrixOrb size={100} state="thinking" color="#20b8cd" dots={12} />
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200 tracking-wide">
+                  Parsu AI is thinking & reasoning...
+                </span>
+                <span className="text-[11px] text-zinc-500 font-medium animate-pulse">
+                  Querying models, searching web, and formulating optimal response
+                </span>
+              </div>
+            </div>
           )}
         </div>
 
@@ -705,17 +733,20 @@ const ChatArea = () => {
                     }
                   }}
                   disabled={user && (!input.trim() && files.length === 0)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-all cursor-pointer ${
+                  className={`w-8.5 h-8.5 flex items-center justify-center rounded-full transition-all cursor-pointer ${
                     !user || input.trim() || files.length > 0 
-                      ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg shadow-black/10 hover:scale-105' 
+                      ? 'bg-[#20b8cd] hover:bg-[#1bb3c7] text-zinc-950 shadow-md shadow-[#20b8cd]/25 hover:scale-105 active:scale-95' 
                       : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600 opacity-50'
                   }`}
                   title="Send message"
                 >
-                  <RiArrowUpLine size={18} />
+                  <RiArrowUpLine size={19} className="stroke-[2.5]" />
                 </button>
               </div>
             </div>
+            <p className="text-center text-[11px] text-zinc-400 dark:text-zinc-500 mt-2 font-medium">
+              Parsu AI can make mistakes. Check important info.
+            </p>
           </div>
         </div>
 

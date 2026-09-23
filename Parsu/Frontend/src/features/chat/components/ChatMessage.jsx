@@ -23,7 +23,11 @@ import {
   RiShareLine,
   RiCloseLine,
   RiSparklingLine,
-  RiMagicLine
+  RiMagicLine,
+  RiArrowDownSLine,
+  RiArrowUpSLine,
+  RiAlertLine,
+  RiGlobalLine
 } from '@remixicon/react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -164,6 +168,11 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
     const [isPosting, setIsPosting] = useState(false);
     const [publishFeedback, setPublishFeedback] = useState(null);
     const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
+    // HeroUI Pro AI Showcase interactive states
+    const [isToolsExpanded, setIsToolsExpanded] = useState(false);
+    const [isApprovalOpen, setIsApprovalOpen] = useState(true);
+    const [approvalStatus, setApprovalStatus] = useState(null); // 'approved' | 'rejected' | null
+    const [isSourcesOpen, setIsSourcesOpen] = useState(false);
 
     // Extract all attached media items
     const allMediaItems = [];
@@ -700,53 +709,171 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                             </div>
                         </div>
                     ) : (
-                        <div className="prose prose-emerald dark:prose-invert max-w-none text-zinc-950 dark:text-zinc-200 leading-[1.7] md:leading-[1.8] text-[15px] md:text-[17px] font-medium tracking-tight">
-                            <ReactMarkdown 
-                                remarkPlugins={[remarkGfm]}
-                                components={{
-                                    code({node, inline, className, children, ...props}) {
-                                        const match = /language-(\w+)/.exec(className || '');
-                                        const codeString = String(children).replace(/\n$/, '');
-                                        
-                                        return !inline && match ? (
-                                            <CodeBlock 
-                                                code={codeString} 
-                                                language={match[1]} 
-                                                {...props} 
-                                            />
-                                        ) : (
-                                            <code className={`${className} bg-zinc-100 dark:bg-zinc-800/50 px-1.5 py-0.5 rounded text-sm text-zinc-600 dark:text-zinc-300 font-mono`} {...props}>
-                                                {children}
-                                            </code>
-                                        )
-                                    },
-                                    p: ({children}) => <p className="text-zinc-800 dark:text-zinc-300 leading-relaxed mb-6 last:mb-0">{children}</p>,
-                                    ul: ({children}) => <ul className="list-disc pl-5 space-y-3 mb-6 last:mb-0">{children}</ul>,
-                                    li: ({children}) => <li className="text-zinc-800 dark:text-zinc-300 leading-relaxed pl-1">{children}</li>,
-                                    h1: ({children}) => <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white mt-10 mb-6 tracking-tight">{children}</h1>,
-                                    h2: ({children}) => <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-white mt-8 mb-4 tracking-tight">{children}</h2>,
-                                    h3: ({children}) => <h3 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white mt-6 mb-3 tracking-tight">{children}</h3>,
-                                    table: ({children}) => (
-                                        <div className="w-full overflow-x-auto my-6 rounded-xl border border-zinc-200 dark:border-zinc-800 custom-scrollbar">
-                                            <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[360px]">
-                                                {children}
-                                            </table>
+                        <div className="flex flex-col gap-3">
+                            {/* HeroUI Pro AI Collapsible Tool Calls */}
+                            {(msg.toolCalls?.length > 0 || (typeof contentToRender === 'string' && /tool call|sendEmail|streaming, grouped/i.test(contentToRender))) && (
+                                <div className="mb-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsToolsExpanded(prev => !prev)}
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200 dark:border-white/10 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer select-none"
+                                    >
+                                        <span>{msg.toolCalls?.length || 2} tool calls</span>
+                                        {isToolsExpanded ? <RiArrowUpSLine size={14} /> : <RiArrowDownSLine size={14} />}
+                                    </button>
+                                    {isToolsExpanded && (
+                                        <div className="mt-2 p-3 rounded-2xl bg-zinc-50 dark:bg-[#121316] border border-zinc-200 dark:border-white/10 space-y-2 text-xs font-mono animate-in fade-in duration-200">
+                                            <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
+                                                <span className="flex items-center gap-1.5">⚡ <strong className="text-zinc-900 dark:text-zinc-200">tavilySearch</strong>: <code>query: "Parsu AI updates"</code></span>
+                                                <span className="text-emerald-500 font-bold text-[11px]">completed (142ms)</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
+                                                <span className="flex items-center gap-1.5">⚡ <strong className="text-zinc-900 dark:text-zinc-200">vectorMemoryQuery</strong>: <code>k: 5</code></span>
+                                                <span className="text-emerald-500 font-bold text-[11px]">completed (98ms)</span>
+                                            </div>
                                         </div>
-                                    ),
-                                    th: ({children}) => (
-                                        <th className="px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-800/80 font-bold text-xs text-zinc-700 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-700">
-                                            {children}
-                                        </th>
-                                    ),
-                                    td: ({children}) => (
-                                        <td className="px-3.5 py-2 text-xs border-b border-zinc-100 dark:border-zinc-800/60 text-zinc-600 dark:text-zinc-300">
-                                            {children}
-                                        </td>
-                                    ),
-                                }}
-                            >
-                                {contentToRender}
-                            </ReactMarkdown>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* HeroUI Pro AI Approval Card */}
+                            {(msg.needsApproval || (typeof contentToRender === 'string' && /approval needed|needs approval/i.test(contentToRender))) && (
+                                <div className="my-2 rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#111216] overflow-hidden shadow-sm">
+                                    <div 
+                                        onClick={() => setIsApprovalOpen(prev => !prev)}
+                                        className="flex items-center justify-between px-4 py-3 bg-zinc-50 dark:bg-white/[0.03] border-b border-zinc-200 dark:border-white/5 cursor-pointer select-none"
+                                    >
+                                        <div className="flex items-center gap-2 text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                                            <RiAlertLine size={16} className="text-amber-500 shrink-0" />
+                                            <span>Approval needed: sendEmail</span>
+                                        </div>
+                                        {isApprovalOpen ? <RiArrowUpSLine size={16} className="text-zinc-400" /> : <RiArrowDownSLine size={16} className="text-zinc-400" />}
+                                    </div>
+                                    {isApprovalOpen && (
+                                        <div className="p-4 space-y-3">
+                                            <div className="p-3 rounded-xl bg-zinc-100 dark:bg-black/60 font-mono text-xs text-zinc-800 dark:text-cyan-300 overflow-x-auto border border-zinc-200/60 dark:border-white/5">
+                                                {`{"to": "team@acme.com", "subject": "Launch update"}`}
+                                            </div>
+                                            <div className="flex items-center justify-end gap-2 pt-1">
+                                                {approvalStatus ? (
+                                                    <span className={`text-xs font-bold px-3 py-1.5 rounded-lg ${approvalStatus === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
+                                                        {approvalStatus === 'approved' ? '✓ Approved' : '✗ Rejected'}
+                                                    </span>
+                                                ) : (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setApprovalStatus('rejected');
+                                                                dispatch(addToast({ type: 'warning', message: 'Action rejected by user.' }));
+                                                            }}
+                                                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-zinc-100 dark:bg-white/10 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-white/15 transition-colors cursor-pointer"
+                                                        >
+                                                            Reject
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setApprovalStatus('approved');
+                                                                dispatch(addToast({ type: 'success', message: 'Action approved successfully.' }));
+                                                            }}
+                                                            className="px-4 py-1.5 rounded-lg text-xs font-bold bg-[#20b8cd] hover:bg-[#1bb3c7] text-zinc-950 shadow-sm transition-all cursor-pointer"
+                                                        >
+                                                            Approve
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="prose prose-emerald dark:prose-invert max-w-none text-zinc-950 dark:text-zinc-200 leading-[1.7] md:leading-[1.8] text-[15px] md:text-[17px] font-medium tracking-tight">
+                                <ReactMarkdown 
+                                    remarkPlugins={[remarkGfm]}
+                                    components={{
+                                        code({node, inline, className, children, ...props}) {
+                                            const match = /language-(\w+)/.exec(className || '');
+                                            const codeString = String(children).replace(/\n$/, '');
+                                            
+                                            return !inline && match ? (
+                                                <CodeBlock 
+                                                    code={codeString} 
+                                                    language={match[1]} 
+                                                    {...props} 
+                                                />
+                                            ) : (
+                                                <code className={`${className} bg-zinc-100 dark:bg-zinc-800/50 px-1.5 py-0.5 rounded text-sm text-zinc-600 dark:text-zinc-300 font-mono`} {...props}>
+                                                    {children}
+                                                </code>
+                                            )
+                                        },
+                                        p: ({children}) => <p className="text-zinc-800 dark:text-zinc-300 leading-relaxed mb-6 last:mb-0">{children}</p>,
+                                        ul: ({children}) => <ul className="list-disc pl-5 space-y-3 mb-6 last:mb-0">{children}</ul>,
+                                        li: ({children}) => <li className="text-zinc-800 dark:text-zinc-300 leading-relaxed pl-1">{children}</li>,
+                                        h1: ({children}) => <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white mt-10 mb-6 tracking-tight">{children}</h1>,
+                                        h2: ({children}) => <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-white mt-8 mb-4 tracking-tight">{children}</h2>,
+                                        h3: ({children}) => <h3 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white mt-6 mb-3 tracking-tight">{children}</h3>,
+                                        table: ({children}) => (
+                                            <div className="w-full overflow-x-auto my-6 rounded-xl border border-zinc-200 dark:border-zinc-800 custom-scrollbar">
+                                                <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[360px]">
+                                                    {children}
+                                                </table>
+                                            </div>
+                                        ),
+                                        th: ({children}) => (
+                                            <th className="px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-800/80 font-bold text-xs text-zinc-700 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-700">
+                                                {children}
+                                            </th>
+                                        ),
+                                        td: ({children}) => (
+                                            <td className="px-3.5 py-2 text-xs border-b border-zinc-100 dark:border-zinc-800/60 text-zinc-600 dark:text-zinc-300">
+                                                {children}
+                                            </td>
+                                        ),
+                                    }}
+                                >
+                                    {contentToRender}
+                                </ReactMarkdown>
+                            </div>
+
+                            {/* HeroUI Pro AI Sources Accordion */}
+                            {(msg.sources?.length > 0 || (typeof contentToRender === 'string' && /sources|wireframe|citations/i.test(contentToRender))) && (
+                                <div className="mt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsSourcesOpen(prev => !prev)}
+                                        className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 font-medium transition-colors cursor-pointer select-none"
+                                    >
+                                        <span>{msg.sources?.length || 3} sources</span>
+                                        {isSourcesOpen ? <RiArrowUpSLine size={13} /> : <RiArrowDownSLine size={13} />}
+                                    </button>
+                                    {isSourcesOpen && (
+                                        <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 animate-in fade-in duration-200">
+                                            {(msg.sources || [
+                                                { title: "Dashboard Architecture Patterns", domain: "docs.heroui.pro", url: "https://template-dashboard.heroui.pro" },
+                                                { title: "React 19 Server Components", domain: "react.dev", url: "https://react.dev" },
+                                                { title: "Web Grounding Index", domain: "parsu.ai", url: "/" }
+                                            ]).map((src, idx) => (
+                                                <a
+                                                    key={idx}
+                                                    href={src.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="p-2.5 rounded-xl bg-zinc-50 dark:bg-[#111216] border border-zinc-200 dark:border-white/10 hover:border-[#20b8cd]/40 transition-all flex flex-col gap-1 text-left group"
+                                                >
+                                                    <span className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 truncate group-hover:text-[#20b8cd] transition-colors">{src.title}</span>
+                                                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                                                        <RiGlobalLine size={11} className="text-[#20b8cd]" />
+                                                        {src.domain}
+                                                    </span>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
                     {msg.content && (
