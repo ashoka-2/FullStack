@@ -3,6 +3,7 @@
 > **Last Updated:** September 23, 2026
 > **Maintainer:** Ashok Kumar
 > **Live Frontend URL:** https://parsuai.vercel.app/
+> **Live Backend URL:** https://parsuai.onrender.com
 > **Purpose:** Structural blueprint and technical documentation for developers and AI agents.
 
 ---

@@ -2,6 +2,7 @@
 
 > This file is for external AI agents (Antigravity, Claude, ChatGPT, Cursor, etc.) modifying or extending this codebase.
 > **Frontend URL:** https://parsuai.vercel.app/
+> **Backend URL:** https://parsuai.onrender.com
 > **Read CODEBASE_ARCHITECTURE.md first** for the complete structural reference.
 
 ---
