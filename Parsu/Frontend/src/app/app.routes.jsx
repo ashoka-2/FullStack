@@ -24,6 +24,15 @@ import Contact from "../features/pages/Contact";
 import FAQ from "../features/pages/FAQ";
 import MaintenanceMode from "../features/pages/MaintenanceMode";
 
+import { useSelector } from "react-redux";
+import LandingPage from "../features/pages/LandingPage";
+
+// Conditional root page: shows Dashboard for logged-in users, LandingPage for guests/Google reviewers
+const RootPage = () => {
+    const user = useSelector((state) => state.auth.user);
+    return user ? <Dashboard /> : <LandingPage />;
+};
+
 export const router = createBrowserRouter([
     {
         element: <Layout />,
@@ -43,7 +52,11 @@ export const router = createBrowserRouter([
             },
             {
                 path: "/",
-                element: <Protected><Dashboard /></Protected>
+                element: <RootPage />
+            },
+            {
+                path: "/welcome",
+                element: <LandingPage />
             },
             {
                 path: "/chat/:id",

@@ -66,6 +66,14 @@ const PrivacyPolicy = () => {
             <p>We do not sell your data to any third party.</p>
           </Section>
 
+          <Section icon={RiShieldCheckLine} title="Google User Data & Limited Use Policy">
+            <p>Parsu AI accesses Google user data when you sign in via Google OAuth. Specifically, we request:</p>
+            <p>• <strong>Profile Information (Name, Avatar):</strong> Used to personalize your workspace and account identity.</p>
+            <p>• <strong>Email Address:</strong> Used as your primary account identifier and to send critical security notices.</p>
+            <p><strong>Limited Use Commitment:</strong> Parsu AI's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer" className="text-cyan-600 dark:text-cyan-400 hover:underline">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+            <p>We do not use Google user data to develop, train, or improve generalized or foundation AI/ML models.</p>
+          </Section>
+
           <Section icon={RiLockLine} title="Data Security">
             <p>We implement industry-standard security measures including:</p>
             <p>• HTTPS/TLS encryption for all data in transit</p>
