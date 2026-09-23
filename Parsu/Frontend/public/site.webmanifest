@@ -1,0 +1,31 @@
+{
+  "name": "Parsu",
+  "short_name": "Parsu",
+  "description": "AI-powered assistant for instant answers, deep research, creative writing, code generation, and social media publishing.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#20b8cd",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/parsu.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["productivity", "utilities", "education"],
+  "lang": "en-US",
+  "dir": "ltr"
+}
