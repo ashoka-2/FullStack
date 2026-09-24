@@ -4,11 +4,11 @@ import React from 'react';
 // 🖼️ HERO BACKGROUND MEDIA ASSETS
 // ============================================================================
 // Currently active background: Poolside.svg (used for both dark & light themes across all devices)
-import poolsideSvg from '../../assets/Poolside.svg';
+// import poolsideSvg from '../../assets/Poolside.svg';
 
 // Example secondary assets (uncomment and supply paths when needed):
 // import blueSkySvg from '../../assets/Blue sky-2048x1152.svg';
-// import heroVideoDark from '../../assets/hero-background-dark.mp4';
+import heroVideoDark from '../../assets/poolside.mp4';
 // import heroVideoLight from '../../assets/hero-background-light.mp4';
 
 import { GRAIN_PATTERN_DATA } from '../../assets/grainData';
@@ -57,12 +57,12 @@ const HeroGradientBackground = () => {
             ⭐ OPTION 1: [CURRENT ACTIVE]
             Poolside.svg background image for BOTH Dark & White Themes on ALL devices
             ===================================================================== */}
-        <img
+        {/* <img
           src={poolsideSvg}
           alt=""
           className="w-full h-full object-cover opacity-80 dark:opacity-90 transition-opacity duration-700 mix-blend-normal dark:mix-blend-screen scale-[1.01]"
           loading="eager"
-        />
+        /> */}
 
         {/* =====================================================================
             💡 OPTION 2: [COMMENTED]
@@ -131,19 +131,19 @@ const HeroGradientBackground = () => {
             Background Video (Autoplay, Looping, Muted Ambient Hero Video)
             To use: Comment Option 1 above, and uncomment this block.
             =====================================================================
-        {/*
+        */}
         <video
           autoPlay
           loop
           muted
           playsInline
-          poster={poolsideSvg}
+          // poster={poolsideSvg}
           className="w-full h-full object-cover opacity-75 dark:opacity-85 mix-blend-normal dark:mix-blend-screen scale-[1.01]"
         >
-          <source src="/path/to/hero-background.webm" type="video/webm" />
-          <source src="/path/to/hero-background.mp4" type="video/mp4" />
+          <source src={heroVideoDark} type="video/webm" />
+          <source src={heroVideoDark} type="video/mp4" />
         </video>
-        */}
+        
 
         {/* =====================================================================
             🎥 OPTION 6: [COMMENTED]
