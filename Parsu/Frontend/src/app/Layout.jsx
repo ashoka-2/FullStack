@@ -3,7 +3,8 @@ import { Outlet, useNavigate } from 'react-router';
 import { ReactLenis } from 'lenis/react';
 import 'lenis/dist/lenis.css';
 import ScrollToTop from '../features/Components/ScrollToTop';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { setUser } from '../features/auth/auth.slice';
 import Loading from '../features/Components/Loading';
 import FloatingBlobMascot from '../features/Components/FloatingBlobMascot';
 import { ToastContainer } from '../features/Components/Toast';
@@ -12,11 +13,26 @@ import ShapeOverlaysTransition from '../features/Components/ShapeOverlaysTransit
 
 const Layout = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const authLoading = useSelector(state => state.auth.loading);
     // Track if the preloader has finished its animation sequence
     const [loaderFinished, setLoaderFinished] = useState(false);
     // Track if we've received the first auth data
     const [authWaitDone, setAuthWaitDone] = useState(false);
+
+    // Invalidate stale user session if restored from browser back-forward cache (bfcache)
+    useEffect(() => {
+        const handlePageShow = (event) => {
+            if (event.persisted) {
+                const token = localStorage.getItem('parsu_auth_token') || localStorage.getItem('token');
+                if (!token) {
+                    dispatch(setUser(null));
+                }
+            }
+        };
+        window.addEventListener('pageshow', handlePageShow);
+        return () => window.removeEventListener('pageshow', handlePageShow);
+    }, [dispatch]);
 
     useEffect(() => {
         // Once auth loading flips from true to false, mark wait as done

@@ -292,7 +292,6 @@ const Settings = () => {
                 onConfirm={async () => {
                     setShowLogoutModal(false);
                     await handleLogout();
-                    navigate('/auth');
                 }}
                 title="Log Out of Parsu AI?"
                 message="Are you sure you want to end your session? You will be returned to the sign-in screen."

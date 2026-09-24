@@ -414,12 +414,20 @@ export async function logoutUser(req, res) {
       console.log(`✅ [Auth] Token blacklisted successfully in Redis (TTL: ${ttl}s)`);
     }
 
-    const isProd = process.env.NODE_ENV === "production";
+    // Thoroughly clear token cookie matching creation options (sameSite: 'none', secure: true) as well as fallback options
     res.clearCookie("token", {
       httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? "none" : "lax",
+      secure: true,
+      sameSite: "none",
+      path: "/",
     });
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+    });
+    res.clearCookie("token", { path: "/" });
     res.clearCookie("token");
 
     res.status(200).json({

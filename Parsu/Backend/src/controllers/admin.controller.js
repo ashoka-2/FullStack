@@ -72,6 +72,40 @@ export async function getAdminOverview(req, res) {
             }
         };
 
+        // Real activity aggregation for live charts
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const [dailyChatsRaw, dailyUsersRaw] = await Promise.all([
+            chatModel.aggregate([
+                { $match: { createdAt: { $gte: sevenDaysAgo } } },
+                { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, count: { $sum: 1 } } },
+                { $sort: { _id: 1 } }
+            ]).catch(() => []),
+            userModel.aggregate([
+                { $match: { createdAt: { $gte: sevenDaysAgo } } },
+                { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, count: { $sum: 1 } } },
+                { $sort: { _id: 1 } }
+            ]).catch(() => [])
+        ]);
+
+        // Build 7-day timeline map
+        const dayLabels = [];
+        const activityTimeline = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+            const key = d.toISOString().slice(0, 10);
+            const chatCount = dailyChatsRaw.find(c => c._id === key)?.count || 0;
+            const userCount = dailyUsersRaw.find(u => u._id === key)?.count || 0;
+            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+            dayLabels.push(dayName);
+            activityTimeline.push({
+                date: key,
+                label: dayName,
+                chats: chatCount,
+                signups: userCount,
+                total: chatCount + userCount
+            });
+        }
+
         // Time-series traffic metrics
         const baseTraffic = (totalUsers * 42) + (totalChats * 18) + 180;
         const analytics = {
@@ -82,6 +116,7 @@ export async function getAdminOverview(req, res) {
             totalPageviews: baseTraffic,
             avgSessionDuration: "4m 48s",
             bounceRate: "28.4%",
+            activityTimeline,
             topTrafficSources: [
                 { source: "Direct (parsuai.vercel.app)", percentage: 56 },
                 { source: "Google Organic Search", percentage: 28 },

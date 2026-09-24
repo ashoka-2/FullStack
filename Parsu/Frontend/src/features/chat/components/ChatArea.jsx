@@ -106,7 +106,7 @@ const ChatArea = () => {
   const handleToggleVoiceInput = () => {
     if (!user) {
       setBlobMood('surprised');
-      navigate('/login');
+      navigate('/auth');
       return;
     }
 
@@ -325,9 +325,9 @@ const ChatArea = () => {
   const onSubmit = async (e, text = null) => {
     if (e) e.preventDefault();
 
-    // Guest protection: Redirect unauthenticated users to login immediately
+    // Guest protection: Redirect unauthenticated users to auth immediately
     if (!user) {
-      navigate('/login');
+      navigate('/auth');
       return;
     }
     
@@ -403,7 +403,7 @@ const ChatArea = () => {
       e.preventDefault(); // Prevent default line skip
 
       if (!user) {
-        navigate('/login');
+        navigate('/auth');
         return;
       }
 
@@ -428,7 +428,7 @@ const ChatArea = () => {
     setIsDragging(false); // Drop ho gaya UI wapas normal kardo
     
     if (!user) {
-      navigate('/login');
+      navigate('/auth');
       return;
     }
 
@@ -490,7 +490,7 @@ const ChatArea = () => {
                 onClick={(e) => {
                   if (!user) {
                     setBlobMood('surprised');
-                    navigate('/login');
+                    navigate('/auth');
                     return;
                   }
                   setInput(promptText);
@@ -572,7 +572,13 @@ const ChatArea = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setIsFullScreenEditor(true)}
+                  onClick={() => {
+                    if (!user) {
+                      navigate('/auth');
+                      return;
+                    }
+                    setIsFullScreenEditor(true);
+                  }}
                   className="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-clear-hanada)] hover:text-[var(--color-deep-hanada)] dark:hover:text-[var(--color-sky-haze)] transition-colors cursor-pointer px-2 py-0.5 rounded-md hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"
                   title="Open full-screen prompt and code editor"
                 >
@@ -589,7 +595,7 @@ const ChatArea = () => {
               onChange={(e) => {
                 if (!user) {
                   setBlobMood('surprised');
-                  navigate('/login');
+                  navigate('/auth');
                   return;
                 }
                 setInput(e.target.value);
@@ -602,7 +608,7 @@ const ChatArea = () => {
               onFocus={() => {
                 if (!user) {
                   setBlobMood('surprised');
-                  navigate('/login');
+                  navigate('/auth');
                   return;
                 }
                 setBlobMood('curious');
@@ -618,7 +624,7 @@ const ChatArea = () => {
               onClick={() => {
                 if (!user) {
                   setBlobMood('surprised');
-                  navigate('/login');
+                  navigate('/auth');
                   return;
                 }
                 triggerBlobInteraction('click');
@@ -646,7 +652,7 @@ const ChatArea = () => {
                     type="button"
                     onClick={() => {
                       if (!user) {
-                        navigate('/login');
+                        navigate('/auth');
                         return;
                       }
                       setIsUploadMenuOpen(true);
@@ -676,7 +682,13 @@ const ChatArea = () => {
                 {/* Web Search Toggle Pill Button (Desktop only on input bar; accessible in sheet on mobile) */}
                 <button
                   type="button"
-                  onClick={handleToggleWebSearch}
+                  onClick={(e) => {
+                    if (!user) {
+                      navigate('/auth');
+                      return;
+                    }
+                    handleToggleWebSearch(e);
+                  }}
                   className={`hidden sm:flex h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
                     webSearch 
                       ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
@@ -716,7 +728,13 @@ const ChatArea = () => {
                 {(input.length > 50 || input.includes('\n')) && (
                   <button
                     type="button"
-                    onClick={() => setIsFullScreenEditor(true)}
+                    onClick={() => {
+                      if (!user) {
+                        navigate('/auth');
+                        return;
+                      }
+                      setIsFullScreenEditor(true);
+                    }}
                     className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-all cursor-pointer"
                     title="Open full-screen prompt and code studio"
                   >
@@ -726,7 +744,13 @@ const ChatArea = () => {
 
                 <button 
                   type="button"
-                  onClick={handleToggleVoiceInput}
+                  onClick={(e) => {
+                    if (!user) {
+                      navigate('/auth');
+                      return;
+                    }
+                    handleToggleVoiceInput(e);
+                  }}
                   className={`p-1.5 rounded-full transition-all cursor-pointer ${
                     isListening 
                       ? 'text-rose-500 bg-rose-500/15 animate-pulse ring-2 ring-rose-500/30' 
@@ -741,7 +765,7 @@ const ChatArea = () => {
                   onClick={(e) => {
                     if (!user) {
                       setBlobMood('surprised');
-                      navigate('/login');
+                      navigate('/auth');
                       return;
                     }
                     setBlobMood('hmm');
@@ -801,7 +825,7 @@ const ChatArea = () => {
                 key={i} 
                 onClick={(e) => {
                   if (!user) {
-                    navigate('/login');
+                    navigate('/auth');
                     return;
                   }
                   onSubmit(e, query);
@@ -832,7 +856,7 @@ const ChatArea = () => {
                     key={i} 
                     onClick={(e) => {
                       if (!user) {
-                        navigate('/login');
+                        navigate('/auth');
                         return;
                       }
                       onSubmit(e, topic.label);
@@ -888,8 +912,10 @@ const ChatArea = () => {
       </div>
 
       {/* Full-width responsive footer - never trapped behind sidebar */}
-      <div className="w-full border-t border-white/[0.08] mt-auto">
+      <div className="w-full border-t border-zinc-200 dark:border-white/[0.08] mt-auto bg-zinc-100 dark:bg-[#0B0B0B]">
         <Footer />
+        {/* Dedicated space below footer with identical footer background color so footer is fully visible above fixed input form */}
+        <div className="w-full h-44 sm:h-52 bg-zinc-100 dark:bg-[#0B0B0B]" />
       </div>
 
       {/* Full-Screen Prompt & Code Editor Studio via React Portal */}

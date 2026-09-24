@@ -99,7 +99,7 @@ export default function AdminProtected({ children }) {
                         className="inline-flex items-center gap-2 text-xs text-zinc-400 hover:text-white transition-colors"
                     >
                         <RiArrowLeftLine size={14} />
-                        <span>Return to Parsu AI Chat</span>
+                        <span>Return to Home</span>
                     </Link>
                 </div>
             </div>

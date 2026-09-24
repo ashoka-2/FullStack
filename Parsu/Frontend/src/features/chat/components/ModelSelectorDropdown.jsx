@@ -13,6 +13,7 @@ import {
   RiCloseLine
 } from "@remixicon/react";
 import { useNavigate } from "react-router";
+import { useSelector } from "react-redux";
 import { getModels, setSelectedModel } from "../service/model.api";
 
 // Monochromatic Apple/AI-design styling for model provider badges (no rainbow colors)
@@ -53,6 +54,7 @@ export default function ModelSelectorDropdown({
   const dropdownRef = useRef(null);
   const popoverRef = useRef(null);
   const navigate = useNavigate();
+  const user = useSelector(state => state.auth?.user);
   const [popoverCoords, setPopoverCoords] = useState({ top: 0, left: 0, width: 384, openUpward: false });
 
   // Load models from API
@@ -231,7 +233,13 @@ export default function ModelSelectorDropdown({
       {/* Trigger Button */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (!user) {
+            navigate('/auth');
+            return;
+          }
+          setIsOpen(!isOpen);
+        }}
         className={`flex items-center gap-2 rounded-xl transition-all border backdrop-blur-md cursor-pointer ${
           compact
             ? "px-2.5 py-1 text-xs bg-white/80 dark:bg-[#191a1a]/80 hover:bg-zinc-100 dark:hover:bg-[#202222] border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-gray-200 shadow-sm"

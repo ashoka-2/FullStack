@@ -305,7 +305,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             onClick={() => {
               triggerBlobSidebarNav('new chat');
               closeMobileSidebar();
-              if (!user) { navigate('/auth'); return; }
               navigate('/ai');
             }}
             title="New Chat"

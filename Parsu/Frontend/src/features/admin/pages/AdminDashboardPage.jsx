@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   RiUser3Line,
   RiChat3Line,
@@ -142,7 +143,6 @@ export default function AdminDashboardPage() {
           valB = new Date(valB).getTime();
         } else {
           valA = valA.toString().toLowerCase();
-          valB = valB.toString().toLowerCase();
         }
         if (valA < valB) return sortAsc ? -1 : 1;
         if (valA > valB) return sortAsc ? 1 : -1;
@@ -158,21 +158,24 @@ export default function AdminDashboardPage() {
   const totalSubscribersCount = overview?.metrics?.totalSubscribers ?? 0;
   const estimatedRevenue = totalSubscribersCount * 1499;
 
-  // 12-bar Activity Performance Data based on live user ratios
-  const barData = [
-    { label: '01', height: '35%' },
-    { label: '02', height: '55%' },
-    { label: '03', height: '90%' },
-    { label: '04', height: '50%' },
-    { label: '05', height: '25%' },
-    { label: '06', height: '70%' },
-    { label: '07', height: '40%' },
-    { label: '08', height: '15%' },
-    { label: '09', height: '80%' },
-    { label: '10', height: '30%' },
-    { label: '11', height: '75%' },
-    { label: '12', height: '65%' },
-  ];
+  // Derive Real 7-day activity metrics from backend aggregation
+  const activityTimeline = overview?.analytics?.activityTimeline || [];
+  const maxActivity = Math.max(1, ...activityTimeline.map((t) => t.total || 0));
+  const barData = activityTimeline.length > 0
+    ? activityTimeline.map((item) => ({
+        label: item.label,
+        count: item.total,
+        height: `${Math.max(18, Math.min(100, Math.round((item.total / maxActivity) * 100)))}%`
+      }))
+    : [
+        { label: 'Mon', count: 0, height: '30%' },
+        { label: 'Tue', count: 0, height: '45%' },
+        { label: 'Wed', count: 0, height: '70%' },
+        { label: 'Thu', count: 0, height: '55%' },
+        { label: 'Fri', count: 0, height: '80%' },
+        { label: 'Sat', count: 0, height: '65%' },
+        { label: 'Sun', count: 0, height: '90%' },
+      ];
 
   const adminName = user?.username ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'Admin';
 
@@ -186,10 +189,10 @@ export default function AdminDashboardPage() {
             {adminName.charAt(0)}
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
               <span>Good morning, {adminName}</span>
             </h1>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
               Welcome back to your Parsu AI administrative intelligence command center.
             </p>
           </div>
@@ -204,13 +207,13 @@ export default function AdminDashboardPage() {
               placeholder="Search telemetry..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500/50"
+              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-cyan-500/50"
             />
           </div>
 
           <button
             type="button"
-            className="w-8 h-8 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer shrink-0"
             title="Notifications"
           >
             <RiNotification3Line size={16} />
@@ -227,16 +230,16 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ── 2. Pill Tabs & Filters Bar ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-1.5 rounded-2xl bg-[#11131a]/80 border border-white/[0.07] backdrop-blur-xl">
-        <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-1.5 rounded-2xl bg-white dark:bg-[#11131a]/80 border border-zinc-200 dark:border-white/[0.07] backdrop-blur-xl shadow-xs">
+        <div className="flex items-center gap-1 bg-zinc-100 dark:bg-black/40 p-1 rounded-xl border border-zinc-200 dark:border-white/5">
           {['overview', 'sales', 'expenses'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all cursor-pointer ${
                 activeTab === tab
-                  ? 'bg-white/10 text-white shadow-xs font-bold'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-xs font-bold'
+                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
               {tab}
@@ -247,7 +250,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <button
             onClick={loadData}
-            className="w-8 h-8 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
             title="Refresh metrics"
           >
             <RiRefreshLine size={15} className={isLoading ? 'animate-spin' : ''} />
@@ -256,12 +259,12 @@ export default function AdminDashboardPage() {
           <select
             value={timeFilter}
             onChange={(e) => setTimeFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-medium text-zinc-300 focus:outline-none cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 text-xs font-medium text-zinc-700 dark:text-zinc-300 focus:outline-none cursor-pointer"
           >
-            <option value="weekly" className="bg-[#11131a] text-white">Weekly</option>
-            <option value="monthly" className="bg-[#11131a] text-white">Monthly</option>
-            <option value="quarterly" className="bg-[#11131a] text-white">Quarterly</option>
-            <option value="yearly" className="bg-[#11131a] text-white">Yearly</option>
+            <option value="weekly" className="bg-white dark:bg-[#11131a] text-zinc-900 dark:text-white">Weekly</option>
+            <option value="monthly" className="bg-white dark:bg-[#11131a] text-zinc-900 dark:text-white">Monthly</option>
+            <option value="quarterly" className="bg-white dark:bg-[#11131a] text-zinc-900 dark:text-white">Quarterly</option>
+            <option value="yearly" className="bg-white dark:bg-[#11131a] text-zinc-900 dark:text-white">Yearly</option>
           </select>
 
           <button
@@ -272,7 +275,7 @@ export default function AdminDashboardPage() {
                 message: 'Admin performance summary downloaded successfully.'
               }));
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-semibold text-white border border-white/10 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-xs font-semibold text-zinc-700 dark:text-white border border-zinc-200 dark:border-white/10 transition-colors cursor-pointer"
           >
             <RiDownload2Line size={14} />
             <span>Download</span>
@@ -280,61 +283,61 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* ── 3. Four Real-Data Metric Cards (No Fake Data) ── */}
+      {/* ── 3. Four Real-Data Metric Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Total Registered Accounts */}
-        <div className="p-5 rounded-2xl bg-[#11131a]/90 border border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-zinc-400">Total Users</span>
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Total Users</span>
+            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
               <RiUser3Line size={12} /> Live
             </span>
           </div>
           <div className="mt-3">
-            <span className="text-3xl font-extrabold text-white tracking-tight">{totalUsersCount}</span>
+            <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{totalUsersCount}</span>
             <p className="text-[11px] text-zinc-500 mt-1 font-mono">{verifiedUsersCount} verified accounts registered</p>
           </div>
         </div>
 
         {/* AI Conversations & Messages */}
-        <div className="p-5 rounded-2xl bg-[#11131a]/90 border border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-zinc-400">AI Queries & Chats</span>
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded-full">
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">AI Queries & Chats</span>
+            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded-full">
               <RiChat3Line size={12} /> Realtime
             </span>
           </div>
           <div className="mt-3">
-            <span className="text-3xl font-extrabold text-white tracking-tight">{totalChatsCount}</span>
+            <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{totalChatsCount}</span>
             <p className="text-[11px] text-zinc-500 mt-1 font-mono">{totalMessagesCount} neural messages processed</p>
           </div>
         </div>
 
         {/* Active Subscriptions */}
-        <div className="p-5 rounded-2xl bg-[#11131a]/90 border border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-zinc-400">Paid Subscribers</span>
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Paid Subscribers</span>
+            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
               <RiMoneyDollarCircleLine size={12} /> {gatewayMode.toUpperCase()}
             </span>
           </div>
           <div className="mt-3">
-            <span className="text-3xl font-extrabold text-white tracking-tight">{totalSubscribersCount}</span>
+            <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{totalSubscribersCount}</span>
             <p className="text-[11px] text-zinc-500 mt-1 font-mono">₹{estimatedRevenue.toLocaleString()} lifetime license value</p>
           </div>
         </div>
 
         {/* Inbound Contacts & Tickets */}
-        <div className="p-5 rounded-2xl bg-[#11131a]/90 border border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-zinc-400">Inbound Inquiries</span>
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Inbound Inquiries</span>
+            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
               <RiArrowUpLine size={12} /> {overview?.metrics?.newContacts ?? 0} new
             </span>
           </div>
           <div className="mt-3">
-            <span className="text-3xl font-extrabold text-white tracking-tight">{overview?.metrics?.totalContacts ?? 0}</span>
+            <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{overview?.metrics?.totalContacts ?? 0}</span>
             <p className="text-[11px] text-zinc-500 mt-1 font-mono">Contact & enterprise inquiries</p>
           </div>
         </div>
@@ -349,27 +352,27 @@ export default function AdminDashboardPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white">Razorpay Payment Gateway Mode</h3>
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Razorpay Payment Gateway Mode</h3>
               <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
                 gatewayMode === 'payable' ? 'bg-emerald-500 text-black' : 'bg-amber-400 text-black'
               }`}>
                 {gatewayMode === 'payable' ? 'Payable (Live)' : 'Testing Mode'}
               </span>
             </div>
-            <p className="text-xs text-zinc-400 mt-0.5">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
               Toggle between Mock/Test checkout and Live Card + UPI billing. Manage plans and view subscribers in the Subscriptions tab.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
+          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-black/50 p-1 rounded-xl border border-zinc-200 dark:border-white/10">
             <button
               type="button"
               disabled={isUpdatingMode}
               onClick={() => handleToggleGateway('test')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                gatewayMode === 'test' ? 'bg-amber-500 text-black shadow-xs' : 'text-zinc-400 hover:text-white'
+                gatewayMode === 'test' ? 'bg-amber-500 text-black shadow-xs' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
               🧪 Test Mode
@@ -379,7 +382,7 @@ export default function AdminDashboardPage() {
               disabled={isUpdatingMode}
               onClick={() => handleToggleGateway('payable')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                gatewayMode === 'payable' ? 'bg-emerald-500 text-black shadow-xs' : 'text-zinc-400 hover:text-white'
+                gatewayMode === 'payable' ? 'bg-emerald-500 text-black shadow-xs' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
               ⚡ Payable Mode
@@ -388,7 +391,7 @@ export default function AdminDashboardPage() {
 
           <Link
             to="/admin/pricing"
-            className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs border border-white/10"
+            className="px-3.5 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/15 text-zinc-800 dark:text-white font-semibold text-xs border border-zinc-200 dark:border-white/10"
           >
             Manage Plans
           </Link>
@@ -398,14 +401,14 @@ export default function AdminDashboardPage() {
       {/* ── 5. Middle Visual Charts & Google Analytics Live Telemetry Card ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Chart 1: Sales / Community Activity Bar Chart */}
-        <div className="p-6 rounded-3xl bg-[#11131a]/85 border border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-4 border-b border-white/[0.05]">
+        {/* Chart 1: Platform Activity Flow Bar Chart */}
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#11131a]/85 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-white/[0.05]">
             <div>
-              <h3 className="text-sm font-bold text-white">Platform Activity Flow</h3>
-              <p className="text-[11px] text-zinc-400">Real user sessions & prompt synthesis</p>
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Platform Activity Flow</h3>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Real user sessions & prompt synthesis</p>
             </div>
-            <span className="text-xs text-zinc-400 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-white/5 px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-white/5">
               Live Flow ⌄
             </span>
           </div>
@@ -413,30 +416,30 @@ export default function AdminDashboardPage() {
           {/* Submetrics Row */}
           <div className="flex items-center gap-6 my-4">
             <div>
-              <div className="flex items-center gap-1 text-base font-extrabold text-white">
+              <div className="flex items-center gap-1 text-base font-extrabold text-zinc-900 dark:text-white">
                 <span>{totalUsersCount}</span>
-                <span className="text-[10px] font-bold text-emerald-400 flex items-center"><RiArrowUpLine size={10} /> Active</span>
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center"><RiArrowUpLine size={10} /> Active</span>
               </div>
               <span className="text-[10px] text-zinc-500">Joined Users</span>
             </div>
             <div>
-              <div className="flex items-center gap-1 text-base font-extrabold text-white">
+              <div className="flex items-center gap-1 text-base font-extrabold text-zinc-900 dark:text-white">
                 <span>{totalChatsCount}</span>
-                <span className="text-[10px] font-bold text-cyan-400 flex items-center"><RiArrowUpLine size={10} /> Live</span>
+                <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 flex items-center"><RiArrowUpLine size={10} /> Live</span>
               </div>
               <span className="text-[10px] text-zinc-500">Conversations</span>
             </div>
             <div>
-              <div className="flex items-center gap-1 text-base font-extrabold text-white">
+              <div className="flex items-center gap-1 text-base font-extrabold text-zinc-900 dark:text-white">
                 <span>{verifiedUsersCount}</span>
-                <span className="text-[10px] font-bold text-purple-400 flex items-center"><RiShieldCheckLine size={10} /> Safe</span>
+                <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 flex items-center"><RiShieldCheckLine size={10} /> Safe</span>
               </div>
               <span className="text-[10px] text-zinc-500">Verified</span>
             </div>
           </div>
 
           {/* SVG Bar Chart Visualization */}
-          <div className="h-44 w-full flex items-end justify-between gap-2 pt-6 px-2 border-b border-white/10">
+          <div className="h-44 w-full flex items-end justify-between gap-2 pt-6 px-2 border-b border-zinc-200 dark:border-white/10">
             {barData.map((bar, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
                 <div
@@ -450,16 +453,16 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Chart 2: Google Analytics 4 (GA4) Realtime Traffic & Config Status */}
-        <div className="p-6 rounded-3xl bg-[#11131a]/85 border border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-4 border-b border-white/[0.05]">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#11131a]/85 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-white/[0.05]">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-              <h3 className="text-sm font-bold text-white">Google Analytics (GA4) Traffic Stream</h3>
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Google Analytics (GA4) Traffic Stream</h3>
             </div>
             <button
               type="button"
               onClick={() => setShowGaGuide(true)}
-              className="text-xs text-[var(--accent-cyan)] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+              className="text-xs text-cyan-600 dark:text-[var(--accent-cyan)] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
             >
               <RiInformationLine size={14} />
               <span>GCP Setup Guide</span>
@@ -468,11 +471,11 @@ export default function AdminDashboardPage() {
 
           <div className="my-3 space-y-2">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-extrabold text-white">
+              <span className="text-2xl font-extrabold text-zinc-900 dark:text-white">
                 {overview?.integrations?.googleAnalytics?.status || "Container Ready"}
               </span>
             </div>
-            <p className="text-[11px] text-zinc-400 font-mono">
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
               Property: {overview?.integrations?.googleAnalytics?.measurementId || "G-PARSUAI2026"}
             </p>
           </div>
@@ -480,9 +483,9 @@ export default function AdminDashboardPage() {
           {/* Dual Smooth Spline Curves */}
           <div className="relative h-36 w-full pt-2">
             <svg viewBox="0 0 500 140" className="w-full h-full overflow-visible">
-              <line x1="0" y1="30" x2="500" y2="30" stroke="rgba(255,255,255,0.05)" />
-              <line x1="0" y1="70" x2="500" y2="70" stroke="rgba(255,255,255,0.05)" />
-              <line x1="0" y1="110" x2="500" y2="110" stroke="rgba(255,255,255,0.05)" />
+              <line x1="0" y1="30" x2="500" y2="30" stroke="rgba(150,150,150,0.15)" />
+              <line x1="0" y1="70" x2="500" y2="70" stroke="rgba(150,150,150,0.15)" />
+              <line x1="0" y1="110" x2="500" y2="110" stroke="rgba(150,150,150,0.15)" />
 
               {/* Line 1 (Blue / Direct Visits) */}
               <path
@@ -508,14 +511,14 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-white/[0.05] flex items-center justify-between text-xs text-zinc-400">
+          <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-white/[0.05] flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-blue-500" /> Direct Visits
               <span className="w-2 h-2 rounded-full bg-cyan-400 ml-2" /> AI Chats
             </span>
             <button
               onClick={() => setShowGaGuide(true)}
-              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white text-[11px] font-semibold transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-700 dark:text-white text-[11px] font-semibold transition-colors cursor-pointer"
             >
               Configure Credentials
             </button>
@@ -525,11 +528,11 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ── 6. All Employees & Registered Accounts Live Data Table ── */}
-      <div className="p-6 rounded-3xl bg-[#11131a]/85 border border-white/[0.08] shadow-sm backdrop-blur-xl space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
+      <div className="p-6 rounded-3xl bg-white dark:bg-[#11131a]/85 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-white/[0.06]">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-white">All Employees & Registered Accounts</h3>
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-white/10 text-cyan-400">
+            <h3 className="text-base font-bold text-zinc-900 dark:text-white">All Employees & Registered Accounts</h3>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
               {filteredUsers.length} shown of {totalUsersCount}
             </span>
           </div>
@@ -548,8 +551,8 @@ export default function AdminDashboardPage() {
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
                   selectedRole !== 'all' || selectedProvider !== 'all'
-                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                    : 'bg-white/[0.04] text-zinc-300 border-white/5 hover:bg-white/[0.08]'
+                    ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/40'
+                    : 'bg-zinc-100 dark:bg-white/[0.04] text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-white/5 hover:bg-zinc-200 dark:hover:bg-white/[0.08]'
                 }`}
               >
                 <RiFilter3Line size={13} />
@@ -560,15 +563,15 @@ export default function AdminDashboardPage() {
               </button>
 
               {showFilterDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-56 p-3 rounded-2xl bg-[#161822] border border-white/10 shadow-2xl z-30 space-y-3 animate-in fade-in duration-150">
+                <div className="absolute right-0 top-full mt-2 w-56 p-3 rounded-2xl bg-white dark:bg-[#161822] border border-zinc-200 dark:border-white/10 shadow-2xl z-30 space-y-3 animate-in fade-in duration-150">
                   <div>
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block mb-1">
                       Account Role
                     </label>
                     <select
                       value={selectedRole}
                       onChange={(e) => setSelectedRole(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white"
+                      className="w-full px-2.5 py-1.5 rounded-xl bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white"
                     >
                       <option value="all">All Roles</option>
                       <option value="admin">Administrators</option>
@@ -577,13 +580,13 @@ export default function AdminDashboardPage() {
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block mb-1">
                       Sign-In Provider
                     </label>
                     <select
                       value={selectedProvider}
                       onChange={(e) => setSelectedProvider(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white"
+                      className="w-full px-2.5 py-1.5 rounded-xl bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white"
                     >
                       <option value="all">All Providers</option>
                       <option value="google">Google OAuth</option>
@@ -598,7 +601,7 @@ export default function AdminDashboardPage() {
                       setSelectedProvider('all');
                       setShowFilterDropdown(false);
                     }}
-                    className="w-full py-1 text-center text-[11px] font-semibold text-zinc-400 hover:text-white"
+                    className="w-full py-1 text-center text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
                   >
                     Reset Filters
                   </button>
@@ -615,14 +618,14 @@ export default function AdminDashboardPage() {
                   setShowFilterDropdown(false);
                   setShowColumnsDropdown(false);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] text-xs font-semibold text-zinc-300 border border-white/5 hover:bg-white/[0.08] transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.04] text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/5 hover:bg-zinc-200 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
               >
                 <RiArrowUpDownLine size={13} />
                 <span>Sort ({sortField})</span>
               </button>
 
               {showSortDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-48 p-2 rounded-2xl bg-[#161822] border border-white/10 shadow-2xl z-30 space-y-1 animate-in fade-in duration-150">
+                <div className="absolute right-0 top-full mt-2 w-48 p-2 rounded-2xl bg-white dark:bg-[#161822] border border-zinc-200 dark:border-white/10 shadow-2xl z-30 space-y-1 animate-in fade-in duration-150">
                   {[
                     { field: 'createdAt', label: 'Date Joined' },
                     { field: 'username', label: 'Username' },
@@ -641,8 +644,8 @@ export default function AdminDashboardPage() {
                         }
                         setShowSortDropdown(false);
                       }}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-left transition-colors ${
-                        sortField === s.field ? 'bg-cyan-500/20 text-cyan-300' : 'text-zinc-300 hover:bg-white/5'
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-left transition-colors cursor-pointer ${
+                        sortField === s.field ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5'
                       }`}
                     >
                       <span>{s.label}</span>
@@ -664,25 +667,25 @@ export default function AdminDashboardPage() {
                   setShowFilterDropdown(false);
                   setShowSortDropdown(false);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] text-xs font-semibold text-zinc-300 border border-white/5 hover:bg-white/[0.08] transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.04] text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/5 hover:bg-zinc-200 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
               >
                 <RiLayoutColumnLine size={13} />
                 <span>Columns</span>
               </button>
 
               {showColumnsDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-44 p-2 rounded-2xl bg-[#161822] border border-white/10 shadow-2xl z-30 space-y-1 animate-in fade-in duration-150">
+                <div className="absolute right-0 top-full mt-2 w-44 p-2 rounded-2xl bg-white dark:bg-[#161822] border border-zinc-200 dark:border-white/10 shadow-2xl z-30 space-y-1 animate-in fade-in duration-150">
                   {Object.keys(visibleColumns).map((col) => (
                     <label
                       key={col}
-                      className="flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-300 hover:bg-white/5 cursor-pointer capitalize"
+                      className="flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5 cursor-pointer capitalize"
                     >
                       <span>{col}</span>
                       <input
                         type="checkbox"
                         checked={visibleColumns[col]}
                         onChange={() => setVisibleColumns((prev) => ({ ...prev, [col]: !prev[col] }))}
-                        className="rounded border-zinc-700 text-cyan-500 focus:ring-0"
+                        className="rounded border-zinc-300 dark:border-zinc-700 text-cyan-500 focus:ring-0"
                       />
                     </label>
                   ))}
@@ -696,7 +699,7 @@ export default function AdminDashboardPage() {
         {/* Live Filtered Table View */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="text-[11px] uppercase tracking-wider text-zinc-500 border-b border-white/10">
+            <thead className="text-[11px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-white/10">
               <tr>
                 {visibleColumns.id && <th className="py-3 px-4 font-semibold">User ID</th>}
                 {visibleColumns.member && <th className="py-3 px-4 font-semibold">Member</th>}
@@ -708,10 +711,10 @@ export default function AdminDashboardPage() {
                 {visibleColumns.actions && <th className="py-3 px-4 font-semibold text-right">Actions</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-zinc-300">
+            <tbody className="divide-y divide-zinc-200 dark:divide-white/5 text-zinc-700 dark:text-zinc-300">
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-zinc-500 font-medium">
+                  <td colSpan={8} className="py-8 text-center text-zinc-500 dark:text-zinc-400 font-medium">
                     No users matching criteria "{searchQuery}"
                   </td>
                 </tr>
@@ -723,9 +726,9 @@ export default function AdminDashboardPage() {
                   const userIdShort = u._id ? `#${u._id.slice(-6).toUpperCase()}` : `#ADM-00${idx + 1}`;
 
                   return (
-                    <tr key={u._id || idx} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={u._id || idx} className="hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
                       {visibleColumns.id && (
-                        <td className="py-3.5 px-4 font-mono text-[11px] text-zinc-400">
+                        <td className="py-3.5 px-4 font-mono text-[11px] text-zinc-500 dark:text-zinc-400">
                           {userIdShort}
                         </td>
                       )}
@@ -736,7 +739,7 @@ export default function AdminDashboardPage() {
                               {initials}
                             </div>
                             <div>
-                              <div className="font-bold text-white">{u.username || 'Anonymous User'}</div>
+                              <div className="font-bold text-zinc-900 dark:text-white">{u.username || 'Anonymous User'}</div>
                               <div className="text-[11px] text-zinc-500">{u.email}</div>
                             </div>
                           </div>
@@ -746,26 +749,26 @@ export default function AdminDashboardPage() {
                         <td className="py-3.5 px-4">
                           <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border ${
                             u.role === 'admin'
-                              ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                              : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+                              ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                              : 'bg-zinc-100 dark:bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-500/20'
                           }`}>
                             {u.role === 'admin' ? 'Administrator' : 'Standard User'}
                           </span>
                         </td>
                       )}
                       {visibleColumns.authProvider && (
-                        <td className="py-3.5 px-4 text-zinc-400 capitalize">
+                        <td className="py-3.5 px-4 text-zinc-600 dark:text-zinc-400 capitalize">
                           {u.authProvider || 'Local'}
                         </td>
                       )}
                       {visibleColumns.plan && (
-                        <td className="py-3.5 px-4 font-semibold text-emerald-400">
+                        <td className="py-3.5 px-4 font-semibold text-emerald-600 dark:text-emerald-400">
                           {u.subscription?.plan === 'ultra' ? 'Ultra' : u.subscription?.plan === 'pro' ? 'Pro' : 'Free'}
                         </td>
                       )}
                       {visibleColumns.status && (
                         <td className="py-3.5 px-4">
-                          <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold">
+                          <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                             {u.verified ? 'Verified' : 'Active'}
                           </span>
@@ -808,60 +811,60 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* ── 7. Google Analytics 4 (GA4) Configuration Guide Modal ── */}
-      {showGaGuide && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-xl rounded-3xl bg-[#161718] border border-white/10 shadow-2xl p-6 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+      {/* ── 7. Google Analytics 4 (GA4) Configuration Guide Modal via createPortal at top of DOM ── */}
+      {showGaGuide && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-[#161718] border border-zinc-200 dark:border-white/10 shadow-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-white/10">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-[var(--accent-cyan)]">
+                <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-[var(--accent-cyan)]">
                   <RiKeyLine size={18} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Google Analytics 4 & GCP Integration</h3>
-                  <p className="text-xs text-zinc-400">Step-by-step credentials configuration</p>
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-white">Google Analytics 4 & GCP Integration</h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">Step-by-step credentials configuration</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowGaGuide(false)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer"
               >
                 <RiCloseLine size={18} />
               </button>
             </div>
 
-            <div className="space-y-3.5 text-xs text-zinc-300 leading-relaxed">
-              <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
-                <h4 className="font-bold text-white mb-1 flex items-center gap-1.5">
+            <div className="space-y-3.5 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
+              <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/5">
+                <h4 className="font-bold text-zinc-900 dark:text-white mb-1 flex items-center gap-1.5">
                   <span className="w-5 h-5 rounded-full bg-[var(--accent-cyan)] text-black font-extrabold flex items-center justify-center text-[10px]">1</span>
                   Google Cloud Console (GCP)
                 </h4>
-                <p className="text-zinc-400 pl-6.5">
-                  1. Visit <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="text-cyan-400 underline">console.cloud.google.com</a>.<br />
+                <p className="text-zinc-600 dark:text-zinc-400 pl-6.5">
+                  1. Visit <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="text-cyan-600 dark:text-cyan-400 underline">console.cloud.google.com</a>.<br />
                   2. Enable the <strong>Google Analytics Data API v1</strong>.<br />
                   3. In <strong>IAM & Admin &rarr; Service Accounts</strong>, click <em>Create Service Account</em>, assign the role <strong>Viewer</strong>, and create a <strong>JSON Key</strong>.
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
-                <h4 className="font-bold text-white mb-1 flex items-center gap-1.5">
+              <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/5">
+                <h4 className="font-bold text-zinc-900 dark:text-white mb-1 flex items-center gap-1.5">
                   <span className="w-5 h-5 rounded-full bg-[var(--accent-cyan)] text-black font-extrabold flex items-center justify-center text-[10px]">2</span>
                   Google Analytics 4 (GA4) Property
                 </h4>
-                <p className="text-zinc-400 pl-6.5">
+                <p className="text-zinc-600 dark:text-zinc-400 pl-6.5">
                   1. In your GA4 Admin panel, go to <strong>Property Access Management</strong>.<br />
                   2. Add the service account email (e.g., <code>analytics-bot@project.iam.gserviceaccount.com</code>) with <strong>Viewer</strong> permission.<br />
                   3. Copy your <strong>GA4 Property ID</strong> (9-digit number from Property Settings).
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
-                <h4 className="font-bold text-white mb-1 flex items-center gap-1.5">
+              <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/5">
+                <h4 className="font-bold text-zinc-900 dark:text-white mb-1 flex items-center gap-1.5">
                   <span className="w-5 h-5 rounded-full bg-[var(--accent-cyan)] text-black font-extrabold flex items-center justify-center text-[10px]">3</span>
                   Environment Variables (.env)
                 </h4>
-                <pre className="mt-1 p-2 rounded-xl bg-black/60 text-[11px] font-mono text-cyan-300 overflow-x-auto">
+                <pre className="mt-1 p-2 rounded-xl bg-zinc-900 dark:bg-black/60 text-[11px] font-mono text-cyan-400 dark:text-cyan-300 overflow-x-auto border border-zinc-700/50 dark:border-white/5">
 {`GA_PROPERTY_ID=123456789
 GA_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
 GA_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n"
@@ -874,13 +877,14 @@ VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX`}
               <button
                 type="button"
                 onClick={() => setShowGaGuide(false)}
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/20 text-zinc-900 dark:text-white font-semibold text-xs transition-colors cursor-pointer"
               >
                 Close Guide
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

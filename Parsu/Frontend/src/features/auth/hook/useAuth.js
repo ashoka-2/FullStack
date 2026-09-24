@@ -111,6 +111,7 @@ export function useAuth(){
             }
             try {
                 localStorage.removeItem(AUTH_TOKEN_KEY);
+                localStorage.removeItem("token");
                 localStorage.removeItem("perplexity_auth_token");
                 localStorage.removeItem("parsu_auth_token");
                 sessionStorage.clear();
@@ -118,12 +119,13 @@ export function useAuth(){
             dispatch(setUser(null));
             dispatch(clearChat());
             if (typeof window !== "undefined") {
-                window.location.href = "/auth";
+                window.location.replace("/auth");
             }
             return { success: true };
         }catch(error){
             try {
                 localStorage.removeItem(AUTH_TOKEN_KEY);
+                localStorage.removeItem("token");
                 localStorage.removeItem("perplexity_auth_token");
                 localStorage.removeItem("parsu_auth_token");
                 sessionStorage.clear();
@@ -131,7 +133,7 @@ export function useAuth(){
             dispatch(setUser(null));
             dispatch(clearChat());
             if (typeof window !== "undefined") {
-                window.location.href = "/auth";
+                window.location.replace("/auth");
             }
             dispatch(setError(error.response?.data?.message || "Failed to logout"));
             throw error;

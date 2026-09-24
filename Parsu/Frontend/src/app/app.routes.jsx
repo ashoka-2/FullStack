@@ -89,7 +89,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: "/ai",
-                element: <Protected><Dashboard /></Protected>
+                element: <Dashboard />
             },
             {
                 path: "/dashboard",

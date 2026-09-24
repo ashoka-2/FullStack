@@ -6,7 +6,7 @@ import ChatArea from '../components/ChatArea'
 import { RiMenuLine, RiLoginCircleLine, RiUserAddLine, RiSparkling2Line, RiSideBarLine } from '@remixicon/react'
 import { setError, toggleSidebarCollapse } from '../chat.slice'
 import { useDispatch } from 'react-redux'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import ParsuLogo from '../../Components/ParsuLogo'
 import { addToast } from '../../../utils/toast.slice'
 
@@ -15,14 +15,19 @@ const Dashboard = () => {
     const error = useSelector(state => state.chat.error)
     const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed)
     const dispatch = useDispatch()
+    const navigate = useNavigate()
     const chat = useChat();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (user) {
+            if (user.role === 'admin') {
+                navigate('/admin/dashboard', { replace: true });
+                return;
+            }
             chat.initializeSocketConnection();
         }
-    }, [user])
+    }, [user, navigate])
 
     // Dispatch errors as toasts via Redux
     useEffect(() => {

@@ -17,7 +17,9 @@ import {
   RiShieldCheckLine,
   RiSparklingFill,
   RiExternalLinkLine,
-  RiPulseLine
+  RiPulseLine,
+  RiSunLine,
+  RiMoonLine
 } from '@remixicon/react';
 import ParsuLogo from '../../Components/ParsuLogo';
 import { useAuth } from '../../auth/hook/useAuth';
@@ -81,6 +83,34 @@ export default function AdminLayout() {
     }
   }, [location.pathname]);
 
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = (e) => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    if (!document.startViewTransition) {
+      setTheme(nextTheme);
+      return;
+    }
+    const x = e?.clientX ?? window.innerWidth / 2;
+    const y = e?.clientY ?? window.innerHeight / 2;
+    document.documentElement.style.setProperty('--click-x', `${x}px`);
+    document.documentElement.style.setProperty('--click-y', `${y}px`);
+    document.startViewTransition(() => {
+      setTheme(nextTheme);
+    });
+  };
+
   const [isPricingPublished, setIsPricingPublished] = useState(() => {
     return localStorage.getItem('parsu_admin_pricing_published') === 'true';
   });
@@ -105,62 +135,73 @@ export default function AdminLayout() {
   return (
     <>
       <style>{ANIM_STYLES}</style>
-      <div className="min-h-screen bg-[#050608] text-zinc-100 flex flex-col lg:flex-row font-sans selection:bg-cyan-500/20 selection:text-cyan-300">
+      <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#050608] text-zinc-800 dark:text-zinc-100 flex flex-col lg:flex-row font-sans selection:bg-cyan-500/20 selection:text-cyan-300 transition-colors duration-300">
       
       {/* ── Mobile Top Bar ── */}
-      <div className="lg:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-[#07080c]/95 backdrop-blur-2xl border-b border-white/[0.06]">
+      <div className="lg:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-[#ffffff]/90 dark:bg-[#07080c]/95 backdrop-blur-2xl border-b border-zinc-200/80 dark:border-white/[0.06] transition-colors">
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-xl bg-white/[0.05] border border-white/[0.08] text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
             aria-label="Toggle Menu"
           >
             {mobileMenuOpen ? <RiCloseLine size={18} /> : <RiMenuLine size={18} />}
           </button>
           <div className="flex items-center gap-2">
-            <ParsuLogo size={17} className="text-cyan-400" />
-            <span className="font-black text-[13px] text-white tracking-tight">Parsu Console</span>
+            <ParsuLogo size={17} className="text-cyan-500 dark:text-cyan-400" />
+            <span className="font-black text-[13px] text-zinc-900 dark:text-white tracking-tight">Parsu Console</span>
             <span className="px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase text-black bg-cyan-400 leading-none">ADMIN</span>
           </div>
         </div>
-        <Link to="/ai" className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-[11px] font-bold">
-          <RiArrowLeftLine size={12} />Exit
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-2 rounded-xl bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-300 hover:text-cyan-500 cursor-pointer transition-colors"
+            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            aria-label="Toggle Theme"
+          >
+            {theme === 'light' ? <RiMoonLine size={15} /> : <RiSunLine size={15} className="text-amber-400" />}
+          </button>
+          <Link to="/ai" className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 text-[11px] font-bold">
+            <RiArrowLeftLine size={12} />Exit
+          </Link>
+        </div>
       </div>
 
       {/* ── Sidebar ── */}
       <aside
         className={`fixed lg:sticky top-0 left-0 z-40 h-[100dvh] w-64
-          bg-[#06070c]/98 backdrop-blur-2xl border-r border-white/[0.06]
-          flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
+          bg-white/95 dark:bg-[#06070c]/98 backdrop-blur-2xl border-r border-zinc-200 dark:border-white/[0.06]
+          flex flex-col transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
         style={{ boxShadow: 'inset -1px 0 0 rgba(6,182,212,0.06)' }}
       >
         {/* Brand */}
-        <div className="px-5 pt-6 pb-5 border-b border-white/[0.05] shrink-0">
+        <div className="px-5 pt-6 pb-5 border-b border-zinc-200 dark:border-white/[0.05] shrink-0">
           <Link to="/admin/dashboard" className="flex items-center gap-3 group">
             <div className="admin-logo-glow relative w-9 h-9 shrink-0">
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-500/70 to-sky-600/60 blur-[1px]" />
-              <div className="relative w-full h-full rounded-2xl bg-[#0c0e16] border border-cyan-500/25 flex items-center justify-center">
-                <ParsuLogo size={16} className="text-cyan-400" />
+              <div className="relative w-full h-full rounded-2xl bg-zinc-100 dark:bg-[#0c0e16] border border-cyan-500/30 flex items-center justify-center">
+                <ParsuLogo size={16} className="text-cyan-500 dark:text-cyan-400" />
               </div>
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-black text-[13px] tracking-tight text-white">Parsu AI</span>
+                <span className="font-black text-[13px] tracking-tight text-zinc-900 dark:text-white">Parsu AI</span>
                 <span className="px-1.5 py-px rounded text-[8px] font-black uppercase bg-gradient-to-r from-cyan-500 to-sky-500 text-black leading-none">ADMIN</span>
               </div>
-              <p className="text-[10px] text-zinc-600 mt-0.5">Infrastructure Console</p>
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-600 mt-0.5">Infrastructure Console</p>
             </div>
           </Link>
         </div>
 
         {/* Pricing Toggle */}
-        <div className="mx-4 mt-4 p-3 rounded-2xl bg-white/[0.02] border border-white/[0.05] shrink-0">
+        <div className="mx-4 mt-4 p-3 rounded-2xl bg-zinc-100/80 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.05] shrink-0">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-1.5">
-              <RiSparklingFill size={11} className="text-cyan-400" />
-              <span className="text-[11px] font-bold text-zinc-300">Public Pricing</span>
+              <RiSparklingFill size={11} className="text-cyan-500 dark:text-cyan-400" />
+              <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">Public Pricing</span>
             </div>
             <button
               onClick={handleTogglePricing}
@@ -168,21 +209,21 @@ export default function AdminLayout() {
               title={isPricingPublished ? 'Hide prices' : 'Publish prices'}
             >
               {isPricingPublished
-                ? <RiToggleFill size={22} className="text-cyan-400" />
-                : <RiToggleLine size={22} className="text-zinc-600" />
+                ? <RiToggleFill size={22} className="text-cyan-500 dark:text-cyan-400" />
+                : <RiToggleLine size={22} className="text-zinc-400 dark:text-zinc-600" />
               }
             </button>
           </div>
           <p className="text-[10px] font-medium">
             {isPricingPublished
-              ? <span className="text-emerald-400">● Live — prices visible</span>
-              : <span className="text-amber-400">● Stealth — coming soon</span>
+              ? <span className="text-emerald-500 dark:text-emerald-400">● Live — prices visible</span>
+              : <span className="text-amber-500 dark:text-amber-400">● Stealth — coming soon</span>
             }
           </p>
         </div>
 
         {/* Nav Links */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5 custom-scrollbar">
           {ADMIN_NAV_LINKS.map((link) => {
             const Icon = link.icon;
             const isActive = link.href === '/admin/dashboard'
@@ -201,23 +242,23 @@ export default function AdminLayout() {
                 className={`relative flex items-center justify-between px-3 py-2.5 rounded-xl
                   text-[12px] font-semibold transition-all duration-200
                   ${isActive
-                    ? 'admin-active-bar bg-cyan-500/[0.08] text-cyan-300 border border-cyan-500/[0.18]'
-                    : 'text-zinc-500 hover:text-zinc-100 hover:bg-white/[0.04]'
+                    ? 'admin-active-bar bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/20 dark:border-cyan-500/[0.18]'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/[0.04]'
                   }`}
               >
                 <div className="flex items-center gap-2.5 pl-1">
                   <Icon
                     size={15}
                     className={`shrink-0 transition-all duration-200 ${
-                      isActive ? 'text-cyan-400'
-                        : hovered === link.href ? 'text-white scale-110'
-                        : 'text-zinc-600'
+                      isActive ? 'text-cyan-500 dark:text-cyan-400'
+                        : hovered === link.href ? 'text-cyan-600 dark:text-white scale-110'
+                        : 'text-zinc-400 dark:text-zinc-600'
                     }`}
                   />
                   <span>{link.label}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  {link.external && <RiExternalLinkLine size={11} className="text-zinc-700" />}
+                  {link.external && <RiExternalLinkLine size={11} className="text-zinc-400 dark:text-zinc-700" />}
                   {isActive && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />}
                 </div>
               </Link>
@@ -226,29 +267,35 @@ export default function AdminLayout() {
         </nav>
 
         {/* Bottom Controls */}
-        <div className="px-3 pb-5 pt-3 border-t border-white/[0.05] space-y-2 shrink-0">
-          <Link
-            to="/ai"
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/[0.03] hover:bg-cyan-500/10 border border-white/[0.06] hover:border-cyan-500/20 text-zinc-400 hover:text-cyan-300 text-[12px] font-semibold transition-all cursor-pointer"
+        <div className="px-3 pb-5 pt-3 border-t border-zinc-200 dark:border-white/[0.05] space-y-2 shrink-0">
+          {/* Theme Toggle Button in Sidebar */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-zinc-100/80 hover:bg-zinc-200/80 dark:bg-white/[0.03] dark:hover:bg-white/[0.08] border border-zinc-200 dark:border-white/[0.06] text-zinc-700 dark:text-zinc-300 text-[12px] font-semibold transition-all cursor-pointer"
+            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
           >
-            <RiArrowLeftLine size={13} />
-            Return to AI Chat
-          </Link>
+            <div className="flex items-center gap-2">
+              {theme === 'light' ? <RiMoonLine size={15} className="text-indigo-600" /> : <RiSunLine size={15} className="text-amber-400" />}
+              <span>{theme === 'light' ? 'Light Theme' : 'Dark Theme'}</span>
+            </div>
+            <span className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-mono">Switch</span>
+          </button>
 
-          <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+          <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-100/70 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.04]">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-cyan-500/25 to-sky-600/25 border border-cyan-500/20 flex items-center justify-center text-[11px] font-black text-cyan-300 shrink-0">
+              <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-cyan-500/25 to-sky-600/25 border border-cyan-500/20 flex items-center justify-center text-[11px] font-black text-cyan-600 dark:text-cyan-300 shrink-0">
                 {initials}
               </div>
               <div className="min-w-0">
-                <p className="text-[12px] font-bold text-white truncate leading-tight">{displayName}</p>
-                <p className="text-[10px] text-zinc-600 truncate">{user?.email}</p>
+                <p className="text-[12px] font-bold text-zinc-900 dark:text-white truncate leading-tight">{displayName}</p>
+                <p className="text-[10px] text-zinc-500 dark:text-zinc-600 truncate">{user?.email}</p>
               </div>
             </div>
             <button
               onClick={onLogout}
               title="Sign out"
-              className="p-1.5 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0"
+              className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0"
             >
               <RiLogoutBoxRLine size={14} />
             </button>
@@ -260,7 +307,7 @@ export default function AdminLayout() {
       {mobileMenuOpen && (
         <div
           onClick={() => setMobileMenuOpen(false)}
-          className="lg:hidden fixed inset-0 z-30 bg-black/65 backdrop-blur-sm"
+          className="lg:hidden fixed inset-0 z-30 bg-black/50 dark:bg-black/65 backdrop-blur-sm"
         />
       )}
 
@@ -268,7 +315,7 @@ export default function AdminLayout() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Desktop Header */}
-        <header className="hidden lg:flex items-center justify-between px-8 py-3 bg-[#06070b]/80 backdrop-blur-2xl border-b border-white/[0.05] sticky top-0 z-20">
+        <header className="hidden lg:flex items-center justify-between px-8 py-3 bg-[#ffffff]/85 dark:bg-[#06070b]/80 backdrop-blur-2xl border-b border-zinc-200/80 dark:border-white/[0.05] sticky top-0 z-20 transition-colors">
           <div className="flex items-center gap-2.5">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
@@ -278,25 +325,28 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            {/* Desktop Theme Switcher */}
             <button
-              onClick={handleTogglePricing}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer bg-white/[0.02] border-white/[0.07] hover:border-white/[0.15]"
+              type="button"
+              onClick={toggleTheme}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.02] dark:hover:bg-white/[0.08] border-zinc-200 dark:border-white/[0.07] text-zinc-700 dark:text-zinc-300"
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             >
-              <RiPulseLine size={13} className={isPricingPublished ? 'text-emerald-400' : 'text-amber-400'} />
-              <span className="text-zinc-500">Pricing:</span>
-              {isPricingPublished
-                ? <span className="text-emerald-400 font-bold">Live</span>
-                : <span className="text-amber-400 font-bold">Hidden</span>
-              }
+              {theme === 'light' ? <RiMoonLine size={13} /> : <RiSunLine size={13} className="text-amber-400" />}
+              <span>{theme === 'light' ? 'Dark' : 'Light'}</span>
             </button>
 
-            <Link
-              to="/ai"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/[0.03] hover:bg-cyan-500/10 text-zinc-400 hover:text-cyan-300 border border-white/[0.07] hover:border-cyan-500/20 text-xs font-semibold transition-all cursor-pointer"
+            <button
+              onClick={handleTogglePricing}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer bg-zinc-100/80 hover:bg-zinc-200/80 dark:bg-white/[0.02] dark:hover:bg-white/[0.08] border-zinc-200 dark:border-white/[0.07]"
             >
-              <RiArrowLeftLine size={13} />
-              Back to Chat
-            </Link>
+              <RiPulseLine size={13} className={isPricingPublished ? 'text-emerald-500 dark:text-emerald-400' : 'text-amber-500 dark:text-amber-400'} />
+              <span className="text-zinc-500">Pricing:</span>
+              {isPricingPublished
+                ? <span className="text-emerald-500 dark:text-emerald-400 font-bold">Live</span>
+                : <span className="text-amber-500 dark:text-amber-400 font-bold">Hidden</span>
+              }
+            </button>
           </div>
         </header>
 
@@ -308,8 +358,8 @@ export default function AdminLayout() {
           <Outlet />
         </main>
 
-        <footer className="py-4 px-8 border-t border-white/[0.04] text-center">
-          <p className="text-[11px] font-mono text-zinc-700">
+        <footer className="py-4 px-8 border-t border-zinc-200 dark:border-white/[0.04] text-center">
+          <p className="text-[11px] font-mono text-zinc-400 dark:text-zinc-700">
             Parsu AI Admin Console &nbsp;·&nbsp; v2.0 &nbsp;·&nbsp;
             <span className="admin-shimmer font-bold">Neural Orchestrator</span>
           </p>
