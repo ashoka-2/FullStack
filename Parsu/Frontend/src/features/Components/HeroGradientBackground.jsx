@@ -6,10 +6,10 @@ import React from 'react';
 // Currently active background: Poolside.svg (used for both dark & light themes across all devices)
 // import poolsideSvg from '../../assets/Poolside.svg';
 
-// Example secondary assets (uncomment and supply paths when needed):
-// import blueSkySvg from '../../assets/Blue sky-2048x1152.svg';
-import heroVideoDark from '../../../public/poolside.mp4';
-// import heroVideoLight from '../../assets/hero-background-light.mp4';
+// Vite serves assets in the `public/` folder directly from the root path.
+// Public assets should never be imported via JavaScript `import` statements.
+const heroVideoDark = '/Poolside.mp4';
+const heroVideoDarkFallback = '/poolside.mp4';
 
 import { GRAIN_PATTERN_DATA } from '../../assets/grainData';
 
@@ -140,8 +140,8 @@ const HeroGradientBackground = () => {
           // poster={poolsideSvg}
           className="w-full h-full object-cover opacity-75 dark:opacity-85 mix-blend-normal dark:mix-blend-screen scale-[1.01]"
         >
-          <source src={heroVideoDark} type="video/webm" />
           <source src={heroVideoDark} type="video/mp4" />
+          <source src={heroVideoDarkFallback} type="video/mp4" />
         </video>
         
 
