@@ -47,9 +47,9 @@ export default function SubscriptionSettingsPage() {
         }
     };
 
+    const isUltra = subscription?.plan === 'ultra' || subscription?.plan === 'enterprise';
     const isPro = subscription?.plan === 'pro';
-    const isEnterprise = subscription?.plan === 'enterprise';
-    const isFree = !isPro && !isEnterprise;
+    const isFree = !isPro && !isUltra;
 
     const [currency, setCurrency] = useState('USD');
 
@@ -180,20 +180,20 @@ export default function SubscriptionSettingsPage() {
                 
                 {/* ── Current Active Tier Card ── */}
                 <div className={`p-6 sm:p-7 rounded-3xl border transition-all duration-300 relative overflow-hidden shadow-lg ${
-                    isPro 
+                    isUltra
+                        ? 'bg-gradient-to-br from-amber-500/10 via-cyan-500/5 to-transparent border-cyan-500/30'
+                        : isPro 
                         ? 'bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border-emerald-500/30'
-                        : isEnterprise
-                        ? 'bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-transparent border-purple-500/30'
                         : 'bg-white dark:bg-[var(--bg-surface)] border-zinc-200/80 dark:border-white/10'
                 }`}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
                                 <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-                                    isPro
+                                    isUltra
+                                        ? 'bg-gradient-to-r from-amber-500/20 to-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                                        : isPro
                                         ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                                        : isEnterprise
-                                        ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30'
                                         : 'bg-zinc-100 dark:bg-white/10 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-white/10'
                                 }`}>
                                     {subscription?.plan?.toUpperCase()} PLAN
@@ -205,29 +205,33 @@ export default function SubscriptionSettingsPage() {
                             </div>
 
                             <h2 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white">
-                                {isPro ? 'Pro Researcher Tier' : isEnterprise ? 'Enterprise Workspace' : 'Free Community Tier'}
+                                {isUltra ? 'Ultra Tier' : isPro ? 'Pro Researcher Tier' : 'Free Community Tier'}
                             </h2>
 
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md leading-relaxed">
-                                {isPro
+                                {isUltra
+                                    ? 'Unrestricted frontier reasoning, massive 1M+ token context, and dedicated compute pipelines.'
+                                    : isPro
                                     ? 'Full flagship intelligence with unlimited queries, Google Workspace sync, and universal social publishing.'
-                                    : isEnterprise
-                                    ? 'Dedicated inference infrastructure, team collaboration, and bespoke compliance.'
-                                    : 'Basic daily research allocation. Upgrade anytime to unlock unlimited intelligence.'}
+                                    : 'Community Starter tier active. Paid Pro & Ultra tiers with expanded quotas are currently in early-access preview and coming soon.'}
                             </p>
                         </div>
 
                         <div className="flex flex-col sm:items-end gap-2 shrink-0">
                             {isFree ? (
-                                <button
-                                    type="button"
-                                    onClick={() => handleQuickUpgrade('pro', 'annual')}
-                                    disabled={upgrading}
-                                    className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md shadow-cyan-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                                >
-                                    {upgrading ? <RiLoader4Line size={16} className="animate-spin" /> : <RiSparkling2Line size={16} />}
-                                    <span>Upgrade to Pro ({proMonthlyDisplay}/mo)</span>
-                                </button>
+                                <div className="flex flex-col sm:items-end gap-2">
+                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-[11px] font-bold text-[var(--accent-cyan)]">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                                        <span>Pro & Ultra Tiers Coming Soon</span>
+                                    </div>
+                                    <Link
+                                        to="/pricing"
+                                        className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/15 text-zinc-800 dark:text-zinc-200 font-semibold text-xs flex items-center gap-1.5 transition-all self-start sm:self-auto cursor-pointer"
+                                    >
+                                        <span>Preview Plans</span>
+                                        <RiArrowRightLine size={13} />
+                                    </Link>
+                                </div>
                             ) : (
                                 <Link
                                     to="/pricing"
@@ -371,17 +375,17 @@ export default function SubscriptionSettingsPage() {
                         <div className="space-y-0.5">
                             <h4 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                                 <RiShieldCheckLine size={18} className="text-cyan-500" />
-                                <span>Compare Tiers & Features</span>
+                                <span>Upcoming Tiers & Quota Expansion</span>
                             </h4>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                View full model matrix, storage limits, and enterprise capabilities.
+                                Explore upcoming model access, larger file contexts, and multi-network capabilities.
                             </p>
                         </div>
                         <Link
                             to="/pricing"
-                            className="shrink-0 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-black font-bold text-xs flex items-center gap-1.5 transition-all self-start sm:self-auto"
+                            className="shrink-0 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-black font-bold text-xs flex items-center gap-1.5 transition-all self-start sm:self-auto cursor-pointer"
                         >
-                            <span>View Full Pricing Matrix</span>
+                            <span>Preview Upcoming Plans</span>
                             <RiArrowRightLine size={14} />
                         </Link>
                     </div>

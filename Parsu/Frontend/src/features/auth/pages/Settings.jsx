@@ -38,7 +38,7 @@ const SETTING_GROUPS = [
                 to: '/settings/subscription',
                 icon: RiVipCrownLine,
                 title: 'Plan & Quotas',
-                description: 'View your active plan, monitor daily query limits, and upgrade via Razorpay.',
+                description: 'View your active plan, monitor daily query limits and resource quotas.',
                 color: '#10b981',
                 glow: 'rgba(16,185,129,0.15)',
             },

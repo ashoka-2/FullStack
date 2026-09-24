@@ -8,38 +8,38 @@ import redisClient, { isRedisReady } from "../config/redis.js";
 export const DEFAULT_PLAN_PRICING = {
     INR: {
         symbol: "₹",
-        starter: {
-            monthly: { amount: 149900, display: 1499, name: "Web Hero (Perpetual)" },
-            annual: { amount: 149900, display: 1499, name: "Web Hero (Perpetual)" },
-            lifetime: { amount: 149900, display: 1499, name: "Web Hero (Perpetual)" }
+        free: {
+            monthly: { amount: 0, display: 0, name: "Starter Free" },
+            annual: { amount: 0, display: 0, name: "Starter Free" },
+            lifetime: { amount: 0, display: 0, name: "Starter Free" }
         },
         pro: {
-            monthly: { amount: 149900, display: 1499, name: "Web Hero (Perpetual)" },
-            annual: { amount: 149900, display: 1499, name: "Web Hero (Perpetual)" },
-            lifetime: { amount: 149900, display: 1499, name: "Web Hero (Perpetual)" }
+            monthly: { amount: 49900, display: 499, name: "Pro" },
+            annual: { amount: 39900 * 12, display: 399, name: "Pro (Annual)" },
+            lifetime: { amount: 499000, display: 4990, name: "Pro (Lifetime)" }
         },
-        enterprise: {
-            monthly: { amount: 249900, display: 2499, name: "Super Hero (Perpetual Bundle)" },
-            annual: { amount: 249900, display: 2499, name: "Super Hero (Perpetual Bundle)" },
-            lifetime: { amount: 249900, display: 2499, name: "Super Hero (Perpetual Bundle)" }
+        ultra: {
+            monthly: { amount: 99900, display: 999, name: "Ultra" },
+            annual: { amount: 79900 * 12, display: 799, name: "Ultra (Annual)" },
+            lifetime: { amount: 999000, display: 9990, name: "Ultra (Lifetime)" }
         }
     },
     USD: {
         symbol: "$",
-        starter: {
-            monthly: { amount: 29900, display: 299, name: "Web Hero (Perpetual)" },
-            annual: { amount: 29900, display: 299, name: "Web Hero (Perpetual)" },
-            lifetime: { amount: 29900, display: 299, name: "Web Hero (Perpetual)" }
+        free: {
+            monthly: { amount: 0, display: 0, name: "Starter Free" },
+            annual: { amount: 0, display: 0, name: "Starter Free" },
+            lifetime: { amount: 0, display: 0, name: "Starter Free" }
         },
         pro: {
-            monthly: { amount: 29900, display: 299, name: "Web Hero (Perpetual)" },
-            annual: { amount: 29900, display: 299, name: "Web Hero (Perpetual)" },
-            lifetime: { amount: 29900, display: 299, name: "Web Hero (Perpetual)" }
+            monthly: { amount: 900, display: 9, name: "Pro" },
+            annual: { amount: 700 * 12, display: 7, name: "Pro (Annual)" },
+            lifetime: { amount: 9900, display: 99, name: "Pro (Lifetime)" }
         },
-        enterprise: {
-            monthly: { amount: 39900, display: 399, name: "Super Hero (Perpetual Bundle)" },
-            annual: { amount: 39900, display: 399, name: "Super Hero (Perpetual Bundle)" },
-            lifetime: { amount: 39900, display: 399, name: "Super Hero (Perpetual Bundle)" }
+        ultra: {
+            monthly: { amount: 1900, display: 19, name: "Ultra" },
+            annual: { amount: 1500 * 12, display: 15, name: "Ultra (Annual)" },
+            lifetime: { amount: 19900, display: 199, name: "Ultra (Lifetime)" }
         }
     }
 };
@@ -85,10 +85,10 @@ export async function createOrder(req, res) {
         const userId = req.user?.id;
         const { plan, billingCycle = "monthly", currency = "INR" } = req.body;
 
-        if (!plan || !["starter", "pro", "enterprise"].includes(plan)) {
+        if (!plan || !["pro", "ultra"].includes(plan)) {
             return res.status(400).json({
                 success: false,
-                message: "Valid plan ('starter', 'pro', or 'enterprise') is required"
+                message: "Valid plan ('pro' or 'ultra') is required"
             });
         }
 
@@ -165,8 +165,8 @@ export async function verifyPayment(req, res) {
             currency = "INR"
         } = req.body;
 
-        if (!plan || !["pro", "enterprise"].includes(plan)) {
-            return res.status(400).json({ success: false, message: "Valid plan ('pro' or 'enterprise') is required" });
+        if (!plan || !["pro", "ultra"].includes(plan)) {
+            return res.status(400).json({ success: false, message: "Valid plan ('pro' or 'ultra') is required" });
         }
 
         if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
@@ -214,7 +214,9 @@ export async function verifyPayment(req, res) {
         // 3. Process genuine upgrade
         const validCurrency = currency === "USD" ? "USD" : "INR";
         const cycle = billingCycle === "annual" ? "annual" : "monthly";
-        const priceConfig = PLAN_PRICING[validCurrency][plan][cycle];
+        const pricing = await getActivePricing();
+        const planPricing = (pricing[validCurrency] || DEFAULT_PLAN_PRICING[validCurrency])[plan] || (DEFAULT_PLAN_PRICING[validCurrency])[plan];
+        const priceConfig = planPricing[cycle] || planPricing.monthly;
 
         const now = new Date();
         const endDate = new Date(now);
@@ -225,9 +227,9 @@ export async function verifyPayment(req, res) {
         }
 
         // Upgrade quotas
-        const queriesLimit = -1; // Unlimited queries for Pro and Enterprise
-        const documentUploadsLimit = plan === "enterprise" ? -1 : 50;
-        const socialPostsLimit = -1; // Unlimited social posts for Pro and Enterprise
+        const queriesLimit = -1; // Unlimited queries for Pro and Ultra
+        const documentUploadsLimit = plan === "ultra" ? -1 : 50;
+        const socialPostsLimit = -1; // Unlimited social posts for Pro and Ultra
 
         const updatedUser = await userModel.findByIdAndUpdate(
             userId,

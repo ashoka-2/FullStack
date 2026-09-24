@@ -55,7 +55,7 @@ const userSchema = new mongoose.Schema({
     subscription: {
         plan: {
             type: String,
-            enum: ['free', 'starter', 'pro', 'enterprise'],
+            enum: ['free', 'pro', 'ultra'],
             default: 'free'
         },
         billingCycle: {

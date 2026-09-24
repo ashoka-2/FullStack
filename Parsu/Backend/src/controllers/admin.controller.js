@@ -141,7 +141,7 @@ export async function getAdminUsers(req, res) {
         if (roleFilter && ["user", "admin"].includes(roleFilter)) {
             query.role = roleFilter;
         }
-        if (planFilter && ["free", "starter", "pro", "enterprise"].includes(planFilter)) {
+        if (planFilter && ["free", "pro", "ultra"].includes(planFilter)) {
             query["subscription.plan"] = planFilter;
         }
 
@@ -241,7 +241,7 @@ export async function updateUserSubscription(req, res) {
         const { id } = req.params;
         const { plan, status, billingCycle } = req.body;
 
-        const validPlans = ['free', 'starter', 'pro', 'enterprise'];
+        const validPlans = ['free', 'pro', 'ultra'];
         const validStatuses = ['active', 'inactive', 'cancelled', 'past_due'];
         const validCycles = ['monthly', 'annual', 'lifetime', 'none'];
 
@@ -278,11 +278,11 @@ export async function updateUserSubscription(req, res) {
 
         if (plan) {
             targetUser.subscription.plan = plan;
-            if (plan === 'enterprise') {
+            if (plan === 'ultra') {
                 targetUser.usageQuotas.queriesLimit = -1;
                 targetUser.usageQuotas.documentUploadsLimit = -1;
                 targetUser.usageQuotas.socialPostsLimit = -1;
-            } else if (plan === 'pro' || plan === 'starter') {
+            } else if (plan === 'pro') {
                 targetUser.usageQuotas.queriesLimit = -1;
                 targetUser.usageQuotas.documentUploadsLimit = 50;
                 targetUser.usageQuotas.socialPostsLimit = -1;
