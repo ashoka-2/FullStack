@@ -191,14 +191,25 @@ export async function getAdminUsers(req, res) {
             userModel.countDocuments(query)
         ]);
 
+        const pages = Math.ceil(total / limit) || 1;
+        const pagination = {
+            total,
+            page,
+            pages,
+            limit,
+            hasMore: page < pages,
+            totalUsers: total,
+            currentPage: page,
+            totalPages: pages
+        };
+
         return res.status(200).json({
             success: true,
             users,
-            pagination: {
-                total,
-                page,
-                pages: Math.ceil(total / limit),
-                limit
+            pagination,
+            data: {
+                users,
+                pagination
             }
         });
     } catch (err) {

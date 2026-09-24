@@ -52,7 +52,16 @@ export default function AdminUsersPage() {
     status: 'active',
     billingCycle: 'monthly'
   });
-  const [isSavingSub, setIsSavingSub] = useState(false);
+  // Refs to avoid stale closures in observer
+  const pageRef = useRef(1);
+  const hasMoreRef = useRef(true);
+  const isLoadingRef = useRef(false);
+  const isLoadingMoreRef = useRef(false);
+
+  pageRef.current = page;
+  hasMoreRef.current = hasMore;
+  isLoadingRef.current = isLoading;
+  isLoadingMoreRef.current = isLoadingMore;
 
   // Sentinel ref for infinite scroll observer
   const observerSentinelRef = useRef(null);
@@ -73,20 +82,27 @@ export default function AdminUsersPage() {
         plan: planFilter
       });
 
-      if (res.success && res.data) {
+      if (res && (res.success || Array.isArray(res.users) || Array.isArray(res.data?.users))) {
+        const rawUsers = res.data?.users || res.users || [];
+        const pagination = res.data?.pagination || res.pagination || {};
+        const total = pagination.totalUsers ?? pagination.total ?? rawUsers.length;
+        const currentPage = pagination.currentPage ?? pagination.page ?? targetPage;
+        const totalPages = pagination.totalPages ?? pagination.pages ?? (Math.ceil(total / 10) || 1);
+        const more = pagination.hasMore ?? (currentPage < totalPages);
+
         if (append) {
           setUsers((prev) => {
             const existingIds = new Set(prev.map((u) => u._id));
-            const newUsers = res.data.users.filter((u) => !existingIds.has(u._id));
+            const newUsers = rawUsers.filter((u) => !existingIds.has(u._id));
             return [...prev, ...newUsers];
           });
         } else {
-          setUsers(res.data.users || []);
+          setUsers(rawUsers);
         }
 
-        setPage(res.data.pagination?.currentPage || targetPage);
-        setHasMore(res.data.pagination?.hasMore || false);
-        setTotalCount(res.data.pagination?.totalUsers || 0);
+        setPage(currentPage);
+        setHasMore(more);
+        setTotalCount(total);
       }
     } catch (err) {
       console.error('Failed to fetch users:', err);
@@ -104,30 +120,28 @@ export default function AdminUsersPage() {
     fetchUsers(1, false);
   }, [searchQuery, roleFilter, planFilter]);
 
-  // Infinite scroll callback
-  const handleObserver = useCallback(
-    (entries) => {
-      const [target] = entries;
-      if (target.isIntersecting && hasMore && !isLoading && !isLoadingMore) {
-        fetchUsers(page + 1, true);
-      }
-    },
-    [hasMore, isLoading, isLoadingMore, page]
-  );
-
+  // Infinite scroll observer setup
   useEffect(() => {
     const element = observerSentinelRef.current;
     if (!element) return;
 
-    const observer = new IntersectionObserver(handleObserver, {
-      root: null,
-      rootMargin: '100px',
-      threshold: 0.1
-    });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [target] = entries;
+        if (target.isIntersecting && hasMoreRef.current && !isLoadingRef.current && !isLoadingMoreRef.current) {
+          fetchUsers(pageRef.current + 1, true);
+        }
+      },
+      {
+        root: null,
+        rootMargin: '250px',
+        threshold: 0.05
+      }
+    );
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, [handleObserver]);
+  }, []);
 
   // Role Promotion / Demotion
   const handleRoleToggle = async (user) => {
@@ -550,7 +564,14 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Sentinel element for infinite scroll observer */}
-        <div ref={observerSentinelRef} className="h-4 w-full" />
+        <div ref={observerSentinelRef} className="w-full flex items-center justify-center min-h-[16px]">
+          {isLoadingMore && (
+            <div className="flex items-center gap-2 text-xs text-cyan-600 dark:text-cyan-400 font-semibold py-2">
+              <RiLoader4Line size={16} className="animate-spin" />
+              <span>Fetching next 10 users...</span>
+            </div>
+          )}
+        </div>
 
         {/* Load More Button & Status Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-zinc-200 dark:border-white/[0.05] text-xs text-zinc-500 dark:text-zinc-400 gap-3">
