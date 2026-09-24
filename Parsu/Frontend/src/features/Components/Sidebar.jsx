@@ -189,7 +189,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     <>
       <aside
         data-lenis-prevent="true"
-        className={`fixed top-0 left-0 z-[9990] w-[280px] xs:w-[290px] lg:w-56 h-[100dvh] flex flex-col bg-[#ebecee] dark:bg-[#070809] text-zinc-600 dark:text-zinc-400 p-3 sm:p-3.5 transition-transform duration-300 ease-in-out shrink-0 border-r border-zinc-300/70 dark:border-white/5 shadow-2xl lg:shadow-none
+        className={`fixed top-0 left-0 z-[9990] w-[280px] xs:w-[290px] lg:w-56 h-[100dvh] flex flex-col bg-[#ebecee] dark:bg-[var(--bg-primary)] text-zinc-600 dark:text-zinc-400 p-3 sm:p-3.5 transition-transform duration-300 ease-in-out shrink-0 border-r border-zinc-300/70 dark:border-white/5 shadow-2xl lg:shadow-none
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Sidebar Header: Brand Mark, Name & Mobile Close Button */}
@@ -199,12 +199,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             onClick={closeMobileSidebar}
             className="flex items-center gap-2 group cursor-pointer"
           >
-            <ParsuLogo className="w-6 h-6 text-[#20b8cd] group-hover:scale-105 transition-transform shrink-0" />
+            <ParsuLogo className="w-6 h-6 text-[var(--accent-cyan)] group-hover:scale-105 transition-transform shrink-0" />
             <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-[16px] sm:text-[17px] tracking-tight text-zinc-900 dark:text-white">
                 PARSU
               </span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-black tracking-wider text-black bg-[#20b8cd] shadow-xs">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-black tracking-wider text-black bg-[var(--accent-cyan)] shadow-xs">
                 AI
               </span>
             </div>
@@ -235,7 +235,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 closeMobileSidebar();
               }}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group cursor-pointer
-                ${item.active ? 'bg-white dark:bg-[#1a1a1a] text-zinc-950 dark:text-zinc-100 shadow-xs border border-zinc-200/80 dark:border-transparent' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/70 dark:hover:bg-[#121212] hover:text-zinc-950 dark:hover:text-zinc-200'}`}
+                ${item.active ? 'bg-white dark:bg-[var(--bg-surface)] text-zinc-950 dark:text-zinc-100 shadow-xs border border-zinc-200/80 dark:border-transparent' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/70 dark:hover:bg-[#121212] hover:text-zinc-950 dark:hover:text-zinc-200'}`}
             >
               <item.icon size={18} className={item.active ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-500'} />
               <span className="text-sm font-medium">{item.label}</span>
@@ -274,7 +274,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 <Link 
                   to="/auth" 
                   onClick={closeMobileSidebar}
-                  className="inline-flex items-center justify-center gap-1 w-full py-1.5 px-3 rounded-lg bg-[#20b8cd] text-zinc-950 font-bold text-xs hover:bg-[#1da9bc] transition-all cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1 w-full py-1.5 px-3 rounded-lg bg-[var(--accent-cyan)] text-zinc-950 font-bold text-xs hover:bg-[var(--accent-cyan-hover)] transition-all cursor-pointer"
                 >
                   <span>Sign In</span>
                 </Link>
@@ -298,7 +298,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                         closeMobileSidebar();
                       }}
                       className={`flex-1 block text-left px-3 py-1.5 rounded-lg text-[13px] truncate transition-all font-medium cursor-pointer
-                      ${location.pathname === `/chat/${thread._id}` ? 'text-zinc-950 dark:text-zinc-100 bg-white dark:bg-[#1a1a1a] shadow-xs border border-zinc-200/80 dark:border-transparent' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200 hover:bg-zinc-200/70 dark:hover:bg-[#121212]'}`}
+                      ${location.pathname === `/chat/${thread._id}` ? 'text-zinc-950 dark:text-zinc-100 bg-white dark:bg-[var(--bg-surface)] shadow-xs border border-zinc-200/80 dark:border-transparent' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200 hover:bg-zinc-200/70 dark:hover:bg-[#121212]'}`}
                     >
                       {thread.title || 'Untitled Chat'}
                     </Link>
@@ -319,7 +319,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   <Link
                     to="/library"
                     onClick={closeMobileSidebar}
-                    className="px-3 py-1.5 text-[11px] font-bold text-[#60A6AF] hover:text-[#60A6AF]/80 uppercase tracking-wider block w-fit transition-colors cursor-pointer"
+                    className="px-3 py-1.5 text-[11px] font-bold text-[var(--accent-cyan)] hover:text-[var(--accent-cyan-hover)] uppercase tracking-wider block w-fit transition-colors cursor-pointer"
                   >
                     View All
                   </Link>
@@ -372,7 +372,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     {user?.username?.[0]?.toUpperCase() || 'A'}
                   </div>
                 )}
-                <span className="text-xs font-bold text-zinc-900 dark:text-zinc-200 truncate group-hover:text-[#20b8cd] transition-colors">
+                <span className="text-xs font-bold text-zinc-900 dark:text-zinc-200 truncate group-hover:text-[var(--accent-cyan)] transition-colors">
                   {user?.username || 'User'}
                 </span>
               </Link>
@@ -415,7 +415,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <div className="px-1 pb-1">
               <Link
                 to="/auth"
-                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-gradient-to-r from-[#20b8cd] to-[#1da9bc] text-zinc-950 font-bold text-xs shadow-md shadow-[#20b8cd]/15 hover:opacity-95 transition-all transform hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-gradient-to-r from-[var(--accent-cyan)] to-[var(--accent-cyan-hover)] text-zinc-950 font-bold text-xs shadow-md shadow-cyan-500/15 hover:opacity-95 transition-all transform hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
               >
                 <RiLoginCircleLine size={15} />
                 <span>Log In / Sign Up</span>

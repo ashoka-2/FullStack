@@ -63,10 +63,10 @@ const HeroGradientBackground = ({
       aria-hidden="true"
       className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none z-0"
     >
-      {/* ── 1. Parsu Cyan Ambient Glow Orbs (Fluid floating animation) ── */}
-      <div className="absolute top-[-10%] left-[20%] w-[55vw] max-w-[850px] h-[500px] rounded-full bg-gradient-to-tr from-[#20b8cd]/35 via-[#0ea5e9]/25 to-[#146c7a]/20 blur-[130px] dark:blur-[150px] animate-pulse duration-[8000ms] transform -rotate-6" />
-      <div className="absolute top-[15%] right-[-5%] w-[45vw] max-w-[700px] h-[450px] rounded-full bg-gradient-to-bl from-[#081e23]/40 via-[#146c7a]/30 to-[#20b8cd]/20 blur-[120px] dark:blur-[140px] animate-pulse duration-[10000ms]" />
-      <div className="absolute top-[35%] left-[5%] w-[35vw] max-w-[600px] h-[350px] rounded-full bg-gradient-to-r from-[#20b8cd]/20 via-[#67e8f9]/15 to-transparent blur-[110px] dark:blur-[130px]" />
+      {/* ── 1. Parsu Cyan & Hanada Ambient Glow Orbs (Fluid floating animation) ── */}
+      <div className="absolute top-[-10%] left-[20%] w-[55vw] max-w-[850px] h-[500px] rounded-full bg-gradient-to-tr from-[var(--accent-cyan)]/35 via-[var(--color-clear-hanada)]/25 to-[var(--color-deep-hanada)]/20 blur-[130px] dark:blur-[150px] animate-pulse duration-[8000ms] transform -rotate-6" />
+      <div className="absolute top-[15%] right-[-5%] w-[45vw] max-w-[700px] h-[450px] rounded-full bg-gradient-to-bl from-[var(--color-deep-teal)]/40 via-[var(--color-deep-hanada)]/30 to-[var(--accent-cyan)]/20 blur-[120px] dark:blur-[140px] animate-pulse duration-[10000ms]" />
+      <div className="absolute top-[35%] left-[5%] w-[35vw] max-w-[600px] h-[350px] rounded-full bg-gradient-to-r from-[var(--accent-cyan)]/20 via-[var(--color-sky-haze)]/15 to-transparent blur-[110px] dark:blur-[130px]" />
 
       {/* ── 2. User's Configurable Hero Backdrop (Same or Theme-Specific) ── */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[2048px] h-[1190px] max-w-none">
@@ -77,9 +77,9 @@ const HeroGradientBackground = ({
           className="w-full h-full object-cover opacity-80 dark:opacity-90 transition-opacity duration-700 mix-blend-normal dark:mix-blend-screen scale-[1.01]"
         />
 
-        {/* Parsu Theme Color Wash Overlay: Injects signature cyan shades into the SVG */}
+        {/* Parsu Theme Color Wash Overlay: Injects signature palette shades into the SVG */}
         <div
-          className="absolute inset-0 bg-gradient-to-b from-[#20b8cd]/20 via-[#146c7a]/25 to-[#081e23]/60 mix-blend-color dark:mix-blend-overlay pointer-events-none"
+          className="absolute inset-0 bg-gradient-to-b from-[var(--accent-cyan)]/20 via-[var(--color-clear-hanada)]/25 to-[var(--color-deep-hanada)]/60 mix-blend-color dark:mix-blend-overlay pointer-events-none"
         />
 
         {/* ── 3. Animated Decorative Cyan Vector Waves & Splines ────── */}
@@ -90,28 +90,28 @@ const HeroGradientBackground = ({
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
-            {/* Parsu Cyan Theme Gradients */}
+            {/* Parsu Cyan & Hanada Theme Gradients */}
             <linearGradient id="parsuCyanWave1" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#20b8cd" stopOpacity="0" />
-              <stop offset="20%" stopColor="#20b8cd" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#67e8f9" stopOpacity="0.9" />
-              <stop offset="80%" stopColor="#0ea5e9" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="#146c7a" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--accent-cyan, #20b8cd)" stopOpacity="0" />
+              <stop offset="20%" stopColor="var(--accent-cyan, #20b8cd)" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="var(--color-sky-haze, #8daad3)" stopOpacity="0.9" />
+              <stop offset="80%" stopColor="var(--color-clear-hanada, #3f63a8)" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="var(--color-deep-hanada, #192d68)" stopOpacity="0" />
             </linearGradient>
 
             <linearGradient id="parsuCyanWave2" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#081e23" stopOpacity="0" />
-              <stop offset="30%" stopColor="#146c7a" stopOpacity="0.6" />
-              <stop offset="60%" stopColor="#20b8cd" stopOpacity="0.75" />
-              <stop offset="90%" stopColor="#a5f3fc" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#20b8cd" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--color-deep-teal, #081e23)" stopOpacity="0" />
+              <stop offset="30%" stopColor="var(--color-deep-hanada, #192d68)" stopOpacity="0.6" />
+              <stop offset="60%" stopColor="var(--accent-cyan, #20b8cd)" stopOpacity="0.75" />
+              <stop offset="90%" stopColor="var(--color-ice-hanada, #cfddea)" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="var(--accent-cyan, #20b8cd)" stopOpacity="0" />
             </linearGradient>
 
             <linearGradient id="parsuCyanWave3" x1="0" y1="1" x2="1" y2="0">
-              <stop offset="0%" stopColor="#20b8cd" stopOpacity="0" />
-              <stop offset="45%" stopColor="#67e8f9" stopOpacity="0.5" />
-              <stop offset="75%" stopColor="#0ea5e9" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#20b8cd" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--accent-cyan, #20b8cd)" stopOpacity="0" />
+              <stop offset="45%" stopColor="var(--color-sky-haze, #8daad3)" stopOpacity="0.5" />
+              <stop offset="75%" stopColor="var(--color-clear-hanada, #3f63a8)" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="var(--accent-cyan, #20b8cd)" stopOpacity="0" />
             </linearGradient>
           </defs>
 

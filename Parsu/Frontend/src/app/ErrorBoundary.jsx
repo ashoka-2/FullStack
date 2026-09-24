@@ -9,8 +9,8 @@ const ErrorBoundary = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-white dark:bg-[#050505] flex items-center justify-center p-6 text-zinc-900 dark:text-zinc-100 font-sans">
-            <div className="max-w-md w-full bg-zinc-50 dark:bg-[#121212] border border-red-500/20 rounded-3xl p-8 md:p-12 shadow-2xl flex flex-col items-center text-center animate-in zoom-in duration-300">
+        <div className="min-h-screen bg-white dark:bg-[var(--bg-primary)] flex items-center justify-center p-6 text-zinc-900 dark:text-zinc-100 font-sans">
+            <div className="max-w-md w-full bg-zinc-50 dark:bg-[var(--bg-surface)] border border-red-500/20 rounded-3xl p-8 md:p-12 shadow-2xl flex flex-col items-center text-center animate-in zoom-in duration-300">
                 <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
                     <RiErrorWarningLine size={32} className="text-red-500" />
                 </div>

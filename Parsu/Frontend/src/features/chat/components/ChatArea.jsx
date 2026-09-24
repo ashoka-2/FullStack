@@ -254,12 +254,12 @@ const ChatArea = () => {
   };
 
   const getFileIcon = (file) => {
-    if (file.isLink) return <RiAttachment2 size={13} className="text-[#60A6AF]" />;
+    if (file.isLink) return <RiAttachment2 size={13} className="text-[var(--color-clear-hanada)]" />;
     const name = file.name?.toLowerCase() || '';
     if (name.match(/\.(mp4|webm|mov|avi|mkv)$/)) return <RiVideoLine size={13} className="text-purple-400" />;
     if (name.match(/\.(pdf)$/)) return <RiFilePdfLine size={13} className="text-red-400" />;
     if (name.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/)) return <RiImageLine size={13} className="text-emerald-400" />;
-    return <RiFileTextLine size={13} className="text-[#60A6AF]" />;
+    return <RiFileTextLine size={13} className="text-[var(--color-clear-hanada)]" />;
   };
 
   // Fetch default suggestions from backend when component mounts
@@ -425,7 +425,7 @@ const ChatArea = () => {
   };
 
   return (
-    <main data-lenis-prevent className="flex-1 w-full flex flex-col items-center bg-[#f4f5f7] dark:bg-[#050505] relative overflow-x-hidden overflow-y-auto custom-scrollbar pb-80 md:pb-32"
+    <main data-lenis-prevent className="flex-1 w-full flex flex-col items-center bg-[var(--bg-primary)] relative overflow-x-hidden overflow-y-auto custom-scrollbar pb-80 md:pb-32"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -433,8 +433,8 @@ const ChatArea = () => {
       {/* Drag Overlay */}
       {isDragging && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-6">
-          <div className="bg-white/80 dark:bg-[#121212]/80 border-2 border-dashed border-[#60A6AF] rounded-3xl p-12 backdrop-blur-xl flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300 shadow-2xl">
-            <RiUploadCloudLine size={64} className="text-[#60A6AF] animate-bounce" />
+          <div className="bg-white/80 dark:bg-[var(--bg-surface)]/80 border-2 border-dashed border-[var(--color-clear-hanada)] rounded-3xl p-12 backdrop-blur-xl flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300 shadow-2xl">
+            <RiUploadCloudLine size={64} className="text-[var(--color-clear-hanada)] animate-bounce" />
             <h2 className="text-xl font-bold text-black dark:text-white uppercase tracking-wider">Drop to upload</h2>
           </div>
         </div>
@@ -444,9 +444,9 @@ const ChatArea = () => {
         
         {/* Brand header */}
         <div className="flex items-center gap-2 mb-4 opacity-90 hover:opacity-100 transition-opacity">
-          <ParsuLogo className="w-7 h-7 sm:w-8 sm:h-8 text-[#20b8cd] shrink-0" />
+          <ParsuLogo className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--accent-cyan)] shrink-0" />
           <span className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-            Parsu <span className="text-[#20b8cd]">AI</span>
+            Parsu <span className="text-[var(--accent-cyan)]">AI</span>
           </span>
         </div>
 
@@ -481,7 +481,7 @@ const ChatArea = () => {
                   setInput(promptText);
                   onSubmit(e, promptText);
                 }}
-                className="p-3.5 sm:p-4 rounded-2xl bg-white/90 dark:bg-[#121316]/90 border border-zinc-200/90 dark:border-white/10 hover:border-[#20b8cd]/60 hover:bg-zinc-50/80 dark:hover:bg-white/[0.04] text-left text-xs sm:text-[13px] text-zinc-700 dark:text-zinc-300 font-medium leading-relaxed transition-all shadow-xs cursor-pointer group active:scale-[0.99]"
+                className="p-3.5 sm:p-4 rounded-2xl bg-white/90 dark:bg-[var(--bg-surface)]/90 border border-zinc-200/90 dark:border-white/10 hover:border-[var(--accent-cyan)]/60 hover:bg-zinc-50/80 dark:hover:bg-white/[0.04] text-left text-xs sm:text-[13px] text-zinc-700 dark:text-zinc-300 font-medium leading-relaxed transition-all shadow-xs cursor-pointer group active:scale-[0.99]"
               >
                 <p className="group-hover:text-zinc-950 dark:group-hover:text-white transition-colors">
                   {promptText}
@@ -508,24 +508,24 @@ const ChatArea = () => {
 
         {/* Search Input Box */}
         <div className="w-full md:relative md:block fixed bottom-0 left-0 right-0 z-50 p-2.5 pb-5 sm:p-4 sm:pb-8 md:p-0 bg-gradient-to-t from-[#f4f5f7] dark:from-[#050505] via-[#f4f5f7]/95 dark:via-[#050505]/95 md:bg-transparent md:dark:bg-transparent to-transparent backdrop-blur-[2px] md:backdrop-blur-0">
-          <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[#121212] border ${isDragging ? 'border-[#60A6AF]' : 'border-zinc-200/90 dark:border-[#2d2e2e]'} focus-within:border-[#60A6AF]/60 dark:focus-within:border-[#60A6AF]/60 focus-within:ring-2 focus-within:ring-[#60A6AF]/20 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-5 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
+          <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[var(--bg-surface)] border ${isDragging ? 'border-[var(--color-clear-hanada)]' : 'border-zinc-200/90 dark:border-[#2d2e2e]'} focus-within:border-[var(--color-clear-hanada)]/60 dark:focus-within:border-[var(--color-clear-hanada)]/60 focus-within:ring-2 focus-within:ring-[#60A6AF]/20 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-5 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
 
             {/* Rich Attachment Preview Strip */}
             <AttachmentPreviewStrip files={files} onRemove={removeFile} />
 
             {/* Live Voice Captioning Stream */}
             {isListening && (
-              <div className="flex items-center gap-3 px-3.5 py-2 mb-2 rounded-xl bg-zinc-900/95 dark:bg-[#18181b]/95 border border-[#20b8cd]/40 text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
+              <div className="flex items-center gap-3 px-3.5 py-2 mb-2 rounded-xl bg-zinc-900/95 dark:bg-[#18181b]/95 border border-[var(--accent-cyan)]/40 text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
                 <div className="flex items-center gap-1 shrink-0">
-                  <span className="w-1 h-3 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:0ms]" />
-                  <span className="w-1 h-5 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:150ms]" />
-                  <span className="w-1 h-2 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:300ms]" />
-                  <span className="w-1 h-4 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:450ms]" />
+                  <span className="w-1 h-3 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:0ms]" />
+                  <span className="w-1 h-5 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1 h-2 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:300ms]" />
+                  <span className="w-1 h-4 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:450ms]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
-                    <span className="text-[10px] font-bold text-[#5ce1f2] uppercase tracking-wider">Live Speech Caption</span>
+                    <span className="text-[10px] font-bold text-[var(--color-sky-haze)] uppercase tracking-wider">Live Speech Caption</span>
                   </div>
                   <p className="text-[13px] text-zinc-100 font-medium truncate italic mt-0.5">
                     {liveCaption || 'Listening to your voice... Speak now'}
@@ -546,7 +546,7 @@ const ChatArea = () => {
               <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-zinc-200/60 dark:border-zinc-800/60 text-xs text-zinc-500 dark:text-zinc-400 select-none animate-in fade-in duration-200">
                 <div className="flex items-center gap-2">
                   {isCodeContent && (
-                    <span className="flex items-center gap-1 text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-[#60A6AF]/15 text-[#296f79] dark:text-[#7fd4df] border border-[#60A6AF]/25">
+                    <span className="flex items-center gap-1 text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-[var(--color-clear-hanada)]/15 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] border border-[var(--color-clear-hanada)]/25">
                       <RiCodeSSlashLine size={12} />
                       Code format preserved
                     </span>
@@ -558,7 +558,7 @@ const ChatArea = () => {
                 <button
                   type="button"
                   onClick={() => setIsFullScreenEditor(true)}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-[#60A6AF] hover:text-[#418690] dark:hover:text-[#90e2ee] transition-colors cursor-pointer px-2 py-0.5 rounded-md hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-clear-hanada)] hover:text-[var(--color-deep-hanada)] dark:hover:text-[var(--color-sky-haze)] transition-colors cursor-pointer px-2 py-0.5 rounded-md hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"
                   title="Open full-screen prompt and code editor"
                 >
                   <RiFullscreenLine size={13} />
@@ -664,14 +664,14 @@ const ChatArea = () => {
                   onClick={handleToggleWebSearch}
                   className={`hidden sm:flex h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
                     webSearch 
-                      ? 'bg-[#20b8cd]/15 border-[#20b8cd]/40 text-[#148393] dark:text-[#5ce1f2] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
+                      ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
                       : 'bg-zinc-100/90 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
                   }`}
                   title={webSearch ? "Web Search: ON (Using Tavily for live internet facts)" : "Web Search: OFF (Pure AI model knowledge)"}
                 >
-                  <RiGlobalLine size={14} className={webSearch ? "text-[#20b8cd]" : "text-zinc-400 dark:text-zinc-500"} />
+                  <RiGlobalLine size={14} className={webSearch ? "text-[var(--accent-cyan)]" : "text-zinc-400 dark:text-zinc-500"} />
                   <span className="text-[11px] sm:text-xs">Web</span>
-                  <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[#20b8cd] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
                 </button>
 
                 <ModelSelectorDropdown
@@ -735,7 +735,7 @@ const ChatArea = () => {
                   disabled={user && (!input.trim() && files.length === 0)}
                   className={`w-8.5 h-8.5 flex items-center justify-center rounded-full transition-all cursor-pointer ${
                     !user || input.trim() || files.length > 0 
-                      ? 'bg-[#20b8cd] hover:bg-[#1bb3c7] text-zinc-950 shadow-md shadow-[#20b8cd]/25 hover:scale-105 active:scale-95' 
+                      ? 'bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 hover:scale-105 active:scale-95' 
                       : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600 opacity-50'
                   }`}
                   title="Send message"
@@ -753,7 +753,7 @@ const ChatArea = () => {
         {/* Guest prompt indicator */}
         {!user && (
           <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 dark:bg-zinc-900/60 border border-zinc-200 dark:border-white/5 text-xs text-zinc-500 animate-in fade-in duration-500">
-            <span className="w-2 h-2 rounded-full bg-[#20b8cd] animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[var(--accent-cyan)] animate-pulse" />
             <span>Sign in to save chat history, analyze files, and publish to social networks.</span>
           </div>
         )}
@@ -842,7 +842,7 @@ const ChatArea = () => {
             {capabilities.map((cap, i) => {
                const Icon = cap.icon;
                return (
-                 <div key={i} className={`flex flex-col gap-2 p-4 bg-white dark:bg-[#121212]/50 border border-zinc-200/90 dark:border-white/5 rounded-2xl transition-all cursor-default shadow-2xs ${cap.bgHover}`}>
+                 <div key={i} className={`flex flex-col gap-2 p-4 bg-white dark:bg-[var(--bg-surface)]/50 border border-zinc-200/90 dark:border-white/5 rounded-2xl transition-all cursor-default shadow-2xs ${cap.bgHover}`}>
                    <div className="flex items-center gap-3">
                      <div className={`w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shadow-xs ${cap.colorClass}`}>
                         <Icon size={16} />
@@ -877,7 +877,7 @@ const ChatArea = () => {
           {/* Studio Header */}
           <div className="h-14 px-4 sm:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#111216] shrink-0">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-[#20b8cd]/15 text-[#20b8cd]">
+              <div className="p-1.5 rounded-lg bg-[var(--accent-cyan)]/15 text-[var(--accent-cyan)]">
                 {isCodeContent ? <RiCodeSSlashLine size={18} /> : <RiFileTextLine size={18} />}
               </div>
               <div>
@@ -913,7 +913,7 @@ const ChatArea = () => {
               <button
                 type="button"
                 onClick={() => setIsFullScreenEditor(false)}
-                className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-[#20b8cd] hover:bg-[#1bb3c7] text-zinc-950 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+                className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
                 title="Exit full-screen mode"
               >
                 <RiFullscreenExitLine size={16} />
@@ -942,15 +942,15 @@ const ChatArea = () => {
 
           {/* Live Voice Captioning Stream in Studio */}
           {isListening && (
-            <div className="mx-4 sm:mx-6 mb-2 px-3.5 py-2 rounded-xl bg-zinc-900/95 border border-[#20b8cd]/40 text-white shadow-xl backdrop-blur-md flex items-center gap-3">
+            <div className="mx-4 sm:mx-6 mb-2 px-3.5 py-2 rounded-xl bg-zinc-900/95 border border-[var(--accent-cyan)]/40 text-white shadow-xl backdrop-blur-md flex items-center gap-3">
               <div className="flex items-center gap-1 shrink-0">
-                <span className="w-1 h-3 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:0ms]" />
-                <span className="w-1 h-5 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:150ms]" />
-                <span className="w-1 h-2 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:300ms]" />
-                <span className="w-1 h-4 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:450ms]" />
+                <span className="w-1 h-3 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:0ms]" />
+                <span className="w-1 h-5 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:150ms]" />
+                <span className="w-1 h-2 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:300ms]" />
+                <span className="w-1 h-4 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:450ms]" />
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-[10px] font-bold text-[#5ce1f2] uppercase tracking-wider block">Live Voice Caption</span>
+                <span className="text-[10px] font-bold text-[var(--color-sky-haze)] uppercase tracking-wider block">Live Voice Caption</span>
                 <p className="text-[13px] text-zinc-100 font-medium truncate italic mt-0.5">
                   {liveCaption || 'Listening to your voice... Speak now'}
                 </p>
@@ -990,14 +990,14 @@ const ChatArea = () => {
                   onClick={handleToggleWebSearch}
                   className={`h-8.5 px-3 rounded-full border flex items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
                     webSearch 
-                      ? 'bg-[#20b8cd]/15 border-[#20b8cd]/40 text-[#5ce1f2] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
+                      ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
                       : 'bg-white/[0.06] border-white/15 text-zinc-400 hover:text-zinc-200'
                   }`}
                   title={webSearch ? "Web Search: ON (Using Tavily for live internet facts)" : "Web Search: OFF (Pure AI model knowledge)"}
                 >
-                  <RiGlobalLine size={14} className={webSearch ? "text-[#20b8cd]" : "text-zinc-400"} />
+                  <RiGlobalLine size={14} className={webSearch ? "text-[var(--accent-cyan)]" : "text-zinc-400"} />
                   <span className="text-xs">Web</span>
-                  <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[#20b8cd] animate-pulse' : 'bg-zinc-600'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-600'}`} />
                 </button>
 
                 {/* Model Selector */}

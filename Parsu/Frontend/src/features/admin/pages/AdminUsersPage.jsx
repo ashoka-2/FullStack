@@ -150,7 +150,7 @@ export default function AdminUsersPage() {
     if (plan === 'starter' || plan === 'pro') {
       return (
         <div className="flex flex-col gap-1 items-start">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-cyan-500/15 text-[#20b8cd] border border-cyan-500/30">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-cyan-500/15 text-[var(--accent-cyan)] border border-cyan-500/30">
             <RiFlashlightLine size={12} />
             Web Hero
           </span>
@@ -359,7 +359,7 @@ export default function AdminUsersPage() {
                           <button
                             onClick={() => openSubscriptionModal(u)}
                             title="Change Subscription Mode"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-500/10 hover:bg-cyan-500/20 text-[#20b8cd] border border-cyan-500/25 transition-all hover:scale-[1.02] cursor-pointer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-500/10 hover:bg-cyan-500/20 text-[var(--accent-cyan)] border border-cyan-500/25 transition-all hover:scale-[1.02] cursor-pointer"
                           >
                             <RiExchangeDollarLine size={13} />
                             <span>Subscription</span>
@@ -429,7 +429,7 @@ export default function AdminUsersPage() {
             <div className="flex items-start justify-between pb-4 border-b border-white/[0.08]">
               <div>
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <RiVipCrownLine size={18} className="text-[#20b8cd]" />
+                  <RiVipCrownLine size={18} className="text-[var(--accent-cyan)]" />
                   <span>Change Subscription Mode</span>
                 </h3>
                 <p className="text-xs text-zinc-400 mt-1">

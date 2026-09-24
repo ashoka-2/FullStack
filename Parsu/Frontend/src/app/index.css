@@ -1,45 +1,277 @@
 @import "tailwindcss";
 
 @theme {
-  /* Tailwind v4 class-based dark mode ke liye ye bohot zaroori hai */
+  /* Tailwind v4 class-based dark mode */
   --variant-dark: selector(.dark);
 
   /* Global Fonts */
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Outfit", "Plus Jakarta Sans", var(--font-sans);
   --font-mono: "Fira Code", monospace;
 
-  /* Theme variables jo pure Tailwind classes me reuse ho sakein */
+  /* Theme variables that map to Tailwind utility classes */
   --background: #f4f5f7;
   --foreground: #18181b;
   --border: #e2e4e8;
   --muted: #ebecee;
   --muted-foreground: #71717a;
+
+  /* ── Hanada Japanese Palette from User Reference ── */
+  --color-deep-hanada: var(--color-deep-hanada, #192D68);
+  --color-clear-hanada: var(--color-clear-hanada, #3F63A8);
+  --color-sky-haze: var(--color-sky-haze, #8DAAD3);
+  --color-ice-hanada: var(--color-ice-hanada, #CFDDEA);
+  --color-peach-silk: var(--color-peach-silk, #F4E9DD);
+
+  /* ── Brand & Core Accent Colors ── */
+  --color-brand-cyan: var(--accent-cyan, #20b8cd);
+  --color-brand-cyan-hover: var(--accent-cyan-hover, #1da9bc);
+  --color-brand-light-blue: var(--color-light-blue, #38bdf8);
+  --color-brand-blue: var(--color-blue, #3b82f6);
+  --color-brand-purple: var(--color-purple, #8b5cf6);
+  --color-brand-violet: var(--color-violet, #a78bfa);
+  --color-brand-teal: var(--color-teal, #14b8a6);
+  --color-brand-deep-teal: var(--color-deep-teal, #081e23);
+
+  /* ── Status & Notification Colors ── */
+  --color-brand-danger: var(--color-danger, #ef4444);
+  --color-brand-success: var(--color-success, #10b981);
+  --color-brand-emerald: var(--color-emerald, #34d399);
+  --color-brand-warning: var(--color-warning, #f59e0b);
+  --color-brand-amber: var(--color-amber, #fbbf24);
+  --color-brand-pink: var(--color-pink, #ec4899);
+  --color-brand-orange: var(--color-orange, #f97316);
+
+  /* ── Layout & Surface Tokens ── */
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-hover: var(--bg-surface-hover);
+  --color-border-primary: var(--border-primary);
+  --color-border-secondary: var(--border-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
 }
 
 @variant dark (&:where(.dark, .dark *));
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display, "Outfit", "Plus Jakarta Sans", sans-serif);
+  }
+}
 
 @layer base {
   :root {
     color-scheme: light dark;
     --background: #f4f5f7;
     --foreground: #18181b;
-    --bg-primary: #f4f5f7;
-    --bg-secondary: #ffffff;
-    --bg-surface: #f0f1f3;
-    --border-primary: #e2e4e8;
+
+    /* ══════════════════════════════════════════════════════════════════
+       1. HANADA JAPANESE PALETTE (From User Reference Image)
+       Used for rich gradients, hero banners, badges & depth styling
+       ══════════════════════════════════════════════════════════════════ */
+    /* Deep Hanada (#192D68): Midnight navy blue.
+       Used in: Hero ambient gradient, dark badges, deep footer contrast, avatar fallback gradients */
+    --color-deep-hanada: #192D68;
+    --deep-hanada: #192D68;
+
+    /* Clear Hanada (#3F63A8): Primary vibrant imperial blue.
+       Used in: Landing page hero headline gradient ("Search Deeper. Think Faster"), active tab outlines, primary card accent borders, auth feature highlights */
+    --color-clear-hanada: #3F63A8;
+    --clear-hanada: #3F63A8;
+
+    /* Sky Haze (#8DAAD3): Soft celestial mist blue.
+       Used in: Landing hero headline gradient ("Publish Everywhere"), hero trust badge glow, secondary card hover rings, delicate light borders */
+    --color-sky-haze: #8DAAD3;
+    --sky-haze: #8DAAD3;
+
+    /* Ice Hanada (#CFDDEA): Crisp pale crystalline blue.
+       Used in: Light mode subtle tag backgrounds, badge borders, divider highlights, card sheen */
+    --color-ice-hanada: #CFDDEA;
+    --ice-hanada: #CFDDEA;
+
+    /* Peach Silk (#F4E9DD): Warm parchment ivory silk.
+       Used in: Warm contrast tags, creative tool badges, highlight ribbons, soft card surfaces */
+    --color-peach-silk: #F4E9DD;
+    --peach-silk: #F4E9DD;
+
+    /* ══════════════════════════════════════════════════════════════════
+       2. BRAND & CORE ACCENT COLORS
+       Used for main interactions, CTA buttons, active states & links
+       ══════════════════════════════════════════════════════════════════ */
+    /* Brand Cyan (#20b8cd): Primary brand action color.
+       Used in: Primary CTA buttons ("Get Started", "Send Message"), active sidebar icons, input focus rings, text selection highlight, loading spinners */
     --accent-cyan: #20b8cd;
+
+    /* Brand Cyan Hover (#1da9bc): Darker cyan state.
+       Used in: Hover state on primary CTA buttons, active navigation item transitions */
+    --accent-cyan-hover: #1da9bc;
+
+    /* Brand Cyan Glow: Transparent glow shadow for hero buttons and active modals */
     --accent-cyan-glow: rgba(32, 184, 205, 0.25);
+
+    /* Light Blue (#38bdf8): Sky accent.
+       Used in: Neural Voice & Speech studio badges, audio waveform indicators, Twitter/X icon highlights */
+    --color-light-blue: #38bdf8;
+
+    /* Blue (#3b82f6): Standard rich blue.
+       Used in: Google sign-in buttons, info alert icons, social integration indicators (Facebook/LinkedIn) */
+    --color-blue: #3b82f6;
+
+    /* Purple (#8b5cf6): Creative royal purple.
+       Used in: Multi-model AI badges (Gemini/Claude tags), Omni-channel social publish badges, prompt library tags */
+    --color-purple: #8b5cf6;
+
+    /* Violet (#a78bfa): Soft violet lavender.
+       Used in: Password security settings card, code syntax highlights, ambient card borders */
+    --color-violet: #a78bfa;
+
+    /* Teal (#14b8a6): Grounding cyan-teal.
+       Used in: Real-time search citations, source URLs, verified grounding source badges */
+    --color-teal: #14b8a6;
+
+    /* Deep Teal (#081e23): Deep contrasting dark teal.
+       Used in: Code editor window headers, terminal preview headers, dark container backdrops */
+    --color-deep-teal: #081e23;
+
+    /* ══════════════════════════════════════════════════════════════════
+       3. STATUS, METRICS & NOTIFICATION COLORS
+       Used for alerts, quotas, destructive actions & feature tags
+       ══════════════════════════════════════════════════════════════════ */
+    /* Danger / Red (#ef4444): Error alerts & destructive actions.
+       Used in: Delete chat button, remove API key, logout confirmations, error toast messages, failed API checks */
+    --color-danger: #ef4444;
+
+    /* Success / Green (#10b981): Affirmative actions & confirmations.
+       Used in: Copy-to-clipboard toast, connected social account status, active subscription plan badge, save confirmations */
+    --color-success: #10b981;
+
+    /* Emerald (#34d399): Vibrant green accent.
+       Used in: Mascot companion settings, online status pulse, live latency meters */
+    --color-emerald: #34d399;
+
+    /* Warning / Amber (#f59e0b): Cautionary feedback & thresholds.
+       Used in: Quota usage approaching limit, missing API key warnings, rate limit alerts */
+    --color-warning: #f59e0b;
+
+    /* Warm Amber (#fbbf24): Golden highlight.
+       Used in: Vector Knowledge Graph badge, long-term memory tags, VIP tier crown icon */
+    --color-amber: #fbbf24;
+
+    /* Pink (#ec4899): Vibrant magenta/pink.
+       Used in: Multimodal Document Studio badge, image generation filters, Instagram publisher tool */
+    --color-pink: #ec4899;
+
+    /* Orange (#f97316): Energetic accent.
+       Used in: Reddit connector, trending topic indicators, high-temperature prompt badges */
+    --color-orange: #f97316;
+
+    /* ══════════════════════════════════════════════════════════════════
+       4. LIGHT MODE SURFACES & CANVAS
+       Used for page layout, sidebars, cards, inputs & typography
+       ══════════════════════════════════════════════════════════════════ */
+    /* Light Primary Canvas (#f4f5f7): Main app background across full screen */
+    --bg-primary: #f4f5f7;
+
+    /* Light Secondary Canvas (#ffffff): Sidebars, modals, navbar, elevated cards */
+    --bg-secondary: #ffffff;
+
+    /* Light Surface (#f0f1f3): Input fields, assistant chat bubble backdrop, table headers */
+    --bg-surface: #f0f1f3;
+
+    /* Light Surface Hover (#e5e7eb): Hover state for buttons, list items, dropdown options */
+    --bg-surface-hover: #e5e7eb;
+
+    /* Light Primary Border (#e2e4e8): Dividers, card boundaries, navigation bottom borders */
+    --border-primary: #e2e4e8;
+
+    /* Light Secondary Border (#d1d5db): Emphasized boundaries, focused input rings */
+    --border-secondary: #d1d5db;
+
+    /* Light Primary Text (#18181b): Main headings, titles, active chat text, button labels */
+    --text-primary: #18181b;
+
+    /* Light Secondary Text (#71717a): Subtitles, helper text, timestamps, inactive icons */
+    --text-secondary: #71717a;
+
+    /* Light Muted Text (#a1a1aa): Input placeholders, disabled options, footer copyright */
+    --text-muted: #a1a1aa;
   }
 
   .dark {
     --background: #0e100f;
     --foreground: #f4f4f5;
-    --bg-primary: #0e100f;
-    --bg-secondary: #161718;
-    --bg-surface: #191a1b;
-    --border-primary: #262729;
+
+    /* ══════════════════════════════════════════════════════════════════
+       1. HANADA JAPANESE PALETTE (Dark Mode Consistency)
+       ══════════════════════════════════════════════════════════════════ */
+    --color-deep-hanada: #192D68;
+    --deep-hanada: #192D68;
+    --color-clear-hanada: #3F63A8;
+    --clear-hanada: #3F63A8;
+    --color-sky-haze: #8DAAD3;
+    --sky-haze: #8DAAD3;
+    --color-ice-hanada: #CFDDEA;
+    --ice-hanada: #CFDDEA;
+    --color-peach-silk: #F4E9DD;
+    --peach-silk: #F4E9DD;
+
+    /* ══════════════════════════════════════════════════════════════════
+       2. BRAND & CORE ACCENT COLORS (Dark Mode Glows)
+       ══════════════════════════════════════════════════════════════════ */
     --accent-cyan: #20b8cd;
+    --accent-cyan-hover: #1da9bc;
     --accent-cyan-glow: rgba(32, 184, 205, 0.35);
+    --color-light-blue: #38bdf8;
+    --color-blue: #3b82f6;
+    --color-purple: #8b5cf6;
+    --color-violet: #a78bfa;
+    --color-teal: #14b8a6;
+    --color-deep-teal: #081e23;
+
+    /* ══════════════════════════════════════════════════════════════════
+       3. STATUS & NOTIFICATION COLORS (Dark Mode High Contrast)
+       ══════════════════════════════════════════════════════════════════ */
+    --color-danger: #ef4444;
+    --color-success: #10b981;
+    --color-emerald: #34d399;
+    --color-warning: #f59e0b;
+    --color-amber: #fbbf24;
+    --color-pink: #ec4899;
+    --color-orange: #f97316;
+
+    /* ══════════════════════════════════════════════════════════════════
+       4. DARK MODE SURFACES & CANVAS
+       Used for OLED dark background, sidebars, cards, inputs & typography
+       ══════════════════════════════════════════════════════════════════ */
+    /* Dark Primary Canvas (#0e100f): OLED dark background canvas across all pages */
+    --bg-primary: #0e100f;
+
+    /* Dark Secondary Canvas (#161718): Dark sidebars, liquid navigation header, elevated panels */
+    --bg-secondary: #161718;
+
+    /* Dark Surface (#191a1b): Chat input containers, message bubbles, settings cards, modal backdrops */
+    --bg-surface: #191a1b;
+
+    /* Dark Surface Hover (#222326): Hover state on dark buttons, sidebar menu items */
+    --bg-surface-hover: #222326;
+
+    /* Dark Primary Border (#262729): Subtle divider lines, card outlines, separating content cleanly */
+    --border-primary: #262729;
+
+    /* Dark Secondary Border (#323438): Emphasized border on active tabs and hovered elements */
+    --border-secondary: #323438;
+
+    /* Dark Primary Text (#f5f5f7): Crisp high-readability text for headings, message responses, active buttons */
+    --text-primary: #f5f5f7;
+
+    /* Dark Secondary Text (#a1a1a6): Secondary descriptions, assistant status, chat history items */
+    --text-secondary: #a1a1a6;
+
+    /* Dark Muted Text (#71717a): Inactive icons, placeholder text, footnote notes */
+    --text-muted: #71717a;
   }
 
   html {
@@ -47,8 +279,8 @@
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     overscroll-behavior-y: none;
   }
 

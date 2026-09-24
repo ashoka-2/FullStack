@@ -165,7 +165,7 @@ export default function Changelog() {
                             className="relative space-y-4"
                         >
                             {/* Timeline bullet icon */}
-                            <div className="absolute -left-[31px] sm:-left-[39px] top-1.5 w-6 h-6 rounded-full bg-white dark:bg-[#121212] border-2 border-cyan-500 flex items-center justify-center text-cyan-500 shadow-sm">
+                            <div className="absolute -left-[31px] sm:-left-[39px] top-1.5 w-6 h-6 rounded-full bg-white dark:bg-[var(--bg-surface)] border-2 border-cyan-500 flex items-center justify-center text-cyan-500 shadow-sm">
                                 <div className="w-2 h-2 rounded-full bg-cyan-500" />
                             </div>
 
@@ -188,7 +188,7 @@ export default function Changelog() {
                             </h3>
 
                             {/* Release Card */}
-                            <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#121212] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-4">
+                            <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {release.highlights.map((h, i) => (
                                         <div key={i} className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-100 dark:border-white/5 space-y-1">

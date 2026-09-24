@@ -12,7 +12,7 @@ const FormField = ({ label, type, value, onChange, placeholder, name, required =
       </label>
       <div className="relative group">
         {Icon && (
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-focus-within:text-[#20b8cd] transition-colors pointer-events-none">
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-focus-within:text-[var(--accent-cyan)] transition-colors pointer-events-none">
             <Icon size={18} />
           </div>
         )}
@@ -24,7 +24,7 @@ const FormField = ({ label, type, value, onChange, placeholder, name, required =
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className={`w-full bg-zinc-100/80 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-2xl py-3 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#20b8cd] focus:ring-2 focus:ring-[#20b8cd]/25 hover:border-zinc-300 dark:hover:border-white/20 transition-all duration-200 text-sm sm:text-base font-medium ${
+          className={`w-full bg-zinc-100/80 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-2xl py-3 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-2 focus:ring-[var(--accent-cyan)]/25 hover:border-zinc-300 dark:hover:border-white/20 transition-all duration-200 text-sm sm:text-base font-medium ${
             Icon ? 'pl-11 pr-4' : 'px-4'
           } ${isPassword ? 'pr-11' : ''}`}
         />

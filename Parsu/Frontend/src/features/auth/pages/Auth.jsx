@@ -636,7 +636,7 @@ const Auth = ({ initialMode }) => {
   };
 
   return (
-    <main className="min-h-[100dvh] bg-[#f4f5f7] dark:bg-[#07080a] text-zinc-900 dark:text-zinc-100 flex flex-col items-center justify-between p-3 xs:p-4 sm:p-6 lg:p-10 relative overflow-y-auto overflow-x-hidden selection:bg-[#20b8cd]/30 transition-colors duration-300">
+    <main className="min-h-[100dvh] bg-[var(--bg-primary)] dark:bg-[#07080a] text-zinc-900 dark:text-zinc-100 flex flex-col items-center justify-between p-3 xs:p-4 sm:p-6 lg:p-10 relative overflow-y-auto overflow-x-hidden selection:bg-[var(--accent-cyan)]/30 transition-colors duration-300">
       {/* Toast Notification Container */}
       <Toast 
         message={toast.message} 
@@ -645,7 +645,7 @@ const Auth = ({ initialMode }) => {
       />
       
       {/* Ambient Atmospheric Glows */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-72 sm:w-96 h-72 sm:h-96 bg-[#4ecde0]/15 dark:bg-[#199eb0]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-72 sm:w-96 h-72 sm:h-96 bg-[var(--color-sky-haze)]/15 dark:bg-[var(--accent-cyan-hover)]/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-blue-500/10 dark:bg-cyan-600/10 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Top Header: Brand & Back to Home */}
@@ -665,7 +665,7 @@ const Auth = ({ initialMode }) => {
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-sm font-extrabold tracking-tight text-zinc-900 dark:text-white">PARSU</span>
-            <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[#20b8cd] px-1 rounded">AI</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[var(--accent-cyan)] px-1 rounded">AI</span>
           </div>
         </div>
       </div>
@@ -681,7 +681,7 @@ const Auth = ({ initialMode }) => {
           {/* Reactive Speech Bubble (Like Floating Mascot) */}
           <div className="mb-2 sm:mb-4 min-h-[30px] sm:min-h-[44px] flex items-center justify-center">
             <div className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-2xl bg-white/90 dark:bg-[#15171a]/90 backdrop-blur-md border border-cyan-500/25 shadow-md shadow-cyan-500/5 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 text-center animate-in fade-in zoom-in-95 duration-200 max-w-[260px] sm:max-w-[340px] flex items-center gap-1.5 sm:gap-2">
-              <RiSparklingFill className="w-3.5 h-3.5 text-[#20b8cd] shrink-0" />
+              <RiSparklingFill className="w-3.5 h-3.5 text-[var(--accent-cyan)] shrink-0" />
               <span className="truncate">{bubbleText}</span>
             </div>
           </div>
@@ -693,7 +693,7 @@ const Auth = ({ initialMode }) => {
             title="Click to interact with mascot!"
           >
             {/* Blob Ambient Underglow */}
-            <div className="absolute inset-0 bg-[#4ecde0]/20 dark:bg-[#199eb0]/15 rounded-full blur-2xl sm:blur-3xl group-hover:bg-[#4ecde0]/30 transition-all pointer-events-none" />
+            <div className="absolute inset-0 bg-[var(--color-sky-haze)]/20 dark:bg-[var(--accent-cyan-hover)]/15 rounded-full blur-2xl sm:blur-3xl group-hover:bg-[var(--color-sky-haze)]/30 transition-all pointer-events-none" />
 
             {/* Mascot Element with levitation and physical leaning towards form */}
             <div 
@@ -729,7 +729,7 @@ const Auth = ({ initialMode }) => {
             {isRegistered ? (
               /* Dedicated Email Verification Stage */
               <div className="text-center py-4 sm:py-6 space-y-6 animate-in fade-in zoom-in-95 duration-300">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-cyan-500/10 border border-cyan-500/20 text-[#20b8cd] flex items-center justify-center mx-auto shadow-xl shadow-cyan-500/10 animate-bounce">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-cyan-500/10 border border-cyan-500/20 text-[var(--accent-cyan)] flex items-center justify-center mx-auto shadow-xl shadow-cyan-500/10 animate-bounce">
                   <RiMailSendLine size={38} />
                 </div>
 
@@ -743,7 +743,7 @@ const Auth = ({ initialMode }) => {
                   </h2>
                   <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-2 leading-relaxed max-w-sm mx-auto">
                     We've sent an activation link to <br/>
-                    <strong className="text-[#20b8cd] font-semibold break-all text-sm">{email}</strong>.
+                    <strong className="text-[var(--accent-cyan)] font-semibold break-all text-sm">{email}</strong>.
                   </p>
                   <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-2">
                     Please check your inbox (or spam folder) and click the link to verify your account before logging in.
@@ -757,7 +757,7 @@ const Auth = ({ initialMode }) => {
                       setIsRegistered(false);
                       handleSwitchMode('login');
                     }}
-                    className="w-full bg-gradient-to-r from-[#20b8cd] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20"
+                    className="w-full bg-gradient-to-r from-[var(--accent-cyan)] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20"
                   >
                     <span>Proceed to Sign In</span>
                     <RiArrowRightLine size={16} />
@@ -768,7 +768,7 @@ const Auth = ({ initialMode }) => {
                       type="button"
                       onClick={resendEmail}
                       disabled={resendStatus === 'Sending...'}
-                      className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-[#20b8cd] transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-[var(--accent-cyan)] transition-colors cursor-pointer"
                     >
                       <RiRefreshLine size={14} className={resendStatus === 'Sending...' ? 'animate-spin' : ''} />
                       <span>{resendStatus === 'Sent!' ? '✓ Email re-sent! Check inbox' : "Didn't receive email? Resend link"}</span>
@@ -780,7 +780,7 @@ const Auth = ({ initialMode }) => {
               <>
                 {/* Form Header */}
                 <div className="mb-6 text-center sm:text-left">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[#20b8cd] text-xs font-semibold mb-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[var(--accent-cyan)] text-xs font-semibold mb-2">
                     <RiShieldCheckLine size={14} />
                     <span>AI Search & Social Hub</span>
                   </div>
@@ -898,7 +898,7 @@ const Auth = ({ initialMode }) => {
                       <div className="flex items-center gap-2">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all ${
                           forgotStep === 1 
-                            ? 'bg-[#20b8cd] text-zinc-950 shadow-xs' 
+                            ? 'bg-[var(--accent-cyan)] text-zinc-950 shadow-xs' 
                             : 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30'
                         }`}>
                           {forgotStep > 1 ? '✓' : '1'}
@@ -908,12 +908,12 @@ const Auth = ({ initialMode }) => {
                         </span>
                       </div>
 
-                      <div className={`flex-1 h-0.5 mx-2.5 transition-all ${forgotStep > 1 ? 'bg-[#20b8cd]' : 'bg-zinc-200 dark:bg-white/10'}`} />
+                      <div className={`flex-1 h-0.5 mx-2.5 transition-all ${forgotStep > 1 ? 'bg-[var(--accent-cyan)]' : 'bg-zinc-200 dark:bg-white/10'}`} />
 
                       <div className="flex items-center gap-2">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all ${
                           forgotStep === 2 
-                            ? 'bg-[#20b8cd] text-zinc-950 shadow-xs' 
+                            ? 'bg-[var(--accent-cyan)] text-zinc-950 shadow-xs' 
                             : forgotStep > 2 
                             ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30'
                             : 'bg-zinc-100 dark:bg-white/5 text-zinc-400'
@@ -925,12 +925,12 @@ const Auth = ({ initialMode }) => {
                         </span>
                       </div>
 
-                      <div className={`flex-1 h-0.5 mx-2.5 transition-all ${forgotStep > 2 ? 'bg-[#20b8cd]' : 'bg-zinc-200 dark:bg-white/10'}`} />
+                      <div className={`flex-1 h-0.5 mx-2.5 transition-all ${forgotStep > 2 ? 'bg-[var(--accent-cyan)]' : 'bg-zinc-200 dark:bg-white/10'}`} />
 
                       <div className="flex items-center gap-2">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all ${
                           forgotStep === 3 
-                            ? 'bg-[#20b8cd] text-zinc-950 shadow-xs' 
+                            ? 'bg-[var(--accent-cyan)] text-zinc-950 shadow-xs' 
                             : 'bg-zinc-100 dark:bg-white/5 text-zinc-400'
                         }`}>
                           3
@@ -965,7 +965,7 @@ const Auth = ({ initialMode }) => {
                               onFocus={() => handleFieldFocus('email')}
                               onBlur={handleFieldBlur}
                               placeholder="name@example.com"
-                              className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all"
+                              className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all"
                             />
                           </div>
                         </div>
@@ -975,7 +975,7 @@ const Auth = ({ initialMode }) => {
                           disabled={forgotLoading}
                           onMouseEnter={() => !forgotLoading && setBlobMood('happy')}
                           onMouseLeave={() => !forgotLoading && setBlobMood('curious')}
-                          className="w-full mt-2 bg-gradient-to-r from-[#20b8cd] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
+                          className="w-full mt-2 bg-gradient-to-r from-[var(--accent-cyan)] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
                         >
                           {forgotLoading ? (
                             <>
@@ -1008,7 +1008,7 @@ const Auth = ({ initialMode }) => {
                           <button
                             type="button"
                             onClick={() => setForgotStep(1)}
-                            className="text-xs text-[#20b8cd] hover:underline font-bold shrink-0 cursor-pointer"
+                            className="text-xs text-[var(--accent-cyan)] hover:underline font-bold shrink-0 cursor-pointer"
                           >
                             Change Email
                           </button>
@@ -1023,7 +1023,7 @@ const Auth = ({ initialMode }) => {
                               type="button"
                               disabled={forgotCooldown > 0 || forgotLoading}
                               onClick={handleSendOtp}
-                              className="text-xs text-[#20b8cd] hover:underline disabled:text-zinc-400 disabled:no-underline font-medium cursor-pointer"
+                              className="text-xs text-[var(--accent-cyan)] hover:underline disabled:text-zinc-400 disabled:no-underline font-medium cursor-pointer"
                             >
                               {forgotCooldown > 0 ? `Resend in ${forgotCooldown}s` : 'Resend Code'}
                             </button>
@@ -1043,7 +1043,7 @@ const Auth = ({ initialMode }) => {
                               onFocus={() => handleFieldFocus('otp')}
                               onBlur={handleFieldBlur}
                               placeholder="123456"
-                              className="w-full font-mono text-center tracking-[0.35em] font-bold bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-base text-zinc-900 dark:text-zinc-100 placeholder:tracking-normal placeholder:font-sans placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all"
+                              className="w-full font-mono text-center tracking-[0.35em] font-bold bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-base text-zinc-900 dark:text-zinc-100 placeholder:tracking-normal placeholder:font-sans placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all"
                             />
                           </div>
                         </div>
@@ -1053,7 +1053,7 @@ const Auth = ({ initialMode }) => {
                           disabled={forgotLoading || otp.trim().length !== 6}
                           onMouseEnter={() => !forgotLoading && setBlobMood('happy')}
                           onMouseLeave={() => !forgotLoading && setBlobMood('curious')}
-                          className="w-full mt-2 bg-gradient-to-r from-[#20b8cd] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
+                          className="w-full mt-2 bg-gradient-to-r from-[var(--accent-cyan)] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
                         >
                           {forgotLoading ? (
                             <>
@@ -1111,7 +1111,7 @@ const Auth = ({ initialMode }) => {
                               onFocus={() => handleFieldFocus('newPassword')}
                               onBlur={handleFieldBlur}
                               placeholder="Min 6 chars, uppercase & number"
-                              className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all"
+                              className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all"
                             />
                             <button
                               type="button"
@@ -1138,7 +1138,7 @@ const Auth = ({ initialMode }) => {
                               onFocus={() => handleFieldFocus('confirmNewPassword')}
                               onBlur={handleFieldBlur}
                               placeholder="Repeat new password"
-                              className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all"
+                              className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all"
                             />
                             <button
                               type="button"
@@ -1155,7 +1155,7 @@ const Auth = ({ initialMode }) => {
                           disabled={forgotLoading}
                           onMouseEnter={() => !forgotLoading && setBlobMood('happy')}
                           onMouseLeave={() => !forgotLoading && setBlobMood('curious')}
-                          className="w-full mt-2 bg-gradient-to-r from-[#20b8cd] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
+                          className="w-full mt-2 bg-gradient-to-r from-[var(--accent-cyan)] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
                         >
                           {forgotLoading ? (
                             <>
@@ -1200,7 +1200,7 @@ const Auth = ({ initialMode }) => {
                           onFocus={() => handleFieldFocus('email')}
                           onBlur={handleFieldBlur}
                           placeholder="name@example.com"
-                          className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all"
+                          className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all"
                         />
                       </div>
                     </div>
@@ -1214,7 +1214,7 @@ const Auth = ({ initialMode }) => {
                         <button
                           type="button"
                           onClick={() => handleSwitchMode('forgot')}
-                          className="text-xs text-[#20b8cd] hover:underline cursor-pointer font-medium"
+                          className="text-xs text-[var(--accent-cyan)] hover:underline cursor-pointer font-medium"
                         >
                           Forgot?
                         </button>
@@ -1229,7 +1229,7 @@ const Auth = ({ initialMode }) => {
                           onFocus={() => handleFieldFocus('password')}
                           onBlur={handleFieldBlur}
                           placeholder="••••••••"
-                          className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all"
+                          className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all"
                         />
                         <button
                           type="button"
@@ -1263,7 +1263,7 @@ const Auth = ({ initialMode }) => {
                       disabled={loading}
                       onMouseEnter={() => !loading && setBlobMood('happy')}
                       onMouseLeave={() => !loading && setBlobMood(activeField ? (activeField.includes('password') && isPasswordSleeping ? 'password' : 'curious') : 'curious')}
-                      className="w-full mt-2 bg-gradient-to-r from-[#20b8cd] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
+                      className="w-full mt-2 bg-gradient-to-r from-[var(--accent-cyan)] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
                     >
                       {loading ? (
                         <>
@@ -1295,7 +1295,7 @@ const Auth = ({ initialMode }) => {
                           onFocus={() => handleFieldFocus('username')}
                           onBlur={handleFieldBlur}
                           placeholder="alex_dev (letters, numbers, _)"
-                          className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all"
+                          className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all"
                         />
                       </div>
                     </div>
@@ -1318,7 +1318,7 @@ const Auth = ({ initialMode }) => {
                           onFocus={() => handleFieldFocus('email')}
                           onBlur={handleFieldBlur}
                           placeholder="name@example.com"
-                          className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all"
+                          className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all"
                         />
                       </div>
                     </div>
@@ -1338,7 +1338,7 @@ const Auth = ({ initialMode }) => {
                           onFocus={() => handleFieldFocus('password')}
                           onBlur={handleFieldBlur}
                           placeholder="Min 6 chars, 1 uppercase, 1 number"
-                          className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all"
+                          className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all"
                         />
                         <button
                           type="button"
@@ -1381,7 +1381,7 @@ const Auth = ({ initialMode }) => {
                           onFocus={() => handleFieldFocus('confirmPassword')}
                           onBlur={handleFieldBlur}
                           placeholder="Repeat password"
-                          className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all"
+                          className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all"
                         />
                         <button
                           type="button"
@@ -1415,7 +1415,7 @@ const Auth = ({ initialMode }) => {
                       disabled={loading}
                       onMouseEnter={() => !loading && setBlobMood('happy')}
                       onMouseLeave={() => !loading && setBlobMood(activeField ? (activeField.includes('password') ? 'password' : 'curious') : 'neutral')}
-                      className={`w-full mt-2 font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 bg-gradient-to-r from-[#20b8cd] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white ${loading ? 'opacity-70' : ''}`}
+                      className={`w-full mt-2 font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 bg-gradient-to-r from-[var(--accent-cyan)] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white ${loading ? 'opacity-70' : ''}`}
                     >
                       {loading ? (
                         <>
@@ -1437,7 +1437,7 @@ const Auth = ({ initialMode }) => {
                       <button
                         type="button"
                         onClick={() => handleSwitchMode('login')}
-                        className="text-[#20b8cd] hover:underline font-bold cursor-pointer"
+                        className="text-[var(--accent-cyan)] hover:underline font-bold cursor-pointer"
                       >
                         Sign In
                       </button>
@@ -1448,7 +1448,7 @@ const Auth = ({ initialMode }) => {
                       <button
                         type="button"
                         onClick={() => handleSwitchMode('register')}
-                        className="text-[#20b8cd] hover:underline font-bold cursor-pointer"
+                        className="text-[var(--accent-cyan)] hover:underline font-bold cursor-pointer"
                       >
                         Create Account
                       </button>
@@ -1459,7 +1459,7 @@ const Auth = ({ initialMode }) => {
                       <button
                         type="button"
                         onClick={() => handleSwitchMode('login')}
-                        className="text-[#20b8cd] hover:underline font-bold cursor-pointer"
+                        className="text-[var(--accent-cyan)] hover:underline font-bold cursor-pointer"
                       >
                         Sign In
                       </button>

@@ -81,14 +81,14 @@ const Settings = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#20b8cd]/30">
+        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             {/* Main column — NO overflow here */}
             <div className="flex-1 flex flex-col min-h-0 lg:pl-56">
 
                 {/* Header — shrink-0: naturally pinned */}
-                <header className="shrink-0 z-30 border-b border-zinc-200 dark:border-white/5 bg-[#f4f5f7]/90 dark:bg-[#050505]/85 backdrop-blur-md px-3.5 sm:px-8 h-12 sm:h-14 flex items-center gap-3">
+                <header className="shrink-0 z-30 border-b border-zinc-200 dark:border-white/5 bg-[var(--bg-primary)]/90 dark:bg-[var(--bg-primary)]/85 backdrop-blur-md px-3.5 sm:px-8 h-12 sm:h-14 flex items-center gap-3">
                     <button
                         onClick={() => setIsSidebarOpen(true)}
                         className="lg:hidden p-1.5 -ml-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer rounded-lg active:scale-95"
@@ -96,7 +96,7 @@ const Settings = () => {
                     >
                         <RiMenuLine size={20} />
                     </button>
-                    <RiSettingsLine size={17} className="text-[#20b8cd] shrink-0" />
+                    <RiSettingsLine size={17} className="text-[var(--accent-cyan)] shrink-0" />
                     <h1 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">Settings</h1>
                 </header>
 
@@ -107,7 +107,7 @@ const Settings = () => {
                         {/* User identity card */}
                         {user && (
                             <div className="flex items-center gap-4 mb-8 p-4 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-white/8 shadow-sm">
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#20b8cd] to-[#60A6AF] flex items-center justify-center text-white font-black text-lg shrink-0 shadow-lg shadow-[#20b8cd]/20">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--accent-cyan)] to-[var(--color-clear-hanada)] flex items-center justify-center text-white font-black text-lg shrink-0 shadow-lg shadow-[var(--accent-cyan)]/20">
                                     {(user.name || user.username || 'U')[0].toUpperCase()}
                                 </div>
                                 <div className="min-w-0">
@@ -150,14 +150,14 @@ const Settings = () => {
 
                                     {/* Text */}
                                     <div className="min-w-0 flex-1">
-                                        <p className="font-bold text-sm text-zinc-900 dark:text-white mb-0.5 group-hover:text-[#20b8cd] transition-colors">{title}</p>
+                                        <p className="font-bold text-sm text-zinc-900 dark:text-white mb-0.5 group-hover:text-[var(--accent-cyan)] transition-colors">{title}</p>
                                         <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">{description}</p>
                                     </div>
 
                                     {/* Arrow */}
                                     <RiArrowRightLine
                                         size={16}
-                                        className="text-zinc-300 dark:text-zinc-700 group-hover:text-[#20b8cd] group-hover:translate-x-0.5 transition-all mt-1 shrink-0"
+                                        className="text-zinc-300 dark:text-zinc-700 group-hover:text-[var(--accent-cyan)] group-hover:translate-x-0.5 transition-all mt-1 shrink-0"
                                     />
                                 </Link>
                             ))}

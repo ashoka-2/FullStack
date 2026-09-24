@@ -24,7 +24,7 @@ export default function NotFound() {
     ];
 
     return (
-        <div className="min-h-screen bg-[#f4f5f7] dark:bg-[#050505] text-zinc-900 dark:text-zinc-100 font-sans flex flex-col justify-between selection:bg-[#20b8cd]/30 overflow-hidden relative">
+        <div className="min-h-screen bg-[var(--bg-primary)] text-zinc-900 dark:text-zinc-100 font-sans flex flex-col justify-between selection:bg-[var(--accent-cyan)]/30 overflow-hidden relative">
             
             {/* Ambient background glows */}
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-cyan-500/10 dark:bg-cyan-500/15 blur-[120px] pointer-events-none rounded-full" />
@@ -38,7 +38,7 @@ export default function NotFound() {
                     </div>
                     <div className="flex items-baseline gap-1.5">
                         <span className="font-extrabold text-lg tracking-tight text-zinc-900 dark:text-white">PARSU</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#20b8cd] bg-[#20b8cd]/10 px-1.5 py-0.5 rounded-md">AI</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-cyan)] bg-[var(--accent-cyan)]/10 px-1.5 py-0.5 rounded-md">AI</span>
                     </div>
                 </Link>
 
@@ -125,7 +125,7 @@ export default function NotFound() {
                                 <Link
                                     key={i}
                                     to={item.to}
-                                    className="p-3.5 rounded-2xl bg-white dark:bg-[#121212] border border-zinc-200/80 dark:border-white/10 hover:border-cyan-500/40 dark:hover:border-cyan-500/40 shadow-xs hover:shadow-md transition-all group flex items-center gap-3.5"
+                                    className="p-3.5 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 hover:border-cyan-500/40 dark:hover:border-cyan-500/40 shadow-xs hover:shadow-md transition-all group flex items-center gap-3.5"
                                 >
                                     <div className={`w-9 h-9 rounded-xl bg-zinc-100 dark:bg-white/5 flex items-center justify-center ${item.color} group-hover:scale-105 transition-transform`}>
                                         <Icon size={18} />

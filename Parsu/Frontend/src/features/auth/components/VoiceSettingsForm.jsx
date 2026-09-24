@@ -126,10 +126,10 @@ const VoiceSettingsForm = ({ onSuccess }) => {
   const currentVoiceObj = voices.find(v => v.voiceURI === selectedVoiceURI);
 
   return (
-    <div className="bg-white dark:bg-[#121212] border border-zinc-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 shadow-xs">
+    <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 shadow-xs">
       <div className="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-white/5 mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-[#20b8cd]/10 text-[#20b8cd] border border-[#20b8cd]/20">
+          <div className="p-2 rounded-xl bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] border border-[var(--accent-cyan)]/20">
             <RiVoiceprintLine size={20} />
           </div>
           <div>
@@ -145,7 +145,7 @@ const VoiceSettingsForm = ({ onSuccess }) => {
           className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 ${
             isPlayingTest
               ? 'bg-rose-500 hover:bg-rose-600 text-white'
-              : 'bg-[#20b8cd] hover:bg-[#1ca6b9] text-zinc-950'
+              : 'bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950'
           }`}
         >
           {isPlayingTest ? (
@@ -172,7 +172,7 @@ const VoiceSettingsForm = ({ onSuccess }) => {
             <select
               value={selectedVoiceURI}
               onChange={handleVoiceChange}
-              className="w-full bg-zinc-50 dark:bg-[#181818] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-[#20b8cd] transition-all cursor-pointer"
+              className="w-full bg-zinc-50 dark:bg-[#181818] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-[var(--accent-cyan)] transition-all cursor-pointer"
             >
               {voices.length === 0 && (
                 <option value="">Loading system voices...</option>
@@ -198,7 +198,7 @@ const VoiceSettingsForm = ({ onSuccess }) => {
           <div className="bg-zinc-50 dark:bg-[#161616] p-4 rounded-xl border border-zinc-100 dark:border-white/5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300">Speaking Speed (Rate)</span>
-              <span className="text-xs font-mono font-bold text-[#20b8cd]">{rate}x</span>
+              <span className="text-xs font-mono font-bold text-[var(--accent-cyan)]">{rate}x</span>
             </div>
             <input
               type="range"
@@ -220,7 +220,7 @@ const VoiceSettingsForm = ({ onSuccess }) => {
           <div className="bg-zinc-50 dark:bg-[#161616] p-4 rounded-xl border border-zinc-100 dark:border-white/5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300">Voice Pitch</span>
-              <span className="text-xs font-mono font-bold text-[#20b8cd]">{pitch}</span>
+              <span className="text-xs font-mono font-bold text-[var(--accent-cyan)]">{pitch}</span>
             </div>
             <input
               type="range"

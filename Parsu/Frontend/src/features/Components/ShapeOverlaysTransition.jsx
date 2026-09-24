@@ -149,22 +149,22 @@ export default function ShapeOverlaysTransition() {
         preserveAspectRatio="none"
       >
         <defs>
-          {/* Deep dark cyan foundation layer */}
+          {/* Deep Hanada & dark foundation layer */}
           <linearGradient id="liquid-grad-1" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#081e23" />
-            <stop offset="100%" stopColor="#0e373f" />
+            <stop offset="0%" stopColor="var(--color-deep-hanada, #192D68)" />
+            <stop offset="100%" stopColor="var(--color-deep-teal, #081e23)" />
           </linearGradient>
 
-          {/* Primary Parsu Cyan middle wave */}
+          {/* Clear Hanada to Primary Cyan middle wave */}
           <linearGradient id="liquid-grad-2" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#146c7a" />
-            <stop offset="100%" stopColor="#20b8cd" />
+            <stop offset="0%" stopColor="var(--color-clear-hanada, #3F63A8)" />
+            <stop offset="100%" stopColor="var(--accent-cyan, #20b8cd)" />
           </linearGradient>
 
-          {/* Radiant light cyan leading wave */}
+          {/* Primary Cyan to Sky Haze leading wave */}
           <linearGradient id="liquid-grad-3" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#20b8cd" />
-            <stop offset="100%" stopColor="#67e8f9" />
+            <stop offset="0%" stopColor="var(--accent-cyan, #20b8cd)" />
+            <stop offset="100%" stopColor="var(--color-sky-haze, #8DAAD3)" />
           </linearGradient>
         </defs>
 

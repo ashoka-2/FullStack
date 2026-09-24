@@ -365,13 +365,13 @@ const ChatPage2 = () => {
 
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30">
+        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             <div className={`flex-1 flex flex-col h-[100dvh] lg:pl-56 overflow-hidden relative transition-all duration-300`}>
 
                 {/* Header Container */}
-                <header className={`h-12 sm:h-14 bg-[#f4f5f7] dark:bg-[#050505] z-30 shrink-0 transition-all duration-300 ${isScrolled ? 'border-b border-zinc-200 dark:border-zinc-900 shadow-xs bg-[#f4f5f7]/95 dark:bg-[#050505]/95 backdrop-blur-md' : ''}`}>
+                <header className={`h-12 sm:h-14 bg-[var(--bg-primary)] z-30 shrink-0 transition-all duration-300 ${isScrolled ? 'border-b border-zinc-200 dark:border-zinc-900 shadow-xs bg-[var(--bg-primary)]/95 dark:bg-[var(--bg-primary)]/95 backdrop-blur-md' : ''}`}>
                     <div className="max-w-[800px] mx-auto h-full flex items-center justify-between px-2.5 sm:px-6">
                         <div className="flex items-center gap-2 sm:gap-4 overflow-hidden min-w-0">
                             <button
@@ -382,7 +382,7 @@ const ChatPage2 = () => {
                                 <RiMenuLine size={20} />
                             </button>
                             <div className="lg:hidden flex items-center gap-1.5 shrink-0">
-                                <ParsuLogo className="w-5 h-5 text-[#20b8cd] shrink-0" />
+                                <ParsuLogo className="w-5 h-5 text-[var(--accent-cyan)] shrink-0" />
                                 <span className="font-bold text-sm text-zinc-900 dark:text-white truncate">Parsu</span>
                             </div>
                             <button className="hidden sm:flex items-center gap-2 text-[13px] font-bold text-zinc-900 dark:text-zinc-100 border-b-2 border-zinc-900 dark:border-white pb-3 mt-3 shrink-0">
@@ -421,7 +421,7 @@ const ChatPage2 = () => {
                             <div className="flex justify-center py-3">
                                 {isLoadingMore ? (
                                     <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
-                                        <div className="w-4 h-4 border-2 border-[#60A6AF]/30 border-t-[#60A6AF] rounded-full animate-spin" />
+                                        <div className="w-4 h-4 border-2 border-[var(--color-clear-hanada)]/30 border-t-[#60A6AF] rounded-full animate-spin" />
                                         Loading earlier messages...
                                     </div>
                                 ) : (
@@ -434,7 +434,7 @@ const ChatPage2 = () => {
                                                 if (scroller) scroller.scrollTop = scroller.scrollHeight - prevScrollHeight;
                                             });
                                         }}
-                                        className="text-xs text-[#60A6AF] hover:text-[#4a8a92] font-semibold transition-colors"
+                                        className="text-xs text-[var(--color-clear-hanada)] hover:text-[var(--color-deep-hanada)] font-semibold transition-colors"
                                     >
                                         ↑ Load earlier messages
                                     </button>

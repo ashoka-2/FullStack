@@ -41,7 +41,7 @@ export default function AdminLayout() {
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-sm tracking-tight text-white">Parsu AI</span>
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider text-black bg-[#20b8cd] shadow-xs">
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider text-black bg-[var(--accent-cyan)] shadow-xs">
                   Console
                 </span>
               </div>
@@ -77,7 +77,7 @@ export default function AdminLayout() {
 
             <Link
               to="/"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-[#20b8cd] border border-cyan-500/25 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-[var(--accent-cyan)] border border-cyan-500/25 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer"
             >
               <RiArrowLeftLine size={14} />
               <span>Back to Chat</span>

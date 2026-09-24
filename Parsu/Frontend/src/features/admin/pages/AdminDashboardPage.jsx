@@ -218,7 +218,7 @@ export default function AdminDashboardPage() {
 
           <Link
             to="/admin/users"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#20b8cd] hover:bg-[#1da9bc] text-black font-bold text-xs shadow-md shrink-0 transition-transform active:scale-95 cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black font-bold text-xs shadow-md shrink-0 transition-transform active:scale-95 cursor-pointer"
           >
             <RiUserAddLine size={14} />
             <span>+ Invite</span>
@@ -344,7 +344,7 @@ export default function AdminDashboardPage() {
       {/* ── 4. Razorpay Testing vs Payable Mode Switcher Banner ── */}
       <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-blue-500/5 to-purple-500/10 border border-cyan-500/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#20b8cd]/10 border border-[#20b8cd]/20 flex items-center justify-center text-[#20b8cd] shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/20 flex items-center justify-center text-[var(--accent-cyan)] shrink-0">
             <RiShieldCheckLine size={20} />
           </div>
           <div>
@@ -441,7 +441,7 @@ export default function AdminDashboardPage() {
               <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
                 <div
                   style={{ height: bar.height }}
-                  className="w-full max-w-[22px] rounded-t-lg bg-gradient-to-t from-cyan-600 to-[#20b8cd] group-hover:brightness-125 transition-all"
+                  className="w-full max-w-[22px] rounded-t-lg bg-gradient-to-t from-cyan-600 to-[var(--accent-cyan)] group-hover:brightness-125 transition-all"
                 />
                 <span className="text-[9px] text-zinc-500 font-mono">{bar.label}</span>
               </div>
@@ -459,7 +459,7 @@ export default function AdminDashboardPage() {
             <button
               type="button"
               onClick={() => setShowGaGuide(true)}
-              className="text-xs text-[#20b8cd] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+              className="text-xs text-[var(--accent-cyan)] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
             >
               <RiInformationLine size={14} />
               <span>GCP Setup Guide</span>
@@ -814,7 +814,7 @@ export default function AdminDashboardPage() {
           <div className="w-full max-w-xl rounded-3xl bg-[#161718] border border-white/10 shadow-2xl p-6 space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-[#20b8cd]">
+                <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-[var(--accent-cyan)]">
                   <RiKeyLine size={18} />
                 </div>
                 <div>
@@ -834,7 +834,7 @@ export default function AdminDashboardPage() {
             <div className="space-y-3.5 text-xs text-zinc-300 leading-relaxed">
               <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
                 <h4 className="font-bold text-white mb-1 flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-[#20b8cd] text-black font-extrabold flex items-center justify-center text-[10px]">1</span>
+                  <span className="w-5 h-5 rounded-full bg-[var(--accent-cyan)] text-black font-extrabold flex items-center justify-center text-[10px]">1</span>
                   Google Cloud Console (GCP)
                 </h4>
                 <p className="text-zinc-400 pl-6.5">
@@ -846,7 +846,7 @@ export default function AdminDashboardPage() {
 
               <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
                 <h4 className="font-bold text-white mb-1 flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-[#20b8cd] text-black font-extrabold flex items-center justify-center text-[10px]">2</span>
+                  <span className="w-5 h-5 rounded-full bg-[var(--accent-cyan)] text-black font-extrabold flex items-center justify-center text-[10px]">2</span>
                   Google Analytics 4 (GA4) Property
                 </h4>
                 <p className="text-zinc-400 pl-6.5">
@@ -858,7 +858,7 @@ export default function AdminDashboardPage() {
 
               <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
                 <h4 className="font-bold text-white mb-1 flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-[#20b8cd] text-black font-extrabold flex items-center justify-center text-[10px]">3</span>
+                  <span className="w-5 h-5 rounded-full bg-[var(--accent-cyan)] text-black font-extrabold flex items-center justify-center text-[10px]">3</span>
                   Environment Variables (.env)
                 </h4>
                 <pre className="mt-1 p-2 rounded-xl bg-black/60 text-[11px] font-mono text-cyan-300 overflow-x-auto">

@@ -82,7 +82,7 @@ export default function ManualConnectModal({ platform, onClose, onConnected }) {
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="space-y-1.5">
                         <label className="flex items-center gap-2 text-sm font-bold text-zinc-700 dark:text-zinc-300 ml-1">
-                            <RiKey2Line size={14} className="text-[#60A6AF]" />
+                            <RiKey2Line size={14} className="text-[var(--color-clear-hanada)]" />
                             Access Token
                         </label>
                         <input
@@ -96,7 +96,7 @@ export default function ManualConnectModal({ platform, onClose, onConnected }) {
                     </div>
                     <div className="space-y-1.5">
                         <label className="flex items-center gap-2 text-sm font-bold text-zinc-700 dark:text-zinc-300 ml-1">
-                            <RiUser6Line size={14} className="text-[#60A6AF]" />
+                            <RiUser6Line size={14} className="text-[var(--color-clear-hanada)]" />
                             User / Page ID
                         </label>
                         <input
@@ -110,7 +110,7 @@ export default function ManualConnectModal({ platform, onClose, onConnected }) {
                     </div>
                     <div className="space-y-1.5">
                         <label className="flex items-center gap-2 text-sm font-bold text-zinc-700 dark:text-zinc-300 ml-1">
-                            <RiUser6Line size={14} className="text-[#60A6AF]" />
+                            <RiUser6Line size={14} className="text-[var(--color-clear-hanada)]" />
                             Username <span className="text-zinc-500 text-xs font-normal">(optional)</span>
                         </label>
                         <input

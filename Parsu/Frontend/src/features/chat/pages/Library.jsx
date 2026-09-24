@@ -193,12 +193,12 @@ const Library = () => {
     };
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30 w-full">
+        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30 w-full">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             <div className="flex-1 flex flex-col h-full lg:pl-56 min-w-0 transition-all duration-300 w-full overflow-hidden">
                 {/* Sticky Header - always pinned, never scrolls away */}
-                <header className="shrink-0 h-12 sm:h-14 bg-[#f4f5f7]/90 dark:bg-[#050505]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-white/5 flex items-center justify-between px-3 sm:px-6 z-40">
+                <header className="shrink-0 h-12 sm:h-14 bg-[var(--bg-primary)]/90 dark:bg-[var(--bg-primary)]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-white/5 flex items-center justify-between px-3 sm:px-6 z-40">
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
@@ -208,10 +208,10 @@ const Library = () => {
                             <RiMenuLine size={20} />
                         </button>
                         <span className="lg:hidden text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
-                            <RiHistoryLine size={17} className="text-[#20b8cd]" /> Chats
+                            <RiHistoryLine size={17} className="text-[var(--accent-cyan)]" /> Chats
                         </span>
                         <span className="hidden lg:flex items-center gap-2 text-sm font-bold text-zinc-900 dark:text-white">
-                            <RiHistoryLine size={17} className="text-[#20b8cd]" /> Chats
+                            <RiHistoryLine size={17} className="text-[var(--accent-cyan)]" /> Chats
                         </span>
                     </div>
                 </header>
@@ -221,7 +221,7 @@ const Library = () => {
                 <main className="max-w-[1000px] mx-auto px-4 md:px-6 py-6 md:py-10">
  
                     <div className="hidden lg:flex items-center gap-3 mb-10 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#20b8cd] to-[#1da9bc] flex items-center justify-center text-zinc-950 shrink-0 shadow-lg shadow-[#20b8cd]/20">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[var(--accent-cyan)] to-[#1da9bc] flex items-center justify-center text-zinc-950 shrink-0 shadow-lg shadow-[var(--accent-cyan)]/20">
                             <RiHistoryLine size={22} />
                         </div>
                         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white shrink-0">Chats</h1>
@@ -230,9 +230,9 @@ const Library = () => {
                     {/* ─── Search Bar + View Toggle + Upload Button ─────────────────────── */}
                     <div className="flex items-center gap-3 w-full">
                         <div className="relative group flex-1 md:w-64 max-w-sm">
-                            <ParsuLogo className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-[#60A6AF] transition-colors" size={16} />
+                            <ParsuLogo className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-[var(--color-clear-hanada)] transition-colors" size={16} />
                             <input
-                                className="w-full bg-white dark:bg-[#0a0a0a] border border-zinc-200/90 dark:border-white/5 rounded-xl pl-10 pr-4 py-2 text-sm font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#60A6AF]/40 focus:ring-1 focus:ring-[#60A6AF]/20 shadow-2xs transition-all"
+                                className="w-full bg-white dark:bg-[var(--bg-primary)] border border-zinc-200/90 dark:border-white/5 rounded-xl pl-10 pr-4 py-2 text-sm font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[var(--color-clear-hanada)]/40 focus:ring-1 focus:ring-[#60A6AF]/20 shadow-2xs transition-all"
                                 placeholder="Search your chats..."
                                 value={searchQuery}
                                 onMouseEnter={() => triggerBlobLibrarySearch('hover')}
@@ -249,20 +249,20 @@ const Library = () => {
                         <button
                             onClick={() => docInputRef.current?.click()}
                             disabled={isUploading}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-zinc-200/90 dark:border-white/5 bg-white dark:bg-[#0a0a0a] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-all disabled:opacity-50 shrink-0 shadow-2xs cursor-pointer"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-zinc-200/90 dark:border-white/5 bg-white dark:bg-[var(--bg-primary)] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-all disabled:opacity-50 shrink-0 shadow-2xs cursor-pointer"
                             title="Upload a document for semantic search"
                         >
                             {isUploading ? (
-                                <div className="w-4 h-4 border-2 border-[#60A6AF]/30 border-t-[#60A6AF] rounded-full animate-spin" />
+                                <div className="w-4 h-4 border-2 border-[var(--color-clear-hanada)]/30 border-t-[#60A6AF] rounded-full animate-spin" />
                             ) : (
                                 <RiUploadCloud2Line size={16} />
                             )}
                             <span className="hidden sm:inline">{isUploading ? 'Uploading...' : 'Upload'}</span>
                         </button>
 
-                        <div className="flex items-center p-1 bg-white/80 dark:bg-[#0a0a0a] border border-zinc-200/90 dark:border-white/5 rounded-xl shrink-0 shadow-2xs">
-                            <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-zinc-100 dark:bg-zinc-800 text-[#60A6AF] font-bold shadow-2xs' : 'text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-300'}`}><RiLayoutGridLine size={18} /></button>
-                            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-zinc-100 dark:bg-zinc-800 text-[#60A6AF] font-bold shadow-2xs' : 'text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-300'}`}><RiListCheck2 size={18} /></button>
+                        <div className="flex items-center p-1 bg-white/80 dark:bg-[var(--bg-primary)] border border-zinc-200/90 dark:border-white/5 rounded-xl shrink-0 shadow-2xs">
+                            <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-zinc-100 dark:bg-zinc-800 text-[var(--color-clear-hanada)] font-bold shadow-2xs' : 'text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-300'}`}><RiLayoutGridLine size={18} /></button>
+                            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-zinc-100 dark:bg-zinc-800 text-[var(--color-clear-hanada)] font-bold shadow-2xs' : 'text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-300'}`}><RiListCheck2 size={18} /></button>
                         </div>
                     </div>
 
@@ -275,7 +275,7 @@ const Library = () => {
                                 onClick={() => setDateFilter(f.value)}
                                 className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all border ${
                                     dateFilter === f.value
-                                        ? 'bg-[#60A6AF]/10 border-[#60A6AF]/30 text-[#60A6AF]'
+                                        ? 'bg-[var(--color-clear-hanada)]/10 border-[var(--color-clear-hanada)]/30 text-[var(--color-clear-hanada)]'
                                         : 'border-zinc-200 dark:border-white/5 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/10'
                                 }`}
                             >
@@ -335,7 +335,7 @@ const Library = () => {
                             </h3>
                             <div className="space-y-3">
                                 {semanticResults.map((result, i) => (
-                                    <div key={i} className="p-4 rounded-xl border border-zinc-200/90 dark:border-white/5 bg-white dark:bg-zinc-900/50 hover:border-[#60A6AF]/30 shadow-2xs transition-all">
+                                    <div key={i} className="p-4 rounded-xl border border-zinc-200/90 dark:border-white/5 bg-white dark:bg-zinc-900/50 hover:border-[var(--color-clear-hanada)]/30 shadow-2xs transition-all">
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className="text-[10px] font-bold text-purple-500 bg-purple-500/10 px-2 py-0.5 rounded-full">
                                                 {(result.score * 100).toFixed(0)}% match

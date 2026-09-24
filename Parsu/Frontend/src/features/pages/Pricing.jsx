@@ -416,7 +416,7 @@ export default function Pricing() {
                         </div>
                     ) : (
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900 border border-white/10 text-xs sm:text-sm text-zinc-300 shadow-md">
-                            <RiGlobalLine size={15} className="text-[#20b8cd]" />
+                            <RiGlobalLine size={15} className="text-[var(--accent-cyan)]" />
                             <span className="font-medium">Global Pricing Active • Location auto-localized</span>
                         </div>
                     )}
@@ -427,7 +427,7 @@ export default function Pricing() {
                     <div className="inline-flex items-center gap-4 px-4 py-2 rounded-full bg-zinc-900/90 border border-white/10 shadow-lg text-xs sm:text-sm">
                         <div className="flex items-center gap-1.5 font-extrabold text-white">
                             <span>Parsu</span>
-                            <span className="px-1.5 py-0.2 rounded bg-[#20b8cd] text-black font-black text-[10px]">PRO</span>
+                            <span className="px-1.5 py-0.2 rounded bg-[var(--accent-cyan)] text-black font-black text-[10px]">PRO</span>
                         </div>
                         <span className="text-zinc-600 dark:text-zinc-600">•</span>
                         <Link to="/about" className="text-zinc-400 hover:text-white transition-colors">Documentation</Link>
@@ -442,7 +442,7 @@ export default function Pricing() {
 
                     <h1 className="text-3xl sm:text-5xl font-black text-zinc-900 dark:text-white tracking-tight pt-2">
                         Pick your stack. <br />
-                        <span className="text-[#20b8cd]">Start building products you're proud to ship.</span>
+                        <span className="text-[var(--accent-cyan)]">Start building products you're proud to ship.</span>
                     </h1>
                 </div>
 
@@ -561,7 +561,7 @@ export default function Pricing() {
                 <div className="max-w-3xl mx-auto pt-8 sm:pt-14 space-y-6">
                     <div className="text-center space-y-2 mb-8">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-zinc-300">
-                            <RiQuestionLine size={14} className="text-[#20b8cd]" />
+                            <RiQuestionLine size={14} className="text-[var(--accent-cyan)]" />
                             <span>Transparent Details</span>
                         </div>
                         <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
@@ -573,17 +573,17 @@ export default function Pricing() {
                         {FAQS.map((faq, idx) => (
                             <div 
                                 key={idx}
-                                className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#111216] overflow-hidden transition-all shadow-xs"
+                                className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[var(--bg-surface)] overflow-hidden transition-all shadow-xs"
                             >
                                 <button
                                     type="button"
                                     onClick={() => setOpenFaq(openFaq === idx ? -1 : idx)}
-                                    className="w-full flex items-center justify-between p-4 sm:p-5 text-left text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 hover:text-[#20b8cd] transition-colors cursor-pointer select-none"
+                                    className="w-full flex items-center justify-between p-4 sm:p-5 text-left text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 hover:text-[var(--accent-cyan)] transition-colors cursor-pointer select-none"
                                 >
                                     <span>{faq.q}</span>
                                     <RiArrowDownSLine 
                                         size={18} 
-                                        className={`transition-transform duration-200 text-zinc-400 ${openFaq === idx ? 'rotate-180 text-[#20b8cd]' : ''}`} 
+                                        className={`transition-transform duration-200 text-zinc-400 ${openFaq === idx ? 'rotate-180 text-[var(--accent-cyan)]' : ''}`} 
                                     />
                                 </button>
                                 {openFaq === idx && (

@@ -220,15 +220,15 @@ const Loading = ({ onFinished, authReady = true }) => {
       className="fixed inset-0 z-[99999] w-screen h-[100dvh] overflow-hidden pointer-events-auto bg-[#07090d] select-none flex items-center justify-center"
     >
       {/* ── Ambient Radial Glow Orbs (Never a single flat color) ── */}
-      <div className="absolute top-1/4 -left-20 w-[420px] h-[420px] rounded-full bg-[#20b8cd]/20 blur-[130px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-1/4 -right-20 w-[460px] h-[460px] rounded-full bg-[#0ea5e9]/15 blur-[150px] pointer-events-none animate-pulse [animation-delay:1.5s]" />
-      <div className="absolute inset-0 bg-radial from-[#146c7a]/10 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute top-1/4 -left-20 w-[420px] h-[420px] rounded-full bg-[var(--accent-cyan)]/20 blur-[130px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-1/4 -right-20 w-[460px] h-[460px] rounded-full bg-[var(--color-clear-hanada)]/15 blur-[150px] pointer-events-none animate-pulse [animation-delay:1.5s]" />
+      <div className="absolute inset-0 bg-radial from-[var(--color-deep-hanada)]/15 via-transparent to-transparent pointer-events-none" />
 
       {/* ── Subtle Cybernetic Coordinate Grid ── */}
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.04]"
         style={{
-          backgroundImage: `linear-gradient(to right, #20b8cd 1px, transparent 1px), linear-gradient(to bottom, #20b8cd 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(to right, var(--accent-cyan, #20b8cd) 1px, transparent 1px), linear-gradient(to bottom, var(--accent-cyan, #20b8cd) 1px, transparent 1px)`,
           backgroundSize: '48px 48px',
         }}
       />
@@ -240,22 +240,22 @@ const Loading = ({ onFinished, authReady = true }) => {
         preserveAspectRatio="none"
       >
         <defs>
-          {/* Deep dark cyan foundation wave */}
+          {/* Deep dark foundation wave */}
           <linearGradient id="load-liquid-1" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#081e23" />
-            <stop offset="100%" stopColor="#0e373f" />
+            <stop offset="0%" stopColor="var(--color-deep-teal, #081e23)" />
+            <stop offset="100%" stopColor="var(--color-deep-hanada, #192D68)" />
           </linearGradient>
 
-          {/* Primary Parsu Cyan middle wave */}
+          {/* Primary middle wave */}
           <linearGradient id="load-liquid-2" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#146c7a" />
-            <stop offset="100%" stopColor="#20b8cd" />
+            <stop offset="0%" stopColor="var(--color-clear-hanada, #3F63A8)" />
+            <stop offset="100%" stopColor="var(--accent-cyan, #20b8cd)" />
           </linearGradient>
 
-          {/* Radiant light cyan leading wave crest */}
+          {/* Radiant leading wave crest */}
           <linearGradient id="load-liquid-3" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#20b8cd" />
-            <stop offset="100%" stopColor="#67e8f9" />
+            <stop offset="0%" stopColor="var(--accent-cyan, #20b8cd)" />
+            <stop offset="100%" stopColor="var(--color-sky-haze, #8DAAD3)" />
           </linearGradient>
         </defs>
 
@@ -273,7 +273,7 @@ const Loading = ({ onFinished, authReady = true }) => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3.5">
             <div className="relative">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#20b8cd] via-[#0ea5e9] to-teal-400 flex items-center justify-center text-black shadow-lg shadow-cyan-500/25">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--accent-cyan)] via-[#0ea5e9] to-teal-400 flex items-center justify-center text-black shadow-lg shadow-cyan-500/25">
                 <ParsuLogo size={22} className="text-black" />
               </div>
               <div className="absolute inset-0 rounded-2xl bg-cyan-400/20 blur-sm -z-10 animate-pulse" />
@@ -308,11 +308,11 @@ const Loading = ({ onFinished, authReady = true }) => {
           <div className="flex items-baseline">
             <span
               ref={counterTextRef}
-              className="text-6xl sm:text-7xl font-black italic tracking-tight tabular-nums bg-gradient-to-br from-white via-cyan-100 to-[#20b8cd] bg-clip-text text-transparent leading-none drop-shadow-lg"
+              className="text-6xl sm:text-7xl font-black italic tracking-tight tabular-nums bg-gradient-to-br from-white via-cyan-100 to-[var(--accent-cyan)] bg-clip-text text-transparent leading-none drop-shadow-lg"
             >
               0
             </span>
-            <span className="text-2xl sm:text-3xl font-light italic text-[#20b8cd] ml-1 opacity-90">
+            <span className="text-2xl sm:text-3xl font-light italic text-[var(--accent-cyan)] ml-1 opacity-90">
               %
             </span>
           </div>
@@ -322,7 +322,7 @@ const Loading = ({ onFinished, authReady = true }) => {
         <div className="w-full h-2 rounded-full bg-white/10 p-0.5 border border-white/10 overflow-hidden mb-6 relative shadow-inner">
           <div
             ref={progressBarRef}
-            className="h-full rounded-full bg-gradient-to-r from-[#0ea5e9] via-[#20b8cd] to-[#67e8f9] shadow-[0_0_12px_rgba(32,184,205,0.7)] transition-all duration-75 relative overflow-hidden"
+            className="h-full rounded-full bg-gradient-to-r from-[#0ea5e9] via-[var(--accent-cyan)] to-[#67e8f9] shadow-[0_0_12px_rgba(32,184,205,0.7)] transition-all duration-75 relative overflow-hidden"
             style={{ width: '0%' }}
           >
             {/* Shimmer line */}

@@ -206,12 +206,12 @@ const FollowUpInput = ({
 
     // Get file type icon
     const getFileIcon = (file) => {
-        if (file.isLink) return <RiAttachment2 size={12} className="text-[#60A6AF]" />;
+        if (file.isLink) return <RiAttachment2 size={12} className="text-[var(--color-clear-hanada)]" />;
         const name = file.name?.toLowerCase() || '';
         if (name.match(/\.(mp4|webm|mov|avi|mkv)$/)) return <RiVideoLine size={12} className="text-purple-400" />;
         if (name.match(/\.(pdf)$/)) return <RiFilePdfLine size={12} className="text-red-400" />;
         if (name.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/)) return <RiImageLine size={12} className="text-emerald-400" />;
-        return <RiFileTextLine size={12} className="text-[#60A6AF]" />;
+        return <RiFileTextLine size={12} className="text-[var(--color-clear-hanada)]" />;
     };
 
     return (
@@ -226,24 +226,24 @@ const FollowUpInput = ({
             />
 
             <div className="max-w-[800px] mx-auto px-2.5 sm:px-4 md:px-6 pointer-events-auto w-full">
-                <div className="w-full bg-white dark:bg-[#121212] border border-zinc-200/90 dark:border-[#2d2e2e] focus-within:border-zinc-300 dark:focus-within:border-zinc-700 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-4 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)]">
+                <div className="w-full bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-[#2d2e2e] focus-within:border-zinc-300 dark:focus-within:border-zinc-700 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-4 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)]">
                     
                     {/* Rich Attachment Preview Strip */}
                     <AttachmentPreviewStrip files={files} onRemove={removeFile} />
 
                     {/* Live Voice Captioning Stream */}
                     {isListening && (
-                        <div className="flex items-center gap-3 px-3.5 py-2 mb-2 rounded-xl bg-zinc-900/95 dark:bg-[#18181b]/95 border border-[#20b8cd]/40 text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
+                        <div className="flex items-center gap-3 px-3.5 py-2 mb-2 rounded-xl bg-zinc-900/95 dark:bg-[#18181b]/95 border border-[var(--accent-cyan)]/40 text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
                             <div className="flex items-center gap-1 shrink-0">
-                                <span className="w-1 h-3 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:0ms]" />
-                                <span className="w-1 h-5 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:150ms]" />
-                                <span className="w-1 h-2 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:300ms]" />
-                                <span className="w-1 h-4 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:450ms]" />
+                                <span className="w-1 h-3 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:0ms]" />
+                                <span className="w-1 h-5 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:150ms]" />
+                                <span className="w-1 h-2 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:300ms]" />
+                                <span className="w-1 h-4 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:450ms]" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5">
                                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
-                                    <span className="text-[10px] font-bold text-[#5ce1f2] uppercase tracking-wider">Live Speech Caption</span>
+                                    <span className="text-[10px] font-bold text-[var(--color-sky-haze)] uppercase tracking-wider">Live Speech Caption</span>
                                 </div>
                                 <p className="text-[13px] text-zinc-100 font-medium truncate italic mt-0.5">
                                     {liveCaption || 'Listening to your voice... Speak now'}
@@ -264,7 +264,7 @@ const FollowUpInput = ({
                         <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-200/60 dark:border-zinc-800/60 text-xs text-zinc-500 dark:text-zinc-400 select-none animate-in fade-in duration-200">
                             <div className="flex items-center gap-2">
                                 {isCodeContent && (
-                                    <span className="flex items-center gap-1 text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-[#20b8cd]/15 text-[#148393] dark:text-[#5ce1f2] border border-[#20b8cd]/25">
+                                    <span className="flex items-center gap-1 text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-[var(--accent-cyan)]/15 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] border border-[var(--accent-cyan)]/25">
                                         <RiCodeSSlashLine size={12} />
                                         Code format preserved
                                     </span>
@@ -276,7 +276,7 @@ const FollowUpInput = ({
                             <button
                                 type="button"
                                 onClick={() => setIsFullScreenEditor(true)}
-                                className="flex items-center gap-1 text-[11px] font-semibold text-[#20b8cd] hover:text-[#1892a3] dark:hover:text-[#6ee6f5] transition-colors cursor-pointer px-2 py-0.5 rounded-md hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"
+                                className="flex items-center gap-1 text-[11px] font-semibold text-[var(--accent-cyan)] hover:text-[var(--color-deep-hanada)] dark:hover:text-[var(--color-sky-haze)] transition-colors cursor-pointer px-2 py-0.5 rounded-md hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"
                                 title="Open full-screen prompt and code editor"
                             >
                                 <RiFullscreenLine size={13} />
@@ -347,14 +347,14 @@ const FollowUpInput = ({
                                 onClick={onToggleWebSearch}
                                 className={`hidden sm:flex h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
                                     webSearch 
-                                        ? 'bg-[#20b8cd]/15 border-[#20b8cd]/40 text-[#148393] dark:text-[#5ce1f2] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
+                                        ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
                                         : 'bg-zinc-100/90 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
                                 }`}
                                 title={webSearch ? "Web Search: ON (Using Tavily for live internet facts)" : "Web Search: OFF (Pure AI model knowledge)"}
                             >
-                                <RiGlobalLine size={14} className={webSearch ? "text-[#20b8cd]" : "text-zinc-400 dark:text-zinc-500"} />
+                                <RiGlobalLine size={14} className={webSearch ? "text-[var(--accent-cyan)]" : "text-zinc-400 dark:text-zinc-500"} />
                                 <span className="text-[11px] sm:text-xs">Web</span>
-                                <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[#20b8cd] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
+                                <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
                             </button>
 
                             {/* AI Model Selector */}
@@ -397,7 +397,7 @@ const FollowUpInput = ({
                                 className={`px-2.5 sm:px-3 py-1.5 h-8 sm:h-9 flex items-center justify-center rounded-full transition-all gap-1 text-xs font-bold ${
                                     input.trim() || files.length > 0 
                                         ? isResponding
-                                            ? 'bg-[#20b8cd] hover:bg-[#1ca6b9] text-zinc-950 shadow-md cursor-pointer'
+                                            ? 'bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 shadow-md cursor-pointer'
                                             : 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg hover:scale-105 cursor-pointer' 
                                         : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-300 dark:text-zinc-600 opacity-50 cursor-not-allowed'
                                 }`}
@@ -434,7 +434,7 @@ const FollowUpInput = ({
                     {/* Studio Header */}
                     <div className="h-14 px-4 sm:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#111216] shrink-0">
                         <div className="flex items-center gap-2.5">
-                            <div className="p-1.5 rounded-lg bg-[#20b8cd]/15 text-[#20b8cd]">
+                            <div className="p-1.5 rounded-lg bg-[var(--accent-cyan)]/15 text-[var(--accent-cyan)]">
                                 {isCodeContent ? <RiCodeSSlashLine size={18} /> : <RiFileTextLine size={18} />}
                             </div>
                             <div>
@@ -470,7 +470,7 @@ const FollowUpInput = ({
                             <button
                                 type="button"
                                 onClick={() => setIsFullScreenEditor(false)}
-                                className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-[#20b8cd] hover:bg-[#1bb3c7] text-zinc-950 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+                                className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
                                 title="Exit full-screen mode"
                             >
                                 <RiFullscreenExitLine size={16} />
@@ -498,15 +498,15 @@ const FollowUpInput = ({
 
                     {/* Live Voice Captioning Stream in Studio */}
                     {isListening && (
-                        <div className="mx-4 sm:mx-6 mb-2 px-3.5 py-2 rounded-xl bg-zinc-900/95 border border-[#20b8cd]/40 text-white shadow-xl backdrop-blur-md flex items-center gap-3">
+                        <div className="mx-4 sm:mx-6 mb-2 px-3.5 py-2 rounded-xl bg-zinc-900/95 border border-[var(--accent-cyan)]/40 text-white shadow-xl backdrop-blur-md flex items-center gap-3">
                             <div className="flex items-center gap-1 shrink-0">
-                                <span className="w-1 h-3 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:0ms]" />
-                                <span className="w-1 h-5 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:150ms]" />
-                                <span className="w-1 h-2 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:300ms]" />
-                                <span className="w-1 h-4 rounded-full bg-[#20b8cd] animate-bounce [animation-delay:450ms]" />
+                                <span className="w-1 h-3 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:0ms]" />
+                                <span className="w-1 h-5 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:150ms]" />
+                                <span className="w-1 h-2 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:300ms]" />
+                                <span className="w-1 h-4 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:450ms]" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <span className="text-[10px] font-bold text-[#5ce1f2] uppercase tracking-wider block">Live Voice Caption</span>
+                                <span className="text-[10px] font-bold text-[var(--color-sky-haze)] uppercase tracking-wider block">Live Voice Caption</span>
                                 <p className="text-[13px] text-zinc-100 font-medium truncate italic mt-0.5">
                                     {liveCaption || 'Listening to your voice... Speak now'}
                                 </p>
@@ -546,14 +546,14 @@ const FollowUpInput = ({
                                     onClick={onToggleWebSearch}
                                     className={`h-8.5 px-3 rounded-full border flex items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
                                         webSearch 
-                                            ? 'bg-[#20b8cd]/15 border-[#20b8cd]/40 text-[#5ce1f2] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
+                                            ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
                                             : 'bg-white/[0.06] border-white/15 text-zinc-400 hover:text-zinc-200'
                                     }`}
                                     title={webSearch ? "Web Search: ON (Using Tavily for live internet facts)" : "Web Search: OFF (Pure AI model knowledge)"}
                                 >
-                                    <RiGlobalLine size={14} className={webSearch ? "text-[#20b8cd]" : "text-zinc-400"} />
+                                    <RiGlobalLine size={14} className={webSearch ? "text-[var(--accent-cyan)]" : "text-zinc-400"} />
                                     <span className="text-xs">Web</span>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[#20b8cd] animate-pulse' : 'bg-zinc-600'}`} />
+                                    <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-600'}`} />
                                 </button>
 
                                 {/* Model Selector */}
@@ -592,7 +592,7 @@ const FollowUpInput = ({
                                     className={`px-4 py-2 h-9 flex items-center justify-center rounded-full transition-all gap-1.5 text-xs font-bold ${
                                         input.trim() || files.length > 0 
                                             ? isResponding
-                                                ? 'bg-[#20b8cd] hover:bg-[#1ca6b9] text-zinc-950 shadow-md cursor-pointer'
+                                                ? 'bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 shadow-md cursor-pointer'
                                                 : 'bg-white text-black hover:bg-zinc-200 shadow-lg hover:scale-105 cursor-pointer' 
                                             : 'bg-zinc-800 text-zinc-600 opacity-50 cursor-not-allowed'
                                     }`}

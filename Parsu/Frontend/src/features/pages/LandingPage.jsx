@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router';
+import { useSelector } from 'react-redux';
 import {
   RiSparkling2Line,
   RiSearchLine,
@@ -20,7 +21,8 @@ import {
   RiFlashlightLine,
   RiTerminalBoxLine,
   RiTimeLine,
-  RiSendPlane2Fill
+  RiSendPlane2Fill,
+  RiUserLine
 } from '@remixicon/react';
 import ParsuLogo from '../Components/ParsuLogo';
 import HeroGradientBackground from '../Components/HeroGradientBackground';
@@ -30,6 +32,7 @@ import LiquidGlassNav from '../Components/LiquidGlassNav';
 import useSEO from '../../utils/useSEO';
 
 const LandingPage = () => {
+  const user = useSelector((state) => state.auth?.user);
   useSEO({
     title: 'Parsu AI — Autonomous Multi-Model Intelligence & Creative Studio',
     description: 'Parsu AI is your intelligent research assistant and creative studio. Powered by Gemini, Claude, and GPT-4 with real-time web search and vector memory.',
@@ -69,54 +72,54 @@ const LandingPage = () => {
       icon: RiCpuLine,
       title: 'Multi-Model AI Orchestration',
       desc: 'Instantly toggle between Google Gemini, Anthropic Claude 3.5, OpenAI GPT-4, and DeepSeek with unified vector memory and cross-model comparative reasoning.',
-      gradient: 'from-cyan-500/15 via-blue-500/5 to-transparent',
-      border: 'border-cyan-500/30 hover:border-cyan-400/60',
-      iconColor: 'text-[#20b8cd]',
+      gradient: 'from-[var(--accent-cyan)]/15 via-[var(--color-clear-hanada)]/10 to-transparent',
+      border: 'border-[var(--accent-cyan)]/30 hover:border-[var(--accent-cyan)]/60',
+      iconColor: 'text-[var(--accent-cyan)]',
       tag: 'Universal LLM'
     },
     {
       icon: RiGlobalLine,
       title: 'Real-Time Web Intelligence',
       desc: 'Live fact-checked citations via high-speed web grounding. Get zero-hallucination answers backed by authoritative primary sources and timestamps.',
-      gradient: 'from-emerald-500/15 via-teal-500/5 to-transparent',
-      border: 'border-emerald-500/30 hover:border-emerald-400/60',
-      iconColor: 'text-emerald-400',
+      gradient: 'from-[var(--color-success)]/15 via-[var(--color-teal)]/10 to-transparent',
+      border: 'border-[var(--color-success)]/30 hover:border-[var(--color-success)]/60',
+      iconColor: 'text-[var(--color-success)]',
       tag: 'Live Web Search'
     },
     {
       icon: RiShareLine,
       title: '1-Click Social Command Center',
       desc: 'Generate, optimize, and schedule AI content directly to 7 platforms: Instagram, Facebook, X (Twitter), Pinterest, TikTok, LinkedIn, and YouTube.',
-      gradient: 'from-purple-500/15 via-indigo-500/5 to-transparent',
-      border: 'border-purple-500/30 hover:border-purple-400/60',
-      iconColor: 'text-purple-400',
+      gradient: 'from-[var(--color-purple)]/15 via-[var(--color-violet)]/10 to-transparent',
+      border: 'border-[var(--color-purple)]/30 hover:border-[var(--color-purple)]/60',
+      iconColor: 'text-[var(--color-purple)]',
       tag: 'Omni-Channel'
     },
     {
       icon: RiDatabase2Line,
       title: 'Vector Knowledge Graph & RAG',
       desc: 'Semantic embeddings remember prior insights, documents, and codebases across chats without requiring manual re-upload or prompt repetition.',
-      gradient: 'from-amber-500/15 via-orange-500/5 to-transparent',
-      border: 'border-amber-500/30 hover:border-amber-400/60',
-      iconColor: 'text-amber-400',
+      gradient: 'from-[var(--color-amber)]/15 via-[var(--color-orange)]/10 to-transparent',
+      border: 'border-[var(--color-amber)]/30 hover:border-[var(--color-amber)]/60',
+      iconColor: 'text-[var(--color-amber)]',
       tag: 'Long-Term Memory'
     },
     {
       icon: RiFolderImageLine,
       title: 'Multimodal Document Studio',
       desc: 'Upload multi-page PDFs, spreadsheets, source code, high-resolution imagery, and video. Synthesize massive research papers in seconds.',
-      gradient: 'from-pink-500/15 via-rose-500/5 to-transparent',
-      border: 'border-pink-500/30 hover:border-pink-400/60',
-      iconColor: 'text-pink-400',
+      gradient: 'from-[var(--color-pink)]/15 via-rose-500/10 to-transparent',
+      border: 'border-[var(--color-pink)]/30 hover:border-[var(--color-pink)]/60',
+      iconColor: 'text-[var(--color-pink)]',
       tag: 'Vision & Documents'
     },
     {
       icon: RiMicLine,
       title: 'Neural Voice & Speech Studio',
       desc: 'Fluid voice conversations with streaming word-by-word captions and lifelike neural voice synthesis with pitch and timbre control.',
-      gradient: 'from-blue-500/15 via-cyan-500/5 to-transparent',
-      border: 'border-blue-500/30 hover:border-blue-400/60',
-      iconColor: 'text-blue-400',
+      gradient: 'from-[var(--color-blue)]/15 via-[var(--color-light-blue)]/10 to-transparent',
+      border: 'border-[var(--color-blue)]/30 hover:border-[var(--color-blue)]/60',
+      iconColor: 'text-[var(--color-light-blue)]',
       tag: 'Real-Time Voice'
     },
   ];
@@ -141,7 +144,7 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f4f5f7] dark:bg-[#0e100f] text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#20b8cd]/30 antialiased overflow-x-hidden relative">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30 antialiased overflow-x-hidden relative">
       
       {/* ── Apple Liquid Glass Sticky Responsive Navigation ─────── */}
       <LiquidGlassNav theme={theme} toggleTheme={toggleTheme} />
@@ -155,41 +158,63 @@ const LandingPage = () => {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           
           {/* Trust Pill / Rare UI Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/70 dark:bg-white/[0.05] border border-cyan-500/30 backdrop-blur-md text-[#20b8cd] text-xs font-semibold mb-6 shadow-sm shadow-cyan-500/10 hover:border-cyan-400 transition-colors animate-fade-in">
-            <RiSparkling2Line size={14} className="text-[#20b8cd] animate-spin-slow" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/70 dark:bg-white/[0.05] border border-[var(--accent-cyan)]/30 backdrop-blur-md text-[var(--accent-cyan)] text-xs font-display font-semibold mb-6 shadow-sm shadow-cyan-500/10 hover:border-[var(--accent-cyan)]/60 transition-colors animate-fade-in">
+            <RiSparkling2Line size={14} className="text-[var(--accent-cyan)] animate-spin-slow" />
             <span className="tracking-wide">Autonomous AI Search & Universal Social Studio</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#20b8cd] animate-ping ml-1" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-cyan)] animate-ping ml-1" />
           </div>
 
-          {/* Main Title */}
-          <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[5rem] font-black tracking-tight text-zinc-900 dark:text-white leading-[1.08] mb-6">
+          {/* Main Title with Outfit Display Font */}
+          <h1 className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-[5.25rem] font-extrabold tracking-[-0.035em] text-zinc-900 dark:text-white leading-[1.06] mb-6">
             Search Deeper. Think Faster. <br />
-            <span className="bg-gradient-to-r from-[#20b8cd] via-teal-300 to-indigo-400 bg-clip-text text-transparent drop-shadow-sm">
+            <span className="bg-gradient-to-r from-[var(--accent-cyan)] via-[var(--color-clear-hanada)] to-[var(--color-sky-haze)] bg-clip-text text-transparent drop-shadow-sm">
               Publish Everywhere.
             </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-sm sm:text-lg md:text-xl text-zinc-600 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed mb-8 sm:mb-10 font-normal">
+          <p className="text-base sm:text-lg md:text-xl text-zinc-600 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed mb-8 sm:mb-10 font-normal tracking-[-0.01em]">
             Parsu AI fuses leading foundation models with real-time web grounding, persistent cross-chat memory, and automated publishing across 7 major social networks.
           </p>
 
-          {/* Primary CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8">
-            <Link
-              to="/auth?mode=register"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#20b8cd] hover:bg-[#1da9bc] text-black font-extrabold text-sm sm:text-base flex items-center justify-center gap-2 shadow-xl shadow-[#20b8cd]/30 hover:shadow-[#20b8cd]/50 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-            >
-              <span>Get Started Free</span>
-              <RiArrowRightLine size={18} />
-            </Link>
-            <Link
-              to="/auth?mode=login"
-              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/10 backdrop-blur-md text-zinc-800 dark:text-zinc-200 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 hover:bg-zinc-100 dark:hover:bg-white/[0.1] transition-all cursor-pointer"
-            >
-              <RiLoginCircleLine size={18} />
-              <span>Launch PARSU AI Workspace</span>
-            </Link>
+          {/* Primary CTA Buttons (Conditional based on auth state) */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8 w-full max-w-lg mx-auto sm:max-w-none">
+            {user ? (
+              <>
+                <Link
+                  to="/ai"
+                  className="font-display w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer tracking-tight"
+                >
+                  <RiSparkling2Line size={18} />
+                  <span>Open PARSU AI Workspace</span>
+                  <RiArrowRightLine size={18} />
+                </Link>
+                <Link
+                  to="/settings"
+                  className="font-display w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/10 backdrop-blur-md text-zinc-800 dark:text-zinc-200 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 hover:bg-zinc-100 dark:hover:bg-white/[0.1] transition-all cursor-pointer tracking-tight"
+                >
+                  <RiUserLine size={18} className="text-emerald-400" />
+                  <span>Welcome back, {user.name || user.username || 'User'}</span>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/auth?mode=register"
+                  className="font-display w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer tracking-tight"
+                >
+                  <span>Get Started Free</span>
+                  <RiArrowRightLine size={18} />
+                </Link>
+                <Link
+                  to="/auth?mode=login"
+                  className="font-display w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/10 backdrop-blur-md text-zinc-800 dark:text-zinc-200 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 hover:bg-zinc-100 dark:hover:bg-white/[0.1] transition-all cursor-pointer tracking-tight"
+                >
+                  <RiLoginCircleLine size={18} />
+                  <span>Launch PARSU AI Workspace</span>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Micro Trust Indicators */}
@@ -208,7 +233,7 @@ const LandingPage = () => {
       {/* ── App Features & Capabilities Grid ───────────────────────────────── */}
       <section id="features" className="py-20 sm:py-28 px-4 sm:px-6 max-w-6xl mx-auto border-t border-zinc-200/80 dark:border-white/5 relative z-10">
         <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-20">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 text-[#20b8cd] text-xs font-semibold mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] text-xs font-semibold mb-3">
             <RiCpuLine size={14} />
             <span>Core Capabilities</span>
           </div>
@@ -255,7 +280,7 @@ const LandingPage = () => {
         <div className="max-w-4xl mx-auto">
           
           <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 text-[#20b8cd] text-xs font-semibold mb-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] text-xs font-semibold mb-3">
               <RiShieldCheckLine size={14} />
               <span>Security & Integrity</span>
             </div>
@@ -272,7 +297,7 @@ const LandingPage = () => {
               {transparencyPoints.map((item, idx) => (
                 <div key={idx} className="p-4 sm:p-5 rounded-2xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200/80 dark:border-white/5">
                   <div className="flex items-center gap-2 mb-2">
-                    <RiCheckLine size={18} className="text-[#20b8cd] shrink-0" />
+                    <RiCheckLine size={18} className="text-[var(--accent-cyan)] shrink-0" />
                     <h4 className="text-sm font-bold text-zinc-900 dark:text-white">{item.title}</h4>
                   </div>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed pl-6">
@@ -284,7 +309,7 @@ const LandingPage = () => {
 
             {/* Google API Limited Use Commitment */}
             <div className="p-4 sm:p-5 rounded-2xl bg-cyan-500/5 border border-cyan-500/20 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed mb-6">
-              <p className="font-semibold text-[#20b8cd] mb-1 flex items-center gap-1.5">
+              <p className="font-semibold text-[var(--accent-cyan)] mb-1 flex items-center gap-1.5">
                 <RiShieldCheckLine size={16} />
                 <span>Google API Services User Data Policy Compliance</span>
               </p>
@@ -331,7 +356,7 @@ const LandingPage = () => {
 
       {/* ── Ready to Start Callout ─────────────────────────────────────────── */}
       <section className="py-16 sm:py-24 px-4 sm:px-6 max-w-4xl mx-auto text-center relative z-10">
-        <div className="p-8 sm:p-14 rounded-3xl bg-gradient-to-br from-cyan-500/20 via-blue-500/10 to-purple-500/15 border border-cyan-500/30 relative overflow-hidden shadow-2xl">
+        <div className="p-8 sm:p-14 rounded-3xl bg-gradient-to-br from-[var(--accent-cyan)]/20 via-[var(--color-clear-hanada)]/15 to-[var(--color-sky-haze)]/15 border border-[var(--accent-cyan)]/30 relative overflow-hidden shadow-2xl">
           <div className="relative z-10">
             <h3 className="text-3xl sm:text-5xl font-black text-zinc-900 dark:text-white tracking-tight mb-4">
               Step Into the Future of AI.
@@ -339,29 +364,39 @@ const LandingPage = () => {
             <p className="text-xs sm:text-base text-zinc-600 dark:text-zinc-300 max-w-xl mx-auto mb-8">
               Join thousands of researchers, engineers, and creators using PARSU AI daily.
             </p>
-            <Link
-              to="/auth?mode=register"
-              className="inline-flex items-center gap-2 px-9 py-4 rounded-2xl bg-[#20b8cd] hover:bg-[#1da9bc] text-black font-extrabold text-sm sm:text-base shadow-xl shadow-[#20b8cd]/35 transition-all hover:scale-105 active:scale-95 cursor-pointer"
-            >
-              <span>Get Started with PARSU AI</span>
-              <RiArrowRightLine size={18} />
-            </Link>
+            {user ? (
+              <Link
+                to="/ai"
+                className="inline-flex items-center gap-2 px-9 py-4 rounded-2xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black font-extrabold text-sm sm:text-base shadow-xl shadow-cyan-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                <span>Launch PARSU AI Workspace</span>
+                <RiArrowRightLine size={18} />
+              </Link>
+            ) : (
+              <Link
+                to="/auth?mode=register"
+                className="inline-flex items-center gap-2 px-9 py-4 rounded-2xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black font-extrabold text-sm sm:text-base shadow-xl shadow-cyan-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                <span>Get Started with PARSU AI</span>
+                <RiArrowRightLine size={18} />
+              </Link>
+            )}
           </div>
         </div>
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="border-t border-zinc-200/80 dark:border-white/5 py-12 px-4 sm:px-6 bg-white dark:bg-[#070809] relative z-10">
+      <footer className="border-t border-zinc-200/80 dark:border-white/5 py-12 px-4 sm:px-6 bg-white dark:bg-[var(--bg-primary)] relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-8 border-b border-zinc-200/60 dark:border-white/5">
             
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-md">
+              <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[var(--accent-cyan)] via-[var(--color-clear-hanada)] to-[var(--color-deep-hanada)] flex items-center justify-center text-white shadow-md">
                 <ParsuLogo size={16} className="text-white" />
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-extrabold text-zinc-900 dark:text-white">PARSU</span>
-                <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[#20b8cd] px-1 rounded">AI</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[var(--accent-cyan)] px-1.5 py-0.5 rounded">AI</span>
               </div>
             </div>
 

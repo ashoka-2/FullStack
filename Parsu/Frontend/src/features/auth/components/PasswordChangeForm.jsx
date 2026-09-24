@@ -63,7 +63,7 @@ const PasswordChangeForm = ({ onSuccess }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-[#121214] border border-zinc-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xs">
+    <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xs">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-zinc-200 dark:border-white/5">
         <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold">
           <RiShieldKeyholeLine size={20} />
@@ -88,7 +88,7 @@ const PasswordChangeForm = ({ onSuccess }) => {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all font-medium"
+                className="w-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all font-medium"
               />
               <button
                 type="button"
@@ -112,7 +112,7 @@ const PasswordChangeForm = ({ onSuccess }) => {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Min 6, uppercase & number"
-                className="w-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all font-medium"
+                className="w-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all font-medium"
               />
               <button
                 type="button"
@@ -136,7 +136,7 @@ const PasswordChangeForm = ({ onSuccess }) => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Repeat new password"
-                className="w-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all font-medium"
+                className="w-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all font-medium"
               />
               <button
                 type="button"
@@ -156,7 +156,7 @@ const PasswordChangeForm = ({ onSuccess }) => {
           <button
             type="submit"
             disabled={passwordLoading}
-            className="px-6 py-2.5 bg-gradient-to-r from-[#20b8cd] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold rounded-xl text-sm transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-cyan-500/10 disabled:opacity-60 shrink-0"
+            className="px-6 py-2.5 bg-gradient-to-r from-[var(--accent-cyan)] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold rounded-xl text-sm transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-cyan-500/10 disabled:opacity-60 shrink-0"
           >
             {passwordLoading ? (
               <>

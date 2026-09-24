@@ -57,7 +57,7 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
     };
 
     return (
-        <div className="relative group my-4 sm:my-6 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-[#0d0d0d] max-w-full">
+        <div className="relative group my-4 sm:my-6 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-[var(--bg-primary)] max-w-full">
             <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
                 <div className="flex items-center gap-2">
                     <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">{language || 'code'}</span>
@@ -103,7 +103,7 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
                         <button
                             type="button"
                             onClick={() => setIsExpanded(true)}
-                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#20b8cd] hover:bg-[#1bb3c7] text-zinc-950 text-xs font-bold shadow-lg transition-transform active:scale-95 cursor-pointer"
+                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 text-xs font-bold shadow-lg transition-transform active:scale-95 cursor-pointer"
                         >
                             <span>Show all {totalLines} lines</span>
                             <span className="text-[10px] opacity-75 font-mono">(+{totalLines - 70} hidden)</span>
@@ -503,7 +503,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                             )}
 
                             {/* Share to Socials Action Bar */}
-                            <div className="p-3 bg-[#f8f9fa] dark:bg-zinc-900/95 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2">
+                            <div className="p-3 bg-[var(--bg-primary)] dark:bg-zinc-900/95 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                     {existingPosts.map((p, idx) => (
                                         <span key={idx} className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30 dark:border-emerald-800/40">
@@ -549,7 +549,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                     onClick={() => togglePlatform(platform.id)}
                                                     className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
                                                         isSelected 
-                                                            ? 'bg-[#20b8cd]/15 border-[#20b8cd] text-zinc-900 dark:text-white shadow-xs' 
+                                                            ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)] text-zinc-900 dark:text-white shadow-xs' 
                                                             : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
                                                     }`}
                                                 >
@@ -569,7 +569,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                     onClick={() => setPostMode('together')}
                                                     className={`px-2.5 py-0.5 rounded-md font-bold transition-all cursor-pointer ${
                                                         postMode === 'together' 
-                                                            ? 'bg-[#20b8cd] text-zinc-950 shadow' 
+                                                            ? 'bg-[var(--accent-cyan)] text-zinc-950 shadow' 
                                                             : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
                                                     }`}
                                                 >
@@ -579,7 +579,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                     onClick={() => setPostMode('separately')}
                                                     className={`px-2.5 py-0.5 rounded-md font-bold transition-all cursor-pointer ${
                                                         postMode === 'separately' 
-                                                            ? 'bg-[#20b8cd] text-zinc-950 shadow' 
+                                                            ? 'bg-[var(--accent-cyan)] text-zinc-950 shadow' 
                                                             : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
                                                     }`}
                                                 >
@@ -611,7 +611,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                             onChange={(e) => setCaptionText(e.target.value)}
                                             placeholder="Write or refine caption with hashtags..."
                                             rows={2}
-                                            className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2 text-xs text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[#20b8cd] resize-none font-sans"
+                                            className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2 text-xs text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent-cyan)] resize-none font-sans"
                                         />
                                     </div>
 
@@ -648,7 +648,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                         </div>
                     )}
 
-                    <div className="bg-zinc-100 dark:bg-[#1a1a1a] text-zinc-900 dark:text-zinc-100 px-4 md:px-5 py-2.5 md:py-3 rounded-[20px] md:rounded-[22px] text-[14px] md:text-[15px] border border-zinc-200 dark:border-white/5 shadow-sm transition-all hover:bg-zinc-200/70 dark:hover:bg-[#222] max-w-full text-left">
+                    <div className="bg-zinc-100 dark:bg-[var(--bg-surface)] text-zinc-900 dark:text-zinc-100 px-4 md:px-5 py-2.5 md:py-3 rounded-[20px] md:rounded-[22px] text-[14px] md:text-[15px] border border-zinc-200 dark:border-white/5 shadow-sm transition-all hover:bg-zinc-200/70 dark:hover:bg-[#222] max-w-full text-left">
                         {typeof contentToRender === 'string' && contentToRender.includes('```') ? (
                             <div className="prose prose-sm dark:prose-invert max-w-none text-zinc-900 dark:text-zinc-100">
                                 <ReactMarkdown 
@@ -722,7 +722,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                         {isToolsExpanded ? <RiArrowUpSLine size={14} /> : <RiArrowDownSLine size={14} />}
                                     </button>
                                     {isToolsExpanded && (
-                                        <div className="mt-2 p-3 rounded-2xl bg-zinc-50 dark:bg-[#121316] border border-zinc-200 dark:border-white/10 space-y-2 text-xs font-mono animate-in fade-in duration-200">
+                                        <div className="mt-2 p-3 rounded-2xl bg-zinc-50 dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 space-y-2 text-xs font-mono animate-in fade-in duration-200">
                                             <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
                                                 <span className="flex items-center gap-1.5">⚡ <strong className="text-zinc-900 dark:text-zinc-200">tavilySearch</strong>: <code>query: "Parsu AI updates"</code></span>
                                                 <span className="text-emerald-500 font-bold text-[11px]">completed (142ms)</span>
@@ -738,7 +738,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
 
                             {/* HeroUI Pro AI Approval Card */}
                             {(msg.needsApproval || (typeof contentToRender === 'string' && /approval needed|needs approval/i.test(contentToRender))) && (
-                                <div className="my-2 rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#111216] overflow-hidden shadow-sm">
+                                <div className="my-2 rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[var(--bg-surface)] overflow-hidden shadow-sm">
                                     <div 
                                         onClick={() => setIsApprovalOpen(prev => !prev)}
                                         className="flex items-center justify-between px-4 py-3 bg-zinc-50 dark:bg-white/[0.03] border-b border-zinc-200 dark:border-white/5 cursor-pointer select-none"
@@ -777,7 +777,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                                 setApprovalStatus('approved');
                                                                 dispatch(addToast({ type: 'success', message: 'Action approved successfully.' }));
                                                             }}
-                                                            className="px-4 py-1.5 rounded-lg text-xs font-bold bg-[#20b8cd] hover:bg-[#1bb3c7] text-zinc-950 shadow-sm transition-all cursor-pointer"
+                                                            className="px-4 py-1.5 rounded-lg text-xs font-bold bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 shadow-sm transition-all cursor-pointer"
                                                         >
                                                             Approve
                                                         </button>
@@ -861,11 +861,11 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                     href={src.url}
                                                     target="_blank"
                                                     rel="noreferrer"
-                                                    className="p-2.5 rounded-xl bg-zinc-50 dark:bg-[#111216] border border-zinc-200 dark:border-white/10 hover:border-[#20b8cd]/40 transition-all flex flex-col gap-1 text-left group"
+                                                    className="p-2.5 rounded-xl bg-zinc-50 dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 hover:border-[var(--accent-cyan)]/40 transition-all flex flex-col gap-1 text-left group"
                                                 >
-                                                    <span className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 truncate group-hover:text-[#20b8cd] transition-colors">{src.title}</span>
+                                                    <span className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 truncate group-hover:text-[var(--accent-cyan)] transition-colors">{src.title}</span>
                                                     <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                                                        <RiGlobalLine size={11} className="text-[#20b8cd]" />
+                                                        <RiGlobalLine size={11} className="text-[var(--accent-cyan)]" />
                                                         {src.domain}
                                                     </span>
                                                 </a>
@@ -899,15 +899,15 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                 onClick={handleToggleSpeech}
                                 className={`flex items-center gap-1 p-1 rounded-md transition-all cursor-pointer ${
                                     isSpeaking 
-                                        ? 'text-[#20b8cd] bg-[#20b8cd]/15 ring-1 ring-[#20b8cd]/30 scale-105' 
+                                        ? 'text-[var(--accent-cyan)] bg-[var(--accent-cyan)]/15 ring-1 ring-[var(--accent-cyan)]/30 scale-105' 
                                         : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'
                                 }`}
                                 title={isSpeaking ? "Stop Speaking" : "Read Aloud (Voice Output)"}
                             >
                                 {isSpeaking ? (
                                     <>
-                                        <RiVolumeUpFill size={16} className="text-[#20b8cd] animate-pulse" />
-                                        <span className="text-[11px] font-bold text-[#20b8cd] hidden xs:inline">Speaking</span>
+                                        <RiVolumeUpFill size={16} className="text-[var(--accent-cyan)] animate-pulse" />
+                                        <span className="text-[11px] font-bold text-[var(--accent-cyan)] hidden xs:inline">Speaking</span>
                                     </>
                                 ) : (
                                     <RiVolumeUpLine size={16} />
@@ -921,13 +921,13 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                 onClick={() => handleFeedback('like')}
                                 className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                                     feedback === 'like'
-                                        ? 'text-[#20b8cd] bg-[#20b8cd]/15 ring-1 ring-[#20b8cd]/40 scale-110 shadow-xs'
-                                        : 'text-zinc-400 dark:text-zinc-500 hover:text-[#20b8cd] hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                                        ? 'text-[var(--accent-cyan)] bg-[var(--accent-cyan)]/15 ring-1 ring-[var(--accent-cyan)]/40 scale-110 shadow-xs'
+                                        : 'text-zinc-400 dark:text-zinc-500 hover:text-[var(--accent-cyan)] hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
                                 }`}
                                 title={feedback === 'like' ? "Remove Like" : "Good response (AI will learn your preference)"}
                             >
                                 {feedback === 'like' ? (
-                                    <RiThumbUpFill size={16} className="text-[#20b8cd]" />
+                                    <RiThumbUpFill size={16} className="text-[var(--accent-cyan)]" />
                                 ) : (
                                     <RiThumbUpLine size={16} />
                                 )}

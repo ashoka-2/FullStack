@@ -48,7 +48,7 @@ const ToastItem = ({ id, message, description, title, type = 'default', action, 
     switch (type) {
       case 'success':
         return {
-          card: 'bg-white/95 dark:bg-[#121417]/95 border-emerald-500/30 dark:border-emerald-500/20 shadow-[0_12px_32px_rgba(16,185,129,0.12)]',
+          card: 'bg-white/95 dark:bg-[var(--bg-surface)]/95 border-emerald-500/30 dark:border-emerald-500/20 shadow-[0_12px_32px_rgba(16,185,129,0.12)]',
           indicator: 'bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/15 border-emerald-500/20',
           title: 'text-emerald-700 dark:text-emerald-400',
           actionBtn: 'bg-emerald-500 text-white hover:bg-emerald-600 dark:bg-emerald-500/90 dark:hover:bg-emerald-500 text-white shadow-xs',
@@ -56,7 +56,7 @@ const ToastItem = ({ id, message, description, title, type = 'default', action, 
         };
       case 'warning':
         return {
-          card: 'bg-white/95 dark:bg-[#121417]/95 border-amber-500/30 dark:border-amber-500/20 shadow-[0_12px_32px_rgba(245,158,11,0.12)]',
+          card: 'bg-white/95 dark:bg-[var(--bg-surface)]/95 border-amber-500/30 dark:border-amber-500/20 shadow-[0_12px_32px_rgba(245,158,11,0.12)]',
           indicator: 'bg-amber-500/10 text-amber-500 dark:bg-amber-500/15 border-amber-500/20',
           title: 'text-amber-700 dark:text-amber-400',
           actionBtn: 'bg-amber-500 text-black hover:bg-amber-600 font-bold shadow-xs',
@@ -65,7 +65,7 @@ const ToastItem = ({ id, message, description, title, type = 'default', action, 
       case 'danger':
       case 'error':
         return {
-          card: 'bg-white/95 dark:bg-[#121417]/95 border-rose-500/30 dark:border-rose-500/20 shadow-[0_12px_32px_rgba(244,63,94,0.12)]',
+          card: 'bg-white/95 dark:bg-[var(--bg-surface)]/95 border-rose-500/30 dark:border-rose-500/20 shadow-[0_12px_32px_rgba(244,63,94,0.12)]',
           indicator: 'bg-rose-500/10 text-rose-500 dark:bg-rose-500/15 border-rose-500/20',
           title: 'text-rose-700 dark:text-rose-400',
           actionBtn: 'bg-rose-500 text-white hover:bg-rose-600 shadow-xs',
@@ -74,15 +74,15 @@ const ToastItem = ({ id, message, description, title, type = 'default', action, 
       case 'info':
       case 'accent':
         return {
-          card: 'bg-white/95 dark:bg-[#121417]/95 border-cyan-500/30 dark:border-cyan-500/20 shadow-[0_12px_32px_rgba(32,184,205,0.14)]',
-          indicator: 'bg-cyan-500/10 text-[#20b8cd] dark:bg-cyan-500/15 border-cyan-500/20',
-          title: 'text-[#20b8cd]',
-          actionBtn: 'bg-[#20b8cd] text-black hover:bg-[#1da9bc] font-bold shadow-xs',
+          card: 'bg-white/95 dark:bg-[var(--bg-surface)]/95 border-cyan-500/30 dark:border-cyan-500/20 shadow-[0_12px_32px_rgba(32,184,205,0.14)]',
+          indicator: 'bg-cyan-500/10 text-[var(--accent-cyan)] dark:bg-cyan-500/15 border-cyan-500/20',
+          title: 'text-[var(--accent-cyan)]',
+          actionBtn: 'bg-[var(--accent-cyan)] text-black hover:bg-[var(--accent-cyan-hover)] font-bold shadow-xs',
           icon: <RiInformationLine size={16} />
         };
       default:
         return {
-          card: 'bg-white/95 dark:bg-[#121417]/95 border-zinc-200/80 dark:border-white/10 shadow-[0_12px_32px_rgba(0,0,0,0.15)]',
+          card: 'bg-white/95 dark:bg-[var(--bg-surface)]/95 border-zinc-200/80 dark:border-white/10 shadow-[0_12px_32px_rgba(0,0,0,0.15)]',
           indicator: 'bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-300 border-zinc-200 dark:border-white/10',
           title: 'text-zinc-900 dark:text-white',
           actionBtn: 'bg-zinc-200 text-zinc-800 hover:bg-zinc-300 dark:bg-white/10 dark:text-white dark:hover:bg-white/15',

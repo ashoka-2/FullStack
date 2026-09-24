@@ -90,7 +90,7 @@ const AddToChatSheet = ({
               isFullScreen
                 ? 'h-[100dvh] rounded-none pt-4'
                 : 'sm:max-w-md max-h-[92vh] rounded-t-[32px] sm:rounded-[32px]'
-            } bg-[#121214] dark:bg-[#121214] border-t sm:border border-zinc-800/80 p-5 sm:p-6 pb-8 z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] sm:shadow-2xl select-none overflow-y-auto custom-scrollbar`}
+            } bg-[#121214] dark:bg-[var(--bg-surface)] border-t sm:border border-zinc-800/80 p-5 sm:p-6 pb-8 z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] sm:shadow-2xl select-none overflow-y-auto custom-scrollbar`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Mobile Pull / Drag Handle */}

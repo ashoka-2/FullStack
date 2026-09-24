@@ -6,20 +6,22 @@ Allow: /privacy
 Allow: /terms
 Allow: /faq
 Allow: /contact
+Allow: /parsu.svg
+Allow: /favicon.ico
+Allow: /favicon-48x48.png
+Allow: /favicon-32x32.png
+Allow: /favicon-16x16.png
+Allow: /apple-touch-icon.png
+Allow: /og-image.png
+Allow: /site.webmanifest
+Allow: /sitemap.xml
 
-# Disallow authenticated/private routes
-Disallow: /
-Disallow: /chat/
+# Disallow authenticated/private user routes
+Disallow: /ai
+Disallow: /chat
 Disallow: /library
 Disallow: /settings
 Disallow: /social-connections
-Disallow: /auth
-
-# Allow the public landing for unauthenticated users
-Allow: /$
 
 # Sitemaps
 Sitemap: https://parsuai.vercel.app/sitemap.xml
-
-# Crawl delay (be polite to crawlers)
-Crawl-delay: 1

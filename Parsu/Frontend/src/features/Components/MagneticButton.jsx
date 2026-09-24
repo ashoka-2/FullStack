@@ -93,11 +93,11 @@ export default function MagneticButton({
   }, [strength, labelStrength, disabled, wiggle]);
 
   const variantStyles = {
-    cyan: 'bg-[#20b8cd] hover:bg-[#1bb3c7] text-zinc-950 font-bold shadow-md shadow-[#20b8cd]/25',
-    macha: 'bg-gradient-to-r from-[#0ae448] to-[#abff84] text-zinc-950 font-bold shadow-md shadow-emerald-500/20',
-    orange: 'bg-gradient-to-r from-[#ff8709] to-[#f7bdf8] text-zinc-950 font-bold shadow-md shadow-orange-500/20',
+    cyan: 'bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 font-bold shadow-md shadow-cyan-500/25',
+    macha: 'bg-gradient-to-r from-[var(--color-success,#0ae448)] to-[#abff84] text-zinc-950 font-bold shadow-md shadow-emerald-500/20',
+    orange: 'bg-gradient-to-r from-[var(--color-orange,#ff8709)] to-[#f7bdf8] text-zinc-950 font-bold shadow-md shadow-orange-500/20',
     glass: 'bg-white/10 dark:bg-white/[0.08] hover:bg-white/20 dark:hover:bg-white/[0.14] text-zinc-900 dark:text-white border border-black/10 dark:border-white/15 backdrop-blur-xl',
-    danger: 'bg-gradient-to-r from-rose-500 to-red-600 text-white font-bold shadow-md shadow-rose-500/20',
+    danger: 'bg-gradient-to-r from-[var(--color-danger,#ef4444)] to-red-600 text-white font-bold shadow-md shadow-rose-500/20',
     ghost: 'bg-transparent text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white',
   };
 

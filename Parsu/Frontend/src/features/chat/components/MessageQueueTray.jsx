@@ -32,7 +32,7 @@ export default function MessageQueueTray({
         <div className="w-full max-w-[800px] mx-auto px-4 md:px-6 mb-2 pointer-events-auto animate-in slide-in-from-bottom-3 duration-200">
             {/* Top Bar: Responding Indicator + Stop Generation Button */}
             {isResponding && (
-                <div className="flex items-center justify-between gap-3 px-4 py-2 mb-2 rounded-2xl bg-[#fafafa]/95 dark:bg-[#151617]/95 border border-zinc-200/80 dark:border-white/10 shadow-sm backdrop-blur-md">
+                <div className="flex items-center justify-between gap-3 px-4 py-2 mb-2 rounded-2xl bg-[#fafafa]/95 dark:bg-[var(--bg-surface)]/95 border border-zinc-200/80 dark:border-white/10 shadow-sm backdrop-blur-md">
                     <div className="flex items-center gap-2 min-w-0">
                         <span className="relative flex h-2.5 w-2.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>

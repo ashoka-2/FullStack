@@ -61,7 +61,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="w-full border-t border-zinc-200/70 dark:border-white/5 bg-white/70 dark:bg-[#0a0a0a]/80 backdrop-blur-xl mt-auto">
+    <footer className="w-full border-t border-zinc-200/70 dark:border-white/5 bg-white/70 dark:bg-[var(--bg-primary)]/80 backdrop-blur-xl mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         {/* Main Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12">
@@ -69,12 +69,12 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="col-span-2 sm:col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--accent-cyan)] to-[var(--color-clear-hanada)] flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white">
                 <ParsuLogo size={19} className="text-white" />
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-base font-extrabold text-zinc-900 dark:text-white tracking-tight">PARSU</span>
-                <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[#20b8cd] px-1.5 py-0.5 rounded">AI</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[var(--accent-cyan)] px-1.5 py-0.5 rounded shadow-xs">AI</span>
               </div>
             </div>
             <p className="text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-xs mb-5">
@@ -85,11 +85,11 @@ const Footer = () => {
             <div className="flex items-center gap-2 text-[11px] text-zinc-400 dark:text-zinc-500">
               <Link 
                 to="/status" 
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all cursor-pointer group"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 hover:bg-[var(--color-success)]/20 transition-all cursor-pointer group"
                 title="View live service uptime & health"
               >
-                <RiCheckboxCircleLine className="w-3 h-3 text-emerald-500 group-hover:scale-110 transition-transform" />
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">All Systems Operational</span>
+                <RiCheckboxCircleLine className="w-3 h-3 text-[var(--color-success)] group-hover:scale-110 transition-transform" />
+                <span className="text-[var(--color-success)] font-semibold">All Systems Operational</span>
               </Link>
             </div>
           </div>
@@ -102,9 +102,9 @@ const Footer = () => {
                 <li key={link.to}>
                   <Link 
                     to={link.to} 
-                    className="group flex items-center gap-2 text-[13px] text-zinc-500 dark:text-zinc-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+                    className="group flex items-center gap-2 text-[13px] text-zinc-500 dark:text-zinc-400 hover:text-[var(--accent-cyan)] transition-colors"
                   >
-                    <link.icon className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 group-hover:text-cyan-500 transition-colors" />
+                    <link.icon className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 group-hover:text-[var(--accent-cyan)] transition-colors" />
                     {link.label}
                   </Link>
                 </li>
@@ -120,9 +120,9 @@ const Footer = () => {
                 <li key={link.to}>
                   <Link 
                     to={link.to} 
-                    className="group flex items-center gap-2 text-[13px] text-zinc-500 dark:text-zinc-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+                    className="group flex items-center gap-2 text-[13px] text-zinc-500 dark:text-zinc-400 hover:text-[var(--accent-cyan)] transition-colors"
                   >
-                    <link.icon className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 group-hover:text-cyan-500 transition-colors" />
+                    <link.icon className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 group-hover:text-[var(--accent-cyan)] transition-colors" />
                     {link.label}
                   </Link>
                 </li>
@@ -135,9 +135,9 @@ const Footer = () => {
                 <li key={link.to}>
                   <Link 
                     to={link.to} 
-                    className="group flex items-center gap-2 text-[13px] text-zinc-500 dark:text-zinc-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+                    className="group flex items-center gap-2 text-[13px] text-zinc-500 dark:text-zinc-400 hover:text-[var(--accent-cyan)] transition-colors"
                   >
-                    <link.icon className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 group-hover:text-cyan-500 transition-colors" />
+                    <link.icon className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 group-hover:text-[var(--accent-cyan)] transition-colors" />
                     {link.label}
                   </Link>
                 </li>
@@ -155,10 +155,10 @@ const Footer = () => {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group w-9 h-9 flex items-center justify-center rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200/60 dark:border-white/10 hover:bg-cyan-500/10 hover:border-cyan-500/30 dark:hover:bg-cyan-500/10 dark:hover:border-cyan-500/30 transition-all"
+                  className="group w-9 h-9 flex items-center justify-center rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200/60 dark:border-white/10 hover:bg-[var(--accent-cyan)]/10 hover:border-[var(--accent-cyan)]/30 dark:hover:bg-[var(--accent-cyan)]/10 dark:hover:border-[var(--accent-cyan)]/30 transition-all"
                   title={social.label}
                 >
-                  <social.icon className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors" />
+                  <social.icon className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-[var(--accent-cyan)] transition-colors" />
                 </a>
               ))}
             </div>
@@ -174,9 +174,9 @@ const Footer = () => {
             © {currentYear} Parsu AI. Built with ❤️ — All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-[11px] text-zinc-400 dark:text-zinc-600">
-            <Link to="/privacy" className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">Privacy</Link>
-            <Link to="/terms" className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">Terms</Link>
-            <Link to="/faq" className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">FAQ</Link>
+            <Link to="/privacy" className="hover:text-[var(--accent-cyan)] transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-[var(--accent-cyan)] transition-colors">Terms</Link>
+            <Link to="/faq" className="hover:text-[var(--accent-cyan)] transition-colors">FAQ</Link>
           </div>
         </div>
       </div>

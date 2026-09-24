@@ -51,7 +51,7 @@ const ConnectInstagram = () => {
     };
 
     return (
-        <div className="min-h-[100dvh] bg-zinc-50 dark:bg-[#020202] pt-6 sm:pt-12 pb-20 px-4 sm:px-8 md:px-12 selection:bg-[#20b8cd]/30">
+        <div className="min-h-[100dvh] bg-zinc-50 dark:bg-[var(--bg-primary)] pt-6 sm:pt-12 pb-20 px-4 sm:px-8 md:px-12 selection:bg-[var(--accent-cyan)]/30">
             <div className="max-w-4xl mx-auto">
                 {/* Back to Social Hub Navigation */}
                 <div className="mb-6">
@@ -104,12 +104,12 @@ const ConnectInstagram = () => {
 
                         {/* Connection Form */}
                         <div className="bg-white dark:bg-zinc-900/60 backdrop-blur-2xl p-8 rounded-[40px] border border-zinc-200 dark:border-white/10 shadow-2xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#20b8cd]/10 to-transparent rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[var(--accent-cyan)]/10 to-transparent rounded-full -mr-16 -mt-16 blur-3xl"></div>
                             
                             <form onSubmit={handleConnect} className="space-y-7 relative z-10">
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-2 text-sm font-bold text-zinc-700 dark:text-zinc-300 ml-1">
-                                        <RiKey2Line size={16} className="text-[#20b8cd]" />
+                                        <RiKey2Line size={16} className="text-[var(--accent-cyan)]" />
                                         Instagram Access Token
                                     </label>
                                     <div className="relative group">
@@ -119,7 +119,7 @@ const ConnectInstagram = () => {
                                             value={formData.accessToken}
                                             onChange={(e) => setFormData({ ...formData, accessToken: e.target.value })}
                                             placeholder="Paste your token here (IGAAP...)"
-                                            className="w-full bg-zinc-100/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-white/10 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#20b8cd] transition-all placeholder:text-zinc-400"
+                                            className="w-full bg-zinc-100/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-white/10 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-cyan)] transition-all placeholder:text-zinc-400"
                                         />
                                     </div>
                                     <p className="text-[10px] text-zinc-500 ml-1">Must have <span className="text-zinc-700 dark:text-zinc-300 font-mono italic">instagram_business_content_publish</span> permission.</p>
@@ -127,7 +127,7 @@ const ConnectInstagram = () => {
 
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-2 text-sm font-bold text-zinc-700 dark:text-zinc-300 ml-1">
-                                        <RiUser6Line size={16} className="text-[#20b8cd]" />
+                                        <RiUser6Line size={16} className="text-[var(--accent-cyan)]" />
                                         Instagram Business ID
                                     </label>
                                     <input
@@ -136,7 +136,7 @@ const ConnectInstagram = () => {
                                         value={formData.userId}
                                         onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
                                         placeholder="Enter the 17-digit Instagram ID"
-                                        className="w-full bg-zinc-100/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-white/10 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#20b8cd] transition-all placeholder:text-zinc-400"
+                                        className="w-full bg-zinc-100/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-white/10 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-cyan)] transition-all placeholder:text-zinc-400"
                                     />
                                     <p className="text-[10px] text-zinc-500 ml-1">Standard format: <span className="text-zinc-700 dark:text-zinc-300 font-mono italic">1784xxxxxxxxxxxxx</span></p>
                                 </div>
@@ -153,7 +153,7 @@ const ConnectInstagram = () => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="group w-full bg-zinc-900 dark:bg-gradient-to-r dark:from-[#20b8cd] dark:to-[#1a9eb0] text-zinc-100 dark:text-zinc-950 font-black py-5 rounded-[20px] hover:shadow-[0_8px_30px_rgb(32,184,205,0.4)] disabled:opacity-50 transition-all active:scale-[0.97] flex items-center justify-center gap-3 relative overflow-hidden"
+                                    className="group w-full bg-zinc-900 dark:bg-gradient-to-r dark:from-[var(--accent-cyan)] dark:to-[#1a9eb0] text-zinc-100 dark:text-zinc-950 font-black py-5 rounded-[20px] hover:shadow-[0_8px_30px_rgb(32,184,205,0.4)] disabled:opacity-50 transition-all active:scale-[0.97] flex items-center justify-center gap-3 relative overflow-hidden"
                                 >
                                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                     {loading ? <RiLoader4Line className="animate-spin" size={24} /> : <RiArrowRightLine className="group-hover:translate-x-1 transition-transform" size={24} />}
@@ -165,13 +165,13 @@ const ConnectInstagram = () => {
                         </div>
 
                         {/* Video Placeholder Section moved here */}
-                        <div className="relative group overflow-hidden rounded-[32px] border border-[#20b8cd]/20 bg-white dark:bg-zinc-900/60 backdrop-blur-2xl p-7 transition-all hover:bg-zinc-50 dark:hover:bg-zinc-800/40 shadow-xl">
+                        <div className="relative group overflow-hidden rounded-[32px] border border-[var(--accent-cyan)]/20 bg-white dark:bg-zinc-900/60 backdrop-blur-2xl p-7 transition-all hover:bg-zinc-50 dark:hover:bg-zinc-800/40 shadow-xl">
                             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                 <RiInstagramLine size={90} className="rotate-12 translate-x-4 -translate-y-4" />
                             </div>
                             <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6">
-                                <div className="w-16 h-16 rounded-full bg-[#20b8cd]/10 flex items-center justify-center text-[#20b8cd] shrink-0 shadow-inner">
-                                    <div className="w-11 h-11 rounded-full bg-[#20b8cd] flex items-center justify-center text-black shadow-lg animate-pulse">
+                                <div className="w-16 h-16 rounded-full bg-[var(--accent-cyan)]/10 flex items-center justify-center text-[var(--accent-cyan)] shrink-0 shadow-inner">
+                                    <div className="w-11 h-11 rounded-full bg-[var(--accent-cyan)] flex items-center justify-center text-black shadow-lg animate-pulse">
                                         <svg viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 ml-1">
                                             <path d="M8 5v14l11-7z" />
                                         </svg>
@@ -216,7 +216,7 @@ const ConnectInstagram = () => {
                                 <div className="relative pl-12 pb-2">
                                     <div className="absolute left-6 top-8 bottom-0 w-[2px] bg-zinc-100 dark:bg-zinc-800"></div>
                                     <div className="flex items-center gap-4 mb-3">
-                                        <span className="absolute left-3 w-7 h-7 rounded-full bg-gradient-to-r from-[#20b8cd] to-cyan-600 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-cyan-500/30">4</span>
+                                        <span className="absolute left-3 w-7 h-7 rounded-full bg-gradient-to-r from-[var(--accent-cyan)] to-cyan-600 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-cyan-500/30">4</span>
                                         <h4 className="font-bold text-zinc-800 dark:text-zinc-200">The Power Step</h4>
                                     </div>
                                     <div className="bg-zinc-50 dark:bg-zinc-950/50 p-4 rounded-2xl border border-zinc-200 dark:border-white/5 space-y-3">
@@ -256,7 +256,7 @@ const StepItem = ({ num, title, desc, link, icon }) => (
             <span className="absolute left-3 w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs flex items-center justify-center font-bold border border-zinc-200 dark:border-zinc-700">{num}</span>
             <h4 className="font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
                 {title}
-                {link && <a href={link} target="_blank" className="text-[#20b8cd] hover:scale-110 transition-transform"><RiExternalLinkLine size={14}/></a>}
+                {link && <a href={link} target="_blank" className="text-[var(--accent-cyan)] hover:scale-110 transition-transform"><RiExternalLinkLine size={14}/></a>}
             </h4>
         </div>
         <div className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">

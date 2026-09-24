@@ -24,7 +24,7 @@ const Layout = () => {
             setAuthWaitDone(true);
         }
 
-        // Sync Initial Theme
+        // Sync Initial Theme & User Custom Colors
         const theme = localStorage.getItem('theme') || 'dark';
         if (theme === 'dark') {
             document.documentElement.classList.add('dark');
@@ -34,6 +34,8 @@ const Layout = () => {
             document.documentElement.classList.add('light');
         }
         localStorage.setItem('theme', theme);
+
+       
     }, [authLoading]);
 
     // Global Organic Liquid Wave Transition for all internal page link navigations
@@ -102,7 +104,7 @@ const Layout = () => {
             }}
         >
             <ConnectionMonitor>
-                <div className={`bg-[#f4f5f7] dark:bg-[#050505] text-zinc-900 dark:text-zinc-100 transition-colors duration-300 min-h-screen relative ${isOverlayActive ? 'h-[100dvh] overflow-hidden' : ''}`}>
+                <div className={`bg-[var(--bg-primary)] text-zinc-900 dark:text-zinc-100 transition-colors duration-300 min-h-screen relative ${isOverlayActive ? 'h-[100dvh] overflow-hidden' : ''}`}>
                     {/* Animated initial loading curtain */}
                     {isOverlayActive && (
                         <Loading onFinished={() => setLoaderFinished(true)} authReady={authWaitDone} />

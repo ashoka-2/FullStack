@@ -21,7 +21,7 @@ const ConfirmationModal = ({
             />
             
             {/* Modal Content */}
-            <div className="relative w-full max-w-sm bg-zinc-50 dark:bg-[#121212] border border-zinc-200 dark:border-white/5 rounded-3xl p-8 shadow-2xl animate-in zoom-in duration-300">
+            <div className="relative w-full max-w-sm bg-zinc-50 dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/5 rounded-3xl p-8 shadow-2xl animate-in zoom-in duration-300">
                 <button 
                     onClick={onClose}
                     className="absolute top-4 right-4 p-2 rounded-xl text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5 transition-all"

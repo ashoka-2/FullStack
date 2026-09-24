@@ -134,7 +134,7 @@ export default function SystemStatus() {
                         { label: 'Uptime (90d)', value: '99.98%', sub: 'Across 8 services' },
                         { label: 'Active Incidents', value: '0', sub: 'Zero disruptions' },
                     ].map((m, i) => (
-                        <div key={i} className="p-4 rounded-2xl bg-white dark:bg-[#121212] border border-zinc-200/80 dark:border-white/10 shadow-xs">
+                        <div key={i} className="p-4 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 shadow-xs">
                             <p className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
                                 {m.label}
                             </p>
@@ -165,7 +165,7 @@ export default function SystemStatus() {
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: idx * 0.05 }}
-                                className="p-5 rounded-2xl bg-white dark:bg-[#121212] border border-zinc-200/80 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 transition-all shadow-xs"
+                                className="p-5 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 transition-all shadow-xs"
                             >
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                                     <div>

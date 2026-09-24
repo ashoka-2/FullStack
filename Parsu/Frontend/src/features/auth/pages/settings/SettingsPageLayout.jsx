@@ -21,14 +21,14 @@ const SettingsPageLayout = ({ title, icon: Icon, description, children }) => {
     });
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#20b8cd]/30">
+        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             {/* Main column — NO overflow here */}
             <div className="flex-1 flex flex-col min-h-0 lg:pl-56">
 
                 {/* Header — shrink-0: naturally pinned */}
-                <header className="shrink-0 z-30 border-b border-zinc-200 dark:border-white/5 bg-[#f4f5f7]/90 dark:bg-[#050505]/85 backdrop-blur-md px-3 sm:px-8 h-12 sm:h-14 flex items-center justify-between gap-2">
+                <header className="shrink-0 z-30 border-b border-zinc-200 dark:border-white/5 bg-[var(--bg-primary)]/90 dark:bg-[var(--bg-primary)]/85 backdrop-blur-md px-3 sm:px-8 h-12 sm:h-14 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
@@ -40,7 +40,7 @@ const SettingsPageLayout = ({ title, icon: Icon, description, children }) => {
 
                         <Link
                             to="/settings"
-                            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-[#20b8cd] transition-colors shrink-0 group py-1 px-1.5 -ml-1 rounded-lg hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"
+                            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-[var(--accent-cyan)] transition-colors shrink-0 group py-1 px-1.5 -ml-1 rounded-lg hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"
                             title="Back to Settings"
                         >
                             <RiArrowLeftLine size={16} className="group-hover:-translate-x-0.5 transition-transform" />
@@ -50,7 +50,7 @@ const SettingsPageLayout = ({ title, icon: Icon, description, children }) => {
                         <div className="h-4 w-[1px] bg-zinc-300 dark:bg-zinc-800 shrink-0" />
 
                         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                            {Icon && <Icon size={16} className="text-[#20b8cd] shrink-0" />}
+                            {Icon && <Icon size={16} className="text-[var(--accent-cyan)] shrink-0" />}
                             <h1 className="text-xs sm:text-sm md:text-base font-bold text-zinc-900 dark:text-white truncate">{title}</h1>
                         </div>
                     </div>

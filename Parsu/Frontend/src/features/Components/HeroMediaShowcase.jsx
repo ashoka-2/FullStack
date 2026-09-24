@@ -200,7 +200,7 @@ export default function HeroMediaShowcase({
   return (
     <div
       id="preview"
-      className={`mt-12 sm:mt-16 rounded-3xl border border-zinc-300/80 dark:border-white/15 bg-white/80 dark:bg-[#0a0a0a]/85 backdrop-blur-2xl p-3 sm:p-5 shadow-2xl shadow-cyan-500/10 transition-all ${className}`}
+      className={`mt-12 sm:mt-16 rounded-3xl border border-zinc-300/80 dark:border-white/15 bg-white/80 dark:bg-[var(--bg-primary)]/85 backdrop-blur-2xl p-3 sm:p-5 shadow-2xl shadow-cyan-500/10 transition-all ${className}`}
     >
       {/* ── Apple Liquid Glass Top Window Bar ──────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 border-b border-zinc-200/80 dark:border-white/5 mb-4 text-xs">
@@ -222,7 +222,7 @@ export default function HeroMediaShowcase({
               onClick={() => setActiveType('interactive')}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                 activeType === 'interactive'
-                  ? 'bg-white dark:bg-zinc-800 text-[#20b8cd] shadow-xs font-bold'
+                  ? 'bg-white dark:bg-zinc-800 text-[var(--accent-cyan)] shadow-xs font-bold'
                   : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
               }`}
             >
@@ -233,7 +233,7 @@ export default function HeroMediaShowcase({
               onClick={() => setActiveType('image')}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                 activeType === 'image'
-                  ? 'bg-white dark:bg-zinc-800 text-[#20b8cd] shadow-xs font-bold'
+                  ? 'bg-white dark:bg-zinc-800 text-[var(--accent-cyan)] shadow-xs font-bold'
                   : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
               }`}
             >
@@ -244,7 +244,7 @@ export default function HeroMediaShowcase({
               onClick={() => setActiveType('video')}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                 activeType === 'video'
-                  ? 'bg-white dark:bg-zinc-800 text-[#20b8cd] shadow-xs font-bold'
+                  ? 'bg-white dark:bg-zinc-800 text-[var(--accent-cyan)] shadow-xs font-bold'
                   : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
               }`}
             >
@@ -256,8 +256,8 @@ export default function HeroMediaShowcase({
 
         {/* Right: Live Status Indicator */}
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#20b8cd] animate-ping" />
-          <span className="text-[11px] font-bold text-[#20b8cd] uppercase tracking-wider">
+          <span className="w-2 h-2 rounded-full bg-[var(--accent-cyan)] animate-ping" />
+          <span className="text-[11px] font-bold text-[var(--accent-cyan)] uppercase tracking-wider">
             {activeType === 'interactive'
               ? DEFAULT_HERO_MEDIA_CONFIG.interactive.badge
               : activeType === 'video'
@@ -286,7 +286,7 @@ export default function HeroMediaShowcase({
             </div>
             <Link
               to="/auth"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#20b8cd] text-black font-bold hover:bg-[#1da9bc] transition-all shadow-lg hover:scale-105 cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--accent-cyan)] text-black font-bold hover:bg-[var(--accent-cyan-hover)] transition-all shadow-lg hover:scale-105 cursor-pointer"
             >
               <span>Explore Live UI</span>
               <RiExternalLinkLine size={13} />
@@ -316,7 +316,7 @@ export default function HeroMediaShowcase({
             {/* Scrubber Bar */}
             <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-cyan-400 to-[#20b8cd] transition-all duration-100"
+                className="h-full bg-gradient-to-r from-cyan-400 to-[var(--accent-cyan)] transition-all duration-100"
                 style={{ width: `${videoProgress}%` }}
               />
             </div>
@@ -368,7 +368,7 @@ export default function HeroMediaShowcase({
                     : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5'
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full ${activeModel === m.id ? 'bg-[#20b8cd]' : 'bg-zinc-400'}`} />
+                <span className={`w-2 h-2 rounded-full ${activeModel === m.id ? 'bg-[var(--accent-cyan)]' : 'bg-zinc-400'}`} />
                 <span>{m.name}</span>
                 <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-white/10 text-zinc-700 dark:text-zinc-300">
                   {m.badge}
@@ -378,7 +378,7 @@ export default function HeroMediaShowcase({
           </div>
 
           {/* Terminal Preview Stage */}
-          <div className="p-4 sm:p-6 text-left bg-zinc-50/70 dark:bg-[#070809]/80 rounded-2xl border border-zinc-200/60 dark:border-white/5 font-mono text-xs">
+          <div className="p-4 sm:p-6 text-left bg-zinc-50/70 dark:bg-[var(--bg-primary)]/80 rounded-2xl border border-zinc-200/60 dark:border-white/5 font-mono text-xs">
             
             {/* User Input Prompt */}
             <div className="flex items-start gap-2.5 mb-4 text-zinc-800 dark:text-zinc-200 font-sans">
@@ -394,12 +394,12 @@ export default function HeroMediaShowcase({
 
             {/* AI Response Output */}
             <div className="flex items-start gap-2.5 text-zinc-700 dark:text-zinc-300 font-sans">
-              <div className="w-6 h-6 rounded-lg bg-[#20b8cd] flex items-center justify-center text-black shrink-0 mt-0.5 shadow-sm shadow-[#20b8cd]/30">
+              <div className="w-6 h-6 rounded-lg bg-[var(--accent-cyan)] flex items-center justify-center text-black shrink-0 mt-0.5 shadow-sm shadow-cyan-500/30">
                 <ParsuLogo size={13} className="text-black" />
               </div>
               <div className="bg-white/90 dark:bg-zinc-900/60 border border-cyan-500/20 rounded-xl p-4 w-full shadow-xs space-y-2">
                 <div className="flex items-center justify-between text-[10px] text-zinc-400 border-b border-zinc-200 dark:border-white/5 pb-1.5">
-                  <span className="font-bold text-[#20b8cd] flex items-center gap-1">
+                  <span className="font-bold text-[var(--accent-cyan)] flex items-center gap-1">
                     <RiFlashlightLine size={11} /> {models.find((m) => m.id === activeModel)?.name}
                   </span>
                   <span>
@@ -417,7 +417,7 @@ export default function HeroMediaShowcase({
               <span className="font-sans">Ready to explore full multi-turn conversations and citations?</span>
               <Link
                 to="/auth"
-                className="px-3.5 py-1.5 rounded-lg bg-[#20b8cd] text-black font-bold text-xs shrink-0 hover:bg-[#1da9bc] transition-colors flex items-center gap-1 font-sans cursor-pointer shadow-sm hover:scale-[1.02]"
+                className="px-3.5 py-1.5 rounded-lg bg-[var(--accent-cyan)] text-black font-bold text-xs shrink-0 hover:bg-[var(--accent-cyan-hover)] transition-colors flex items-center gap-1 font-sans cursor-pointer shadow-sm hover:scale-[1.02]"
               >
                 <span>Open Studio</span>
                 <RiSendPlane2Fill size={11} />

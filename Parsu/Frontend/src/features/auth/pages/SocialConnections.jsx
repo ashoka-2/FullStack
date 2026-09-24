@@ -224,21 +224,21 @@ const SocialConnections = () => {
 
     if (loading) {
         return (
-            <div className="h-[100dvh] bg-[#f4f5f7] dark:bg-[#020202] flex items-center justify-center">
-                <RiLoader4Line className="animate-spin w-8 h-8 text-[#20b8cd]" />
+            <div className="h-[100dvh] bg-[var(--bg-primary)] flex items-center justify-center">
+                <RiLoader4Line className="animate-spin w-8 h-8 text-[var(--accent-cyan)]" />
             </div>
         );
     }
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#020202] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30">
+        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30">
             {/* Quick Switch Sidebar */}
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             {/* Main Content Column — NO overflow here */}
             <div className="flex-1 flex flex-col min-h-0 lg:pl-56 transition-all duration-300">
                 {/* Header — shrink-0: naturally pinned, column never scrolls */}
-                <header className="shrink-0 z-30 bg-[#f4f5f7]/90 dark:bg-[#020202]/85 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/5 px-3.5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
+                <header className="shrink-0 z-30 bg-[var(--bg-primary)]/90 dark:bg-[var(--bg-primary)]/85 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/5 px-3.5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
                     <div className="flex items-center gap-2 sm:gap-3">
                         <button
                             type="button"
@@ -258,7 +258,7 @@ const SocialConnections = () => {
                             <button
                                 type="button"
                                 onClick={() => setCreatePostOpen(true)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#20b8cd] hover:bg-[#1da9bc] text-black font-bold text-xs shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black font-bold text-xs shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                             >
                                 <RiSendPlaneFill size={13} />
                                 <span>Create Post</span>
@@ -279,12 +279,12 @@ const SocialConnections = () => {
                         <div className="mb-12">
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                                 <div className="flex items-center gap-5">
-                                    <div className="w-16 h-16 rounded-[24px] bg-gradient-to-tr from-[#60A6AF] to-[#20b8cd] flex items-center justify-center text-white shadow-[0_8px_30px_rgba(32,184,205,0.3)]">
+                                    <div className="w-16 h-16 rounded-[24px] bg-gradient-to-tr from-[var(--color-clear-hanada)] to-[var(--accent-cyan)] flex items-center justify-center text-white shadow-[0_8px_30px_rgba(32,184,205,0.3)]">
                                         <RiApps2Line size={34} />
                                     </div>
                                     <div>
                                         <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
-                                            Social <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#60A6AF] to-[#20b8cd]">Command Center</span>
+                                            Social <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-clear-hanada)] to-[var(--accent-cyan)]">Command Center</span>
                                         </h1>
                                         <p className="text-zinc-500 dark:text-zinc-400 font-medium text-base sm:text-lg mt-1">
                                             Connect your accounts once. Publish everywhere with AI.
@@ -295,7 +295,7 @@ const SocialConnections = () => {
                                 <button
                                     type="button"
                                     onClick={() => setCreatePostOpen(true)}
-                                    className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#20b8cd] to-[#0ea5e9] hover:from-[#1da9bc] hover:to-[#0284c7] text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
+                                    className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[var(--accent-cyan)] to-[var(--color-light-blue)] hover:from-[var(--accent-cyan-hover)] hover:to-[var(--color-blue)] text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
                                 >
                                     <RiSendPlaneFill size={16} />
                                     <span>Create & Publish Post</span>
@@ -328,7 +328,7 @@ const SocialConnections = () => {
                         {/* AI Assistant Hint Card */}
                         <div className="mt-12 bg-white dark:bg-zinc-900/40 backdrop-blur-xl rounded-[32px] border border-zinc-200 dark:border-white/8 p-8 shadow-sm">
                             <div className="flex items-start gap-5">
-                                <div className="w-12 h-12 rounded-2xl bg-[#60A6AF]/10 flex items-center justify-center text-[#60A6AF] shrink-0">
+                                <div className="w-12 h-12 rounded-2xl bg-[var(--color-clear-hanada)]/10 flex items-center justify-center text-[var(--color-clear-hanada)] shrink-0">
                                     <RiSparklingLine size={24} />
                                 </div>
                                 <div>
@@ -346,7 +346,7 @@ const SocialConnections = () => {
                                             '"Improve my caption with trending hashtags"'
                                         ].map((cmd, i) => (
                                             <div key={i} className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 font-mono bg-zinc-50 dark:bg-zinc-800/40 px-3 py-2 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                                                <span className="text-[#60A6AF]">→</span>
+                                                <span className="text-[var(--color-clear-hanada)]">→</span>
                                                 <span>{cmd}</span>
                                             </div>
                                         ))}

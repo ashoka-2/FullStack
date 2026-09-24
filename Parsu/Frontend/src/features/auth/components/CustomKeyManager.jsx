@@ -190,7 +190,7 @@ export default function CustomKeyManager({ onNotify }) {
   const selectedProviderConfig = PRESET_PROVIDERS.find(p => p.id === provider) || PRESET_PROVIDERS[0];
 
   return (
-    <div className="bg-white dark:bg-[#121214] border border-zinc-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+    <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-white/5">
         <div className="flex items-center gap-3">

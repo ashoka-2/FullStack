@@ -110,7 +110,7 @@ export default function AdminPricingPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            <RiMoneyDollarCircleLine className="text-[#20b8cd]" />
+            <RiMoneyDollarCircleLine className="text-[var(--accent-cyan)]" />
             <span>Subscription & Pricing Command Hub</span>
           </h1>
           <p className="text-xs text-zinc-400 mt-1">
@@ -177,7 +177,7 @@ export default function AdminPricingPage() {
 
         {/* UPI & Gateway Technical FAQ Note */}
         <div className="mt-5 p-4 rounded-2xl bg-cyan-500/5 border border-cyan-500/15 flex items-start gap-3 text-xs text-zinc-300">
-          <RiShieldCheckLine size={18} className="text-[#20b8cd] shrink-0 mt-0.5" />
+          <RiShieldCheckLine size={18} className="text-[var(--accent-cyan)] shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-bold text-white">Razorpay UPI & International Card Support:</p>
             <p className="text-zinc-400 leading-relaxed">
@@ -212,7 +212,7 @@ export default function AdminPricingPage() {
                 <button
                   type="button"
                   onClick={handleSavePricing}
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[#20b8cd] text-black font-bold text-xs shadow-md"
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[var(--accent-cyan)] text-black font-bold text-xs shadow-md"
                 >
                   <RiSaveLine size={14} />
                   <span>Save Changes</span>
@@ -265,7 +265,7 @@ export default function AdminPricingPage() {
                     className="w-24 px-2 py-1 rounded bg-black border border-white/20 text-right text-white font-mono"
                   />
                 ) : (
-                  <span className="font-bold text-[#20b8cd]">₹{pricing?.INR?.pro?.monthly?.display || 1499} / mo</span>
+                  <span className="font-bold text-[var(--accent-cyan)]">₹{pricing?.INR?.pro?.monthly?.display || 1499} / mo</span>
                 )}
               </div>
 
@@ -291,7 +291,7 @@ export default function AdminPricingPage() {
                     className="w-24 px-2 py-1 rounded bg-black border border-white/20 text-right text-white font-mono"
                   />
                 ) : (
-                  <span className="font-bold text-[#20b8cd]">₹{pricing?.INR?.enterprise?.monthly?.display || 5999} / mo</span>
+                  <span className="font-bold text-[var(--accent-cyan)]">₹{pricing?.INR?.enterprise?.monthly?.display || 5999} / mo</span>
                 )}
               </div>
             </div>
@@ -367,7 +367,7 @@ export default function AdminPricingPage() {
       <div className="p-6 rounded-3xl bg-[#11131a]/85 border border-white/[0.08] shadow-sm backdrop-blur-xl space-y-4">
         <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
           <div className="flex items-center gap-2.5">
-            <RiUser3Line size={18} className="text-[#20b8cd]" />
+            <RiUser3Line size={18} className="text-[var(--accent-cyan)]" />
             <h2 className="text-sm font-bold uppercase tracking-wider text-white">
               Subscribed Users & Revenue Accounts ({subscribers.length})
             </h2>

@@ -166,7 +166,7 @@ export default function OfflineBlobPlayground({
     return (
         <div 
             onMouseMove={handleMouseMove}
-            className="fixed inset-0 z-[99999] bg-[#f8f9fa] dark:bg-[#070809] text-zinc-900 dark:text-zinc-100 flex flex-col items-center justify-between p-3.5 sm:p-6 lg:p-8 select-none overflow-y-auto overflow-x-hidden min-h-[100dvh] h-[100dvh] custom-scrollbar transition-colors duration-300"
+            className="fixed inset-0 z-[99999] bg-[var(--bg-primary)] text-zinc-900 dark:text-zinc-100 flex flex-col items-center justify-between p-3.5 sm:p-6 lg:p-8 select-none overflow-y-auto overflow-x-hidden min-h-[100dvh] h-[100dvh] custom-scrollbar transition-colors duration-300"
         >
             {/* Background Ambient Glows */}
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 sm:w-96 h-72 sm:h-96 bg-cyan-500/10 dark:bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -225,7 +225,7 @@ export default function OfflineBlobPlayground({
                 {speechText && (
                     <div className="mb-2 min-h-[32px] flex items-center justify-center animate-in fade-in zoom-in-95 duration-200">
                         <div className="px-3 py-1 rounded-2xl bg-white/95 dark:bg-[#15171a]/95 backdrop-blur-md border border-cyan-500/25 shadow-md shadow-cyan-500/5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 text-center max-w-[260px] sm:max-w-[320px] flex items-center gap-1.5">
-                            <RiSparklingFill className="w-3.5 h-3.5 text-[#20b8cd] shrink-0" />
+                            <RiSparklingFill className="w-3.5 h-3.5 text-[var(--accent-cyan)] shrink-0" />
                             <span className="truncate">{speechText}</span>
                         </div>
                     </div>
@@ -256,7 +256,7 @@ export default function OfflineBlobPlayground({
                     <button
                         type="button"
                         onClick={() => handleFeedSnack('cookie', '🍪', 'Mmm, delicious chocolate chip! 🍪😋')}
-                        className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white dark:bg-[#151617] hover:bg-amber-50 dark:hover:bg-amber-950/30 border border-zinc-200/80 dark:border-white/10 text-xs font-semibold text-zinc-700 dark:text-zinc-300 shadow-xs active:scale-95 transition-all cursor-pointer"
+                        className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white dark:bg-[var(--bg-surface)] hover:bg-amber-50 dark:hover:bg-amber-950/30 border border-zinc-200/80 dark:border-white/10 text-xs font-semibold text-zinc-700 dark:text-zinc-300 shadow-xs active:scale-95 transition-all cursor-pointer"
                     >
                         <span>🍪</span>
                         <span>Cookie</span>
@@ -265,7 +265,7 @@ export default function OfflineBlobPlayground({
                     <button
                         type="button"
                         onClick={() => handleFeedSnack('coffee', '☕', 'Ah, fresh hot coffee! Energetic! ☕⚡')}
-                        className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white dark:bg-[#151617] hover:bg-orange-50 dark:hover:bg-orange-950/30 border border-zinc-200/80 dark:border-white/10 text-xs font-semibold text-zinc-700 dark:text-zinc-300 shadow-xs active:scale-95 transition-all cursor-pointer"
+                        className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white dark:bg-[var(--bg-surface)] hover:bg-orange-50 dark:hover:bg-orange-950/30 border border-zinc-200/80 dark:border-white/10 text-xs font-semibold text-zinc-700 dark:text-zinc-300 shadow-xs active:scale-95 transition-all cursor-pointer"
                     >
                         <span>☕</span>
                         <span>Coffee</span>
@@ -274,7 +274,7 @@ export default function OfflineBlobPlayground({
                     <button
                         type="button"
                         onClick={() => handleFeedSnack('pizza', '🍕', 'Hot cheesy pizza slice! Love it! 🍕❤️')}
-                        className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white dark:bg-[#151617] hover:bg-red-50 dark:hover:bg-red-950/30 border border-zinc-200/80 dark:border-white/10 text-xs font-semibold text-zinc-700 dark:text-zinc-300 shadow-xs active:scale-95 transition-all cursor-pointer"
+                        className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white dark:bg-[var(--bg-surface)] hover:bg-red-50 dark:hover:bg-red-950/30 border border-zinc-200/80 dark:border-white/10 text-xs font-semibold text-zinc-700 dark:text-zinc-300 shadow-xs active:scale-95 transition-all cursor-pointer"
                     >
                         <span>🍕</span>
                         <span>Pizza</span>
@@ -286,7 +286,7 @@ export default function OfflineBlobPlayground({
                         className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border text-xs font-semibold shadow-xs active:scale-95 transition-all cursor-pointer ${
                             gameActive 
                                 ? 'bg-cyan-500 text-white border-cyan-400' 
-                                : 'bg-white dark:bg-[#151617] text-cyan-600 dark:text-cyan-400 border-cyan-500/30 hover:bg-cyan-50 dark:hover:bg-cyan-950/30'
+                                : 'bg-white dark:bg-[var(--bg-surface)] text-cyan-600 dark:text-cyan-400 border-cyan-500/30 hover:bg-cyan-50 dark:hover:bg-cyan-950/30'
                         }`}
                     >
                         <RiGamepadLine size={13} />

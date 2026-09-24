@@ -169,12 +169,12 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-[#121316] border border-zinc-200 dark:border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         
         {/* Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-zinc-200 dark:border-white/10 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#60A6AF] to-[#20b8cd] flex items-center justify-center text-white shadow-md shadow-[#20b8cd]/20">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[var(--color-clear-hanada)] to-[var(--accent-cyan)] flex items-center justify-center text-white shadow-md shadow-[var(--accent-cyan)]/20">
               <RiSendPlaneFill size={16} />
             </div>
             <div>
@@ -218,7 +218,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
                       onClick={() => togglePlatform(account.platform)}
                       className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                         isSelected
-                          ? 'bg-[#20b8cd] text-black border-[#20b8cd] shadow-sm shadow-[#20b8cd]/20 scale-[1.02]'
+                          ? 'bg-[var(--accent-cyan)] text-black border-[var(--accent-cyan)] shadow-sm shadow-[var(--accent-cyan)]/20 scale-[1.02]'
                           : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-white/5 hover:border-zinc-300 dark:hover:border-white/20'
                       }`}
                     >
@@ -244,7 +244,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
               <button
                 type="button"
                 onClick={() => setShowAiInput(!showAiInput)}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[#20b8cd] hover:underline cursor-pointer"
+                className="flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-cyan)] hover:underline cursor-pointer"
               >
                 <RiSparklingFill size={13} />
                 <span>{showAiInput ? "Close AI Copilot" : "✨ Write with AI"}</span>
@@ -253,7 +253,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
 
             {/* AI Prompt Input Bar */}
             {showAiInput && (
-              <div className="p-3 mb-2.5 rounded-2xl bg-[#20b8cd]/10 border border-[#20b8cd]/20 flex items-center gap-2 animate-in fade-in zoom-in-95 duration-200">
+              <div className="p-3 mb-2.5 rounded-2xl bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/20 flex items-center gap-2 animate-in fade-in zoom-in-95 duration-200">
                 <input
                   type="text"
                   value={aiTopic}
@@ -265,7 +265,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
                   type="button"
                   disabled={isGeneratingCaption}
                   onClick={handleAiCaption}
-                  className="px-3 py-1 rounded-xl bg-[#20b8cd] hover:bg-[#1da9bc] text-black text-xs font-bold flex items-center gap-1 shrink-0 cursor-pointer disabled:opacity-50"
+                  className="px-3 py-1 rounded-xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black text-xs font-bold flex items-center gap-1 shrink-0 cursor-pointer disabled:opacity-50"
                 >
                   {isGeneratingCaption ? (
                     <RiLoader4Line size={13} className="animate-spin" />
@@ -282,7 +282,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="Write your post caption, thoughts, emojis, and hashtags..."
-              className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-2xl p-3.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-[#20b8cd] transition-all resize-none"
+              className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 rounded-2xl p-3.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-[var(--accent-cyan)] transition-all resize-none"
             />
             <div className="flex justify-between items-center mt-1 text-[11px] text-zinc-400">
               <span>Supports hashtags, emojis, and formatting</span>
@@ -308,10 +308,10 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
 
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-zinc-200 dark:border-white/15 hover:border-[#20b8cd] dark:hover:border-[#20b8cd] rounded-2xl p-5 text-center cursor-pointer transition-colors bg-zinc-50/50 dark:bg-white/[0.02] hover:bg-[#20b8cd]/5"
+              className="border-2 border-dashed border-zinc-200 dark:border-white/15 hover:border-[var(--accent-cyan)] dark:hover:border-[var(--accent-cyan)] rounded-2xl p-5 text-center cursor-pointer transition-colors bg-zinc-50/50 dark:bg-white/[0.02] hover:bg-[var(--accent-cyan)]/5"
             >
               <div className="flex flex-col items-center justify-center gap-1.5 text-zinc-500 dark:text-zinc-400">
-                <RiUploadCloudLine size={28} className="text-[#20b8cd]" />
+                <RiUploadCloudLine size={28} className="text-[var(--accent-cyan)]" />
                 <span className="text-xs font-semibold">
                   {isUploadingMedia ? "Uploading media..." : "Click or drag images & videos here"}
                 </span>
@@ -359,7 +359,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
                   onClick={() => setPostMode('together')}
                   className={`px-3 py-1 rounded-lg font-bold transition-all ${
                     postMode === 'together'
-                      ? 'bg-[#20b8cd] text-black shadow-xs'
+                      ? 'bg-[var(--accent-cyan)] text-black shadow-xs'
                       : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                   }`}
                 >
@@ -370,7 +370,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
                   onClick={() => setPostMode('separately')}
                   className={`px-3 py-1 rounded-lg font-bold transition-all ${
                     postMode === 'separately'
-                      ? 'bg-[#20b8cd] text-black shadow-xs'
+                      ? 'bg-[var(--accent-cyan)] text-black shadow-xs'
                       : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                   }`}
                 >
@@ -384,7 +384,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
           <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/10 space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <RiTimeLine size={16} className="text-[#20b8cd]" />
+                <RiTimeLine size={16} className="text-[var(--accent-cyan)]" />
                 <span className="text-xs font-bold text-zinc-900 dark:text-white">
                   Schedule Release (Native Platform Timing)
                 </span>
@@ -396,7 +396,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
                   onChange={(e) => setIsScheduleEnabled(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-zinc-300 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-zinc-600 peer-checked:bg-[#20b8cd]"></div>
+                <div className="w-9 h-5 bg-zinc-300 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-zinc-600 peer-checked:bg-[var(--accent-cyan)]"></div>
               </label>
             </div>
 
@@ -406,7 +406,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
                   type="datetime-local"
                   value={scheduledDateTime}
                   onChange={(e) => setScheduledDateTime(e.target.value)}
-                  className="w-full bg-white dark:bg-black/30 border border-zinc-200 dark:border-white/15 rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[#20b8cd]"
+                  className="w-full bg-white dark:bg-black/30 border border-zinc-200 dark:border-white/15 rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[var(--accent-cyan)]"
                 />
                 <p className="text-[10px] text-zinc-400">
                   Platforms like YouTube natively hold your video private and release it publicly at this designated time.
@@ -441,7 +441,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
                       href={s.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-bold underline text-[#20b8cd] hover:text-[#1da9bc] flex items-center gap-1 ml-2 cursor-pointer"
+                      className="font-bold underline text-[var(--accent-cyan)] hover:text-[#1da9bc] flex items-center gap-1 ml-2 cursor-pointer"
                     >
                       <span>View Live Post</span>
                       <RiExternalLinkLine size={12} />
@@ -465,7 +465,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
             <button
               type="submit"
               disabled={isPublishing || connectedAccounts.length === 0}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#20b8cd] to-[#0ea5e9] hover:from-[#1da9bc] hover:to-[#0284c7] text-white font-bold text-xs shadow-lg shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[var(--accent-cyan)] to-[#0ea5e9] hover:from-[#1da9bc] hover:to-[#0284c7] text-white font-bold text-xs shadow-lg shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
             >
               {isPublishing ? (
                 <>

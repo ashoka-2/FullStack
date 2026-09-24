@@ -71,10 +71,10 @@ export default function MaintenanceMode() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f4f5f7] dark:bg-[#070809] text-zinc-900 dark:text-zinc-100 flex flex-col justify-between selection:bg-[#20b8cd]/30 selection:text-white transition-colors duration-300 relative overflow-x-hidden">
+    <div className="min-h-screen w-full bg-[var(--bg-primary)] text-zinc-900 dark:text-zinc-100 flex flex-col justify-between selection:bg-[var(--accent-cyan)]/30 selection:text-white transition-colors duration-300 relative overflow-x-hidden">
       
       {/* Ambient background glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[420px] bg-gradient-to-b from-[#20b8cd]/10 via-[#20b8cd]/5 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[420px] bg-gradient-to-b from-[var(--accent-cyan)]/10 via-[var(--accent-cyan)]/5 to-transparent blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-10 w-96 h-96 bg-purple-500/5 blur-3xl pointer-events-none" />
 
       {/* Navigation Header */}
@@ -129,14 +129,14 @@ export default function MaintenanceMode() {
 
         {/* Status Pill */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-200/80 dark:bg-zinc-800/80 border border-zinc-300 dark:border-zinc-700/80 text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-4 shadow-sm">
-          <RiToolsLine size={15} className="text-[#20b8cd]" />
+          <RiToolsLine size={15} className="text-[var(--accent-cyan)]" />
           <span>Under Scheduled Maintenance</span>
         </div>
 
         {/* Title */}
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-4 text-zinc-900 dark:text-white leading-tight">
           We’re Fine-Tuning <br className="hidden sm:inline" />
-          <span className="bg-gradient-to-r from-[#20b8cd] via-teal-400 to-emerald-400 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[var(--accent-cyan)] via-teal-400 to-emerald-400 bg-clip-text text-transparent">
             Our AI Engines
           </span>
         </h1>
@@ -148,7 +148,7 @@ export default function MaintenanceMode() {
 
         {/* Progress Bar Shimmer */}
         <div className="w-full max-w-md bg-zinc-200 dark:bg-zinc-800/80 rounded-full h-2.5 mb-8 overflow-hidden relative">
-          <div className="h-full bg-gradient-to-r from-[#20b8cd] via-teal-400 to-[#20b8cd] rounded-full animate-pulse w-3/4" />
+          <div className="h-full bg-gradient-to-r from-[var(--accent-cyan)] via-teal-400 to-[var(--accent-cyan)] rounded-full animate-pulse w-3/4" />
         </div>
 
         {/* System Safeguard Cards */}

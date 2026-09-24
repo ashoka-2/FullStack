@@ -184,7 +184,7 @@ export default function SubscriptionSettingsPage() {
                         ? 'bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border-emerald-500/30'
                         : isEnterprise
                         ? 'bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-transparent border-purple-500/30'
-                        : 'bg-white dark:bg-[#121212] border-zinc-200/80 dark:border-white/10'
+                        : 'bg-white dark:bg-[var(--bg-surface)] border-zinc-200/80 dark:border-white/10'
                 }`}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-1.5">
@@ -267,7 +267,7 @@ export default function SubscriptionSettingsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         
                         {/* Daily AI Queries */}
-                        <div className="p-5 rounded-2xl bg-white dark:bg-[#121212] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-3">
+                        <div className="p-5 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
                                     Daily AI Queries
@@ -303,7 +303,7 @@ export default function SubscriptionSettingsPage() {
                         </div>
 
                         {/* Document & PDF Uploads */}
-                        <div className="p-5 rounded-2xl bg-white dark:bg-[#121212] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-3">
+                        <div className="p-5 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
                                     Document / RAG Uploads
@@ -333,7 +333,7 @@ export default function SubscriptionSettingsPage() {
                         </div>
 
                         {/* Social Media Posts */}
-                        <div className="p-5 rounded-2xl bg-white dark:bg-[#121212] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-3">
+                        <div className="p-5 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
                                     Social Publishing / Mo

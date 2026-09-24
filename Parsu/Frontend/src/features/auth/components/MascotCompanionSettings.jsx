@@ -45,7 +45,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
   };
 
   return (
-    <div className="bg-white dark:bg-[#121214] border border-zinc-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+    <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
       <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-white/5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold">
@@ -66,7 +66,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
             type="button"
             onClick={() => handleToggleBlobVisibility(!blobVisible)}
             className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
-              blobVisible ? 'bg-[#20b8cd]' : 'bg-zinc-300 dark:bg-zinc-700'
+              blobVisible ? 'bg-[var(--accent-cyan)]' : 'bg-zinc-300 dark:bg-zinc-700'
             }`}
             title={blobVisible ? "Click to hide mascot" : "Click to show mascot"}
           >
@@ -110,7 +110,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
           </div>
 
           <p className="text-[11px] text-zinc-400 mt-3 text-center">
-            Current Mood: <strong className="text-[#20b8cd] capitalize">{previewMood}</strong> • Tap to interact
+            Current Mood: <strong className="text-[var(--accent-cyan)] capitalize">{previewMood}</strong> • Tap to interact
           </p>
         </div>
 
@@ -120,7 +120,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-semibold">
               <span className="text-zinc-700 dark:text-zinc-300">Mascot Size</span>
-              <span className="text-[#20b8cd] font-mono font-bold">{blobSize}px</span>
+              <span className="text-[var(--accent-cyan)] font-mono font-bold">{blobSize}px</span>
             </div>
             <input
               type="range"
@@ -151,7 +151,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
                   onClick={() => setPreviewMood(m)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer capitalize ${
                     previewMood === m
-                      ? 'bg-[#20b8cd] text-zinc-950 font-bold shadow-xs'
+                      ? 'bg-[var(--accent-cyan)] text-zinc-950 font-bold shadow-xs'
                       : 'bg-zinc-100 dark:bg-white/[0.04] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                   }`}
                 >
@@ -164,7 +164,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
           {/* Mascot Features Guide Card */}
           <div className="p-3.5 rounded-xl bg-zinc-100 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/5 space-y-1">
             <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-              <RiSparkling2Line size={13} className="text-[#20b8cd]" />
+              <RiSparkling2Line size={13} className="text-[var(--accent-cyan)]" />
               <span>How to interact anywhere on screen:</span>
             </span>
             <ul className="text-[11px] text-zinc-500 dark:text-zinc-400 list-disc list-inside space-y-0.5">

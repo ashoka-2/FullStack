@@ -32,14 +32,14 @@ const Dashboard = () => {
     }, [error, dispatch])
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30">
+        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
 
             <div className={`flex-1 flex flex-col h-[100dvh] overflow-hidden relative lg:pl-56 transition-all duration-300 ${isSidebarOpen ? 'opacity-50 blur-sm pointer-events-none lg:opacity-100 lg:blur-none lg:pointer-events-auto' : ''}`}>
 
                 {/* Header (Responsive: Mobile brand + hamburger + Auth actions) */}
-                <header className="flex items-center justify-between px-3 sm:px-6 h-12 sm:h-14 bg-[#f4f5f7]/90 dark:bg-[#050505]/85 backdrop-blur-md shrink-0 z-40 border-b border-zinc-200/80 dark:border-white/5">
+                <header className="flex items-center justify-between px-3 sm:px-6 h-12 sm:h-14 bg-[var(--bg-primary)]/90 dark:bg-[var(--bg-primary)]/85 backdrop-blur-md shrink-0 z-40 border-b border-zinc-200/80 dark:border-white/5">
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
@@ -49,9 +49,9 @@ const Dashboard = () => {
                             <RiMenuLine size={20} />
                         </button>
                         <div className="lg:hidden flex items-center gap-1.5">
-                            <ParsuLogo className="w-5 h-5 text-[#20b8cd]" />
+                            <ParsuLogo className="w-5 h-5 text-[var(--accent-cyan)]" />
                             <span className="font-extrabold text-sm text-zinc-900 dark:text-white tracking-tight">PARSU</span>
-                            <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[#20b8cd] px-1 rounded">AI</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[var(--accent-cyan)] px-1 rounded">AI</span>
                         </div>
                     </div>
 
@@ -66,7 +66,7 @@ const Dashboard = () => {
                             </Link>
                             <Link
                                 to="/auth?mode=register"
-                                className="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#20b8cd] hover:bg-[#1da9bc] text-zinc-950 shadow-md shadow-[#20b8cd]/20 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center gap-1.5"
+                                className="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/20 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center gap-1.5"
                             >
                                 <span>Sign up</span>
                                 <RiSparkling2Line size={14} />

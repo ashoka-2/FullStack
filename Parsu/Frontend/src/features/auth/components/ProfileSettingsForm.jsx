@@ -67,9 +67,9 @@ const ProfileSettingsForm = ({ user, onSuccess }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-[#121214] border border-zinc-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xs">
+    <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xs">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-zinc-200 dark:border-white/5">
-        <div className="w-10 h-10 rounded-2xl bg-[#20b8cd]/10 text-[#20b8cd] flex items-center justify-center font-bold">
+        <div className="w-10 h-10 rounded-2xl bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] flex items-center justify-center font-bold">
           <RiUser3Line size={20} />
         </div>
         <div>
@@ -101,7 +101,7 @@ const ProfileSettingsForm = ({ user, onSuccess }) => {
               value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
               placeholder="https://example.com/avatar.png"
-              className="w-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all"
+              className="w-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all"
             />
             <div className="flex items-center gap-2 pt-1 flex-wrap">
               <span className="text-[11px] text-zinc-500 font-medium">Or pick an avatar:</span>
@@ -111,7 +111,7 @@ const ProfileSettingsForm = ({ user, onSuccess }) => {
                   type="button"
                   onClick={() => setAvatarUrl(preset)}
                   className={`w-7 h-7 rounded-lg overflow-hidden border transition-all cursor-pointer ${
-                    avatarUrl === preset ? 'border-[#20b8cd] ring-2 ring-[#20b8cd]/30 scale-105' : 'border-zinc-200 dark:border-white/10 opacity-70 hover:opacity-100'
+                    avatarUrl === preset ? 'border-[var(--accent-cyan)] ring-2 ring-[var(--accent-cyan)]/30 scale-105' : 'border-zinc-200 dark:border-white/10 opacity-70 hover:opacity-100'
                   }`}
                 >
                   <img src={preset} alt={`Preset ${i + 1}`} className="w-full h-full object-cover" />
@@ -135,7 +135,7 @@ const ProfileSettingsForm = ({ user, onSuccess }) => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Your username"
-                className="w-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[#20b8cd] focus:ring-1 focus:ring-[#20b8cd] transition-all font-medium"
+                className="w-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all font-medium"
               />
             </div>
           </div>

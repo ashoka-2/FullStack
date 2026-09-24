@@ -19,7 +19,7 @@ export default function InfoPageLayout({
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
-        <div className="flex bg-[#f4f5f7] dark:bg-[#050505] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#60A6AF]/30">
+        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30">
             {/* Shared Application Sidebar */}
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
@@ -27,7 +27,7 @@ export default function InfoPageLayout({
             <div className="flex-1 flex flex-col min-h-0 lg:pl-56 transition-all duration-300">
 
                 {/* Header — shrink-0 pins it; column doesn't scroll so header stays fixed */}
-                <header className="shrink-0 z-30 bg-[#f4f5f7]/90 dark:bg-[#050505]/85 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/5 px-4 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
+                <header className="shrink-0 z-30 bg-[var(--bg-primary)]/90 dark:bg-[var(--bg-primary)]/85 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/5 px-4 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
