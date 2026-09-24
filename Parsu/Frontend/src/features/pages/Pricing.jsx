@@ -267,19 +267,19 @@ export default function Pricing() {
                 {/* ── Currency & Location Indicator + Monthly/Yearly Toggle ── */}
                 <div className="flex flex-col items-center gap-6">
                     {/* Location detection pill */}
-                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs text-zinc-300">
+                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/[0.08] text-xs text-zinc-600 dark:text-zinc-300">
                         {isIndia ? (
                             <>
                                 <span className="text-sm">🇮🇳</span>
-                                <span className="font-semibold text-white">India Localized Pricing (₹ INR)</span>
+                                <span className="font-semibold text-zinc-900 dark:text-white">India Localized Pricing (₹ INR)</span>
                             </>
                         ) : (
                             <>
                                 <RiGlobalLine size={14} className="text-[var(--accent-cyan)]" />
-                                <span className="font-semibold text-white">International Pricing ($ USD)</span>
+                                <span className="font-semibold text-zinc-900 dark:text-white">International Pricing ($ USD)</span>
                             </>
                         )}
-                        <span className="text-zinc-500">•</span>
+                        <span className="text-zinc-400 dark:text-zinc-500">•</span>
                         {/* Currency switcher button */}
                         <button
                             type="button"
@@ -291,14 +291,14 @@ export default function Pricing() {
                     </div>
 
                     {/* Monthly / Yearly Switcher */}
-                    <div className="inline-flex items-center p-1 rounded-full bg-white/[0.04] border border-white/[0.08] shadow-inner">
+                    <div className="inline-flex items-center p-1 rounded-full bg-zinc-200/70 dark:bg-white/[0.04] border border-zinc-300 dark:border-white/[0.08] shadow-inner">
                         <button
                             type="button"
                             onClick={() => setBillingCycle('monthly')}
                             className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
                                 billingCycle === 'monthly'
                                     ? 'bg-[var(--accent-cyan)] text-zinc-950 shadow-md'
-                                    : 'text-zinc-400 hover:text-white'
+                                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                             }`}
                         >
                             Monthly Billing
@@ -309,14 +309,14 @@ export default function Pricing() {
                             className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
                                 billingCycle === 'yearly'
                                     ? 'bg-[var(--accent-cyan)] text-zinc-950 shadow-md'
-                                    : 'text-zinc-400 hover:text-white'
+                                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                             }`}
                         >
                             <span>Yearly Billing</span>
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
                                 billingCycle === 'yearly'
                                     ? 'bg-black/25 text-zinc-950'
-                                    : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                    : 'bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30'
                             }`}>
                                 Save 20%
                             </span>
@@ -338,8 +338,8 @@ export default function Pricing() {
                                 key={tier.id}
                                 className={`relative flex flex-col rounded-3xl overflow-hidden transition-all duration-300 ${
                                     tier.popular
-                                        ? 'bg-[#101217] border-2 border-[var(--accent-cyan)]/40 shadow-2xl shadow-cyan-500/10'
-                                        : 'bg-[#0d0e12] border border-white/[0.08] shadow-lg'
+                                        ? 'bg-white dark:bg-[#101217] border-2 border-[var(--accent-cyan)] shadow-2xl shadow-cyan-500/10'
+                                        : 'bg-white dark:bg-[#0d0e12] border border-zinc-200 dark:border-white/[0.08] shadow-lg'
                                 }`}
                             >
                                 {/* Top Badge */}
@@ -348,7 +348,7 @@ export default function Pricing() {
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                                             tier.popular
                                                 ? 'bg-[var(--accent-cyan)] text-zinc-950 shadow-sm'
-                                                : 'bg-white/10 text-zinc-300 border border-white/10'
+                                                : 'bg-zinc-100 dark:bg-white/10 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/10'
                                         }`}>
                                             {tier.badge}
                                         </span>
@@ -356,12 +356,12 @@ export default function Pricing() {
                                 )}
 
                                 {/* Card Header */}
-                                <div className="p-7 sm:p-8 border-b border-white/[0.06] relative">
-                                    <div className="w-10 h-10 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center text-[var(--accent-cyan)] mb-4">
+                                <div className="p-7 sm:p-8 border-b border-zinc-100 dark:border-white/[0.06] relative">
+                                    <div className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-[var(--accent-cyan)] mb-4">
                                         <Icon size={20} />
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-2">{tier.name}</h3>
-                                    <p className="text-xs text-zinc-400 min-h-[36px] leading-relaxed">
+                                    <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">{tier.name}</h3>
+                                    <p className="text-xs text-zinc-600 dark:text-zinc-400 min-h-[36px] leading-relaxed">
                                         {tier.desc}
                                     </p>
 
@@ -369,23 +369,23 @@ export default function Pricing() {
                                     <div className="mt-6 flex items-baseline gap-1.5">
                                         {isBlurred ? (
                                             <div className="flex items-baseline gap-1">
-                                                <span className="text-3xl sm:text-4xl font-black text-zinc-500 tracking-tight font-mono select-none">
+                                                <span className="text-3xl sm:text-4xl font-black text-zinc-400 dark:text-zinc-500 tracking-tight font-mono select-none">
                                                     {currencySymbol}xxx
                                                 </span>
-                                                <span className="text-xs text-zinc-500 font-medium">/month</span>
+                                                <span className="text-xs text-zinc-400 dark:text-zinc-500 font-medium">/month</span>
                                             </div>
                                         ) : (
                                             <div className="flex items-baseline gap-1">
-                                                <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                                                <span className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tight">
                                                     {currencySymbol}{displayPrice}
                                                 </span>
-                                                <span className="text-xs text-zinc-400 font-medium">
+                                                <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
                                                     {tier.isFree ? '' : '/month'}
                                                 </span>
                                             </div>
                                         )}
                                     </div>
-                                    <p className="text-[11px] text-zinc-500 mt-1 font-medium">
+                                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
                                         {isBlurred ? 'Pricing under unveiling' : tier.period}
                                     </p>
                                 </div>
@@ -393,23 +393,25 @@ export default function Pricing() {
                                 {/* Features List & Action Container */}
                                 <div className="p-7 sm:p-8 flex-1 flex flex-col justify-between relative">
                                     
-                                    {/* Blurred stealth overlay if unreleased */}
+                                    {/* Fully blurred stealth overlay if unreleased */}
                                     {isBlurred && (
-                                        <div className="absolute inset-0 z-10 backdrop-blur-[6px] bg-black/40 flex flex-col items-center justify-center p-6 text-center select-none pointer-events-none rounded-b-3xl">
-                                            <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-zinc-300 mb-3 shadow-lg">
-                                                <RiLockLine size={22} />
+                                        <div className="absolute inset-0 z-20 backdrop-blur-md bg-white/70 dark:bg-black/60 flex flex-col items-center justify-center p-6 text-center select-none pointer-events-none rounded-b-3xl">
+                                            <div className="w-14 h-14 rounded-2xl bg-zinc-200/80 dark:bg-white/[0.08] border border-zinc-300 dark:border-white/15 flex items-center justify-center text-[var(--accent-cyan)] mb-3 shadow-xl shadow-cyan-500/10">
+                                                <RiLockLine size={24} />
                                             </div>
-                                            <p className="text-sm font-bold text-white">Tier Under Launch</p>
-                                            <p className="text-xs text-zinc-400 mt-1 max-w-[200px]">
-                                                This tier will unlock automatically upon official release.
+                                            <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-[var(--accent-cyan)]/15 border border-[var(--accent-cyan)]/30 text-[var(--accent-cyan)] mb-1.5">
+                                                Coming Soon
+                                            </span>
+                                            <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 max-w-[200px] leading-relaxed">
+                                                Will be unlocked upon official launch.
                                             </p>
                                         </div>
                                     )}
 
                                     {/* Features */}
-                                    <ul className={`space-y-3.5 mb-8 ${isBlurred ? 'opacity-30' : ''}`}>
+                                    <ul className={`space-y-3.5 mb-8 ${isBlurred ? 'filter blur-[3px] opacity-25 select-none pointer-events-none' : ''}`}>
                                         {tier.features.map((feat, fIdx) => (
-                                            <li key={fIdx} className="flex items-start gap-3 text-xs text-zinc-300">
+                                            <li key={fIdx} className="flex items-start gap-3 text-xs text-zinc-700 dark:text-zinc-300">
                                                 <div className="w-4 h-4 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[var(--accent-cyan)] flex items-center justify-center shrink-0 mt-0.5">
                                                     <RiCheckLine size={11} />
                                                 </div>
@@ -419,19 +421,19 @@ export default function Pricing() {
                                     </ul>
 
                                     {/* CTA Button */}
-                                    <div className="relative z-20">
+                                    <div className={`relative ${isBlurred ? 'filter blur-[2px] opacity-30 select-none pointer-events-none' : 'z-10'}`}>
                                         {isBlurred ? (
                                             <button
                                                 type="button"
                                                 disabled
-                                                className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold bg-white/5 border border-white/10 text-zinc-400 cursor-not-allowed text-center uppercase tracking-wider"
+                                                className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-zinc-400 cursor-not-allowed text-center uppercase tracking-wider"
                                             >
                                                 Coming Soon
                                             </button>
                                         ) : tier.isFree ? (
                                             <Link
                                                 to="/ai"
-                                                className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold bg-white text-zinc-950 hover:bg-zinc-100 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-[0.98]"
+                                                className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-[0.98]"
                                             >
                                                 <span>Get Started Free</span>
                                                 <RiArrowRightLine size={15} />
@@ -444,7 +446,7 @@ export default function Pricing() {
                                                 className={`w-full py-3.5 px-4 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${
                                                     tier.popular
                                                         ? 'bg-[var(--accent-cyan)] text-zinc-950 hover:bg-[var(--accent-cyan-hover)] shadow-lg shadow-cyan-500/20'
-                                                        : 'bg-white/10 hover:bg-white/20 text-white border border-white/10'
+                                                        : 'bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white/10 dark:hover:bg-white/20 dark:text-white border border-transparent dark:border-white/10'
                                                 }`}
                                             >
                                                 {loadingTier === tier.id ? (
@@ -468,10 +470,10 @@ export default function Pricing() {
                 </div>
 
                 {/* ── FAQ Section ── */}
-                <div className="pt-12 border-t border-white/[0.08]">
+                <div className="pt-12 border-t border-zinc-200 dark:border-white/[0.08]">
                     <div className="text-center mb-10">
-                        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Frequently Asked Questions</h2>
-                        <p className="text-xs text-zinc-400 mt-1">Everything you need to know about billing, models, and quotas.</p>
+                        <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">Frequently Asked Questions</h2>
+                        <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">Everything you need to know about billing, models, and quotas.</p>
                     </div>
 
                     <div className="max-w-3xl mx-auto space-y-3">
@@ -480,23 +482,23 @@ export default function Pricing() {
                             return (
                                 <div
                                     key={index}
-                                    className="rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden transition-colors"
+                                    className="rounded-2xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.06] overflow-hidden transition-colors"
                                 >
                                     <button
                                         type="button"
                                         onClick={() => setOpenFaq(isOpen ? null : index)}
                                         className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 cursor-pointer"
                                     >
-                                        <span className="text-xs sm:text-sm font-semibold text-zinc-200">{faq.q}</span>
+                                        <span className="text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200">{faq.q}</span>
                                         <RiArrowDownSLine
                                             size={18}
-                                            className={`text-zinc-400 transition-transform duration-200 shrink-0 ${
+                                            className={`text-zinc-500 dark:text-zinc-400 transition-transform duration-200 shrink-0 ${
                                                 isOpen ? 'rotate-180 text-[var(--accent-cyan)]' : ''
                                             }`}
                                         />
                                     </button>
                                     {isOpen && (
-                                        <div className="px-4 sm:px-5 pb-5 text-xs text-zinc-400 leading-relaxed border-t border-white/[0.04] pt-3">
+                                        <div className="px-4 sm:px-5 pb-5 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed border-t border-zinc-200/60 dark:border-white/[0.04] pt-3">
                                             {faq.a}
                                         </div>
                                     )}

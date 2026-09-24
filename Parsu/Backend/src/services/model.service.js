@@ -304,8 +304,10 @@ export async function executeModelChatStream({
   messages = [],
   onChunk = () => {}
 }) {
-  // Format message history
-  const systemPrompt = `You are a world-class AI search assistant (like Parsu AI). Provide comprehensive, accurate, well-structured, objective, and beautifully formatted markdown answers. Include clear headings, bullet points, and code blocks when applicable.`;
+  const systemPrompt = `You are a world-class AI search assistant (Parsu AI). Provide comprehensive, accurate, well-structured, objective, and beautifully formatted markdown answers. Include clear headings, bullet points, and code blocks when applicable.
+CRITICAL CITATION & LINK RULES:
+1. When real-time web search findings are provided, cite facts clearly and ALWAYS provide a dedicated '### Sources & Citations' section with clickable markdown links [Source Title](URL) at the end of your response.
+2. Whenever user uploaded files, attachments, or published social media links are provided in context, always prominently provide the direct clickable markdown link [Platform Post / File Name](URL) so the user can immediately click and view it.`;
 
   // 1. Google Gemini Provider
   if (provider === "gemini") {

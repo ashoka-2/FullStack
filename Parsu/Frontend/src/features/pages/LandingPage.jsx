@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { useSelector } from 'react-redux';
+import { useLenis } from 'lenis/react';
 import {
   RiSparkling2Line,
   RiSearchLine,
@@ -40,6 +41,42 @@ const LandingPage = () => {
   });
 
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  const location = useLocation();
+  const lenis = useLenis();
+
+  // Handle smooth scroll when navigating to hash anchors (e.g. /#features, /#workspace, /#privacy)
+  useEffect(() => {
+    if (location.hash) {
+      const targetId = location.hash.replace('#', '');
+      const findTarget = () => {
+        return (
+          document.getElementById(targetId) ||
+          (targetId === 'preview' ? document.getElementById('workspace') : null) ||
+          (targetId === 'workspace' ? document.getElementById('preview') : null) ||
+          (targetId === 'privacy' ? document.getElementById('transparency') : null) ||
+          (targetId === 'transparency' ? document.getElementById('privacy') : null)
+        );
+      };
+
+      const scrollToTarget = () => {
+        const el = findTarget();
+        if (el) {
+          if (lenis) {
+            lenis.scrollTo(el, { offset: -90 });
+          } else {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      };
+
+      const t1 = setTimeout(scrollToTarget, 80);
+      const t2 = setTimeout(scrollToTarget, 300);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [location.hash, location.pathname, lenis]);
 
   useEffect(() => {
     if (theme === 'light') {
@@ -225,13 +262,17 @@ const LandingPage = () => {
           </div>
 
           {/* ── Interactive Live Workspace Terminal Preview ─────────── */}
-          <HeroWorkspacePreview />
+          <div id="preview" className="scroll-mt-24 w-full">
+            <div id="workspace" className="scroll-mt-24 w-full">
+              <HeroWorkspacePreview />
+            </div>
+          </div>
 
         </div>
       </section>
 
       {/* ── App Features & Capabilities Grid ───────────────────────────────── */}
-      <section id="features" className="py-20 sm:py-28 px-4 sm:px-6 max-w-6xl mx-auto border-t border-zinc-200/80 dark:border-white/5 relative z-10">
+      <section id="features" className="scroll-mt-24 py-20 sm:py-28 px-4 sm:px-6 max-w-6xl mx-auto border-t border-zinc-200/80 dark:border-white/5 relative z-10">
         <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-20">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] text-xs font-semibold mb-3">
             <RiCpuLine size={14} />
@@ -276,7 +317,8 @@ const LandingPage = () => {
       </section>
 
       {/* ── User Data Transparency & Privacy Section (Google OAuth Verification) ── */}
-      <section id="transparency" className="py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-cyan-500/[0.02] to-transparent border-t border-zinc-200/80 dark:border-white/5 relative z-10">
+      <section id="transparency" className="scroll-mt-24 py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-cyan-500/[0.02] to-transparent border-t border-zinc-200/80 dark:border-white/5 relative z-10">
+        <div id="privacy" className="scroll-mt-24" />
         <div className="max-w-4xl mx-auto">
           
           <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">

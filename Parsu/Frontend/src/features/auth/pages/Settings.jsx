@@ -17,12 +17,12 @@ import {
     RiVipCrownLine,
     RiBrainLine,
     RiSettings3Line,
-    RiNotificationLine,
     RiShieldLine,
     RiHardDriveLine,
     RiBugLine,
     RiSideBarLine,
     RiLogoutBoxRLine,
+    RiNotificationLine,
 } from '@remixicon/react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router';
@@ -83,7 +83,7 @@ const SETTING_GROUPS = [
                 to: '/settings/general',
                 icon: RiSettings3Line,
                 title: 'General',
-                description: 'App theme, language, haptic feedback and web search (Tavily) settings.',
+                description: 'App theme, haptic feedback and web search (Tavily) settings.',
                 color: '#20b8cd',
                 glow: 'rgba(32,184,205,0.10)',
             },
@@ -91,9 +91,9 @@ const SETTING_GROUPS = [
                 to: '/settings/notifications',
                 icon: RiNotificationLine,
                 title: 'Notifications',
-                description: 'Manage when and how Parsu notifies you about AI responses and updates.',
-                color: '#f87171',
-                glow: 'rgba(248,113,113,0.12)',
+                description: 'Manage push and browser notifications, sounds and alerts.',
+                color: '#f43f5e',
+                glow: 'rgba(244,63,94,0.12)',
             },
             {
                 to: '/settings/safety',

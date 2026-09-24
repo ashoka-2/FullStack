@@ -5,7 +5,7 @@ import { useAuth } from '../hook/useAuth';
 import { clearError } from '../auth.slice';
 import Toast from '../../Components/Toast';
 import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
-import { API_BASE_URL, AUTH_TOKEN_KEY } from '../../../utils/axios.js';
+import { API_BASE_URL, BACKEND_URL, AUTH_TOKEN_KEY } from '../../../utils/axios.js';
 import ParsuLogo from '../../Components/ParsuLogo';
 import '../../Components/blob.css';
 
@@ -97,7 +97,7 @@ const Auth = ({ initialMode }) => {
     // If Google redirected directly to frontend with ?code=, proxy it to backend callback
     if (codeParam && !tokenParam) {
       const searchString = window.location.search;
-      window.location.href = `${API_BASE_URL || ''}/api/auth/google/callback${searchString}`;
+      window.location.href = `${BACKEND_URL}/api/auth/google/callback${searchString}`;
       return;
     }
 

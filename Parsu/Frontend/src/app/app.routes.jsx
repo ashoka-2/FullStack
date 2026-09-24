@@ -115,19 +115,6 @@ export const router = createBrowserRouter([
                 path: "/settings",
                 element: <Protected><Settings /></Protected>
             },
-            {
-                path: "/admin",
-                element: <AdminProtected><AdminLayout /></AdminProtected>,
-                children: [
-                    { index: true, element: <Navigate to="/admin/dashboard" replace /> },
-                    { path: "dashboard", element: <AdminDashboardPage /> },
-                    { path: "users", element: <AdminUsersPage /> },
-                    { path: "pricing", element: <AdminPricingPage /> },
-                    { path: "newsletter", element: <AdminNewsletterPage /> },
-                    { path: "contacts", element: <AdminContactsPage /> },
-                    { path: "api-usage", element: <AdminApiUsagePage /> }
-                ]
-            },
             // Settings Sub-Pages
             {
                 path: "/settings/profile",
@@ -227,6 +214,20 @@ export const router = createBrowserRouter([
                 path: "*",
                 element: <NotFound />
             }
+        ]
+    },
+    {
+        path: "/admin",
+        element: <AdminProtected><AdminLayout /></AdminProtected>,
+        errorElement: <ErrorBoundary />,
+        children: [
+            { index: true, element: <Navigate to="/admin/dashboard" replace /> },
+            { path: "dashboard", element: <AdminDashboardPage /> },
+            { path: "users", element: <AdminUsersPage /> },
+            { path: "pricing", element: <AdminPricingPage /> },
+            { path: "newsletter", element: <AdminNewsletterPage /> },
+            { path: "contacts", element: <AdminContactsPage /> },
+            { path: "api-usage", element: <AdminApiUsagePage /> }
         ]
     }
 ])

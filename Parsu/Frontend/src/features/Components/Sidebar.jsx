@@ -14,7 +14,6 @@ import {
   RiMoonClearLine,
   RiApps2Line,
   RiCloseLine,
-  RiShieldUserLine,
   RiGhostLine,
   RiPushpin2Fill,
   RiPencilLine,
@@ -110,7 +109,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { icon: RiHistoryLine, label: 'Chats', path: '/library', active: location.pathname === '/library', isProtected: true },
     { icon: RiApps2Line, label: 'Social Hub', path: '/social-connections', active: location.pathname === '/social-connections', isProtected: true },
     { icon: RiSettings4Line, label: 'Settings', path: '/settings', active: location.pathname.startsWith('/settings'), isProtected: true },
-    ...(user?.role === 'admin' ? [{ icon: RiShieldUserLine, label: 'Admin Portal', path: '/admin', active: location.pathname.startsWith('/admin'), isProtected: true }] : []),
   ];
 
   const handleNavClick = (e, item) => {

@@ -15,17 +15,15 @@ import {
   RiFullscreenExitLine
 } from '@remixicon/react';
 import { useNavigate } from 'react-router';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useDragControls } from 'motion/react';
 
 /**
  * AddToChatSheet Component
- * - Framer Motion slide-up spring animation when clicked
- * - Drag downwards to dismiss / close the sheet
- * - Mobile full-screen toggle support
- * - Rendered via React Portal directly into document.body to stay on top of all UI layers
- * - Horizontally centered within the active ChatArea (excluding the sidebar)
- * - Fully interactive Web Search & Memory row toggles
- * - 4 Squircle Action Cards: Camera, Photos, Videos, Files
+ * - Spring slide-up animation
+ * - Drag downwards on top handle to dismiss
+ * - Non-interfering clicks on action buttons and toggles
+ * - Web Search & Memory toggles synced with global state
+ * - 4 Quick Media Pickers: Camera, Photos, Videos, Files
  */
 const AddToChatSheet = ({
   isOpen,
@@ -42,6 +40,7 @@ const AddToChatSheet = ({
   const navigate = useNavigate();
   const [isFullScreen, setIsFullScreen] = useState(false);
   const isSidebarCollapsed = useSelector((state) => state.chat?.isSidebarCollapsed);
+  const dragControls = useDragControls();
 
   // Reset full screen on close
   useEffect(() => {
@@ -76,7 +75,7 @@ const AddToChatSheet = ({
             aria-label="Close backdrop"
           />
 
-          {/* Centered Modal Workspace Container (centered within chat area excluding sidebar) */}
+          {/* Centered Modal Workspace Container */}
           <div
             className={`fixed inset-0 ${
               isSidebarCollapsed ? 'lg:left-16' : 'lg:left-56'
@@ -86,6 +85,8 @@ const AddToChatSheet = ({
           {/* Sheet / Modal Container */}
           <motion.div
             drag="y"
+            dragControls={dragControls}
+            dragListener={false}
             dragConstraints={{ top: 0 }}
             dragElastic={{ top: 0.05, bottom: 0.6 }}
             onDragEnd={(_, info) => {
@@ -104,15 +105,18 @@ const AddToChatSheet = ({
             } bg-[#121214] dark:bg-[var(--bg-surface)] border-t sm:border border-zinc-800/80 p-5 sm:p-6 pb-8 z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] sm:shadow-2xl select-none overflow-y-auto custom-scrollbar pointer-events-auto`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Mobile Pull / Drag Handle */}
-            <div className="w-12 h-1.5 rounded-full bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-500 mx-auto mb-3 sm:hidden cursor-grab active:cursor-grabbing transition-colors" />
+            {/* Mobile Drag Handle (Only region that initiates vertical drag) */}
+            <div 
+              onPointerDown={(e) => dragControls.start(e)}
+              className="w-14 h-1.5 rounded-full bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-500 mx-auto mb-3 cursor-grab active:cursor-grabbing transition-colors touch-none" 
+              title="Drag down to close"
+            />
 
             {/* Header: Close Button, Centered Title & Mobile Fullscreen Button */}
             <div className="flex items-center justify-between mb-5 relative">
               <button
                 type="button"
                 onClick={onClose}
-                onPointerDown={(e) => e.stopPropagation()}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
                 aria-label="Close"
               >
@@ -128,7 +132,6 @@ const AddToChatSheet = ({
                 <button
                   type="button"
                   onClick={() => setIsFullScreen((prev) => !prev)}
-                  onPointerDown={(e) => e.stopPropagation()}
                   className="sm:hidden w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
                   title={isFullScreen ? "Exit full screen" : "Make full screen"}
                   aria-label="Toggle full screen"
@@ -144,7 +147,6 @@ const AddToChatSheet = ({
               {/* 1. Camera */}
               <button
                 type="button"
-                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   onClose();
                   onPickCamera?.();
@@ -162,7 +164,6 @@ const AddToChatSheet = ({
               {/* 2. Photos */}
               <button
                 type="button"
-                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   onClose();
                   onPickPhotos?.();
@@ -180,7 +181,6 @@ const AddToChatSheet = ({
               {/* 3. Videos */}
               <button
                 type="button"
-                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   onClose();
                   onPickVideos?.();
@@ -198,7 +198,6 @@ const AddToChatSheet = ({
               {/* 4. Files */}
               <button
                 type="button"
-                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   onClose();
                   onPickFiles?.();
@@ -216,11 +215,10 @@ const AddToChatSheet = ({
 
             {/* Options List */}
             <div className="space-y-2">
-              {/* Row 1: Web search (Entire row is clickable to toggle) */}
+              {/* Row 1: Web search */}
               <div
-                onClick={onToggleWebSearch}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1c1c1e] hover:bg-[#252528] border border-white/5 transition-colors cursor-pointer group"
+                onClick={() => onToggleWebSearch?.()}
+                className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1c1c1e] hover:bg-[#252528] border border-white/5 transition-colors cursor-pointer group select-none active:scale-[0.99]"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="w-10 h-10 rounded-full bg-[#2c2c2e] group-hover:bg-[#38383c] flex items-center justify-center text-zinc-200 shrink-0 transition-colors">
@@ -237,16 +235,10 @@ const AddToChatSheet = ({
                 </div>
 
                 {/* iOS-Style Toggle Switch */}
-                <button
-                  type="button"
+                <div
                   role="switch"
                   aria-checked={webSearch}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleWebSearch?.();
-                  }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  className={`relative inline-flex h-7 w-12 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
                     webSearch ? 'bg-[var(--accent-cyan)]' : 'bg-[#3a3a3c]'
                   }`}
                 >
@@ -255,7 +247,7 @@ const AddToChatSheet = ({
                       webSearch ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
-                </button>
+                </div>
               </div>
 
               {/* Row 2: Connectors (Navigates to /social-connections) */}
@@ -264,8 +256,7 @@ const AddToChatSheet = ({
                   onClose();
                   navigate('/social-connections');
                 }}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1c1c1e] hover:bg-[#242426] border border-white/5 transition-colors cursor-pointer group"
+                className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1c1c1e] hover:bg-[#242426] border border-white/5 transition-colors cursor-pointer group select-none active:scale-[0.99]"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="w-10 h-10 rounded-full bg-[#2c2c2e] group-hover:bg-[#38383c] flex items-center justify-center text-zinc-200 shrink-0 transition-colors">
@@ -283,11 +274,10 @@ const AddToChatSheet = ({
                 <RiArrowRightSLine size={20} className="text-zinc-500 group-hover:text-zinc-300 shrink-0" />
               </div>
 
-              {/* Row 3: Memory (Entire row is clickable to toggle) */}
+              {/* Row 3: Memory */}
               <div
-                onClick={onToggleMemory}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1c1c1e] hover:bg-[#252528] border border-white/5 transition-colors cursor-pointer group"
+                onClick={() => onToggleMemory?.()}
+                className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1c1c1e] hover:bg-[#252528] border border-white/5 transition-colors cursor-pointer group select-none active:scale-[0.99]"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="w-10 h-10 rounded-full bg-[#2c2c2e] group-hover:bg-[#38383c] flex items-center justify-center text-zinc-200 shrink-0 transition-colors">
@@ -304,16 +294,10 @@ const AddToChatSheet = ({
                 </div>
 
                 {/* iOS-Style Toggle Switch */}
-                <button
-                  type="button"
+                <div
                   role="switch"
                   aria-checked={memoryEnabled}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleMemory?.();
-                  }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  className={`relative inline-flex h-7 w-12 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
                     memoryEnabled ? 'bg-[var(--accent-cyan)]' : 'bg-[#3a3a3c]'
                   }`}
                 >
@@ -322,7 +306,7 @@ const AddToChatSheet = ({
                       memoryEnabled ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
-                </button>
+                </div>
               </div>
             </div>
           </motion.div>

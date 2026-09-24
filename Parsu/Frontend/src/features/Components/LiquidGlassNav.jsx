@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
+import { useLenis } from 'lenis/react';
 import {
   RiArrowRightLine,
   RiArrowRightUpLine,
@@ -124,11 +125,48 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
     };
   }, [isMobileOpen]);
 
+  const navigate = useNavigate();
+  const lenis = useLenis();
+
+  const handleNavClick = (e, link) => {
+    if (isMobileOpen) {
+      setIsMobileOpen(false);
+    }
+
+    if (link.isHash) {
+      e.preventDefault();
+      const targetId = link.href.replace('#', '');
+
+      if (location.pathname === '/') {
+        const el =
+          document.getElementById(targetId) ||
+          (targetId === 'preview' ? document.getElementById('workspace') : null) ||
+          (targetId === 'workspace' ? document.getElementById('preview') : null) ||
+          (targetId === 'privacy' ? document.getElementById('transparency') : null) ||
+          (targetId === 'transparency' ? document.getElementById('privacy') : null);
+
+        if (el) {
+          if (lenis) {
+            lenis.scrollTo(el, { offset: -90 });
+          } else {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+          window.history.pushState(null, '', `/#${targetId}`);
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } else {
+        // When on another page (e.g. /pricing, /about, /contact), navigate to landing page with hash
+        navigate(`/#${targetId}`);
+      }
+    }
+  };
+
   const navLinks = [
     { id: '01', label: 'Features', href: '#features', isHash: true, icon: RiCompass3Line },
     { id: '02', label: 'Pricing', href: '/pricing', isHash: false, icon: RiPriceTag3Line },
-    { id: '03', label: 'Workspace', href: '#preview', isHash: true, icon: RiLayoutMasonryLine },
-    { id: '04', label: 'Privacy', href: '#transparency', isHash: true, icon: RiShieldCheckLine },
+    { id: '03', label: 'Workspace', href: '#workspace', isHash: true, icon: RiLayoutMasonryLine },
+    { id: '04', label: 'Privacy', href: '#privacy', isHash: true, icon: RiShieldCheckLine },
     { id: '05', label: 'About', href: '/about', isHash: false, icon: RiInformationLine },
     { id: '06', label: 'Contact', href: '/contact', isHash: false, icon: RiCustomerService2Line },
   ];
@@ -138,7 +176,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
       <header
         className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${
           isScrolled
-            ? 'bg-zinc-950/85 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_10px_35px_rgba(0,0,0,0.5)]'
+            ? 'bg-white/85 dark:bg-zinc-950/85 backdrop-blur-xl border-b border-zinc-200/80 dark:border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.5)]'
             : 'bg-transparent border-b border-transparent'
         }`}
       >
@@ -154,7 +192,9 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
               <ParsuLogo size={18} className="text-white drop-shadow-xs" />
             </div>
             <div className="flex items-center gap-1 sm:gap-1.5">
-              <span className="font-extrabold text-base sm:text-xl tracking-tight text-white group-hover:text-cyan-300 transition-colors drop-shadow-xs">
+              <span className={`font-extrabold text-base sm:text-xl tracking-tight transition-colors drop-shadow-xs ${
+                isScrolled ? 'text-zinc-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300' : 'text-white group-hover:text-cyan-300'
+              }`}>
                 Parsu
               </span>
               <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-black bg-[var(--accent-cyan)] px-1.5 py-0.5 rounded shadow-xs">
@@ -172,8 +212,13 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
               link.isHash ? (
                 <a
                   key={link.label}
-                  href={link.href}
-                  className="px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-all duration-150 drop-shadow-xs"
+                  href={location.pathname === '/' ? link.href : `/${link.href}`}
+                  onClick={(e) => handleNavClick(e, link)}
+                  className={`px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all duration-150 drop-shadow-xs cursor-pointer ${
+                    isScrolled
+                      ? 'text-zinc-700 dark:text-white/90 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10'
+                      : 'text-white/90 hover:text-white hover:bg-white/10'
+                  }`}
                 >
                   {link.label}
                 </a>
@@ -181,7 +226,11 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
                 <Link
                   key={link.label}
                   to={link.href}
-                  className="px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-all duration-150 drop-shadow-xs"
+                  className={`px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all duration-150 drop-shadow-xs ${
+                    isScrolled
+                      ? 'text-zinc-700 dark:text-white/90 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10'
+                      : 'text-white/90 hover:text-white hover:bg-white/10'
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -195,12 +244,16 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             <button
               type="button"
               onClick={toggleTheme}
-              className="hidden md:flex w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full items-center justify-center bg-white/10 hover:bg-white/20 border border-white/15 text-white active:scale-95 transition-all duration-150 cursor-pointer shadow-xs"
+              className={`hidden md:flex w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full items-center justify-center border active:scale-95 transition-all duration-150 cursor-pointer shadow-xs ${
+                isScrolled
+                  ? 'bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 border-zinc-200 dark:border-white/15 text-zinc-800 dark:text-white'
+                  : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
+              }`}
               title="Toggle Light / Dark mode"
               aria-label="Toggle Theme"
             >
               {theme === 'light' ? (
-                <RiMoonLine size={15} className="transition-transform duration-300 rotate-0 hover:-rotate-12 text-white" />
+                <RiMoonLine size={15} className={`transition-transform duration-300 rotate-0 hover:-rotate-12 ${isScrolled ? 'text-zinc-800 dark:text-white' : 'text-white'}`} />
               ) : (
                 <RiSunLine size={15} className="transition-transform duration-300 rotate-0 hover:rotate-45 text-amber-300" />
               )}
@@ -210,7 +263,11 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             {user ? (
               <Link
                 to="/settings"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 border border-white/15 transition-all drop-shadow-xs"
+                className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all drop-shadow-xs ${
+                  isScrolled
+                    ? 'text-zinc-700 dark:text-white/90 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 border-zinc-200 dark:border-white/15'
+                    : 'text-white/90 hover:text-white hover:bg-white/10 border-white/15'
+                }`}
                 title={`Logged in as ${user.name || user.username || 'User'}`}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -219,7 +276,11 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             ) : (
               <Link
                 to="/auth?mode=login"
-                className="hidden sm:inline-flex px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-white/90 hover:text-white hover:bg-white/10 active:scale-95 transition-all duration-150 drop-shadow-xs"
+                className={`hidden sm:inline-flex px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold active:scale-95 transition-all duration-150 drop-shadow-xs ${
+                  isScrolled
+                    ? 'text-zinc-700 dark:text-white/90 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10'
+                    : 'text-white/90 hover:text-white hover:bg-white/10'
+                }`}
               >
                 Sign In
               </Link>
@@ -241,7 +302,11 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             <button
               type="button"
               onClick={() => setIsMobileOpen(true)}
-              className="md:hidden w-8.5 h-8.5 rounded-xl flex items-center justify-center text-white bg-white/10 hover:bg-white/20 border border-white/15 transition-colors cursor-pointer"
+              className={`md:hidden w-8.5 h-8.5 rounded-xl flex items-center justify-center border transition-colors cursor-pointer ${
+                isScrolled
+                  ? 'text-zinc-800 dark:text-white bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 border-zinc-200 dark:border-white/15'
+                  : 'text-white bg-white/10 hover:bg-white/20 border-white/15'
+              }`}
               aria-label="Open Navigation Menu"
             >
               <RiMenuLine size={20} />
@@ -297,10 +362,10 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             return link.isHash ? (
               <a
                 key={link.label}
-                href={link.href}
+                href={location.pathname === '/' ? link.href : `/${link.href}`}
                 ref={(el) => (menuItemsRef.current[idx] = el)}
-                onClick={() => setIsMobileOpen(false)}
-                className="group flex items-center justify-between py-3 px-3 rounded-2xl hover:bg-white/[0.06] transition-all duration-300 border-b border-white/[0.04]"
+                onClick={(e) => handleNavClick(e, link)}
+                className="group flex items-center justify-between py-3 px-3 rounded-2xl hover:bg-white/[0.06] transition-all duration-300 border-b border-white/[0.04] cursor-pointer"
               >
                 <div className="flex items-center gap-4">
                   <span className="text-xs font-mono font-bold text-[var(--accent-cyan)] opacity-70 group-hover:opacity-100">

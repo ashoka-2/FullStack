@@ -16,6 +16,11 @@ export const API_BASE_URL = import.meta.env.DEV
     ? rawEnvUrl.trim().replace(/\/+$/, "")
     : "https://parsuai.onrender.com";
 
+// Direct backend URL for full-page OAuth navigations (Google OAuth, etc.)
+export const BACKEND_URL = (rawEnvUrl && rawEnvUrl.trim())
+  ? rawEnvUrl.trim().replace(/\/+$/, "")
+  : (import.meta.env.DEV ? "http://localhost:3000" : "https://parsuai.onrender.com");
+
 const customAxios = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    RiSettings3Line, RiTranslate2, RiPaletteLine, RiPulseLine,
+    RiSettings3Line, RiPaletteLine, RiPulseLine,
     RiSearchLine, RiLoader4Line, RiCheckLine, RiMoonLine, RiSunLine, RiComputerLine
 } from '@remixicon/react';
 import SettingsPageLayout from './SettingsPageLayout';
@@ -68,25 +68,6 @@ const ThemePicker = ({ value, onChange }) => (
     </div>
 );
 
-// ─── Languages ────────────────────────────────────────────────────────────────
-const LANGUAGES = [
-    { code: 'en', name: 'English' },
-    { code: 'hi', name: 'हिन्दी (Hindi)' },
-    { code: 'es', name: 'Español' },
-    { code: 'fr', name: 'Français' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'pt', name: 'Português' },
-    { code: 'ja', name: '日本語' },
-    { code: 'ko', name: '한국어' },
-    { code: 'zh', name: '中文' },
-    { code: 'ar', name: 'العربية' },
-    { code: 'ru', name: 'Русский' },
-    { code: 'bn', name: 'বাংলা' },
-    { code: 'te', name: 'తెలుగు' },
-    { code: 'mr', name: 'मराठी' },
-    { code: 'ta', name: 'தமிழ்' },
-];
-
 // ─── General Settings Page ───────────────────────────────────────────────────
 const GeneralSettingsPage = () => {
     const dispatch = useDispatch();
@@ -96,7 +77,6 @@ const GeneralSettingsPage = () => {
     const [saving, setSaving] = useState(false);
 
     const [theme, setTheme] = useState('system');
-    const [language, setLanguage] = useState('en');
     const [haptic, setHaptic] = useState(true);
     const [webSearch, setWebSearch] = useState(getWebSearchSetting);
 
@@ -111,7 +91,6 @@ const GeneralSettingsPage = () => {
             .then(data => {
                 const p = data.preferences || {};
                 setTheme(p.theme || 'system');
-                setLanguage(p.language || 'en');
                 setHaptic(p.hapticFeedback !== false);
                 if (p.webSearchEnabled !== undefined) {
                     setWebSearch(p.webSearchEnabled);
@@ -151,7 +130,7 @@ const GeneralSettingsPage = () => {
         setSaving(true);
         try {
             await updateUserSettings({
-                preferences: { theme, language, hapticFeedback: haptic, webSearchEnabled: webSearch }
+                preferences: { theme, hapticFeedback: haptic, webSearchEnabled: webSearch }
             });
             // Persist web search preference and notify all components
             setWebSearchSetting(webSearch);
@@ -168,7 +147,7 @@ const GeneralSettingsPage = () => {
         <SettingsPageLayout
             title="General"
             icon={RiSettings3Line}
-            description="App appearance, language and behaviour preferences"
+            description="App appearance and behaviour preferences"
         >
             {loading ? (
                 <div className="flex items-center justify-center py-24">
@@ -192,37 +171,6 @@ const GeneralSettingsPage = () => {
                                 </div>
                             </div>
                             <ThemePicker value={theme} onChange={setTheme} />
-                        </Surface>
-                    </div>
-
-                    {/* ── Language ──────────────────────────────────────── */}
-                    <div>
-                        <SectionLabel>Language</SectionLabel>
-                        <Surface className="py-4">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                                    style={{ background: 'rgba(32,184,205,0.08)' }}>
-                                    <RiTranslate2 size={16} className="text-[var(--accent-cyan)]" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">App Language</p>
-                                    <p className="text-xs text-zinc-500 mt-0.5">Interface display language</p>
-                                </div>
-                            </div>
-                            <select
-                                value={language}
-                                onChange={e => setLanguage(e.target.value)}
-                                className="w-full px-4 py-2.5 text-sm rounded-xl
-                                    bg-zinc-100 dark:bg-zinc-800/80
-                                    border border-zinc-200 dark:border-white/8
-                                    text-zinc-900 dark:text-zinc-100
-                                    focus:outline-none focus:border-[var(--accent-cyan)]/60
-                                    transition-all cursor-pointer"
-                            >
-                                {LANGUAGES.map(l => (
-                                    <option key={l.code} value={l.code}>{l.name}</option>
-                                ))}
-                            </select>
                         </Surface>
                     </div>
 

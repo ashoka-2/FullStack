@@ -10,7 +10,7 @@ import {
   RiCpuLine,
   RiSunLine,
   RiMoonLine,
-  RiTwitterXLine,
+  RiDiscordLine,
   RiGithubLine,
   RiHeart2Line
 } from "@remixicon/react";
@@ -212,16 +212,16 @@ export default function MaintenanceMode() {
 
         <div className="flex items-center gap-4">
           <a
-            href="https://twitter.com"
+            href="https://discord.com/users/1409565502224863332"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors flex items-center gap-1"
           >
-            <RiTwitterXLine size={14} />
-            <span>Updates</span>
+            <RiDiscordLine size={14} />
+            <span>Discord</span>
           </a>
           <a
-            href="https://github.com"
+            href="https://github.com/ashoka-2"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors flex items-center gap-1"
