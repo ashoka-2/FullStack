@@ -230,7 +230,7 @@ const Library = () => {
                     {/* ─── Search Bar + View Toggle + Upload Button ─────────────────────── */}
                     <div className="flex items-center gap-3 w-full">
                         <div className="relative group flex-1 md:w-64 max-w-sm">
-                            <ParsuLogo className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-[var(--color-clear-hanada)] transition-colors" size={16} />
+                            <ParsuLogo className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-[var(--color-clear-hanada)] transition-colors" size={19} />
                             <input
                                 className="w-full bg-white dark:bg-[var(--bg-primary)] border border-zinc-200/90 dark:border-white/5 rounded-xl pl-10 pr-4 py-2 text-sm font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[var(--color-clear-hanada)]/40 focus:ring-1 focus:ring-[#60A6AF]/20 shadow-2xs transition-all"
                                 placeholder="Search your chats..."

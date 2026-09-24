@@ -433,9 +433,7 @@ const LandingPage = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-8 border-b border-zinc-200/60 dark:border-white/5">
             
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[var(--accent-cyan)] via-[var(--color-clear-hanada)] to-[var(--color-deep-hanada)] flex items-center justify-center text-white shadow-md">
-                <ParsuLogo size={16} className="text-white" />
-              </div>
+              <ParsuLogo size={26} className="text-zinc-900 dark:text-white" />
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-extrabold text-zinc-900 dark:text-white">PARSU</span>
                 <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[var(--accent-cyan)] px-1.5 py-0.5 rounded">AI</span>

@@ -122,11 +122,7 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 via-teal-500 to-sky-400 p-[1.5px] shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
-                <div className="w-full h-full bg-[#12141a] rounded-[10px] flex items-center justify-center text-cyan-400">
-                  <ParsuLogo size={18} />
-                </div>
-              </div>
+              <ParsuLogo size={28} className="text-cyan-400 group-hover:scale-105 transition-transform" />
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-extrabold text-base tracking-tight text-white">Parsu AI</span>

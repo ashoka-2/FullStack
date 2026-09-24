@@ -80,9 +80,7 @@ export default function MaintenanceMode() {
       {/* Navigation Header */}
       <header className="relative z-10 w-full max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-black flex items-center justify-center shadow-md">
-            <ParsuLogo size={20} />
-          </div>
+          <ParsuLogo size={28} className="text-zinc-900 dark:text-white" />
           <span className="font-bold text-lg tracking-tight">Parsu AI</span>
         </div>
 

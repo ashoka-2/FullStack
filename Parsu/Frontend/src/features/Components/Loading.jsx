@@ -148,12 +148,8 @@ const Loading = ({ onFinished, authReady = true }) => {
         className="relative z-10 w-[90vw] max-w-[380px] px-8 py-9 rounded-2xl bg-[#0B0B0B]/80 border border-white/[0.08] backdrop-blur-2xl shadow-[0_24px_60px_rgba(0,0,0,0.9)] flex flex-col items-center text-center"
       >
         {/* Animated Glowing Logo Mark */}
-        <div ref={logoWrapperRef} className="relative mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-[#111111] border border-white/[0.12] flex items-center justify-center text-[var(--accent-cyan)] shadow-[0_0_25px_rgba(32,184,205,0.25)]">
-            <ParsuLogo size={26} className="text-[var(--accent-cyan)]" />
-          </div>
-          {/* Subtle outer breathing ring */}
-          <div className="absolute -inset-1 rounded-2xl border border-[var(--accent-cyan)]/25 animate-pulse -z-10" />
+        <div ref={logoWrapperRef} className="relative mb-6 flex items-center justify-center">
+          <ParsuLogo size={52} className="text-[var(--accent-cyan)] drop-shadow-[0_0_25px_rgba(32,184,205,0.5)] animate-pulse" />
         </div>
 
         {/* Brand Name */}

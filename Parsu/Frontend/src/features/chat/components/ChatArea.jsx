@@ -458,8 +458,8 @@ const ChatArea = () => {
       <div className="w-full max-w-fluid flex flex-col items-center relative z-10 px-4 md:px-0 pt-6 sm:pt-10 md:pt-12">
         
         {/* Brand header */}
-        <div className="flex items-center gap-2 mb-4 opacity-90 hover:opacity-100 transition-opacity">
-          <ParsuLogo className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--accent-cyan)] shrink-0" />
+        <div className="flex items-center gap-2.5 mb-4 opacity-90 hover:opacity-100 transition-opacity">
+          <ParsuLogo className="w-8 h-8 sm:w-9 sm:h-9 text-[var(--accent-cyan)] shrink-0" />
           <span className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
             Parsu <span className="text-[var(--accent-cyan)]">AI</span>
           </span>

@@ -690,9 +690,7 @@ const Auth = ({ initialMode }) => {
         </button>
 
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06] shadow-xs">
-          <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-xs">
-            <ParsuLogo size={13} className="text-white" />
-          </div>
+          <ParsuLogo size={20} className="text-white" />
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-bold tracking-tight text-white">PARSU</span>
             <span className="text-[9px] font-black uppercase tracking-wider text-black bg-[var(--accent-cyan)] px-1 rounded-xs">AI</span>

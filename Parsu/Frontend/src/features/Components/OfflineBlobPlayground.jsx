@@ -175,9 +175,7 @@ export default function OfflineBlobPlayground({
             {/* Top Bar: Brand & Diagnostics */}
             <div className="w-full max-w-3xl flex items-center justify-between gap-2 z-10 shrink-0">
                 <div className="flex items-center gap-2 sm:gap-2.5">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
-                        <ParsuLogo size={16} className="text-white" />
-                    </div>
+                    <ParsuLogo size={26} className="text-zinc-900 dark:text-white" />
                     <span className="text-xs sm:text-sm font-bold tracking-tight">Parsu AI</span>
                 </div>
 

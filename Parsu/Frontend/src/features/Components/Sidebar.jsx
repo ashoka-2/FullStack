@@ -227,7 +227,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             onClick={closeMobileSidebar}
             className={`flex items-center gap-2 group cursor-pointer overflow-hidden ${isSidebarCollapsed ? 'lg:hidden' : 'flex'}`}
           >
-            <ParsuLogo className="w-6 h-6 text-[var(--accent-cyan)] group-hover:scale-105 transition-transform shrink-0" />
+            <ParsuLogo className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--accent-cyan)] group-hover:scale-105 transition-transform shrink-0" />
             <div className="flex items-center gap-1.5 whitespace-nowrap">
               <span className="font-extrabold text-[16px] sm:text-[17px] tracking-tight text-white">
                 PARSU

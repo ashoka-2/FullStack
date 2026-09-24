@@ -161,7 +161,7 @@ const ThreadCard = ({ thread, viewMode, onDelete, onRename, onPinToggle }) => {
         >
             <div className="flex items-center gap-4 min-w-0 flex-1">
                 <div className="w-10 h-10 rounded-xl bg-[#1A1A1A] border border-white/[0.08] flex items-center justify-center text-zinc-400 group-hover:text-[var(--accent-cyan)] transition-colors shrink-0 relative">
-                    <ParsuLogo size={18} />
+                    <ParsuLogo size={22} />
                     {isPinned && (
                         <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[var(--accent-cyan)] rounded-full flex items-center justify-center shadow-xs">
                             <RiPushpin2Fill size={8} className="text-black" />

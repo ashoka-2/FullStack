@@ -67,9 +67,7 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="col-span-2 sm:col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#171717] border border-zinc-200 dark:border-white/[0.08] flex items-center justify-center text-[var(--accent-cyan)] shadow-sm">
-                <ParsuLogo size={19} className="text-[var(--accent-cyan)]" />
-              </div>
+              <ParsuLogo size={28} className="text-[var(--accent-cyan)]" />
               <div className="flex items-center gap-1.5">
                 <span className="text-base font-bold text-zinc-900 dark:text-white tracking-tight">PARSU</span>
                 <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[var(--accent-cyan)] px-1.5 py-0.5 rounded shadow-xs">AI</span>

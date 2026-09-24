@@ -112,9 +112,7 @@ export default function HeroWorkspacePreview({ className = "" }) {
 
           {/* AI Output Answer Block */}
           <div className="flex items-start gap-2.5 text-zinc-700 dark:text-zinc-300 font-sans">
-            <div className="w-6 h-6 rounded-lg bg-[var(--accent-cyan)] flex items-center justify-center text-black shrink-0 mt-0.5 shadow-sm shadow-[var(--accent-cyan)]/30">
-              <ParsuLogo size={13} className="text-black" />
-            </div>
+            <ParsuLogo size={22} className="text-[var(--accent-cyan)] shrink-0 mt-0.5" />
             <div className="bg-white/90 dark:bg-zinc-900/60 border border-[var(--accent-cyan)]/25 rounded-xl p-3 sm:p-4 w-full shadow-xs space-y-2">
               <div className="flex flex-wrap items-center justify-between text-[10px] text-zinc-400 border-b border-zinc-200 dark:border-white/5 pb-1.5 gap-1">
                 <span className="font-bold text-[var(--accent-cyan)] flex items-center gap-1">

@@ -188,9 +188,12 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer shrink-0 select-none"
             aria-label="Parsu AI Home"
           >
-            <div className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-gradient-to-br from-[var(--accent-cyan)] via-[var(--color-clear-hanada)] to-[var(--color-deep-hanada)] flex items-center justify-center shadow-lg shadow-cyan-500/25 group-hover:scale-105 group-hover:shadow-cyan-500/40 transition-all duration-200">
-              <ParsuLogo size={18} className="text-white drop-shadow-xs" />
-            </div>
+            <ParsuLogo
+              size={30}
+              className={`transition-all duration-200 group-hover:scale-105 ${
+                isScrolled ? 'text-zinc-900 dark:text-white' : 'text-white'
+              }`}
+            />
             <div className="flex items-center gap-1 sm:gap-1.5">
               <span className={`font-extrabold text-base sm:text-xl tracking-tight transition-colors drop-shadow-xs ${
                 isScrolled ? 'text-zinc-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300' : 'text-white group-hover:text-cyan-300'
@@ -330,11 +333,9 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
           <Link
             to="/"
             onClick={() => setIsMobileOpen(false)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 group cursor-pointer"
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--accent-cyan)] to-[var(--color-deep-hanada)] flex items-center justify-center shadow-md shadow-cyan-500/30">
-              <ParsuLogo size={18} className="text-white" />
-            </div>
+            <ParsuLogo size={28} className="text-white group-hover:scale-105 transition-transform" />
             <div className="flex items-center gap-1">
               <span className="font-extrabold text-lg tracking-tight text-white">Parsu</span>
               <span className="text-[9px] font-black uppercase text-black bg-[var(--accent-cyan)] px-1.5 py-0.5 rounded">AI</span>

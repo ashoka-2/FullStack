@@ -111,9 +111,7 @@ export default function About() {
         {/* ── Architectural Philosophy ── */}
         <div className="p-7 sm:p-10 rounded-3xl bg-gradient-to-br from-zinc-100 to-zinc-50 dark:from-white/[0.04] dark:to-white/[0.01] border border-zinc-200 dark:border-white/[0.08] relative overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-2xl bg-[var(--accent-cyan)]/15 border border-[var(--accent-cyan)]/30 flex items-center justify-center text-[var(--accent-cyan)]">
-              <ParsuLogo size={20} />
-            </div>
+            <ParsuLogo size={32} className="text-[var(--accent-cyan)]" />
             <div>
               <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white tracking-tight">Our Mission & Principles</h2>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">Built for researchers, creators, and engineers</p>

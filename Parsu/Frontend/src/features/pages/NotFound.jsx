@@ -33,9 +33,7 @@ export default function NotFound() {
             {/* Top Minimal Brand Bar */}
             <header className="w-full max-w-6xl mx-auto px-6 h-16 flex items-center justify-between z-10">
                 <Link to="/" className="flex items-center gap-2.5 group cursor-pointer">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
-                        <ParsuLogo size={18} className="text-white" />
-                    </div>
+                    <ParsuLogo size={28} className="text-zinc-900 dark:text-white group-hover:scale-105 transition-transform" />
                     <div className="flex items-baseline gap-1.5">
                         <span className="font-extrabold text-lg tracking-tight text-zinc-900 dark:text-white">PARSU</span>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-cyan)] bg-[var(--accent-cyan)]/10 px-1.5 py-0.5 rounded-md">AI</span>
