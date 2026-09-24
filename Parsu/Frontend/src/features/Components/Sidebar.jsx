@@ -8,9 +8,7 @@ import {
   RiHistoryLine,
   RiCompass3Line,
   RiGlobalLine,
-  RiNotification3Line,
   RiSettings4Line,
-  RiLogoutBoxRLine,
   RiDeleteBinLine,
   RiSunLine,
   RiMoonClearLine,
@@ -524,11 +522,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
           {/* User Profile or Guest Login CTA */}
           {user ? (
-            <div className={`flex items-center ${isSidebarCollapsed ? 'justify-between px-2 lg:px-0 lg:justify-center' : 'justify-between px-2'} pb-1`}>
+            <div className={`flex items-center ${isSidebarCollapsed ? 'px-1 lg:p-0 lg:justify-center' : 'px-2'} pb-1`}>
               <Link 
                 to="/settings"
                 title={`Profile & Settings (${user?.username || 'User'})`}
-                className="flex items-center gap-2 group max-w-[140px] cursor-pointer"
+                className="flex items-center gap-2 group w-full cursor-pointer hover:bg-white/[0.04] p-1.5 rounded-xl transition-colors"
               >
                 {user?.profilePic ? (
                   <img 
@@ -541,20 +539,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     {user?.username?.[0]?.toUpperCase() || 'A'}
                   </div>
                 )}
-                <span className={`text-xs font-bold text-zinc-200 truncate group-hover:text-[var(--accent-cyan)] transition-colors ${isSidebarCollapsed ? 'block lg:hidden' : 'block'}`}>
-                  {user?.username || 'User'}
-                </span>
+                <div className={`min-w-0 flex-1 ${isSidebarCollapsed ? 'block lg:hidden' : 'block'}`}>
+                  <p className="text-xs font-bold text-zinc-200 truncate group-hover:text-[var(--accent-cyan)] transition-colors">
+                    {user?.username || 'User'}
+                  </p>
+                  <p className="text-[10px] text-zinc-500 truncate">Settings & Profile</p>
+                </div>
               </Link>
-              <div className={`items-center gap-2 ${isSidebarCollapsed ? 'flex lg:hidden' : 'flex'}`}>
-                <RiNotification3Line size={16} className="text-zinc-500 hover:text-zinc-300 cursor-pointer" />
-                <button
-                  onClick={handleLogout}
-                  className="text-zinc-500 hover:text-red-400 transition-colors cursor-pointer p-1"
-                  title="Logout"
-                >
-                  <RiLogoutBoxRLine size={16} />
-                </button>
-              </div>
             </div>
           ) : (
             <div className={`${isSidebarCollapsed ? 'px-1 lg:p-0 lg:flex lg:justify-center' : 'px-1'} pb-1`}>

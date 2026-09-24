@@ -103,23 +103,40 @@ export async function sendMessage(req, res) {
         }
 
         // Web Search evaluation (Tavily live search vs pure AI model knowledge)
-        const isWebSearch = req.body.webSearch === 'true' || req.body.webSearch === true;
+        const explicitWebSearch = req.body.webSearch === 'true' || req.body.webSearch === true;
+        const promptRaw = (message || userMessage.content || "").toLowerCase();
+        const autoTriggerKeywords = ["latest", "recent", "news", "today", "current", "latest info", "update", "right now", "live score"];
+        const autoTriggerWebSearch = autoTriggerKeywords.some(kw => promptRaw.includes(kw));
+        const shouldExecuteWebSearch = explicitWebSearch || autoTriggerWebSearch;
+
         let webSearchContext = "";
 
-        if (isWebSearch && (message || userMessage.content)) {
+        if (shouldExecuteWebSearch && (message || userMessage.content)) {
             try {
                 const { tavily } = await import("@tavily/core");
                 const tvly = new tavily(process.env.TAVILY_API_KEY);
                 const query = message || userMessage.content;
-                const searchResults = await tvly.search(query, { searchDepth: "basic", maxResults: 4 });
+                const searchResults = await tvly.search(query, { searchDepth: "basic", maxResults: 5 });
                 if (searchResults?.results?.length > 0) {
                     webSearchContext = `\n\n--- REAL-TIME INTERNET SEARCH RESULTS (via Tavily) ---\n` +
-                        searchResults.results.map(r => `• Title: ${r.title}\n  Source: ${r.url}\n  Snippet: ${r.content}`).join("\n\n") +
-                        `\n------------------------------------------------------\nUse these fresh internet facts to provide an accurate, up-to-date answer.`;
+                        searchResults.results.map((r, i) => `[${i + 1}] Title: ${r.title}\n    URL: ${r.url}\n    Content: ${r.content}`).join("\n\n") +
+                        `\n------------------------------------------------------\n` +
+                        `INSTRUCTIONS FOR CITATIONS & ACCURACY:\n` +
+                        `1. Use these live internet findings to deliver a comprehensive, up-to-date response.\n` +
+                        `2. You MUST cite your sources! At the end of your answer, provide a dedicated '### Sources & Citations' section listing the clickable markdown links: [Title](URL) for every article or website you gathered facts from.\n`;
                 }
             } catch (tavilyErr) {
                 console.warn("⚠️ Tavily web search error in chat.controller:", tavilyErr.message);
             }
+        }
+
+        // Uploaded media & social media link context
+        let uploadedMediaContext = "";
+        if (uploadedFiles && uploadedFiles.length > 0) {
+            uploadedMediaContext = `\n\n--- UPLOADED ATTACHMENTS & SOCIAL MEDIA LINKS ---\n` +
+                uploadedFiles.map(f => `• ${f.fileType ? f.fileType.toUpperCase() : 'FILE'}: "${f.name || 'Attachment'}" -> Direct Link: ${f.url}`).join("\n") +
+                `\n-------------------------------------------------\n` +
+                `When referencing or confirming the user's uploaded files or social media content, always provide the clickable markdown link [filename](URL) so the user can easily view or download it.\n`;
         }
 
         // ── User Feedback Adaptation ──────────────────────────────────────────
@@ -202,8 +219,9 @@ export async function sendMessage(req, res) {
 
         const userContextWithSearch = {
             ...(fullUser?.toObject ? fullUser.toObject() : fullUser),
-            webSearch: isWebSearch,
+            webSearch: shouldExecuteWebSearch,
             webSearchContext,
+            uploadedMediaContext,
             feedbackInstruction,
             memoryContext
         };
@@ -220,9 +238,10 @@ export async function sendMessage(req, res) {
             }
 
             try {
-                // Prepare message payload: inject real-time Tavily search context and feedback instruction into latest user message
+                // Prepare message payload: inject real-time Tavily search context, media links, and feedback instruction into latest user message
                 const chatHistoryForModel = messages.map(m => ({ role: m.role, content: m.content }));
                 const extraContext = (webSearchContext ? webSearchContext : "") + 
+                    (uploadedMediaContext ? uploadedMediaContext : "") +
                     (feedbackInstruction ? feedbackInstruction : "") + 
                     (memoryContext ? memoryContext : "");
                 if (extraContext && chatHistoryForModel.length > 0) {

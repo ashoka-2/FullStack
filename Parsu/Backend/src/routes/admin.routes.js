@@ -5,6 +5,8 @@ import {
     getAdminUsers,
     updateUserRole,
     updateUserSubscription,
+    deleteUser,
+    toggleUserBlock,
     claimInitialAdmin,
     getAdminContacts,
     updateContactStatus,
@@ -26,6 +28,8 @@ adminRouter.get("/overview", getAdminOverview);
 adminRouter.get("/users", getAdminUsers);
 adminRouter.patch("/users/:id/role", updateUserRole);
 adminRouter.patch("/users/:id/subscription", updateUserSubscription);
+adminRouter.patch("/users/:id/block", toggleUserBlock);
+adminRouter.delete("/users/:id", deleteUser);
 
 // Contact messages inbox
 adminRouter.get("/contacts", getAdminContacts);

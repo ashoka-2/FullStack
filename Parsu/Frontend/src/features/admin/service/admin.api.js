@@ -40,6 +40,22 @@ export async function updateUserSubscription(userId, { plan, status, billingCycl
 }
 
 /**
+ * Delete a user and their chats
+ */
+export async function deleteAdminUser(userId) {
+    const res = await customAxios.delete(`/api/admin/users/${userId}`);
+    return res.data;
+}
+
+/**
+ * Block or unblock a user
+ */
+export async function toggleAdminUserBlock(userId) {
+    const res = await customAxios.patch(`/api/admin/users/${userId}/block`);
+    return res.data;
+}
+
+/**
  * Bootstrap or claim initial admin status
  */
 export async function claimInitialAdmin(adminSecret = "") {

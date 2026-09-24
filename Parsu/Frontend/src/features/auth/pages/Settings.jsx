@@ -22,8 +22,12 @@ import {
     RiHardDriveLine,
     RiBugLine,
     RiSideBarLine,
+    RiLogoutBoxRLine,
 } from '@remixicon/react';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router';
+import { useAuth } from '../hook/useAuth';
+import ConfirmationModal from '../../Components/ConfirmationModal';
 import { toggleSidebarCollapse } from '../../chat/chat.slice';
 
 const SETTING_GROUPS = [
@@ -157,7 +161,10 @@ const Settings = () => {
     const { user } = useSelector(state => state.auth);
     const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { handleLogout } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     return (
         <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30">
@@ -250,10 +257,46 @@ const Settings = () => {
                             </div>
                         ))}
 
+                        {/* Account Actions / Logout Section */}
+                        {user && (
+                            <div className="pt-2 pb-6">
+                                <div className="p-4 sm:p-5 rounded-2xl bg-[#111111] border border-red-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div>
+                                        <p className="font-semibold text-sm text-white flex items-center gap-2">
+                                            <RiLogoutBoxRLine size={17} className="text-red-400" />
+                                            <span>Sign Out of Parsu AI</span>
+                                        </p>
+                                        <p className="text-xs text-zinc-400 mt-0.5">
+                                            End your current session on this browser. You can sign back in at any time.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowLogoutModal(true)}
+                                        className="px-4 py-2 rounded-xl text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all cursor-pointer self-start sm:self-auto shrink-0 active:scale-[0.98]"
+                                    >
+                                        Log Out
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
                     <Footer />
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={async () => {
+                    setShowLogoutModal(false);
+                    await handleLogout();
+                    navigate('/auth');
+                }}
+                title="Log Out of Parsu AI?"
+                message="Are you sure you want to end your session? You will be returned to the sign-in screen."
+            />
 
             {isSidebarOpen && (
                 <div

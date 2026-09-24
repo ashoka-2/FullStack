@@ -322,6 +322,14 @@ export async function loginUser(req, res) {
     });
   }
 
+  if (user.isBlocked) {
+    return res.status(403).json({
+      success: false,
+      message: "Your account has been suspended by an administrator. Please contact support.",
+      err: "account_blocked",
+    });
+  }
+
   if (!user.verified) {
     return res.status(400).json({
       message: "Please verify your email to login",

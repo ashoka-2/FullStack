@@ -149,7 +149,7 @@ export async function getAdminUsers(req, res) {
 
         const [users, total] = await Promise.all([
             userModel.find(query)
-                .select("username email role verified authProvider profilePic createdAt subscription")
+                .select("username email role verified isBlocked authProvider profilePic createdAt subscription")
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit),
@@ -310,6 +310,83 @@ export async function updateUserSubscription(req, res) {
         return res.status(500).json({
             success: false,
             message: "Failed to update subscription",
+            error: err.message
+        });
+    }
+}
+
+/**
+ * DELETE /api/admin/users/:id
+ * Delete a user and associated chat history
+ */
+export async function deleteUser(req, res) {
+    try {
+        const { id } = req.params;
+        if (req.user.id === id) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot delete your own admin account."
+            });
+        }
+
+        const targetUser = await userModel.findByIdAndDelete(id);
+        if (!targetUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // Delete user's chats and messages
+        await chatModel.deleteMany({ user: id });
+
+        return res.status(200).json({
+            success: true,
+            message: `User ${targetUser.username} and their chat records were successfully deleted.`
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Failed to delete user",
+            error: err.message
+        });
+    }
+}
+
+/**
+ * PATCH /api/admin/users/:id/block
+ * Toggle block status for a user
+ */
+export async function toggleUserBlock(req, res) {
+    try {
+        const { id } = req.params;
+        if (req.user.id === id) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot block your own admin account."
+            });
+        }
+
+        const targetUser = await userModel.findById(id);
+        if (!targetUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        targetUser.isBlocked = !targetUser.isBlocked;
+        await targetUser.save();
+
+        return res.status(200).json({
+            success: true,
+            message: `User ${targetUser.username} is now ${targetUser.isBlocked ? 'BLOCKED' : 'ACTIVE'}.`,
+            isBlocked: targetUser.isBlocked
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Failed to toggle user block status",
             error: err.message
         });
     }

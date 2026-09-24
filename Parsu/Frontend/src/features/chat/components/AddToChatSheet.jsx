@@ -21,10 +21,10 @@ import { motion, AnimatePresence } from 'motion/react';
  * AddToChatSheet Component
  * - Framer Motion slide-up spring animation when clicked
  * - Drag downwards to dismiss / close the sheet
- * - Mobile full-screen toggle support (desktop remains clean centered modal)
+ * - Mobile full-screen toggle support
  * - Rendered via React Portal directly into document.body to stay on top of all UI layers
- * - Horizontally centered within the active ChatArea (excluding the sidebar) with smooth cubic-bezier transitions
- * - Web Search & Memory toggles
+ * - Horizontally centered within the active ChatArea (excluding the sidebar)
+ * - Fully interactive Web Search & Memory row toggles
  * - 4 Squircle Action Cards: Camera, Photos, Videos, Files
  */
 const AddToChatSheet = ({
@@ -83,13 +83,12 @@ const AddToChatSheet = ({
             } flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}
           >
 
-          {/* Sheet / Modal Container with smooth spring slide-up and drag-to-dismiss */}
+          {/* Sheet / Modal Container */}
           <motion.div
             drag="y"
             dragConstraints={{ top: 0 }}
             dragElastic={{ top: 0.05, bottom: 0.6 }}
             onDragEnd={(_, info) => {
-              // If dragged down by 90px or dragged downwards with velocity
               if (info.offset.y > 90 || info.velocity.y > 450) {
                 onClose();
               }
@@ -102,7 +101,7 @@ const AddToChatSheet = ({
               isFullScreen
                 ? 'h-[100dvh] rounded-none pt-4'
                 : 'sm:max-w-md max-h-[92vh] rounded-t-[32px] sm:rounded-[32px]'
-            } bg-[#121214] dark:bg-[var(--bg-surface)] border-t sm:border border-zinc-800/80 p-5 sm:p-6 pb-8 z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] sm:shadow-2xl select-none overflow-y-auto custom-scrollbar`}
+            } bg-[#121214] dark:bg-[var(--bg-surface)] border-t sm:border border-zinc-800/80 p-5 sm:p-6 pb-8 z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] sm:shadow-2xl select-none overflow-y-auto custom-scrollbar pointer-events-auto`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Mobile Pull / Drag Handle */}
@@ -113,13 +112,14 @@ const AddToChatSheet = ({
               <button
                 type="button"
                 onClick={onClose}
+                onPointerDown={(e) => e.stopPropagation()}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
                 aria-label="Close"
               >
                 <RiCloseLine size={22} />
               </button>
 
-              <h2 className="text-[17px] font-semibold text-zinc-100 tracking-tight absolute left-1/2 -translate-x-1/2">
+              <h2 className="text-[17px] font-semibold text-zinc-100 tracking-tight absolute left-1/2 -translate-x-1/2 pointer-events-none">
                 Add to chat
               </h2>
 
@@ -128,6 +128,7 @@ const AddToChatSheet = ({
                 <button
                   type="button"
                   onClick={() => setIsFullScreen((prev) => !prev)}
+                  onPointerDown={(e) => e.stopPropagation()}
                   className="sm:hidden w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
                   title={isFullScreen ? "Exit full screen" : "Make full screen"}
                   aria-label="Toggle full screen"
@@ -143,6 +144,7 @@ const AddToChatSheet = ({
               {/* 1. Camera */}
               <button
                 type="button"
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   onClose();
                   onPickCamera?.();
@@ -160,6 +162,7 @@ const AddToChatSheet = ({
               {/* 2. Photos */}
               <button
                 type="button"
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   onClose();
                   onPickPhotos?.();
@@ -177,6 +180,7 @@ const AddToChatSheet = ({
               {/* 3. Videos */}
               <button
                 type="button"
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   onClose();
                   onPickVideos?.();
@@ -194,6 +198,7 @@ const AddToChatSheet = ({
               {/* 4. Files */}
               <button
                 type="button"
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   onClose();
                   onPickFiles?.();
@@ -211,14 +216,18 @@ const AddToChatSheet = ({
 
             {/* Options List */}
             <div className="space-y-2">
-              {/* Row 1: Web search (Toggle) */}
-              <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1c1c1e] border border-white/5 transition-colors">
+              {/* Row 1: Web search (Entire row is clickable to toggle) */}
+              <div
+                onClick={onToggleWebSearch}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1c1c1e] hover:bg-[#252528] border border-white/5 transition-colors cursor-pointer group"
+              >
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-[#2c2c2e] flex items-center justify-center text-zinc-200 shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-[#2c2c2e] group-hover:bg-[#38383c] flex items-center justify-center text-zinc-200 shrink-0 transition-colors">
                     <RiGlobalLine size={19} />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[14px] font-semibold text-zinc-200">
+                    <span className="text-[14px] font-semibold text-zinc-200 group-hover:text-white transition-colors">
                       Web search
                     </span>
                     <span className="text-xs text-zinc-500">
@@ -232,9 +241,13 @@ const AddToChatSheet = ({
                   type="button"
                   role="switch"
                   aria-checked={webSearch}
-                  onClick={onToggleWebSearch}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleWebSearch?.();
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    webSearch ? 'bg-[#2970ff]' : 'bg-[#3a3a3c]'
+                    webSearch ? 'bg-[var(--accent-cyan)]' : 'bg-[#3a3a3c]'
                   }`}
                 >
                   <span
@@ -251,14 +264,15 @@ const AddToChatSheet = ({
                   onClose();
                   navigate('/social-connections');
                 }}
+                onPointerDown={(e) => e.stopPropagation()}
                 className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1c1c1e] hover:bg-[#242426] border border-white/5 transition-colors cursor-pointer group"
               >
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-[#2c2c2e] flex items-center justify-center text-zinc-200 shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-[#2c2c2e] group-hover:bg-[#38383c] flex items-center justify-center text-zinc-200 shrink-0 transition-colors">
                     <RiNodeTree size={19} />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[14px] font-semibold text-zinc-200 group-hover:text-white">
+                    <span className="text-[14px] font-semibold text-zinc-200 group-hover:text-white transition-colors">
                       Connectors
                     </span>
                     <span className="text-xs text-zinc-500">
@@ -269,14 +283,18 @@ const AddToChatSheet = ({
                 <RiArrowRightSLine size={20} className="text-zinc-500 group-hover:text-zinc-300 shrink-0" />
               </div>
 
-              {/* Row 3: Memory (Cross-chat context recall toggle) */}
-              <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1c1c1e] border border-white/5 transition-colors">
+              {/* Row 3: Memory (Entire row is clickable to toggle) */}
+              <div
+                onClick={onToggleMemory}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1c1c1e] hover:bg-[#252528] border border-white/5 transition-colors cursor-pointer group"
+              >
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-[#2c2c2e] flex items-center justify-center text-zinc-200 shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-[#2c2c2e] group-hover:bg-[#38383c] flex items-center justify-center text-zinc-200 shrink-0 transition-colors">
                     <RiHistoryLine size={19} />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[14px] font-semibold text-zinc-200">
+                    <span className="text-[14px] font-semibold text-zinc-200 group-hover:text-white transition-colors">
                       Memory
                     </span>
                     <span className="text-xs text-zinc-500">
@@ -290,9 +308,13 @@ const AddToChatSheet = ({
                   type="button"
                   role="switch"
                   aria-checked={memoryEnabled}
-                  onClick={onToggleMemory}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleMemory?.();
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    memoryEnabled ? 'bg-[#2970ff]' : 'bg-[#3a3a3c]'
+                    memoryEnabled ? 'bg-[var(--accent-cyan)]' : 'bg-[#3a3a3c]'
                   }`}
                 >
                   <span

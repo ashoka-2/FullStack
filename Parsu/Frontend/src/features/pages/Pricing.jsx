@@ -6,252 +6,135 @@ import {
     RiCheckLine,
     RiSparkling2Line,
     RiFlashlightLine,
-    RiArrowRightLine,
     RiShieldCheckLine,
     RiQuestionLine,
     RiArrowDownSLine,
     RiLoader4Line,
     RiGlobalLine,
-    RiFileCopyLine,
-    RiDiscordLine,
-    RiCodeSSlashLine,
-    RiSmartphoneLine
+    RiLockLine,
+    RiCpuLine,
+    RiCompass3Line,
+    RiDatabase2Line,
+    RiArrowRightLine
 } from '@remixicon/react';
 import InfoPageLayout from './InfoPageLayout';
-import { createRazorpayOrder, verifyPaymentSignature, getPublicPlans } from '../auth/service/subscription.api';
+import { createRazorpayOrder, verifyPaymentSignature } from '../auth/service/subscription.api';
 import { setUser } from '../auth/auth.slice';
 import { addToast } from '../../utils/toast.slice';
 
-const TIERS_CONFIG = {
-    INR: [
-        {
-            id: 'free',
-            name: 'Starter',
-            badge: null,
-            desc: 'Instant access to multi-model AI search, research, and chat',
-            price: 0,
-            period: 'Free forever',
-            icon: RiFlashlightLine,
-            theme: 'cyan',
-            glowGradient: 'from-cyan-900/40 via-teal-950/30 to-[#0e1015]',
-            iconBg: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30',
-            buttonText: 'Start for free',
-            buttonStyle: 'bg-zinc-800/90 hover:bg-zinc-700 text-white border border-white/10',
-            features: [
-                'Unlimited Gemini 3.6 Flash queries',
-                'Claude 3.5 Sonnet & GPT-4o access',
-                'Real-time live web search grounding',
-                'Standard document upload & RAG',
-                'Social command center previews',
-                'Community Discord support'
-            ]
-        },
-        {
-            id: 'starter',
-            name: 'Web Hero',
-            badge: null,
-            desc: 'Get access to React library components and features',
-            price: 1499,
-            period: 'Perpetual license',
-            icon: RiSmartphoneLine,
-            theme: 'purple',
-            glowGradient: 'from-sky-900/60 via-cyan-950/40 to-[#0e1015]',
-            iconBg: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30',
-            buttonText: 'Get Web Hero',
-            buttonStyle: 'bg-zinc-800/90 hover:bg-zinc-700 text-white border border-white/10',
-            features: [
-                'Pro React components',
-                'Premium templates',
-                'Pro AI (Skills and MCPs)',
-                '500 AI credits included',
-                'Premium design systems',
-                'Pro design systems',
-                'Private Discord channel',
-                'Prioritized issues',
-                'Priority support'
-            ]
-        },
-        {
-            id: 'enterprise',
-            name: 'Super Hero',
-            badge: 'Save ₹1,000 with bundle',
-            desc: 'The full system. React and React Native, together',
-            price: 2499,
-            period: 'Perpetual license',
-            icon: RiSparkling2Line,
-            theme: 'amber',
-            popular: true,
-            glowGradient: 'from-amber-800/70 via-yellow-950/40 to-[#0e1015]',
-            iconBg: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
-            buttonText: 'Get Super Hero',
-            buttonStyle: 'bg-white hover:bg-zinc-100 text-black font-extrabold shadow-lg shadow-amber-500/10',
-            features: [
-                'All Pro components (React + React Native)',
-                'Premium templates',
-                'Pro AI (Skills and MCPs)',
-                '1000 AI credits included',
-                'Premium design systems',
-                'Pro design systems',
-                'Private Discord channels',
-                'Prioritized issues',
-                'Priority support'
-            ]
-        }
-    ],
-    USD: [
-        {
-            id: 'free',
-            name: 'Starter',
-            badge: null,
-            desc: 'Instant access to multi-model AI search, research, and chat',
-            price: 0,
-            period: 'Free forever',
-            icon: RiFlashlightLine,
-            theme: 'cyan',
-            glowGradient: 'from-cyan-900/40 via-teal-950/30 to-[#0e1015]',
-            iconBg: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30',
-            buttonText: 'Start for free',
-            buttonStyle: 'bg-zinc-800/90 hover:bg-zinc-700 text-white border border-white/10',
-            features: [
-                'Unlimited Gemini 3.6 Flash queries',
-                'Claude 3.5 Sonnet & GPT-4o access',
-                'Real-time live web search grounding',
-                'Standard document upload & RAG',
-                'Social command center previews',
-                'Community Discord support'
-            ]
-        },
-        {
-            id: 'starter',
-            name: 'Web Hero',
-            badge: null,
-            desc: 'Get access to React library components and features',
-            price: 299,
-            period: 'Perpetual license',
-            icon: RiSmartphoneLine,
-            theme: 'purple',
-            glowGradient: 'from-sky-900/60 via-cyan-950/40 to-[#0e1015]',
-            iconBg: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30',
-            buttonText: 'Get Web Hero',
-            buttonStyle: 'bg-zinc-800/90 hover:bg-zinc-700 text-white border border-white/10',
-            features: [
-                'Pro React components',
-                'Premium templates',
-                'Pro AI (Skills and MCPs)',
-                '500 AI credits included',
-                'Premium design systems',
-                'Pro design systems',
-                'Private Discord channel',
-                'Prioritized issues',
-                'Priority support'
-            ]
-        },
-        {
-            id: 'enterprise',
-            name: 'Super Hero',
-            badge: 'Save $199 with bundle',
-            desc: 'The full system. React and React Native, together',
-            price: 399,
-            period: 'Perpetual license',
-            icon: RiSparkling2Line,
-            theme: 'amber',
-            popular: true,
-            glowGradient: 'from-amber-800/70 via-yellow-950/40 to-[#0e1015]',
-            iconBg: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
-            buttonText: 'Get Super Hero',
-            buttonStyle: 'bg-white hover:bg-zinc-100 text-black font-extrabold shadow-lg shadow-amber-500/10',
-            features: [
-                'All Pro components (React + React Native)',
-                'Premium templates',
-                'Pro AI (Skills and MCPs)',
-                '1000 AI credits included',
-                'Premium design systems',
-                'Pro design systems',
-                'Private Discord channels',
-                'Prioritized issues',
-                'Priority support'
-            ]
-        }
-    ]
-};
-
-const FAQS = [
-    {
-        q: 'How does location detection work?',
-        a: 'Pricing is automatically localized based on your country. Visitors in India receive special Purchasing Power Parity (PPP) rates in Indian Rupees (₹), while international visitors receive standard rates in US Dollars ($).'
-    },
-    {
-        q: 'How does Razorpay checkout and UPI work?',
-        a: 'When you click to get an edition, Razorpay launches an encrypted checkout modal. In India, UPI is prioritized at the top of the payment screen, allowing instant payment via Google Pay, PhonePe, Paytm, or BHIM. Credit/Debit Cards and Net Banking are also supported.'
-    },
-    {
-        q: 'What is a perpetual license?',
-        a: 'A perpetual license grants you lifetime access to the components, source code, and templates included with your plan, plus dedicated AI credits and priority feature updates.'
-    },
-    {
-        q: 'Can pricing and features be changed by admin?',
-        a: 'Yes, admin administrators can modify edition prices, AI quotas, and toggle between Razorpay testing mode and live payable mode at any time via the admin dashboard.'
-    },
-    {
-        q: 'Can I use my own API keys (OpenAI, Gemini, Anthropic)?',
-        a: 'Absolutely! Parsu AI includes a built-in Custom Key Manager in Settings. When you configure your own personal keys, queries route directly with zero rate-limit friction.'
-    }
-];
-
 export default function Pricing() {
+    const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
     const [currency, setCurrency] = useState('USD');
-    const [countryName, setCountryName] = useState('International');
     const [isIndia, setIsIndia] = useState(false);
-    const [openFaq, setOpenFaq] = useState(0);
+    const [openFaq, setOpenFaq] = useState(null);
     const [loadingTier, setLoadingTier] = useState(null);
-    const [copiedCode, setCopiedCode] = useState(false);
-    const [dynamicPlans, setDynamicPlans] = useState(null);
+    
+    // Live pricing toggle state (admin controllable via localStorage or Admin Dashboard)
+    const [isPricingPublished, setIsPricingPublished] = useState(() => {
+        return localStorage.getItem('parsu_admin_pricing_published') === 'true';
+    });
 
     const { user } = useSelector(state => state.auth);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    // Auto-detect user's location automatically without user switch option
+    // Auto-detect user's location on mount
     useEffect(() => {
-        let detectedCurrency = 'USD';
-        let detectedIsIndia = false;
-
         try {
             const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
             const languages = navigator.languages ? navigator.languages.join(',') : navigator.language || '';
-            detectedIsIndia = timeZone.includes('Calcutta') || timeZone.includes('Kolkata') || languages.includes('-IN') || languages.includes('hi');
-            if (detectedIsIndia) {
-                detectedCurrency = 'INR';
-                setCountryName('India');
+            const inIndia = timeZone.includes('Calcutta') || timeZone.includes('Kolkata') || languages.includes('-IN') || languages.includes('hi');
+            if (inIndia) {
+                setCurrency('INR');
                 setIsIndia(true);
             } else {
-                detectedCurrency = 'USD';
-                setCountryName('International');
+                setCurrency('USD');
                 setIsIndia(false);
             }
-            setCurrency(detectedCurrency);
         } catch (e) {
             setCurrency('USD');
         }
 
-        // Fetch live updated plan pricing from backend
-        getPublicPlans()
-            .then(res => {
-                if (res?.plans) {
-                    setDynamicPlans(res.plans);
-                }
-                if (res?.currency) {
-                    setCurrency(res.currency);
-                    setIsIndia(res.currency === 'INR');
-                }
-            })
-            .catch(() => {
-                // Smooth fallback to local static configuration
-            });
+        // Listen for storage events (if admin toggles pricing visibility in another tab)
+        const handleStorageChange = () => {
+            setIsPricingPublished(localStorage.getItem('parsu_admin_pricing_published') === 'true');
+        };
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('parsu_pricing_visibility_changed', handleStorageChange);
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('parsu_pricing_visibility_changed', handleStorageChange);
+        };
     }, []);
 
     const currencySymbol = currency === 'INR' ? '₹' : '$';
-    const tiers = TIERS_CONFIG[currency] || TIERS_CONFIG.USD;
+
+    // Pricing definitions matching user's exact specification
+    const TIERS = [
+        {
+            id: 'free',
+            name: 'Starter',
+            badge: 'Free Forever',
+            desc: 'Essential multi-model AI reasoning for individuals and students.',
+            monthlyPrice: 0,
+            yearlyPrice: 0,
+            period: 'Free forever',
+            icon: RiFlashlightLine,
+            isFree: true,
+            isBlur: false,
+            features: [
+                'Unlimited Gemini 2.5 Flash queries',
+                'Live web search with Tavily grounding',
+                'Upload images, PDFs & text files',
+                'AI social connector previews',
+                'Standard response speed & rate limits',
+                'Public community support'
+            ]
+        },
+        {
+            id: 'pro',
+            name: 'Pro',
+            badge: 'Most Popular',
+            desc: 'Advanced intelligence with flagship reasoning models and deep web search.',
+            monthlyPrice: currency === 'INR' ? 499 : 9,
+            yearlyPrice: currency === 'INR' ? 399 : 7,
+            period: billingCycle === 'yearly' ? 'billed annually' : 'billed monthly',
+            icon: RiSparkling2Line,
+            popular: true,
+            isFree: false,
+            isBlur: !isPricingPublished,
+            features: [
+                'Everything in Starter',
+                'Full access to Claude 3.7 Sonnet & GPT-4o',
+                'Unlimited deep internet research & citations',
+                'Persistent memory & custom user instructions',
+                'Multi-file RAG document analysis',
+                'Higher context window (200k tokens)',
+                'Priority inference GPU queue'
+            ]
+        },
+        {
+            id: 'ultra',
+            name: 'Ultra',
+            badge: 'Maximum Power',
+            desc: 'Unrestricted frontier reasoning, massive context, and dedicated resources.',
+            monthlyPrice: currency === 'INR' ? 999 : 19,
+            yearlyPrice: currency === 'INR' ? 799 : 15,
+            period: billingCycle === 'yearly' ? 'billed annually' : 'billed monthly',
+            icon: RiCpuLine,
+            isFree: false,
+            isBlur: !isPricingPublished,
+            features: [
+                'Everything in Pro',
+                'Frontier reasoning: o1, o3-mini & DeepSeek R1',
+                'Massive 1M+ token context window',
+                'Custom API Key BYOK integration',
+                'Dedicated high-throughput compute pipeline',
+                'Early access to experimental multi-modal skills',
+                '24/7 Priority support & private channels'
+            ]
+        }
+    ];
 
     const loadRazorpay = () => {
         return new Promise((resolve) => {
@@ -264,38 +147,28 @@ export default function Pricing() {
         });
     };
 
-    const handleCopyDiscount = () => {
-        navigator.clipboard.writeText('PPP25');
-        setCopiedCode(true);
-        setTimeout(() => setCopiedCode(false), 2000);
-        dispatch(addToast({ type: 'success', message: 'Discount code PPP25 copied to clipboard!' }));
-    };
-
     const handleSelectPlan = async (tier) => {
-        if (tier.price === 0 || tier.id === 'free') {
+        if (tier.isFree) {
             navigate('/ai');
             return;
         }
 
-        if (!user) {
-            dispatch(addToast({ type: 'info', message: 'Please create an account or sign in to complete your purchase.' }));
-            navigate(`/auth?mode=register&redirect=/pricing`);
-            return;
+        if (!isPricingPublished) {
+            return; // Paid tiers are locked in coming soon state
         }
 
-        if (user.subscription?.plan === tier.id && user.subscription?.status === 'active') {
-            dispatch(addToast({ type: 'info', message: `You already have active access to the ${tier.name} edition!` }));
-            navigate('/settings/subscription');
+        if (!user) {
+            dispatch(addToast({ type: 'info', message: 'Please create an account or sign in to complete your subscription.' }));
+            navigate(`/auth?mode=register&redirect=/pricing`);
             return;
         }
 
         setLoadingTier(tier.id);
 
         try {
-            // 1. Create order on backend (handles Test vs Payable mode seamlessly)
             const orderData = await createRazorpayOrder({ 
                 plan: tier.id, 
-                billingCycle: 'lifetime', 
+                billingCycle, 
                 currency 
             });
 
@@ -303,44 +176,18 @@ export default function Pricing() {
                 throw new Error(orderData?.message || 'Failed to create payment order');
             }
 
-            // 2. Load official Razorpay Checkout SDK
             const isLoaded = await loadRazorpay();
             if (!isLoaded) {
-                throw new Error('Unable to connect to Razorpay payment gateway');
+                throw new Error('Unable to connect to payment gateway');
             }
 
-            // 3. Configure Checkout with explicit UPI prioritization
             const options = {
                 key: orderData.keyId,
                 amount: orderData.amount,
                 currency: orderData.currency || currency,
                 name: 'Parsu AI',
-                description: `${tier.name} (Perpetual Edition)`,
+                description: `${tier.name} Plan (${billingCycle})`,
                 order_id: orderData.orderId,
-                config: {
-                    display: {
-                        blocks: {
-                            upi: {
-                                name: "Pay via UPI",
-                                instruments: [
-                                    { method: "upi" }
-                                ]
-                            },
-                            other: {
-                                name: "Cards, Net Banking & Wallets",
-                                instruments: [
-                                    { method: "card" },
-                                    { method: "netbanking" },
-                                    { method: "wallet" }
-                                ]
-                            }
-                        },
-                        sequence: ["block.upi", "block.other"],
-                        preferences: {
-                            show_default_blocks: true
-                        }
-                    }
-                },
                 handler: async (response) => {
                     try {
                         const verifyRes = await verifyPaymentSignature({
@@ -348,13 +195,13 @@ export default function Pricing() {
                             razorpayPaymentId: response.razorpay_payment_id,
                             razorpaySignature: response.razorpay_signature,
                             plan: tier.id,
-                            billingCycle: 'lifetime',
+                            billingCycle,
                             currency
                         });
 
                         if (verifyRes.success) {
                             dispatch(setUser(verifyRes.user));
-                            dispatch(addToast({ type: 'success', message: `🎉 Payment successful! Welcome to Parsu AI ${tier.name}.` }));
+                            dispatch(addToast({ type: 'success', message: `🎉 Welcome to Parsu AI ${tier.name}!` }));
                             navigate('/settings/subscription');
                         } else {
                             dispatch(addToast({ type: 'error', message: verifyRes.message || 'Payment verification failed.' }));
@@ -372,7 +219,7 @@ export default function Pricing() {
                 },
                 modal: {
                     ondismiss: () => {
-                        dispatch(addToast({ type: 'info', message: 'Payment window was closed.' }));
+                        dispatch(addToast({ type: 'info', message: 'Payment modal closed.' }));
                         setLoadingTier(null);
                     }
                 }
@@ -390,209 +237,272 @@ export default function Pricing() {
         }
     };
 
-    return (
-        <InfoPageLayout 
-            title="Parsu AI Editions" 
-            subtitle="Pick your stack. Start building products you're proud to ship."
-            badge="HeroUI Pro Theme"
-        >
-            <div className="space-y-10 sm:space-y-14">
-                
-                {/* ── Top Location Discount Banner (Matching media_1790057123792.jpg) ── */}
-                <div className="w-full flex justify-center px-2">
-                    {isIndia ? (
-                        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 px-3.5 sm:px-4 py-2 rounded-2xl sm:rounded-full bg-zinc-900 border border-white/10 text-xs sm:text-sm text-zinc-300 shadow-md text-center">
-                            <span className="text-base shrink-0">🇮🇳</span>
-                            <span className="font-medium">Special pricing for India - 25% off with</span>
-                            <button
-                                type="button"
-                                onClick={handleCopyDiscount}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 text-white font-mono font-bold text-xs transition-colors cursor-pointer shrink-0"
-                                title="Click to copy promo code"
-                            >
-                                <span>PPP25</span>
-                                <RiFileCopyLine size={12} className={copiedCode ? "text-emerald-400" : ""} />
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="flex flex-wrap items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-2xl sm:rounded-full bg-zinc-900 border border-white/10 text-xs sm:text-sm text-zinc-300 shadow-md text-center">
-                            <RiGlobalLine size={15} className="text-[var(--accent-cyan)] shrink-0" />
-                            <span className="font-medium">Global Pricing Active • Location auto-localized</span>
-                        </div>
-                    )}
-                </div>
+    const FAQS = [
+        {
+            q: 'How does India vs International pricing work?',
+            a: 'Parsu AI automatically checks your location. Visitors in India are shown local Indian Rupee (₹) pricing with localized UPI support. International visitors receive standard USD ($) pricing.'
+        },
+        {
+            q: 'Can I start with the Free plan?',
+            a: 'Yes! The Starter Free plan is available immediately with zero credit card required. You get unlimited multi-model queries and live web search.'
+        },
+        {
+            q: 'When will Pro and Ultra plans become active?',
+            a: 'Paid plans are currently in early-access preview mode. When live deployment is activated, you will be able to subscribe seamlessly with monthly and yearly billing.'
+        },
+        {
+            q: 'Can I bring my own API keys (BYOK)?',
+            a: 'Yes, you can configure your own Gemini, OpenAI, or Anthropic keys in Settings > API Keys at any time.'
+        }
+    ];
 
-                {/* ── Header Pill Bar (Matching media_1790057123792.jpg) ── */}
-                <div className="flex flex-col items-center text-center space-y-4 max-w-2xl mx-auto px-2">
-                    <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl sm:rounded-full bg-zinc-900/90 border border-white/10 shadow-lg text-xs sm:text-sm">
-                        <div className="flex items-center gap-1.5 font-extrabold text-white">
-                            <span>Parsu</span>
-                            <span className="px-1.5 py-0.2 rounded bg-[var(--accent-cyan)] text-black font-black text-[10px]">PRO</span>
-                        </div>
-                        <span className="hidden xs:inline text-zinc-600 dark:text-zinc-600">•</span>
-                        <Link to="/about" className="text-zinc-400 hover:text-white transition-colors">Documentation</Link>
-                        <span className="hidden xs:inline text-zinc-600 dark:text-zinc-600">•</span>
-                        <Link to={user ? "/settings" : "/auth?mode=login"} className="text-zinc-400 hover:text-white transition-colors">
-                            {user ? "Account" : "Login"}
-                        </Link>
-                        <span className="px-3 py-1 rounded-full bg-white text-black font-bold text-xs">
-                            Get Parsu AI Pro
-                        </span>
+    return (
+        <InfoPageLayout
+            title="Transparent, Predictable Pricing"
+            subtitle="Start free with powerful AI models, or upgrade to unleash full research capabilities."
+            badge="Plans & Pricing"
+        >
+            <div className="space-y-12 max-w-6xl mx-auto">
+                
+                {/* ── Currency & Location Indicator + Monthly/Yearly Toggle ── */}
+                <div className="flex flex-col items-center gap-6">
+                    {/* Location detection pill */}
+                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs text-zinc-300">
+                        {isIndia ? (
+                            <>
+                                <span className="text-sm">🇮🇳</span>
+                                <span className="font-semibold text-white">India Localized Pricing (₹ INR)</span>
+                            </>
+                        ) : (
+                            <>
+                                <RiGlobalLine size={14} className="text-[var(--accent-cyan)]" />
+                                <span className="font-semibold text-white">International Pricing ($ USD)</span>
+                            </>
+                        )}
+                        <span className="text-zinc-500">•</span>
+                        {/* Currency switcher button */}
+                        <button
+                            type="button"
+                            onClick={() => setCurrency(currency === 'INR' ? 'USD' : 'INR')}
+                            className="text-[var(--accent-cyan)] hover:underline font-mono text-[11px] cursor-pointer"
+                        >
+                            Switch to {currency === 'INR' ? 'USD ($)' : 'INR (₹)'}
+                        </button>
                     </div>
 
-                    <h1 className="text-2xl sm:text-5xl font-black text-zinc-900 dark:text-white tracking-tight pt-2 leading-tight">
-                        Pick your stack. <br />
-                        <span className="text-[var(--accent-cyan)]">Start building products you're proud to ship.</span>
-                    </h1>
+                    {/* Monthly / Yearly Switcher */}
+                    <div className="inline-flex items-center p-1 rounded-full bg-white/[0.04] border border-white/[0.08] shadow-inner">
+                        <button
+                            type="button"
+                            onClick={() => setBillingCycle('monthly')}
+                            className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                                billingCycle === 'monthly'
+                                    ? 'bg-[var(--accent-cyan)] text-zinc-950 shadow-md'
+                                    : 'text-zinc-400 hover:text-white'
+                            }`}
+                        >
+                            Monthly Billing
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setBillingCycle('yearly')}
+                            className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                                billingCycle === 'yearly'
+                                    ? 'bg-[var(--accent-cyan)] text-zinc-950 shadow-md'
+                                    : 'text-zinc-400 hover:text-white'
+                            }`}
+                        >
+                            <span>Yearly Billing</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                billingCycle === 'yearly'
+                                    ? 'bg-black/25 text-zinc-950'
+                                    : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            }`}>
+                                Save 20%
+                            </span>
+                        </button>
+                    </div>
                 </div>
 
-                {/* ── 3 Cosmic Cards Grid (Exact media_1790057123792.jpg layout) ── */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch max-w-6xl mx-auto">
-                    {tiers.map((tier) => {
+                {/* ── 3 Pricing Cards Grid ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
+                    {TIERS.map((tier) => {
                         const Icon = tier.icon;
-                        const isCurrentPlan = user?.subscription?.plan === tier.id && user?.subscription?.status === 'active';
-                        const isLoading = loadingTier === tier.id;
+                        const isBlurred = tier.isBlur;
+                        const displayPrice = isBlurred
+                            ? 'xxx'
+                            : (billingCycle === 'yearly' ? tier.yearlyPrice : tier.monthlyPrice);
 
                         return (
-                            <motion.div
+                            <div
                                 key={tier.id}
-                                whileHover={{ y: -6 }}
-                                transition={{ duration: 0.3 }}
-                                className={`relative flex flex-col rounded-[28px] overflow-hidden bg-[#111216] border ${
-                                    tier.popular 
-                                        ? 'border-amber-500/40 shadow-2xl shadow-amber-500/10 ring-1 ring-amber-500/30' 
-                                        : 'border-white/10 shadow-xl'
+                                className={`relative flex flex-col rounded-3xl overflow-hidden transition-all duration-300 ${
+                                    tier.popular
+                                        ? 'bg-[#101217] border-2 border-[var(--accent-cyan)]/40 shadow-2xl shadow-cyan-500/10'
+                                        : 'bg-[#0d0e12] border border-white/[0.08] shadow-lg'
                                 }`}
                             >
-                                {/* Top Badge if available (e.g. Save $199 with bundle) */}
+                                {/* Top Badge */}
                                 {tier.badge && (
-                                    <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold backdrop-blur-md">
-                                        <span>⭐</span>
-                                        <span>{tier.badge}</span>
+                                    <div className="absolute top-4 right-4 z-20">
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                            tier.popular
+                                                ? 'bg-[var(--accent-cyan)] text-zinc-950 shadow-sm'
+                                                : 'bg-white/10 text-zinc-300 border border-white/10'
+                                        }`}>
+                                            {tier.badge}
+                                        </span>
                                     </div>
                                 )}
 
-                                {/* Cosmic Glowing Nebula Header Box */}
-                                <div className={`relative p-7 sm:p-8 pt-10 sm:pt-12 bg-gradient-to-b ${tier.glowGradient} border-b border-white/5 overflow-hidden`}>
-                                    
-                                    {/* Starry dust texture effect */}
-                                    <div 
-                                        className="absolute inset-0 opacity-30 mix-blend-screen pointer-events-none"
-                                        style={{
-                                            backgroundImage: 'radial-gradient(circle at 50% 20%, rgba(255,255,255,0.8) 0.5px, transparent 1px), radial-gradient(circle at 20% 70%, rgba(255,255,255,0.6) 0.5px, transparent 1px), radial-gradient(circle at 80% 60%, rgba(255,255,255,0.7) 0.5px, transparent 1px)',
-                                            backgroundSize: '40px 40px, 60px 60px, 80px 80px'
-                                        }}
-                                    />
-
-                                    {/* Edition Icon Badge */}
-                                    <div className={`w-9 h-9 rounded-xl ${tier.iconBg} flex items-center justify-center mb-5 relative z-10 shadow-md`}>
-                                        <Icon size={18} />
+                                {/* Card Header */}
+                                <div className="p-7 sm:p-8 border-b border-white/[0.06] relative">
+                                    <div className="w-10 h-10 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center text-[var(--accent-cyan)] mb-4">
+                                        <Icon size={20} />
                                     </div>
-
-                                    {/* Title and Subtitle */}
-                                    <h3 className="text-xl sm:text-2xl font-bold text-white mb-1.5 relative z-10">
-                                        {tier.name}
-                                    </h3>
-                                    <p className="text-xs sm:text-[13px] text-zinc-300 font-medium leading-relaxed mb-6 min-h-[36px] relative z-10 opacity-90">
+                                    <h3 className="text-xl font-bold text-white mb-2">{tier.name}</h3>
+                                    <p className="text-xs text-zinc-400 min-h-[36px] leading-relaxed">
                                         {tier.desc}
                                     </p>
 
-                                    {/* Price tag */}
-                                    <div className="flex items-baseline gap-1.5 mb-1 relative z-10">
-                                        <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-                                            {currencySymbol}{tier.price.toLocaleString()}
-                                        </span>
-                                    </div>
-                                    <p className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold mb-6 relative z-10">
-                                        {tier.period}
-                                    </p>
-
-                                    {/* Main Action Button */}
-                                    <button
-                                        type="button"
-                                        onClick={() => handleSelectPlan(tier)}
-                                        disabled={isLoading || isCurrentPlan}
-                                        className={`w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2 relative z-10 active:scale-[0.98] ${
-                                            isCurrentPlan
-                                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default'
-                                                : tier.buttonStyle
-                                        }`}
-                                    >
-                                        {isLoading ? (
-                                            <>
-                                                <RiLoader4Line size={16} className="animate-spin" />
-                                                <span>Connecting Gateway...</span>
-                                            </>
-                                        ) : isCurrentPlan ? (
-                                            <>
-                                                <RiCheckLine size={16} />
-                                                <span>Active Edition</span>
-                                            </>
+                                    {/* Price section */}
+                                    <div className="mt-6 flex items-baseline gap-1.5">
+                                        {isBlurred ? (
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-3xl sm:text-4xl font-black text-zinc-500 tracking-tight font-mono select-none">
+                                                    {currencySymbol}xxx
+                                                </span>
+                                                <span className="text-xs text-zinc-500 font-medium">/month</span>
+                                            </div>
                                         ) : (
-                                            <span>{tier.buttonText}</span>
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                                                    {currencySymbol}{displayPrice}
+                                                </span>
+                                                <span className="text-xs text-zinc-400 font-medium">
+                                                    {tier.isFree ? '' : '/month'}
+                                                </span>
+                                            </div>
                                         )}
-                                    </button>
+                                    </div>
+                                    <p className="text-[11px] text-zinc-500 mt-1 font-medium">
+                                        {isBlurred ? 'Pricing under unveiling' : tier.period}
+                                    </p>
                                 </div>
 
-                                {/* Features List */}
-                                <div className="p-7 sm:p-8 flex-1 flex flex-col justify-between bg-[#0e1015]">
-                                    <ul className="space-y-3.5">
+                                {/* Features List & Action Container */}
+                                <div className="p-7 sm:p-8 flex-1 flex flex-col justify-between relative">
+                                    
+                                    {/* Blurred stealth overlay if unreleased */}
+                                    {isBlurred && (
+                                        <div className="absolute inset-0 z-10 backdrop-blur-[6px] bg-black/40 flex flex-col items-center justify-center p-6 text-center select-none pointer-events-none rounded-b-3xl">
+                                            <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-zinc-300 mb-3 shadow-lg">
+                                                <RiLockLine size={22} />
+                                            </div>
+                                            <p className="text-sm font-bold text-white">Tier Under Launch</p>
+                                            <p className="text-xs text-zinc-400 mt-1 max-w-[200px]">
+                                                This tier will unlock automatically upon official release.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Features */}
+                                    <ul className={`space-y-3.5 mb-8 ${isBlurred ? 'opacity-30' : ''}`}>
                                         {tier.features.map((feat, fIdx) => (
-                                            <li key={fIdx} className="flex items-start gap-3 text-xs sm:text-[13px] text-zinc-300 font-medium">
-                                                <div className="w-4 h-4 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0 mt-0.5 text-zinc-400">
-                                                    <RiCheckLine size={12} />
+                                            <li key={fIdx} className="flex items-start gap-3 text-xs text-zinc-300">
+                                                <div className="w-4 h-4 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[var(--accent-cyan)] flex items-center justify-center shrink-0 mt-0.5">
+                                                    <RiCheckLine size={11} />
                                                 </div>
                                                 <span>{feat}</span>
                                             </li>
                                         ))}
                                     </ul>
 
-                                    <div className="pt-6 mt-6 border-t border-white/5 flex items-center justify-between text-[11px] text-zinc-500">
-                                        <span>Instant deployment</span>
-                                        <span>UPI & Cards accepted</span>
+                                    {/* CTA Button */}
+                                    <div className="relative z-20">
+                                        {isBlurred ? (
+                                            <button
+                                                type="button"
+                                                disabled
+                                                className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold bg-white/5 border border-white/10 text-zinc-400 cursor-not-allowed text-center uppercase tracking-wider"
+                                            >
+                                                Coming Soon
+                                            </button>
+                                        ) : tier.isFree ? (
+                                            <Link
+                                                to="/ai"
+                                                className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold bg-white text-zinc-950 hover:bg-zinc-100 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-[0.98]"
+                                            >
+                                                <span>Get Started Free</span>
+                                                <RiArrowRightLine size={15} />
+                                            </Link>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleSelectPlan(tier)}
+                                                disabled={loadingTier === tier.id}
+                                                className={`w-full py-3.5 px-4 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${
+                                                    tier.popular
+                                                        ? 'bg-[var(--accent-cyan)] text-zinc-950 hover:bg-[var(--accent-cyan-hover)] shadow-lg shadow-cyan-500/20'
+                                                        : 'bg-white/10 hover:bg-white/20 text-white border border-white/10'
+                                                }`}
+                                            >
+                                                {loadingTier === tier.id ? (
+                                                    <>
+                                                        <RiLoader4Line size={15} className="animate-spin" />
+                                                        <span>Connecting Gateway...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span>Subscribe to {tier.name}</span>
+                                                        <RiArrowRightLine size={15} />
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
-                            </motion.div>
+                            </div>
                         );
                     })}
                 </div>
 
-                {/* ── Frequently Asked Questions ── */}
-                <div className="max-w-3xl mx-auto pt-8 sm:pt-14 space-y-6">
-                    <div className="text-center space-y-2 mb-8">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-zinc-300">
-                            <RiQuestionLine size={14} className="text-[var(--accent-cyan)]" />
-                            <span>Transparent Details</span>
-                        </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
-                            Frequently Asked Questions
-                        </h2>
+                {/* ── FAQ Section ── */}
+                <div className="pt-12 border-t border-white/[0.08]">
+                    <div className="text-center mb-10">
+                        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Frequently Asked Questions</h2>
+                        <p className="text-xs text-zinc-400 mt-1">Everything you need to know about billing, models, and quotas.</p>
                     </div>
 
-                    <div className="space-y-3">
-                        {FAQS.map((faq, idx) => (
-                            <div 
-                                key={idx}
-                                className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[var(--bg-surface)] overflow-hidden transition-all shadow-xs"
-                            >
-                                <button
-                                    type="button"
-                                    onClick={() => setOpenFaq(openFaq === idx ? -1 : idx)}
-                                    className="w-full flex items-center justify-between p-4 sm:p-5 text-left text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 hover:text-[var(--accent-cyan)] transition-colors cursor-pointer select-none"
+                    <div className="max-w-3xl mx-auto space-y-3">
+                        {FAQS.map((faq, index) => {
+                            const isOpen = openFaq === index;
+                            return (
+                                <div
+                                    key={index}
+                                    className="rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden transition-colors"
                                 >
-                                    <span>{faq.q}</span>
-                                    <RiArrowDownSLine 
-                                        size={18} 
-                                        className={`transition-transform duration-200 text-zinc-400 ${openFaq === idx ? 'rotate-180 text-[var(--accent-cyan)]' : ''}`} 
-                                    />
-                                </button>
-                                {openFaq === idx && (
-                                    <div className="px-4 pb-4 sm:px-5 sm:pb-5 text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal border-t border-zinc-100 dark:border-white/5 pt-3 animate-in fade-in duration-200">
-                                        {faq.a}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => setOpenFaq(isOpen ? null : index)}
+                                        className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 cursor-pointer"
+                                    >
+                                        <span className="text-xs sm:text-sm font-semibold text-zinc-200">{faq.q}</span>
+                                        <RiArrowDownSLine
+                                            size={18}
+                                            className={`text-zinc-400 transition-transform duration-200 shrink-0 ${
+                                                isOpen ? 'rotate-180 text-[var(--accent-cyan)]' : ''
+                                            }`}
+                                        />
+                                    </button>
+                                    {isOpen && (
+                                        <div className="px-4 sm:px-5 pb-5 text-xs text-zinc-400 leading-relaxed border-t border-white/[0.04] pt-3">
+                                            {faq.a}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 

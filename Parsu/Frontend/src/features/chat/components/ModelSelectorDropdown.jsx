@@ -15,17 +15,10 @@ import {
 import { useNavigate } from "react-router";
 import { getModels, setSelectedModel } from "../service/model.api";
 
-// Provider Color / Icon Mapping
-const PROVIDER_THEMES = {
-  gemini: { color: "text-blue-400 bg-blue-500/10 border-blue-500/30", label: "Google" },
-  openai: { color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30", label: "OpenAI" },
-  anthropic: { color: "text-amber-400 bg-amber-500/10 border-amber-500/30", label: "Claude" },
-  deepseek: { color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/30", label: "DeepSeek" },
-  mistral: { color: "text-orange-400 bg-orange-500/10 border-orange-500/30", label: "Mistral" },
-  groq: { color: "text-rose-400 bg-rose-500/10 border-rose-500/30", label: "Groq" },
-  nvidia: { color: "text-green-400 bg-green-500/10 border-green-500/30", label: "NVIDIA" },
-  openrouter: { color: "text-purple-400 bg-purple-500/10 border-purple-500/30", label: "OpenRouter" },
-  custom: { color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/30", label: "Custom" }
+// Monochromatic Apple/AI-design styling for model provider badges (no rainbow colors)
+const NEUTRAL_THEME = {
+  color: "text-zinc-300 dark:text-zinc-300 bg-zinc-100 dark:bg-white/[0.05] border-zinc-200 dark:border-white/[0.08]",
+  selectedColor: "text-[var(--accent-cyan)] bg-cyan-500/10 border-cyan-500/30"
 };
 
 const getShortBrandName = (model) => {
@@ -368,10 +361,7 @@ export default function ModelSelectorDropdown({
             ) : (
               filteredModels.map((m) => {
                 const isSelected = activeModel.id === m.id && activeModel.isCustom === m.isCustom;
-                const theme = PROVIDER_THEMES[m.provider] || {
-                  color: "text-zinc-400 bg-zinc-500/10 border-zinc-500/30",
-                  label: m.provider || "AI"
-                };
+                const iconColorStyle = isSelected ? NEUTRAL_THEME.selectedColor : NEUTRAL_THEME.color;
 
                 return (
                   <div
@@ -383,7 +373,7 @@ export default function ModelSelectorDropdown({
                         : "hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-700 dark:text-gray-300"
                     }`}
                   >
-                    <div className={`mt-0.5 p-1 rounded-lg border shrink-0 ${theme.color}`}>
+                    <div className={`mt-0.5 p-1 rounded-lg border shrink-0 ${iconColorStyle}`}>
                       {m.provider === "groq" ? (
                         <RiFlashlightLine className="w-3.5 h-3.5" />
                       ) : m.id?.includes("reason") || m.id?.includes("r1") ? (

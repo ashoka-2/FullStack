@@ -8,7 +8,7 @@ import React from 'react';
 
 // Example secondary assets (uncomment and supply paths when needed):
 // import blueSkySvg from '../../assets/Blue sky-2048x1152.svg';
-import heroVideoDark from '../../assets/poolside.mp4';
+import heroVideoDark from '../../../public/poolside.mp4';
 // import heroVideoLight from '../../assets/hero-background-light.mp4';
 
 import { GRAIN_PATTERN_DATA } from '../../assets/grainData';

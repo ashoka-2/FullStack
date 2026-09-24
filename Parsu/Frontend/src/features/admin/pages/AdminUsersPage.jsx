@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   RiUser3Line,
   RiSearchLine,
@@ -11,59 +11,119 @@ import {
   RiShieldStarLine,
   RiExchangeDollarLine,
   RiTimeLine,
-  RiFlashlightLine
+  RiFlashlightLine,
+  RiDeleteBinLine,
+  RiForbidLine,
+  RiCheckboxCircleLine,
+  RiAlertLine,
+  RiCpuLine,
+  RiArrowDownLine
 } from '@remixicon/react';
 import { useSelector } from 'react-redux';
-import { getAdminUsers, updateUserRole, updateUserSubscription } from '../service/admin.api';
+import {
+  getAdminUsers,
+  updateUserRole,
+  updateUserSubscription,
+  deleteAdminUser,
+  toggleAdminUserBlock
+} from '../service/admin.api';
 
 export default function AdminUsersPage() {
   const currentUser = useSelector((state) => state.auth.user);
   const [users, setUsers] = useState([]);
-  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [planFilter, setPlanFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [actionUserId, setActionUserId] = useState(null);
   const [notification, setNotification] = useState(null);
 
-  // Subscription change modal state
+  // Modals state
+  const [deleteModalUser, setDeleteModalUser] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [subForm, setSubForm] = useState({
     plan: 'free',
     status: 'active',
-    billingCycle: 'lifetime'
+    billingCycle: 'monthly'
   });
   const [isSavingSub, setIsSavingSub] = useState(false);
 
-  const loadUsers = async (page = 1) => {
-    setIsLoading(true);
+  // Sentinel ref for infinite scroll observer
+  const observerSentinelRef = useRef(null);
+
+  const fetchUsers = async (targetPage = 1, append = false) => {
+    if (append) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoading(true);
+    }
+
     try {
       const res = await getAdminUsers({
-        page,
-        limit: 12,
+        page: targetPage,
+        limit: 10, // 10 users per page as requested
         search: searchQuery,
         role: roleFilter,
         plan: planFilter
       });
+
       if (res.success) {
-        setUsers(res.users);
-        setPagination(res.pagination);
+        if (append) {
+          setUsers((prev) => [...prev, ...res.users]);
+        } else {
+          setUsers(res.users);
+        }
+        setPage(targetPage);
+        setTotalCount(res.pagination?.total || res.users.length);
+        setHasMore(targetPage < (res.pagination?.pages || 1));
       }
     } catch (err) {
       console.error("Failed to load users:", err);
+      setNotification({
+        type: 'error',
+        message: err.response?.data?.message || 'Failed to fetch user directory.'
+      });
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
+  // Debounced search / filter reset
   useEffect(() => {
     const timer = setTimeout(() => {
-      loadUsers(1);
+      fetchUsers(1, false);
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery, roleFilter, planFilter]);
 
+  // Infinite Scroll IntersectionObserver
+  useEffect(() => {
+    if (isLoading || isLoadingMore || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          fetchUsers(page + 1, true);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    const target = observerSentinelRef.current;
+    if (target) observer.observe(target);
+
+    return () => {
+      if (target) observer.unobserve(target);
+    };
+  }, [isLoading, isLoadingMore, hasMore, page]);
+
+  // 1. Role Toggle (Admin <-> User)
   const handleRoleToggle = async (user) => {
     const newRole = user.role === 'admin' ? 'user' : 'admin';
     setActionUserId(user._id);
@@ -89,12 +149,64 @@ export default function AdminUsersPage() {
     }
   };
 
+  // 2. Block / Unblock Toggle
+  const handleToggleBlock = async (user) => {
+    setActionUserId(user._id);
+    try {
+      const res = await toggleAdminUserBlock(user._id);
+      if (res.success) {
+        setUsers((prev) =>
+          prev.map((u) => (u._id === user._id ? { ...u, isBlocked: res.isBlocked } : u))
+        );
+        setNotification({
+          type: 'success',
+          message: res.message
+        });
+      }
+    } catch (err) {
+      setNotification({
+        type: 'error',
+        message: err.response?.data?.message || "Failed to change user block status."
+      });
+    } finally {
+      setActionUserId(null);
+      setTimeout(() => setNotification(null), 4000);
+    }
+  };
+
+  // 3. Delete User Handler
+  const confirmDeleteUser = async () => {
+    if (!deleteModalUser) return;
+    setIsDeleting(true);
+    try {
+      const res = await deleteAdminUser(deleteModalUser._id);
+      if (res.success) {
+        setUsers((prev) => prev.filter((u) => u._id !== deleteModalUser._id));
+        setTotalCount((c) => Math.max(0, c - 1));
+        setNotification({
+          type: 'success',
+          message: `User ${deleteModalUser.username} and all their chats were deleted.`
+        });
+        setDeleteModalUser(null);
+      }
+    } catch (err) {
+      setNotification({
+        type: 'error',
+        message: err.response?.data?.message || "Failed to delete user."
+      });
+    } finally {
+      setIsDeleting(false);
+      setTimeout(() => setNotification(null), 4000);
+    }
+  };
+
+  // 4. Subscription Management Modal
   const openSubscriptionModal = (user) => {
     setEditingUser(user);
     setSubForm({
       plan: user.subscription?.plan || 'free',
       status: user.subscription?.status || 'active',
-      billingCycle: user.subscription?.billingCycle || 'lifetime'
+      billingCycle: user.subscription?.billingCycle || 'monthly'
     });
   };
 
@@ -125,7 +237,7 @@ export default function AdminUsersPage() {
       });
     } finally {
       setIsSavingSub(false);
-      setTimeout(() => setNotification(null), 4500);
+      setTimeout(() => setNotification(null), 4000);
     }
   };
 
@@ -133,40 +245,40 @@ export default function AdminUsersPage() {
     const plan = sub?.plan || 'free';
     const status = sub?.status || 'active';
 
-    if (plan === 'enterprise') {
+    if (plan === 'ultra' || plan === 'enterprise') {
       return (
-        <div className="flex flex-col gap-1 items-start">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-cyan-500/20 text-purple-300 border border-purple-500/30">
+        <div className="flex flex-col gap-0.5 items-start">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-gradient-to-r from-amber-500/20 to-cyan-500/20 text-cyan-300 border border-cyan-500/30">
             <RiVipCrownLine size={12} className="text-amber-400" />
-            Super Hero
+            Ultra Plan
           </span>
           <span className="text-[10px] text-zinc-400 capitalize">
-            {status} • {sub?.billingCycle || 'perpetual'}
+            {status} • {sub?.billingCycle || 'monthly'}
           </span>
         </div>
       );
     }
 
-    if (plan === 'starter' || plan === 'pro') {
+    if (plan === 'pro' || plan === 'starter') {
       return (
-        <div className="flex flex-col gap-1 items-start">
+        <div className="flex flex-col gap-0.5 items-start">
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-cyan-500/15 text-[var(--accent-cyan)] border border-cyan-500/30">
-            <RiFlashlightLine size={12} />
-            Web Hero
+            <RiSparkling2Line size={12} />
+            Pro Plan
           </span>
           <span className="text-[10px] text-zinc-400 capitalize">
-            {status} • {sub?.billingCycle || 'perpetual'}
+            {status} • {sub?.billingCycle || 'monthly'}
           </span>
         </div>
       );
     }
 
     return (
-      <div className="flex flex-col gap-1 items-start">
+      <div className="flex flex-col gap-0.5 items-start">
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium uppercase bg-white/5 text-zinc-400 border border-white/10">
           Free Starter
         </span>
-        <span className="text-[10px] text-zinc-500">Standard Quotas</span>
+        <span className="text-[10px] text-zinc-500">Standard</span>
       </div>
     );
   };
@@ -174,19 +286,20 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       
-      {/* Header */}
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-            <span>User Directory & Subscriptions</span>
+            <span>User Directory & Governance</span>
           </h1>
           <p className="text-xs text-zinc-400 mt-1">
-            Access governance, subscription mode management, and authentication tracking across all Parsu AI members.
+            Displaying 10 users per batch. Grant subscriptions, promote admins, block or delete accounts.
           </p>
         </div>
 
         <button
-          onClick={() => loadUsers(pagination.page)}
+          type="button"
+          onClick={() => fetchUsers(1, false)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-semibold text-zinc-300 border border-white/10 transition-colors cursor-pointer"
         >
           <RiRefreshLine size={14} className={isLoading ? 'animate-spin' : ''} />
@@ -210,7 +323,7 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {/* Search & Filter Toolbar */}
+      {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-2xl bg-[#11131a]/80 border border-white/[0.08]">
         <div className="relative w-full sm:w-80">
           <RiSearchLine size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
@@ -230,11 +343,10 @@ export default function AdminUsersPage() {
             onChange={(e) => setPlanFilter(e.target.value)}
             className="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-cyan-400 cursor-pointer"
           >
-            <option value="">All Subscription Plans</option>
+            <option value="">All Plans</option>
             <option value="free">Free Starter</option>
-            <option value="starter">Web Hero (Starter)</option>
-            <option value="pro">Web Hero (Pro)</option>
-            <option value="enterprise">Super Hero (Enterprise)</option>
+            <option value="pro">Pro Plan</option>
+            <option value="ultra">Ultra Plan</option>
           </select>
 
           {/* Role Filter */}
@@ -250,38 +362,38 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Table Container */}
+      {/* Users Table */}
       <div className="rounded-2xl bg-[#11131a]/80 border border-white/[0.08] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-white/[0.05] text-[10px] font-bold uppercase tracking-wider text-zinc-500 bg-white/[0.01]">
                 <th className="py-3 px-5">User</th>
-                <th className="py-3 px-4">Provider</th>
-                <th className="py-3 px-4">Verification</th>
-                <th className="py-3 px-4">Subscription Mode</th>
-                <th className="py-3 px-4">Joined Date</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Subscription</th>
                 <th className="py-3 px-4">Role</th>
+                <th className="py-3 px-4">Joined</th>
                 <th className="py-3 px-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04] text-xs">
-              {isLoading ? (
+              {isLoading && users.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-zinc-500">
+                  <td colSpan={6} className="py-12 text-center text-zinc-500">
                     <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-cyan-400" />
                     Loading user records...
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-zinc-500">
-                    No users matching criteria.
+                  <td colSpan={6} className="py-12 text-center text-zinc-500">
+                    No users found matching your search.
                   </td>
                 </tr>
               ) : (
                 users.map((u) => {
                   const isAdmin = u.role === 'admin';
+                  const isBlocked = !!u.isBlocked;
                   const isSelf = currentUser?._id === u._id;
                   const isActing = actionUserId === u._id;
 
@@ -307,36 +419,22 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
 
-                      {/* Provider */}
+                      {/* Status / Blocked Indicator */}
                       <td className="py-3.5 px-4">
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase ${
-                          u.authProvider === 'google'
-                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                            : 'bg-zinc-800 text-zinc-300'
-                        }`}>
-                          {u.authProvider || 'local'}
-                        </span>
-                      </td>
-
-                      {/* Verification */}
-                      <td className="py-3.5 px-4">
-                        {u.verified ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
-                            <RiCheckFill size={13} /> Verified
+                        {isBlocked ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-500/15 text-red-400 border border-red-500/30">
+                            <RiForbidLine size={11} /> Blocked
                           </span>
                         ) : (
-                          <span className="text-[11px] text-zinc-500">Unverified</span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <RiCheckboxCircleLine size={11} /> Active
+                          </span>
                         )}
                       </td>
 
                       {/* Subscription Mode */}
                       <td className="py-3.5 px-4">
                         {getPlanBadge(u.subscription)}
-                      </td>
-
-                      {/* Joined Date */}
-                      <td className="py-3.5 px-4 text-[11px] text-zinc-400">
-                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
                       </td>
 
                       {/* Role Pill */}
@@ -352,37 +450,66 @@ export default function AdminUsersPage() {
                         </span>
                       </td>
 
+                      {/* Joined Date */}
+                      <td className="py-3.5 px-4 text-[11px] text-zinc-400">
+                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
+                      </td>
+
                       {/* Actions */}
                       <td className="py-3.5 px-5 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {/* Change Subscription Mode Button */}
+                        <div className="flex items-center justify-end gap-1.5">
+                          
+                          {/* 1. Subscription Button */}
                           <button
+                            type="button"
                             onClick={() => openSubscriptionModal(u)}
-                            title="Change Subscription Mode"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-500/10 hover:bg-cyan-500/20 text-[var(--accent-cyan)] border border-cyan-500/25 transition-all hover:scale-[1.02] cursor-pointer"
+                            title="Assign Subscription Plan"
+                            className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white transition-colors cursor-pointer"
                           >
-                            <RiExchangeDollarLine size={13} />
-                            <span>Subscription</span>
+                            <RiExchangeDollarLine size={15} />
                           </button>
 
-                          {/* Role Toggle Action */}
+                          {/* 2. Role Toggle (Make Admin / Demote) */}
                           <button
+                            type="button"
                             onClick={() => handleRoleToggle(u)}
-                            disabled={isActing}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer disabled:opacity-50 ${
+                            disabled={isActing || isSelf}
+                            title={isAdmin ? "Demote to User" : "Promote to Admin"}
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-40 ${
                               isAdmin
-                                ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20'
-                                : 'bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10 hover:scale-[1.02]'
+                                ? 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+                                : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08] hover:text-white'
                             }`}
                           >
-                            {isActing ? (
-                              <RiLoader4Line size={13} className="animate-spin" />
-                            ) : isAdmin ? (
-                              'Demote'
-                            ) : (
-                              'Make Admin'
-                            )}
+                            <RiShieldStarLine size={15} />
                           </button>
+
+                          {/* 3. Block / Unblock Toggle */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleBlock(u)}
+                            disabled={isActing || isSelf}
+                            title={isBlocked ? "Unblock User" : "Block User"}
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-40 ${
+                              isBlocked
+                                ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                                : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+                            }`}
+                          >
+                            <RiForbidLine size={15} />
+                          </button>
+
+                          {/* 4. Delete User Button */}
+                          <button
+                            type="button"
+                            onClick={() => setDeleteModalUser(u)}
+                            disabled={isActing || isSelf}
+                            title="Delete User permanently"
+                            className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer disabled:opacity-40"
+                          >
+                            <RiDeleteBinLine size={15} />
+                          </button>
+
                         </div>
                       </td>
                     </tr>
@@ -393,153 +520,153 @@ export default function AdminUsersPage() {
           </table>
         </div>
 
-        {/* Pagination */}
-        {pagination.pages > 1 && (
-          <div className="flex items-center justify-between p-4 border-t border-white/[0.05] text-xs text-zinc-400">
-            <span>Showing {users.length} of {pagination.total} records</span>
-            <div className="flex items-center gap-1.5">
-              <button
-                disabled={pagination.page <= 1}
-                onClick={() => loadUsers(pagination.page - 1)}
-                className="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white disabled:opacity-40 cursor-pointer"
-              >
-                Prev
-              </button>
-              <span className="px-2 font-mono text-zinc-300">
-                {pagination.page} / {pagination.pages}
-              </span>
-              <button
-                disabled={pagination.page >= pagination.pages}
-                onClick={() => loadUsers(pagination.page + 1)}
-                className="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white disabled:opacity-40 cursor-pointer"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Sentinel element for infinite scroll observer */}
+        <div ref={observerSentinelRef} className="h-4 w-full" />
+
+        {/* Load More Button & Status Footer */}
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-white/[0.05] text-xs text-zinc-400 gap-3">
+          <span>
+            Showing <strong className="text-white">{users.length}</strong> of <strong className="text-white">{totalCount}</strong> users (10 per batch)
+          </span>
+
+          {hasMore && (
+            <button
+              type="button"
+              onClick={() => fetchUsers(page + 1, true)}
+              disabled={isLoadingMore}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-[var(--accent-cyan)] border border-cyan-500/20 font-bold transition-all cursor-pointer disabled:opacity-50"
+            >
+              {isLoadingMore ? (
+                <>
+                  <RiLoader4Line size={14} className="animate-spin" />
+                  <span>Loading next 10...</span>
+                </>
+              ) : (
+                <>
+                  <RiArrowDownLine size={14} />
+                  <span>Load More 10 Users</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Subscription Mode Modal */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
           <div className="w-full max-w-md rounded-3xl bg-[#11131a] border border-white/10 p-6 shadow-2xl relative">
-            
-            {/* Modal Header */}
             <div className="flex items-start justify-between pb-4 border-b border-white/[0.08]">
               <div>
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <RiVipCrownLine size={18} className="text-[var(--accent-cyan)]" />
-                  <span>Change Subscription Mode</span>
+                  <span>Assign Subscription</span>
                 </h3>
-                <p className="text-xs text-zinc-400 mt-1">
-                  Adjust plan access, quotas, and billing status for this user.
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Update plan tier and privileges for {editingUser.username}.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setEditingUser(null)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-zinc-400 hover:text-white cursor-pointer"
               >
                 <RiCloseLine size={18} />
               </button>
             </div>
 
-            {/* Target User Info */}
-            <div className="my-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center gap-3">
-              <img
-                src={editingUser.profilePic || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"}
-                alt={editingUser.username}
-                className="w-10 h-10 rounded-full object-cover border border-white/10"
-              />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-white truncate">{editingUser.username}</div>
-                <div className="text-xs text-zinc-400 truncate">{editingUser.email}</div>
-              </div>
-            </div>
-
-            {/* Subscription Form */}
-            <form onSubmit={handleSaveSubscription} className="space-y-4">
-              
-              {/* Plan Selection */}
+            <form onSubmit={handleSaveSubscription} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                  Subscription Plan / Mode
-                </label>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">Plan Tier</label>
                 <select
                   value={subForm.plan}
                   onChange={(e) => setSubForm({ ...subForm, plan: e.target.value })}
-                  className="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-400 cursor-pointer"
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
                 >
-                  <option value="free">Free Starter (50 queries/day, 2 doc uploads)</option>
-                  <option value="starter">Web Hero (Unlimited queries, 50 uploads)</option>
-                  <option value="enterprise">Super Hero (Unlimited queries & uploads, VIP neural routing)</option>
+                  <option value="free">Free Starter</option>
+                  <option value="pro">Pro Plan</option>
+                  <option value="enterprise">Ultra Plan</option>
                 </select>
               </div>
 
-              {/* Status Selection */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                  Subscription Status
-                </label>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">Status</label>
                 <select
                   value={subForm.status}
                   onChange={(e) => setSubForm({ ...subForm, status: e.target.value })}
-                  className="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-400 cursor-pointer"
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
                 >
-                  <option value="active">Active (Granted Full Plan Features)</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="active">Active</option>
                   <option value="cancelled">Cancelled</option>
-                  <option value="past_due">Past Due</option>
+                  <option value="expired">Expired</option>
                 </select>
               </div>
 
-              {/* Billing Cycle */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                  Billing Cycle Mode
-                </label>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">Billing Cycle</label>
                 <select
                   value={subForm.billingCycle}
                   onChange={(e) => setSubForm({ ...subForm, billingCycle: e.target.value })}
-                  className="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-400 cursor-pointer"
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
                 >
-                  <option value="lifetime">Lifetime / Perpetual License</option>
-                  <option value="monthly">Monthly Recurring</option>
-                  <option value="annual">Annual Plan</option>
-                  <option value="none">None (Complimentary)</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                  <option value="lifetime">Lifetime</option>
                 </select>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/[0.08]">
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-white/[0.08]">
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-zinc-300 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingSub}
-                  className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-400 text-black shadow-md hover:scale-[1.02] transition-transform cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 cursor-pointer disabled:opacity-50"
                 >
-                  {isSavingSub ? (
-                    <>
-                      <RiLoader4Line size={14} className="animate-spin" />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <RiCheckFill size={15} />
-                      <span>Apply Subscription</span>
-                    </>
-                  )}
+                  {isSavingSub ? 'Saving...' : 'Save Plan'}
                 </button>
               </div>
-
             </form>
+          </div>
+        </div>
+      )}
 
+      {/* Delete User Confirmation Modal */}
+      {deleteModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="w-full max-w-sm rounded-3xl bg-[#13141a] border border-red-500/20 p-6 shadow-2xl relative text-center">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-3">
+              <RiAlertLine size={24} />
+            </div>
+
+            <h3 className="text-base font-bold text-white mb-1">Delete User Account?</h3>
+            <p className="text-xs text-zinc-400 mb-6 leading-relaxed">
+              Are you sure you want to permanently delete <strong className="text-white">{deleteModalUser.username}</strong> ({deleteModalUser.email})? All their chat histories and records will be deleted forever.
+            </p>
+
+            <div className="flex items-center justify-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setDeleteModalUser(null)}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-zinc-300 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteUser}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-red-500 hover:bg-red-600 text-white cursor-pointer disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}
