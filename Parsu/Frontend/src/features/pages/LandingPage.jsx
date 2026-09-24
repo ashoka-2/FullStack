@@ -26,7 +26,7 @@ import {
 } from '@remixicon/react';
 import ParsuLogo from '../Components/ParsuLogo';
 import HeroGradientBackground from '../Components/HeroGradientBackground';
-import HeroMediaShowcase from '../Components/HeroMediaShowcase';
+import HeroWorkspacePreview from '../Components/HeroWorkspacePreview';
 import MagneticButton from '../Components/MagneticButton';
 import LiquidGlassNav from '../Components/LiquidGlassNav';
 import useSEO from '../../utils/useSEO';
@@ -224,8 +224,8 @@ const LandingPage = () => {
             <span className="flex items-center gap-1.5"><RiCheckLine size={15} className="text-emerald-500" /> Instant Google Sign-In</span>
           </div>
 
-          {/* ── Interactive Live Workspace / Image / Video Media Showcase ─── */}
-          <HeroMediaShowcase />
+          {/* ── Interactive Live Workspace Terminal Preview ─────────── */}
+          <HeroWorkspacePreview />
 
         </div>
       </section>

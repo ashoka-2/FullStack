@@ -1,81 +1,181 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+
+// ============================================================================
+// 🖼️ HERO BACKGROUND MEDIA ASSETS
+// ============================================================================
+// Currently active background: Poolside.svg (used for both dark & light themes across all devices)
 import poolsideSvg from '../../assets/Poolside.svg';
-import blueSkySvg from '../../assets/Blue sky-2048x1152.svg';
+
+// Example secondary assets (uncomment and supply paths when needed):
+// import blueSkySvg from '../../assets/Blue sky-2048x1152.svg';
+// import heroVideoDark from '../../assets/hero-background-dark.mp4';
+// import heroVideoLight from '../../assets/hero-background-light.mp4';
+
 import { GRAIN_PATTERN_DATA } from '../../assets/grainData';
 
 /**
  * ============================================================================
- * ⚙️ DEVELOPER HERO BACKDROP CONFIGURATION
+ * ⚙️ DEVELOPER GUIDE — HERO SECTION BACKGROUND COMPONENT
  * ============================================================================
- * Developers can choose to:
- * 1. Keep the SAME image for both themes (set useSameImage: true)
- * 2. Or use DIFFERENT images for light and dark themes (set useSameImage: false)
- * 
- * Props can also be passed directly to <HeroGradientBackground />:
- *   <HeroGradientBackground useSameImage={false} darkImage={...} lightImage={...} />
+ * This component renders the entire background for the landing page hero section.
+ *
+ * HOW DEVELOPERS CAN CHANGE THE HERO BACKGROUND:
+ * ----------------------------------------------------------------------------
+ * 1. TO USE A BACKGROUND VIDEO:
+ *    - Comment out [OPTION 1: ACTIVE IMAGE - POOLSIDE.SVG] below.
+ *    - Uncomment [OPTION 5: BACKGROUND VIDEO (AUTOPLAY LOOP)].
+ *
+ * 2. TO USE DIFFERENT BACKGROUND IMAGES FOR LIGHT & DARK THEMES:
+ *    - Comment out [OPTION 1].
+ *    - Uncomment [OPTION 2: THEME-SPECIFIC BACKGROUND IMAGES (DARK vs LIGHT)].
+ *
+ * 3. TO USE RESPONSIVE BACKGROUND IMAGES (MOBILE / TABLET / DESKTOP):
+ *    - Comment out [OPTION 1].
+ *    - Uncomment [OPTION 3: RESPONSIVE BACKGROUND IMAGES].
+ *
+ * 4. TO USE SEPARATE BACKGROUND VIDEOS FOR LIGHT & DARK THEMES:
+ *    - Comment out [OPTION 1].
+ *    - Uncomment [OPTION 6: THEME-SPECIFIC BACKGROUND VIDEOS].
  * ============================================================================
  */
-export const HERO_BACKGROUND_CONFIG = {
-  // Set to true to use the same image for both themes; false to use separate images per theme
-  useSameImage: true,
 
-  // When useSameImage is true (used across all themes):
-  sameImage: poolsideSvg,
-
-  // When useSameImage is false:
-  darkImage: poolsideSvg,
-  lightImage: blueSkySvg, // or any custom image for light theme
-};
-
-const HeroGradientBackground = ({
-  useSameImage = HERO_BACKGROUND_CONFIG.useSameImage,
-  sameImage = HERO_BACKGROUND_CONFIG.sameImage,
-  darkImage = HERO_BACKGROUND_CONFIG.darkImage,
-  lightImage = HERO_BACKGROUND_CONFIG.lightImage,
-}) => {
-  // Theme reactivity (supports view transitions and manual toggles)
-  const [isDark, setIsDark] = useState(() =>
-    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true
-  );
-
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-
-    const checkTheme = () => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    };
-
-    checkTheme();
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  // Determine current image based on developer configuration & theme
-  const currentHeroImage = useSameImage ? sameImage : (isDark ? darkImage : lightImage);
-
+const HeroGradientBackground = () => {
   return (
     <div
       aria-hidden="true"
       className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none z-0"
     >
-      {/* ── 1. Parsu Cyan & Hanada Ambient Glow Orbs (Fluid floating animation) ── */}
+      {/* ── 1. Parsu Cyan & Hanada Ambient Glow Orbs (Atmospheric Depth) ── */}
       <div className="absolute top-[-10%] left-[20%] w-[55vw] max-w-[850px] h-[500px] rounded-full bg-gradient-to-tr from-[var(--accent-cyan)]/35 via-[var(--color-clear-hanada)]/25 to-[var(--color-deep-hanada)]/20 blur-[130px] dark:blur-[150px] animate-pulse duration-[8000ms] transform -rotate-6" />
       <div className="absolute top-[15%] right-[-5%] w-[45vw] max-w-[700px] h-[450px] rounded-full bg-gradient-to-bl from-[var(--color-deep-teal)]/40 via-[var(--color-deep-hanada)]/30 to-[var(--accent-cyan)]/20 blur-[120px] dark:blur-[140px] animate-pulse duration-[10000ms]" />
       <div className="absolute top-[35%] left-[5%] w-[35vw] max-w-[600px] h-[350px] rounded-full bg-gradient-to-r from-[var(--accent-cyan)]/20 via-[var(--color-sky-haze)]/15 to-transparent blur-[110px] dark:blur-[130px]" />
 
-      {/* ── 2. User's Configurable Hero Backdrop (Same or Theme-Specific) ── */}
+      {/* ── 2. Hero Background Media Container (2048x1190 centered canvas) ── */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[2048px] h-[1190px] max-w-none">
+
+        {/* =====================================================================
+            ⭐ OPTION 1: [CURRENT ACTIVE]
+            Poolside.svg background image for BOTH Dark & White Themes on ALL devices
+            ===================================================================== */}
         <img
-          key={currentHeroImage}
-          src={currentHeroImage}
+          src={poolsideSvg}
           alt=""
           className="w-full h-full object-cover opacity-80 dark:opacity-90 transition-opacity duration-700 mix-blend-normal dark:mix-blend-screen scale-[1.01]"
+          loading="eager"
         />
+
+        {/* =====================================================================
+            💡 OPTION 2: [COMMENTED]
+            Different Background Images for Dark Mode vs Light Mode
+            To use: Comment Option 1 above, and uncomment this block.
+            =====================================================================
+        {/*
+        <picture className="w-full h-full">
+          <!-- Dark mode background image (shown when document has .dark) -->
+          <img
+            src={poolsideSvg}
+            alt=""
+            className="w-full h-full object-cover opacity-90 dark:block hidden mix-blend-screen scale-[1.01]"
+          />
+          <!-- Light mode background image (shown when in light mode) -->
+          <img
+            src="/path/to/hero-light-backdrop.svg"
+            alt=""
+            className="w-full h-full object-cover opacity-80 dark:hidden block mix-blend-normal scale-[1.01]"
+          />
+        </picture>
+        */}
+
+        {/* =====================================================================
+            💡 OPTION 3: [COMMENTED]
+            Responsive Background Images for Mobile, Tablet, and Desktop
+            To use: Comment Option 1 above, and uncomment this block.
+            =====================================================================
+        {/*
+        <picture className="w-full h-full">
+          <!-- Mobile viewport (<640px) -->
+          <source media="(max-width: 639px)" srcSet="/path/to/hero-bg-mobile.svg" />
+          <!-- Tablet viewport (640px - 1023px) -->
+          <source media="(max-width: 1023px)" srcSet="/path/to/hero-bg-tablet.svg" />
+          <!-- Desktop default (>=1024px) -->
+          <img
+            src={poolsideSvg}
+            alt=""
+            className="w-full h-full object-cover opacity-80 dark:opacity-90 mix-blend-normal dark:mix-blend-screen scale-[1.01]"
+          />
+        </picture>
+        */}
+
+        {/* =====================================================================
+            💡 OPTION 4: [COMMENTED]
+            Full Matrix: Responsive Devices (Mobile/Tablet/Desktop) × Theme (Dark/Light)
+            To use: Comment Option 1 above, and uncomment this block.
+            =====================================================================
+        {/*
+        <picture className="w-full h-full">
+          <source media="(prefers-color-scheme: dark) and (max-width: 639px)" srcSet="/path/to/hero-dark-mobile.svg" />
+          <source media="(prefers-color-scheme: dark) and (max-width: 1023px)" srcSet="/path/to/hero-dark-tablet.svg" />
+          <source media="(prefers-color-scheme: dark)" srcSet={poolsideSvg} />
+          <source media="(max-width: 639px)" srcSet="/path/to/hero-light-mobile.svg" />
+          <source media="(max-width: 1023px)" srcSet="/path/to/hero-light-tablet.svg" />
+          <img
+            src="/path/to/hero-light-desktop.svg"
+            alt=""
+            className="w-full h-full object-cover opacity-80 dark:opacity-90 mix-blend-normal dark:mix-blend-screen scale-[1.01]"
+          />
+        </picture>
+        */}
+
+        {/* =====================================================================
+            🎬 OPTION 5: [COMMENTED]
+            Background Video (Autoplay, Looping, Muted Ambient Hero Video)
+            To use: Comment Option 1 above, and uncomment this block.
+            =====================================================================
+        {/*
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster={poolsideSvg}
+          className="w-full h-full object-cover opacity-75 dark:opacity-85 mix-blend-normal dark:mix-blend-screen scale-[1.01]"
+        >
+          <source src="/path/to/hero-background.webm" type="video/webm" />
+          <source src="/path/to/hero-background.mp4" type="video/mp4" />
+        </video>
+        */}
+
+        {/* =====================================================================
+            🎥 OPTION 6: [COMMENTED]
+            Theme-Specific Background Videos (Separate Videos for Dark vs Light Mode)
+            To use: Comment Option 1 above, and uncomment this block.
+            =====================================================================
+        {/*
+        <div className="w-full h-full">
+          <!-- Dark Mode Video -->
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster={poolsideSvg}
+            className="w-full h-full object-cover opacity-85 dark:block hidden mix-blend-screen scale-[1.01]"
+          >
+            <source src="/path/to/hero-dark.mp4" type="video/mp4" />
+          </video>
+          <!-- Light Mode Video -->
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster={poolsideSvg}
+            className="w-full h-full object-cover opacity-75 dark:hidden block mix-blend-normal scale-[1.01]"
+          >
+            <source src="/path/to/hero-light.mp4" type="video/mp4" />
+          </video>
+        </div>
+        */}
 
         {/* Parsu Theme Color Wash Overlay: Injects signature palette shades into the SVG */}
         <div
