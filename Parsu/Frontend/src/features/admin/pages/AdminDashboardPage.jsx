@@ -760,7 +760,7 @@ export default function AdminDashboardPage() {
                       )}
                       {visibleColumns.plan && (
                         <td className="py-3.5 px-4 font-semibold text-emerald-400">
-                          {u.subscription?.plan === 'enterprise' ? 'Super Hero (Bundle)' : u.subscription?.plan === 'starter' ? 'Web Hero' : 'Community (Free)'}
+                          {u.subscription?.plan === 'ultra' ? 'Ultra' : u.subscription?.plan === 'pro' ? 'Pro' : 'Free'}
                         </td>
                       )}
                       {visibleColumns.status && (

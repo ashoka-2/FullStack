@@ -49,6 +49,10 @@ import LandingPage from "../features/pages/LandingPage";
 const RootRoute = () => {
     const user = useSelector(state => state.auth.user);
     if (user) {
+        // Admins go directly to their console
+        if (user.role === 'admin') {
+            return <Navigate to="/admin/dashboard" replace />;
+        }
         return <Navigate to="/ai" replace />;
     }
     return <LandingPage />;

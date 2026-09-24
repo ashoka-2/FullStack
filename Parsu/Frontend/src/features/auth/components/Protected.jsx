@@ -16,6 +16,11 @@ const Protected = ({children}) => {
         return <Navigate to="/auth" state={{ from: location }} replace /> 
     }
 
+    // Admins should only use the admin console — redirect away from user routes
+    if (user.role === 'admin') {
+        return <Navigate to="/admin/dashboard" replace />;
+    }
+
     return children
 }
 

@@ -19,7 +19,7 @@ import {
   RiCompass3Line,
   RiGlobalLine,
   RiMagicLine,
-  RiInstagramLine,
+  RiShareForwardLine,
   RiMailSendLine,
   RiImageLine,
   RiVideoLine,
@@ -303,9 +303,9 @@ const ChatArea = () => {
   // Clean monochrome native surface with subtle cyan interaction
   const capabilities = [
     {
-       title: "Post to Instagram",
-       description: "Instantly create and publish image posts directly to your Instagram account.",
-       icon: RiInstagramLine,
+       title: "Post to Socials",
+       description: "Create & publish content to Instagram, Facebook, X, LinkedIn, YouTube, TikTok & Pinterest — all from chat.",
+       icon: RiShareForwardLine,
        colorClass: "text-zinc-300 group-hover:text-[var(--accent-cyan)]",
        bgHover: "hover:bg-white/[0.04] hover:border-white/20"
     },
@@ -440,7 +440,7 @@ const ChatArea = () => {
   };
 
   return (
-    <main data-lenis-prevent className="flex-1 w-full flex flex-col items-center bg-[var(--bg-primary)] relative overflow-x-hidden overflow-y-auto custom-scrollbar pb-80 md:pb-32"
+    <main data-lenis-prevent className="flex-1 w-full flex flex-col items-center bg-[var(--bg-primary)] relative overflow-x-hidden overflow-y-auto custom-scrollbar"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -521,8 +521,8 @@ const ChatArea = () => {
           )}
         </div>
 
-        {/* Search Input Box */}
-        <div className="w-full md:relative md:block fixed bottom-0 left-0 right-0 z-50 p-2.5 pb-5 sm:p-4 sm:pb-8 md:p-0 bg-gradient-to-t from-[#f4f5f7] dark:from-[#050505] via-[#f4f5f7]/95 dark:via-[#050505]/95 md:bg-transparent md:dark:bg-transparent to-transparent backdrop-blur-[2px] md:backdrop-blur-0">
+        {/* Search Input Box — always fixed at bottom, sidebar-aware on desktop */}
+        <div className={`fixed bottom-0 right-0 z-50 p-2.5 pb-5 sm:p-4 sm:pb-8 bg-gradient-to-t from-[#f4f5f7] dark:from-[#050505] via-[#f4f5f7]/95 dark:via-[#050505]/95 to-transparent backdrop-blur-[2px] transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'left-0 lg:left-16' : 'left-0 lg:left-56'}`}>
           <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[var(--bg-surface)] border ${isDragging ? 'border-[var(--color-clear-hanada)]' : 'border-zinc-200/90 dark:border-[#2d2e2e]'} focus-within:border-[var(--color-clear-hanada)]/60 dark:focus-within:border-[var(--color-clear-hanada)]/60 focus-within:ring-2 focus-within:ring-[#60A6AF]/20 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-5 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
 
             {/* Rich Attachment Preview Strip */}
@@ -883,8 +883,8 @@ const ChatArea = () => {
           </div>
         </div>
 
-        {/* Mobile Spacer to prevent overlap with fixed search bar */}
-        <div className="h-40 md:hidden" />
+        {/* Spacer so scrollable content doesn't hide behind fixed input bar */}
+        <div className="h-36 sm:h-40 shrink-0" />
       </div>
 
       {/* Full-width responsive footer - never trapped behind sidebar */}

@@ -585,7 +585,7 @@ export default function AdminUsersPage() {
                 >
                   <option value="free">Free Starter</option>
                   <option value="pro">Pro Plan</option>
-                  <option value="enterprise">Ultra Plan</option>
+                  <option value="ultra">Ultra Plan</option>
                 </select>
               </div>
 
