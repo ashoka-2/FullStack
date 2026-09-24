@@ -59,6 +59,7 @@ const FollowUpInput = ({
     const [isListening, setIsListening] = useState(false);
     const [liveCaption, setLiveCaption] = useState('');
     const recognitionRef = useRef(null);
+    const baseInputRef = useRef('');
 
     const handleToggleVoiceInput = () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -84,7 +85,16 @@ const FollowUpInput = ({
             const recognition = new SpeechRecognition();
             recognition.continuous = true;
             recognition.interimResults = true;
-            recognition.lang = 'en-US';
+
+            // Smart language configuration: detect if user prefers Hindi or device language
+            const savedVoiceURI = localStorage.getItem('parsu_tts_voice') || localStorage.getItem('perplexity_tts_voice') || '';
+            const isHindiPreferred = savedVoiceURI.toLowerCase().includes('hindi') || 
+                                     savedVoiceURI.toLowerCase().includes('hi-in') || 
+                                     (navigator.language && navigator.language.startsWith('hi'));
+            recognition.lang = isHindiPreferred ? 'hi-IN' : (navigator.language || 'en-US');
+
+            // Capture existing input before recognition starts to prevent re-duplication
+            baseInputRef.current = input ? input.trim() : '';
 
             recognition.onstart = () => {
                 setIsListening(true);
@@ -93,26 +103,37 @@ const FollowUpInput = ({
             };
 
             recognition.onresult = (event) => {
-                let currentInterim = '';
                 let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
+                let interimTranscript = '';
+
+                // Iterate through all accumulated results from 0 to length - 1
+                // to prevent Chrome's non-monotonic event.resultIndex duplication bug
+                for (let i = 0; i < event.results.length; i++) {
                     const transcript = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
                         finalTranscript += transcript + ' ';
                     } else {
-                        currentInterim += transcript;
+                        interimTranscript += transcript;
                     }
                 }
-                const fullLive = (finalTranscript + currentInterim).trim();
+
+                finalTranscript = finalTranscript.trim();
+                interimTranscript = interimTranscript.trim();
+
+                const fullLive = (finalTranscript + (interimTranscript ? ' ' + interimTranscript : '')).trim();
                 if (fullLive) {
                     setLiveCaption(fullLive);
                 }
-                if (finalTranscript.trim()) {
-                    setInput(prev => {
-                        const trimmed = prev ? prev.trim() : '';
-                        return trimmed ? `${trimmed} ${finalTranscript.trim()}` : finalTranscript.trim();
-                    });
-                    triggerBlobTyping();
+
+                const base = baseInputRef.current;
+                const currentSpoken = fullLive;
+
+                if (currentSpoken) {
+                    const combined = base ? `${base} ${currentSpoken}` : currentSpoken;
+                    setInput(combined);
+                    if (finalTranscript) {
+                        triggerBlobTyping();
+                    }
                 }
             };
 

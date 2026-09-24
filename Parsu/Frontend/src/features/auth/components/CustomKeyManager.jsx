@@ -213,7 +213,7 @@ export default function CustomKeyManager({ onNotify }) {
             setIsAdding(!isAdding);
             setTestResult(null);
           }}
-          className="px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer w-fit"
+          className="w-full sm:w-auto justify-center px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
         >
           <RiAddLine size={16} />
           <span>{isAdding ? "Close Form" : "Add Custom Key"}</span>
@@ -224,11 +224,11 @@ export default function CustomKeyManager({ onNotify }) {
       {isAdding && (
         <form
           onSubmit={handleSaveKey}
-          className="p-5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-cyan-500/30 shadow-lg space-y-4 animate-in fade-in zoom-in-95 duration-200"
+          className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/80 border border-cyan-500/30 shadow-lg space-y-4 animate-in fade-in zoom-in-95 duration-200"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2.5 pb-2 border-b border-zinc-200 dark:border-white/5">
             <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-              <RiKey2Line size={16} className="text-cyan-400" />
+              <RiKey2Line size={16} className="text-cyan-400 shrink-0" />
               <span>Connect AI Provider Key</span>
             </h3>
             {selectedProviderConfig.docs && (
@@ -236,9 +236,9 @@ export default function CustomKeyManager({ onNotify }) {
                 href={selectedProviderConfig.docs}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs text-cyan-400 hover:underline flex items-center gap-1"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25 text-xs font-semibold transition-all hover:scale-105 active:scale-95 shrink-0 self-start xs:self-auto shadow-xs"
               >
-                <span>Get API Key</span>
+                <span>Get {selectedProviderConfig.name || "Provider"} API Key</span>
                 <RiExternalLinkLine size={12} />
               </a>
             )}
@@ -361,12 +361,12 @@ export default function CustomKeyManager({ onNotify }) {
           )}
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-2">
             <button
               type="button"
               onClick={handleTestKey}
               disabled={testing || !apiKey.trim()}
-              className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
             >
               {testing ? (
                 <>
@@ -384,7 +384,7 @@ export default function CustomKeyManager({ onNotify }) {
             <button
               type="submit"
               disabled={loading || !apiKey.trim()}
-              className="px-5 py-2 bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 flex items-center gap-1.5"
+              className="w-full sm:w-auto px-5 py-2.5 sm:py-2 bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {loading ? (
                 <>
@@ -414,14 +414,25 @@ export default function CustomKeyManager({ onNotify }) {
             <p className="text-xs text-zinc-400">
               No custom API keys added yet. You are currently using our built-in default models (Gemini 2.5 Flash, Mistral, Groq Llama, DeepSeek).
             </p>
-            <button
-              type="button"
-              onClick={() => setIsAdding(true)}
-              className="mt-2 px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 text-xs font-semibold border border-cyan-500/30 hover:bg-cyan-500/30 cursor-pointer inline-flex items-center gap-1"
-            >
-              <RiAddLine size={14} />
-              <span>Add Your First Key</span>
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+              <button
+                type="button"
+                onClick={() => setIsAdding(true)}
+                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-cyan-500/20 text-cyan-300 text-xs font-semibold border border-cyan-500/30 hover:bg-cyan-500/30 cursor-pointer inline-flex items-center justify-center gap-1.5"
+              >
+                <RiAddLine size={14} />
+                <span>Add Custom Key</span>
+              </button>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-semibold border border-white/10 cursor-pointer inline-flex items-center justify-center gap-1.5"
+              >
+                <span>Get Free Gemini Key</span>
+                <RiExternalLinkLine size={12} />
+              </a>
+            </div>
           </div>
         ) : (
           customKeys.map((key) => {
@@ -433,24 +444,24 @@ export default function CustomKeyManager({ onNotify }) {
                 key={key._id}
                 className="rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-white/10 p-4 transition-all"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shrink-0">
                       <RiKey2Line size={18} />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                        <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
                           {key.name || key.provider}
                         </span>
-                        <span className="text-[10px] px-1.5 py-0.2 rounded font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 uppercase">
+                        <span className="text-[10px] px-1.5 py-0.2 rounded font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 uppercase shrink-0">
                           {key.provider}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 text-[11px] text-zinc-400 font-mono mt-0.5">
-                        <span>{key.maskedKey}</span>
+                        <span className="truncate">{key.maskedKey}</span>
                         {key.baseUrl && (
-                          <span className="text-zinc-500 truncate max-w-[200px]">
+                          <span className="text-zinc-500 truncate max-w-[140px] sm:max-w-[200px]">
                             {key.baseUrl}
                           </span>
                         )}
@@ -458,11 +469,11 @@ export default function CustomKeyManager({ onNotify }) {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100 dark:border-white/5">
                     <button
                       type="button"
                       onClick={() => setExpandedKeyId(isExpanded ? null : key._id)}
-                      className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-[11px] font-medium transition-colors cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-[11px] font-medium transition-colors cursor-pointer"
                     >
                       {isExpanded ? "Hide Models" : `View ${modelsCount} Models`}
                     </button>

@@ -253,40 +253,41 @@ const SocialConnections = () => {
                         </h1>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex items-center gap-1.5 sm:gap-3">
                         {connectedCount > 0 && (
                             <button
                                 type="button"
                                 onClick={() => setCreatePostOpen(true)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black font-bold text-xs shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black font-bold text-xs shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                             >
                                 <RiSendPlaneFill size={13} />
-                                <span>Create Post</span>
+                                <span className="hidden xs:inline">Create Post</span>
                             </button>
                         )}
-                        <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-white/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-white/10 text-[11px] sm:text-xs font-bold shadow-xs">
-                            <div className={`w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full ${connectedCount > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-500'}`} />
-                            <span>{connectedCount} of {PLATFORMS.length} Connected</span>
+                        <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-white/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-white/10 text-[10px] sm:text-xs font-bold shadow-xs">
+                            <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${connectedCount > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-500'}`} />
+                            <span>{connectedCount} <span className="hidden sm:inline">of {PLATFORMS.length}</span> Connected</span>
                         </div>
                     </div>
                 </header>
 
                 {/* Scrollable Content — only this area scrolls */}
                 <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
-                <main className="max-w-5xl w-full mx-auto px-4 sm:px-8 md:px-12 py-6 sm:py-10">
+                <main className="max-w-5xl w-full mx-auto px-3.5 sm:px-8 md:px-12 py-5 sm:py-10">
                     <div ref={containerRef}>
                         {/* Hero Section */}
-                        <div className="mb-12">
-                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                                <div className="flex items-center gap-5">
-                                    <div className="w-16 h-16 rounded-[24px] bg-gradient-to-tr from-[var(--color-clear-hanada)] to-[var(--accent-cyan)] flex items-center justify-center text-white shadow-[0_8px_30px_rgba(32,184,205,0.3)]">
-                                        <RiApps2Line size={34} />
+                        <div className="mb-8 sm:mb-12">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
+                                <div className="flex items-start sm:items-center gap-3.5 sm:gap-5">
+                                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[24px] bg-gradient-to-tr from-[var(--color-clear-hanada)] to-[var(--accent-cyan)] flex items-center justify-center text-white shadow-[0_8px_30px_rgba(32,184,205,0.3)] shrink-0 mt-0.5 sm:mt-0">
+                                        <RiApps2Line size={24} className="sm:hidden" />
+                                        <RiApps2Line size={34} className="hidden sm:block" />
                                     </div>
                                     <div>
-                                        <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
+                                        <h1 className="text-2xl sm:text-4xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
                                             Social <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-clear-hanada)] to-[var(--accent-cyan)]">Command Center</span>
                                         </h1>
-                                        <p className="text-zinc-500 dark:text-zinc-400 font-medium text-base sm:text-lg mt-1">
+                                        <p className="text-zinc-500 dark:text-zinc-400 font-medium text-xs sm:text-base mt-1">
                                             Connect your accounts once. Publish everywhere with AI.
                                         </p>
                                     </div>
@@ -295,7 +296,7 @@ const SocialConnections = () => {
                                 <button
                                     type="button"
                                     onClick={() => setCreatePostOpen(true)}
-                                    className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[var(--accent-cyan)] to-[var(--color-light-blue)] hover:from-[var(--accent-cyan-hover)] hover:to-[var(--color-blue)] text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
+                                    className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[var(--accent-cyan)] to-[var(--color-light-blue)] hover:from-[var(--accent-cyan-hover)] hover:to-[var(--color-blue)] text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
                                 >
                                     <RiSendPlaneFill size={16} />
                                     <span>Create & Publish Post</span>

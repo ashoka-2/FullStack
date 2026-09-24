@@ -399,15 +399,15 @@ export default function Pricing() {
             <div className="space-y-10 sm:space-y-14">
                 
                 {/* ── Top Location Discount Banner (Matching media_1790057123792.jpg) ── */}
-                <div className="w-full flex justify-center">
+                <div className="w-full flex justify-center px-2">
                     {isIndia ? (
-                        <div className="inline-flex items-center gap-2 sm:gap-3 px-4 py-2 rounded-full bg-zinc-900 border border-white/10 text-xs sm:text-sm text-zinc-300 shadow-md">
-                            <span className="text-base">🇮🇳</span>
+                        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 px-3.5 sm:px-4 py-2 rounded-2xl sm:rounded-full bg-zinc-900 border border-white/10 text-xs sm:text-sm text-zinc-300 shadow-md text-center">
+                            <span className="text-base shrink-0">🇮🇳</span>
                             <span className="font-medium">Special pricing for India - 25% off with</span>
                             <button
                                 type="button"
                                 onClick={handleCopyDiscount}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 text-white font-mono font-bold text-xs transition-colors cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 text-white font-mono font-bold text-xs transition-colors cursor-pointer shrink-0"
                                 title="Click to copy promo code"
                             >
                                 <span>PPP25</span>
@@ -415,23 +415,23 @@ export default function Pricing() {
                             </button>
                         </div>
                     ) : (
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900 border border-white/10 text-xs sm:text-sm text-zinc-300 shadow-md">
-                            <RiGlobalLine size={15} className="text-[var(--accent-cyan)]" />
+                        <div className="flex flex-wrap items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-2xl sm:rounded-full bg-zinc-900 border border-white/10 text-xs sm:text-sm text-zinc-300 shadow-md text-center">
+                            <RiGlobalLine size={15} className="text-[var(--accent-cyan)] shrink-0" />
                             <span className="font-medium">Global Pricing Active • Location auto-localized</span>
                         </div>
                     )}
                 </div>
 
                 {/* ── Header Pill Bar (Matching media_1790057123792.jpg) ── */}
-                <div className="flex flex-col items-center text-center space-y-4 max-w-2xl mx-auto">
-                    <div className="inline-flex items-center gap-4 px-4 py-2 rounded-full bg-zinc-900/90 border border-white/10 shadow-lg text-xs sm:text-sm">
+                <div className="flex flex-col items-center text-center space-y-4 max-w-2xl mx-auto px-2">
+                    <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl sm:rounded-full bg-zinc-900/90 border border-white/10 shadow-lg text-xs sm:text-sm">
                         <div className="flex items-center gap-1.5 font-extrabold text-white">
                             <span>Parsu</span>
                             <span className="px-1.5 py-0.2 rounded bg-[var(--accent-cyan)] text-black font-black text-[10px]">PRO</span>
                         </div>
-                        <span className="text-zinc-600 dark:text-zinc-600">•</span>
+                        <span className="hidden xs:inline text-zinc-600 dark:text-zinc-600">•</span>
                         <Link to="/about" className="text-zinc-400 hover:text-white transition-colors">Documentation</Link>
-                        <span className="text-zinc-600 dark:text-zinc-600">•</span>
+                        <span className="hidden xs:inline text-zinc-600 dark:text-zinc-600">•</span>
                         <Link to={user ? "/settings" : "/auth?mode=login"} className="text-zinc-400 hover:text-white transition-colors">
                             {user ? "Account" : "Login"}
                         </Link>
@@ -440,7 +440,7 @@ export default function Pricing() {
                         </span>
                     </div>
 
-                    <h1 className="text-3xl sm:text-5xl font-black text-zinc-900 dark:text-white tracking-tight pt-2">
+                    <h1 className="text-2xl sm:text-5xl font-black text-zinc-900 dark:text-white tracking-tight pt-2 leading-tight">
                         Pick your stack. <br />
                         <span className="text-[var(--accent-cyan)]">Start building products you're proud to ship.</span>
                     </h1>

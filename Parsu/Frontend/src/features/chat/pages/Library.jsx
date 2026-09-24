@@ -303,9 +303,14 @@ const Library = () => {
                                     key={thread.id} 
                                     thread={thread} 
                                     viewMode={viewMode} 
-                                    onDelete={() => {
-                                        setTargetThreadId(thread.id);
-                                        setDeleteModalOpen(true);
+                                    onDelete={async (id) => {
+                                        try {
+                                            await handleDeleteChat(id || thread.id);
+                                            triggerBlobChatDeleted();
+                                            dispatch(addToast({ type: 'success', message: 'Chat deleted' }));
+                                        } catch (err) {
+                                            dispatch(addToast({ type: 'error', message: 'Failed to delete chat' }));
+                                        }
                                     }}
                                 />
                             ))

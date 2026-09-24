@@ -106,15 +106,17 @@ const Settings = () => {
 
                         {/* User identity card */}
                         {user && (
-                            <div className="flex items-center gap-4 mb-8 p-4 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-white/8 shadow-sm">
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--accent-cyan)] to-[var(--color-clear-hanada)] flex items-center justify-center text-white font-black text-lg shrink-0 shadow-lg shadow-[var(--accent-cyan)]/20">
-                                    {(user.name || user.username || 'U')[0].toUpperCase()}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 p-4 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-white/8 shadow-sm">
+                                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-[var(--accent-cyan)] to-[var(--color-clear-hanada)] flex items-center justify-center text-white font-black text-base sm:text-lg shrink-0 shadow-lg shadow-[var(--accent-cyan)]/20">
+                                        {(user.name || user.username || 'U')[0].toUpperCase()}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="font-bold text-sm sm:text-base text-zinc-900 dark:text-white truncate">{user.name || user.username}</p>
+                                        <p className="text-xs text-zinc-500 truncate">{user.email}</p>
+                                    </div>
                                 </div>
-                                <div className="min-w-0">
-                                    <p className="font-bold text-zinc-900 dark:text-white truncate">{user.name || user.username}</p>
-                                    <p className="text-xs text-zinc-500 truncate">{user.email}</p>
-                                </div>
-                                <div className="ml-auto flex items-center gap-2 shrink-0">
+                                <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-zinc-100 dark:border-white/5 w-full sm:w-auto justify-between sm:justify-end">
                                     <Link
                                         to="/settings/subscription"
                                         className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 transition-all flex items-center gap-1"

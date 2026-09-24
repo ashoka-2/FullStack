@@ -267,6 +267,9 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
 
         if (!cleanText) return;
 
+        // Detect if text contains Hindi (Devanagari script \u0900-\u097F)
+        const hasHindi = /[\u0900-\u097F]/.test(cleanText);
+
         const utterance = new SpeechSynthesisUtterance(cleanText);
 
         const savedVoiceURI = localStorage.getItem("parsu_tts_voice") || localStorage.getItem("perplexity_tts_voice");
@@ -274,9 +277,33 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
         const savedPitch = parseFloat(localStorage.getItem("parsu_tts_pitch") || localStorage.getItem("perplexity_tts_pitch") || "1");
 
         const voices = window.speechSynthesis.getVoices();
-        if (savedVoiceURI && voices.length > 0) {
-            const matchedVoice = voices.find(v => v.voiceURI === savedVoiceURI || v.name === savedVoiceURI);
-            if (matchedVoice) utterance.voice = matchedVoice;
+
+        if (hasHindi) {
+            // Explicitly set language tag to Hindi (India)
+            utterance.lang = "hi-IN";
+            // Look for a native Hindi voice installed on the device (e.g., Google हिन्दी, Microsoft Kalpana/Swara/Hemant)
+            const hindiVoice = voices.find(v => 
+                v.lang === "hi-IN" || 
+                v.lang === "hi_IN" || 
+                v.lang?.toLowerCase().startsWith("hi") || 
+                v.name?.toLowerCase().includes("hindi") ||
+                v.name?.toLowerCase().includes("kalpana") ||
+                v.name?.toLowerCase().includes("swara") ||
+                v.name?.toLowerCase().includes("hemant")
+            );
+            if (hindiVoice) {
+                utterance.voice = hindiVoice;
+            }
+            // Omitting an incompatible English voice allows the browser to synthesize Hindi without being muted
+        } else {
+            utterance.lang = "en-US";
+            if (savedVoiceURI && voices.length > 0) {
+                const matchedVoice = voices.find(v => v.voiceURI === savedVoiceURI || v.name === savedVoiceURI);
+                if (matchedVoice) {
+                    utterance.voice = matchedVoice;
+                    if (matchedVoice.lang) utterance.lang = matchedVoice.lang;
+                }
+            }
         }
 
         utterance.rate = isNaN(savedRate) ? 1 : savedRate;

@@ -426,20 +426,20 @@ export default function ModelSelectorDropdown({
           </div>
 
           {/* Footer Action */}
-          <div className="p-2.5 border-t border-zinc-200/80 dark:border-white/10 bg-zinc-50/80 dark:bg-[#171819] flex items-center justify-between">
+          <div className="p-2.5 border-t border-zinc-200/80 dark:border-white/10 bg-zinc-50/80 dark:bg-[#171819] flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => {
                 setIsOpen(false);
-                navigate("/settings");
+                navigate("/settings/api-keys");
               }}
-              className="flex items-center gap-1.5 text-xs text-cyan-500 dark:text-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-300 font-medium transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-xs text-cyan-500 dark:text-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-300 font-medium transition-colors cursor-pointer truncate"
             >
-              <RiSettings3Line className="w-3.5 h-3.5" />
-              <span>Manage Custom API Keys</span>
+              <RiSettings3Line className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Manage API Keys & Models</span>
             </button>
-            <span className="text-[10px] text-zinc-400 dark:text-gray-500">
-              {allModels.length} models available
+            <span className="text-[10px] text-zinc-400 dark:text-gray-500 shrink-0">
+              {allModels.length} models
             </span>
           </div>
         </div>,

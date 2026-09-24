@@ -19,7 +19,7 @@ const FloatingBlobMascot = () => {
   // Size state (width & height in px) from localStorage (default: 110)
   const [size, setSize] = useState(() => {
     const saved = localStorage.getItem('blob_mascot_size');
-    return saved ? Math.max(60, Math.min(200, parseInt(saved, 10))) : 110;
+    return saved ? Math.max(48, Math.min(300, parseInt(saved, 10))) : 110;
   });
 
   // Mood and speech states
@@ -231,7 +231,8 @@ const FloatingBlobMascot = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const activeSize = isMobile ? Math.min(size, 72) : size;
+  // Allow mascot to increase and decrease size on mobile as well
+  const activeSize = isMobile ? Math.max(48, Math.min(180, size)) : size;
 
   if (isAuthPage || !isVisible) {
     return null;

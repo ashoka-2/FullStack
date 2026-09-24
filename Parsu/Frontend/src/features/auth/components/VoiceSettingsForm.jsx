@@ -92,12 +92,18 @@ const VoiceSettingsForm = ({ onSuccess }) => {
 
     window.speechSynthesis.cancel();
 
-    const text = "Hello! This is a preview of my voice. I will use this voice to read AI responses for you.";
+    const matchedVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
+    const isHindiVoice = matchedVoice?.lang?.toLowerCase().startsWith('hi') || matchedVoice?.name?.toLowerCase().includes('hindi');
+
+    const text = isHindiVoice
+      ? "नमस्ते! मैं पार्सू एआई हूँ। यह मेरी आवाज़ का परीक्षण है। मैं हिंदी और अंग्रेज़ी दोनों पढ़ सकता हूँ।"
+      : "Hello! This is a preview of my voice. I will use this voice to read AI responses for you.";
+
     const utterance = new SpeechSynthesisUtterance(text);
 
-    const matchedVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
     if (matchedVoice) {
       utterance.voice = matchedVoice;
+      utterance.lang = matchedVoice.lang || (isHindiVoice ? "hi-IN" : "en-US");
     }
 
     utterance.rate = rate;
