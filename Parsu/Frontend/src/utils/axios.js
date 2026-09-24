@@ -14,7 +14,7 @@ export const API_BASE_URL = import.meta.env.DEV
   ? ""
   : (rawEnvUrl && rawEnvUrl.trim())
     ? rawEnvUrl.trim().replace(/\/+$/, "")
-    : "";
+    : "https://parsuai.onrender.com";
 
 const customAxios = axios.create({
   baseURL: API_BASE_URL,

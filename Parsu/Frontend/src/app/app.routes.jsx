@@ -64,6 +64,14 @@ export const router = createBrowserRouter([
                 element: <Auth />
             },
             {
+                path: "/auth/google/callback",
+                element: <Auth />
+            },
+            {
+                path: "/auth/callback",
+                element: <Auth />
+            },
+            {
                 path: "/login",
                 element: <Navigate to="/auth" replace />
             },

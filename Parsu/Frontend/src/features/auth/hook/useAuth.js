@@ -76,6 +76,7 @@ export function useAuth(){
             }
             const response = await getMe();
             dispatch(setUser(response.user));
+            return response;
         }catch(error){
             // 401 means not logged in - don't show an error toast for this
             if(error.response?.status !== 401) {

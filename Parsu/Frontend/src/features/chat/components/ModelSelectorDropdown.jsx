@@ -195,8 +195,6 @@ export default function ModelSelectorDropdown({
     isCustom: selectedModel?.isCustom || false
   };
 
-  const activeTheme = PROVIDER_THEMES[activeModel.provider] || PROVIDER_THEMES.gemini;
-
   const handleSelect = async (model) => {
     const normalizedModel = {
       ...model,
@@ -241,7 +239,7 @@ export default function ModelSelectorDropdown({
         }`}
         title={`Active AI Model: ${activeModel.name}`}
       >
-        <div className={`p-0.5 rounded-md ${activeTheme.color}`}>
+        <div className="p-0.5 rounded-md text-[var(--accent-cyan)]">
           {activeModel.provider === "groq" ? (
             <RiFlashlightLine className="w-3.5 h-3.5" />
           ) : activeModel.id?.includes("reason") || activeModel.id?.includes("r1") ? (

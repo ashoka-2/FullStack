@@ -547,8 +547,11 @@ export async function googleCallback(req, res) {
         googleId: id,
         authProvider: "google",
         profilePic,
-        verified: true
       });
+    }
+
+    if (user.isBlocked) {
+      return res.redirect(`${frontendUrl}/auth?error=account_blocked`);
     }
 
     const token = jwt.sign(
