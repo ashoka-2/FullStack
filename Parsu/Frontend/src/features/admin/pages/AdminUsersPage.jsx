@@ -52,6 +52,8 @@ export default function AdminUsersPage() {
     status: 'active',
     billingCycle: 'monthly'
   });
+  const [isSavingSub, setIsSavingSub] = useState(false);
+
   // Refs to avoid stale closures in observer
   const pageRef = useRef(1);
   const hasMoreRef = useRef(true);
