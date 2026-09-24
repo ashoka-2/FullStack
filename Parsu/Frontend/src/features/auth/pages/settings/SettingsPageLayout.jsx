@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router';
-import { RiMenuLine, RiArrowLeftLine } from '@remixicon/react';
+import { RiMenuLine, RiArrowLeftLine, RiSideBarLine } from '@remixicon/react';
+import { useSelector, useDispatch } from 'react-redux';
+import { toggleSidebarCollapse } from '../../../chat/chat.slice';
 import Sidebar from '../../../Components/Sidebar';
 import Footer from '../../../Components/Footer';
 import useSEO from '../../../../utils/useSEO';
@@ -13,6 +15,8 @@ import useSEO from '../../../../utils/useSEO';
  */
 const SettingsPageLayout = ({ title, icon: Icon, description, children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
+    const dispatch = useDispatch();
 
     useSEO({
         title,
@@ -24,15 +28,16 @@ const SettingsPageLayout = ({ title, icon: Icon, description, children }) => {
         <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            {/* Main column — NO overflow here */}
-            <div className="flex-1 flex flex-col min-h-0 lg:pl-56">
+            {/* Main column — dynamic padding based on sidebar collapse */}
+            <div className={`flex-1 flex flex-col min-h-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
 
                 {/* Header — shrink-0: naturally pinned */}
-                <header className="shrink-0 z-30 border-b border-zinc-200 dark:border-white/5 bg-[var(--bg-primary)]/90 dark:bg-[var(--bg-primary)]/85 backdrop-blur-md px-3 sm:px-8 h-12 sm:h-14 flex items-center justify-between gap-2">
+                <header className="shrink-0 z-30 border-b border-white/[0.08] bg-[#0B0B0B]/90 backdrop-blur-md px-3 sm:px-8 h-12 sm:h-14 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        {/* Mobile sidebar toggle button */}
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-1.5 -ml-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer rounded-lg active:scale-95 shrink-0"
+                            className="lg:hidden p-1.5 -ml-1 text-zinc-400 hover:text-white transition-all cursor-pointer rounded-lg active:scale-95 shrink-0"
                             aria-label="Open navigation"
                         >
                             <RiMenuLine size={20} />

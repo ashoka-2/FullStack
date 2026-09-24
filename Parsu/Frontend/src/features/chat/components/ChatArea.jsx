@@ -26,7 +26,8 @@ import {
   RiFilePdfLine,
   RiFullscreenLine,
   RiFullscreenExitLine,
-  RiCodeSSlashLine
+  RiCodeSSlashLine,
+  RiSpyLine
 } from '@remixicon/react';
 import { useChat } from '../hook/useChat';
 import { useNavigate } from 'react-router';
@@ -37,6 +38,7 @@ import { addToast } from '../../../utils/toast.slice';
 import ParsuLogo from '../../Components/ParsuLogo';
 import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
 import ModelSelectorDropdown from './ModelSelectorDropdown';
+import { useAiFeatureToggles } from '../../../utils/aiSettingsSync';
 import AttachmentPreviewStrip from './AttachmentPreviewStrip';
 import AddToChatSheet from './AddToChatSheet';
 import MatrixOrb from '../../Components/rare-ui/MatrixOrb';
@@ -58,8 +60,9 @@ const ChatArea = () => {
   // Chat custom hook functions
   const { handleSendMessage, handleGetSuggestions, loading } = useChat();
   
-  // Global error state from Redux
+  // Global error & layout state from Redux
   const error = useSelector(state => state.chat.error);
+  const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -236,33 +239,24 @@ const ChatArea = () => {
   const docInputRef = useRef(null);
   const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
 
-  // Web Search toggle (Tavily search vs pure AI)
-  const [webSearch, setWebSearch] = useState(() => {
-    const saved = localStorage.getItem("parsu_web_search") ?? localStorage.getItem("perplexity_web_search");
-    return saved !== null ? saved === "true" : true; // Default ON
-  });
+  // Web Search and Cross-Chat Memory feature toggles synced across all pages & settings
+  const {
+    webSearch,
+    setWebSearch,
+    handleToggleWebSearch,
+    memoryEnabled,
+    setMemoryEnabled,
+    handleToggleMemory,
+  } = useAiFeatureToggles();
 
-  const handleToggleWebSearch = () => {
-    setWebSearch(prev => {
-      const next = !prev;
-      localStorage.setItem("parsu_web_search", String(next));
-      return next;
-    });
-  };
+  // Incognito mode state synced with localStorage and event
+  const [incognito, setIncognito] = useState(() => localStorage.getItem('parsu_incognito') === '1');
 
-  // Cross-Chat Memory toggle (read & recall across other chats)
-  const [memoryEnabled, setMemoryEnabled] = useState(() => {
-    const saved = localStorage.getItem("parsu_memory_enabled") ?? localStorage.getItem("perplexity_memory_enabled");
-    return saved !== null ? saved === "true" : true; // Default ON
-  });
-
-  const handleToggleMemory = () => {
-    setMemoryEnabled(prev => {
-      const next = !prev;
-      localStorage.setItem("parsu_memory_enabled", String(next));
-      return next;
-    });
-  };
+  useEffect(() => {
+    const handler = (e) => setIncognito(Boolean(e.detail));
+    window.addEventListener('parsu_incognito_change', handler);
+    return () => window.removeEventListener('parsu_incognito_change', handler);
+  }, []);
 
   const handleFileUpload = (e) => {
     const uploadedFiles = Array.from(e.target.files);
@@ -306,21 +300,21 @@ const ChatArea = () => {
   };
 
   // Dynamic array of extra AI capabilities
-  // For future extensibility without changing UI code
+  // Clean monochrome native surface with subtle cyan interaction
   const capabilities = [
     {
        title: "Post to Instagram",
        description: "Instantly create and publish image posts directly to your Instagram account.",
        icon: RiInstagramLine,
-       colorClass: "text-[#E1306C]",
-       bgHover: "hover:bg-[#E1306C]/10 hover:border-[#E1306C]/30"
+       colorClass: "text-zinc-300 group-hover:text-[var(--accent-cyan)]",
+       bgHover: "hover:bg-white/[0.04] hover:border-white/20"
     },
     {
        title: "Send Emails",
        description: "Draft and send professional emails straight from the chat interface.",
        icon: RiMailSendLine,
-       colorClass: "text-[#EA4335]",
-       bgHover: "hover:bg-[#EA4335]/10 hover:border-[#EA4335]/30"
+       colorClass: "text-zinc-300 group-hover:text-[var(--accent-cyan)]",
+       bgHover: "hover:bg-white/[0.04] hover:border-white/20"
     }
   ];
 
@@ -365,8 +359,8 @@ const ChatArea = () => {
         }
       }));
       
-      // Asynchronously handle message sending with selected model, webSearch, and cross-chat memory
-      handleSendMessage(messageToSend, null, filesToSend, selectedModel, webSearch, memoryEnabled).then(response => {
+      // Asynchronously handle message sending with selected model, webSearch, and cross-chat memory (plus incognito)
+      handleSendMessage(messageToSend, null, filesToSend, selectedModel, webSearch, memoryEnabled, incognito).then(response => {
         // Silently update URL once real chat ID is received
         if (response && response.chat) {
           navigate(`/chat/${response.chat._id}`, { replace: true });
@@ -700,6 +694,16 @@ const ChatArea = () => {
                   onModelChange={setSelectedModel}
                 />
 
+                {incognito && (
+                  <span
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-500/10 border border-purple-500/25 text-[11px] text-purple-400 font-semibold shrink-0 cursor-help"
+                    title="Incognito Mode is ON: This chat will not be saved to your history or library."
+                  >
+                    <RiSpyLine size={13} />
+                    <span className="hidden sm:inline">Incognito</span>
+                  </span>
+                )}
+
                 {/* Hidden inputs */}
                 <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" multiple />
                 <input type="file" ref={cameraInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" capture="environment" />
@@ -863,14 +867,14 @@ const ChatArea = () => {
             {capabilities.map((cap, i) => {
                const Icon = cap.icon;
                return (
-                 <div key={i} className={`flex flex-col gap-2 p-4 bg-white dark:bg-[var(--bg-surface)]/50 border border-zinc-200/90 dark:border-white/5 rounded-2xl transition-all cursor-default shadow-2xs ${cap.bgHover}`}>
+                 <div key={i} className={`group flex flex-col gap-2 p-4 bg-[#111111] dark:bg-[#111111] border border-white/[0.08] hover:border-white/20 rounded-2xl transition-all cursor-default shadow-xs ${cap.bgHover}`}>
                    <div className="flex items-center gap-3">
-                     <div className={`w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shadow-xs ${cap.colorClass}`}>
+                     <div className={`w-8 h-8 rounded-xl bg-[#1A1A1A] border border-white/[0.08] flex items-center justify-center transition-colors shadow-xs ${cap.colorClass}`}>
                         <Icon size={16} />
                      </div>
-                     <span className="text-[14px] font-extrabold text-zinc-800 dark:text-zinc-200">{cap.title}</span>
+                     <span className="text-[14px] font-semibold text-zinc-100">{cap.title}</span>
                    </div>
-                   <p className="text-[12px] text-zinc-500 font-medium leading-[1.5] mt-1 pr-4">
+                   <p className="text-[12px] text-zinc-400 font-normal leading-[1.5] mt-1 pr-4">
                      {cap.description}
                    </p>
                  </div>
@@ -879,20 +883,20 @@ const ChatArea = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="w-full max-w-[800px] mt-12 mb-8 px-1">
-          <Footer />
-        </div>
-
         {/* Mobile Spacer to prevent overlap with fixed search bar */}
         <div className="h-40 md:hidden" />
+      </div>
+
+      {/* Full-width responsive footer - never trapped behind sidebar */}
+      <div className="w-full border-t border-white/[0.08] mt-auto">
+        <Footer />
       </div>
 
       {/* Full-Screen Prompt & Code Editor Studio via React Portal */}
       {isFullScreenEditor && typeof document !== 'undefined' && createPortal(
         <div 
           data-lenis-prevent="true"
-          className="fixed inset-0 lg:left-56 z-[9980] bg-[#0c0d10] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200 border-l border-zinc-800/80 shadow-2xl"
+          className={`fixed inset-0 ${isSidebarCollapsed ? 'lg:left-16' : 'lg:left-56'} z-[9980] bg-[#0c0d10] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200 border-l border-zinc-800/80 shadow-2xl transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}
           onWheel={(e) => e.stopPropagation()}
         >
           {/* Studio Header */}

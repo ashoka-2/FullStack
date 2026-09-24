@@ -138,6 +138,32 @@ const userSchema = new mongoose.Schema({
         provider: { type: String, default: "gemini" },
         modelId: { type: String, default: "gemini-2.5-flash" },
         modelName: { type: String, default: "Gemini 2.5 Flash" }
+    },
+
+    // ── Memory System ────────────────────────────────────────────────────────
+    memory: {
+        enabled: { type: Boolean, default: true },
+        nickname: { type: String, default: "", trim: true },
+        occupation: { type: String, default: "", trim: true },
+        customInstructions: { type: String, default: "", maxlength: 2000 },
+        summary: { type: String, default: "" },   // AI-generated overview
+        facts: [{ type: String }],                // individual facts learned
+        librarySearchEnabled: { type: Boolean, default: false },
+        lastUpdated: { type: Date, default: Date.now }
+    },
+
+    // ── User Preferences ─────────────────────────────────────────────────────
+    preferences: {
+        theme: { type: String, enum: ['system', 'light', 'dark'], default: 'system' },
+        language: { type: String, default: 'en' },
+        hapticFeedback: { type: Boolean, default: true },
+        webSearchEnabled: { type: Boolean, default: false },
+        safetyFilter: { type: Boolean, default: true },
+        notifications: {
+            enabled: { type: Boolean, default: true },
+            aiResponse: { type: Boolean, default: true },
+            systemAlerts: { type: Boolean, default: true }
+        }
     }
 },{timestamps:true})
 

@@ -73,20 +73,13 @@ const ToastItem = ({ id, message, description, title, type = 'default', action, 
         };
       case 'info':
       case 'accent':
-        return {
-          card: 'bg-white/95 dark:bg-[var(--bg-surface)]/95 border-cyan-500/30 dark:border-cyan-500/20 shadow-[0_12px_32px_rgba(32,184,205,0.14)]',
-          indicator: 'bg-cyan-500/10 text-[var(--accent-cyan)] dark:bg-cyan-500/15 border-cyan-500/20',
-          title: 'text-[var(--accent-cyan)]',
-          actionBtn: 'bg-[var(--accent-cyan)] text-black hover:bg-[var(--accent-cyan-hover)] font-bold shadow-xs',
-          icon: <RiInformationLine size={16} />
-        };
       default:
         return {
-          card: 'bg-white/95 dark:bg-[var(--bg-surface)]/95 border-zinc-200/80 dark:border-white/10 shadow-[0_12px_32px_rgba(0,0,0,0.15)]',
-          indicator: 'bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-300 border-zinc-200 dark:border-white/10',
-          title: 'text-zinc-900 dark:text-white',
-          actionBtn: 'bg-zinc-200 text-zinc-800 hover:bg-zinc-300 dark:bg-white/10 dark:text-white dark:hover:bg-white/15',
-          icon: <RiUserSharedLine size={16} />
+          card: 'bg-[#171717] border-[var(--accent-cyan)]/30 text-white shadow-xl',
+          indicator: 'bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] border-[var(--accent-cyan)]/20',
+          title: 'text-[var(--accent-cyan)]',
+          actionBtn: 'bg-[var(--accent-cyan)] text-zinc-950 hover:bg-[var(--accent-cyan-hover)] font-bold shadow-xs',
+          icon: <RiInformationLine size={16} />
         };
     }
   };

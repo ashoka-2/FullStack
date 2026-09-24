@@ -23,7 +23,7 @@ import AddToChatSheet from './AddToChatSheet';
 import { triggerBlobInteraction, triggerBlobTyping } from '../../../utils/blobReactions';
 import { useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { addToast } from '../../../utils/toast.slice';
 
 const FollowUpInput = ({ 
@@ -54,6 +54,7 @@ const FollowUpInput = ({
     const cameraInputRef = useRef(null);
 
     const dispatch = useDispatch();
+    const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
 
     // Speech Recognition (Voice to text) & Live Caption
     const [isListening, setIsListening] = useState(false);
@@ -236,7 +237,7 @@ const FollowUpInput = ({
     };
 
     return (
-        <div className="absolute bottom-0 left-0 w-full lg:pl-56 bg-gradient-to-t from-[#f4f5f7] dark:from-[#050505] via-[#f4f5f7]/95 dark:via-[#050505]/95 to-transparent z-40 pb-6 md:pb-8 pointer-events-none transition-all flex flex-col justify-end">
+        <div className={`absolute bottom-0 left-0 w-full ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} bg-gradient-to-t from-[#f4f5f7] dark:from-[#050505] via-[#f4f5f7]/95 dark:via-[#050505]/95 to-transparent z-40 pb-6 md:pb-8 pointer-events-none transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col justify-end`}>
             {/* Queued Messages Tray & Stop Generating */}
             <MessageQueueTray 
                 queue={queue}
@@ -449,7 +450,7 @@ const FollowUpInput = ({
             {isFullScreenEditor && typeof document !== 'undefined' && createPortal(
                 <div 
                     data-lenis-prevent="true"
-                    className="fixed inset-0 lg:left-56 z-[9980] bg-[#0c0d10] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200 border-l border-zinc-800/80 shadow-2xl"
+                    className={`fixed inset-0 ${isSidebarCollapsed ? 'lg:left-16' : 'lg:left-56'} z-[9980] bg-[#0c0d10] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200 border-l border-zinc-800/80 shadow-2xl transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}
                     onWheel={(e) => e.stopPropagation()}
                 >
                     {/* Studio Header */}

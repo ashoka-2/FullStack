@@ -10,7 +10,8 @@ import {
     RiCalendarLine,
     RiSortDesc,
     RiSortAsc,
-    RiUploadCloud2Line
+    RiUploadCloud2Line,
+    RiSideBarLine
 } from '@remixicon/react';
 import { useNavigate } from 'react-router';
 import Sidebar from '../../Components/Sidebar';
@@ -18,10 +19,9 @@ import ThreadCard from '../components/ThreadCard';
 import MessageSearchResults from '../components/MessageSearchResults';
 import ParsuLogo from '../../Components/ParsuLogo';
 import { useChat } from '../hook/useChat';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { LibrarySkeleton } from '../components/Skeletons';
-import { setError } from '../chat.slice';
-import { useDispatch } from 'react-redux';
+import { setError, toggleSidebarCollapse } from '../chat.slice';
 import { addToast } from '../../../utils/toast.slice';
 import ConfirmationModal from '../../Components/ConfirmationModal';
 import { triggerBlobLibrarySearch, triggerBlobChatDeleted } from '../../../utils/blobReactions';
@@ -79,6 +79,7 @@ const Library = () => {
     const { handleGetChats, handleDeleteChat, handleSearchMessagesGlobally } = useChat();
     const chats = useSelector(state => state.chat.chats);
     const error = useSelector(state => state.chat.error);
+    const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
     const dispatch = useDispatch();
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [targetThreadId, setTargetThreadId] = useState(null);
@@ -196,22 +197,21 @@ const Library = () => {
         <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30 w-full">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            <div className="flex-1 flex flex-col h-full lg:pl-56 min-w-0 transition-all duration-300 w-full overflow-hidden">
-                {/* Sticky Header - always pinned, never scrolls away */}
-                <header className="shrink-0 h-12 sm:h-14 bg-[var(--bg-primary)]/90 dark:bg-[var(--bg-primary)]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-white/5 flex items-center justify-between px-3 sm:px-6 z-40">
+            <div className={`flex-1 flex flex-col h-full ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} min-w-0 transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] w-full overflow-hidden`}>
+                {/* ChatGPT-style Header */}
+                <header className="shrink-0 h-12 sm:h-14 bg-[#0B0B0B]/90 backdrop-blur-md border-b border-white/[0.08] flex items-center justify-between px-3 sm:px-6 z-40">
                     <div className="flex items-center gap-2">
+                        {/* Mobile sidebar button */}
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-1.5 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all rounded-lg active:scale-95 cursor-pointer"
+                            className="lg:hidden p-1.5 text-zinc-400 hover:text-white transition-all rounded-lg active:scale-95 cursor-pointer"
                             aria-label="Open sidebar"
                         >
                             <RiMenuLine size={20} />
                         </button>
-                        <span className="lg:hidden text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
-                            <RiHistoryLine size={17} className="text-[var(--accent-cyan)]" /> Chats
-                        </span>
-                        <span className="hidden lg:flex items-center gap-2 text-sm font-bold text-zinc-900 dark:text-white">
-                            <RiHistoryLine size={17} className="text-[var(--accent-cyan)]" /> Chats
+
+                        <span className="text-sm font-semibold text-zinc-100 flex items-center gap-1.5">
+                            <RiHistoryLine size={17} className="text-[var(--accent-cyan)]" /> Library & History
                         </span>
                     </div>
                 </header>
@@ -221,10 +221,10 @@ const Library = () => {
                 <main className="max-w-[1000px] mx-auto px-4 md:px-6 py-6 md:py-10">
  
                     <div className="hidden lg:flex items-center gap-3 mb-10 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[var(--accent-cyan)] to-[#1da9bc] flex items-center justify-center text-zinc-950 shrink-0 shadow-lg shadow-[var(--accent-cyan)]/20">
-                            <RiHistoryLine size={22} />
+                        <div className="w-10 h-10 rounded-2xl bg-[#171717] border border-white/[0.08] flex items-center justify-center text-[var(--accent-cyan)] shrink-0 shadow-sm">
+                            <RiHistoryLine size={20} />
                         </div>
-                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white shrink-0">Chats</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white shrink-0">Chats</h1>
                     </div>
 
                     {/* ─── Search Bar + View Toggle + Upload Button ─────────────────────── */}
@@ -298,22 +298,33 @@ const Library = () => {
                         {useSelector(state => state.chat.loading) && chatsList.length === 0 ? (
                             <LibrarySkeleton viewMode={viewMode} />
                         ) : (
-                            chatsList.map((thread) => (
-                                <ThreadCard 
-                                    key={thread.id} 
-                                    thread={thread} 
-                                    viewMode={viewMode} 
-                                    onDelete={async (id) => {
-                                        try {
-                                            await handleDeleteChat(id || thread.id);
-                                            triggerBlobChatDeleted();
-                                            dispatch(addToast({ type: 'success', message: 'Chat deleted' }));
-                                        } catch (err) {
-                                            dispatch(addToast({ type: 'error', message: 'Failed to delete chat' }));
-                                        }
-                                    }}
-                                />
-                            ))
+                            chatsList.map((thread) => {
+                                const threadId = thread._id || thread.id;
+                                return (
+                                    <ThreadCard 
+                                        key={threadId} 
+                                        thread={thread} 
+                                        viewMode={viewMode} 
+                                        onDelete={async (id) => {
+                                            const targetId = id || threadId;
+                                            try {
+                                                await handleDeleteChat(targetId);
+                                                triggerBlobChatDeleted();
+                                                dispatch(addToast({ type: 'success', message: 'Chat deleted' }));
+                                                handleGetChats();
+                                            } catch (err) {
+                                                dispatch(addToast({ type: 'error', message: 'Failed to delete chat' }));
+                                            }
+                                        }}
+                                        onRename={async () => {
+                                            await handleGetChats();
+                                        }}
+                                        onPinToggle={async () => {
+                                            await handleGetChats();
+                                        }}
+                                    />
+                                );
+                            })
                         )}
                         {!useSelector(state => state.chat.loading) && chatsList.length === 0 && (
                             <div className="col-span-full py-20 text-center text-zinc-500 text-sm font-medium">

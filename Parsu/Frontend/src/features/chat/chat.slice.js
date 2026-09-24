@@ -15,8 +15,17 @@ const chatSlice = createSlice({
         messagesPage: 1,
         totalMessages: 0,
         isLoadingMore: false, // For scroll-up older message loading
+        isSidebarCollapsed: localStorage.getItem('parsu_sidebar_collapsed') === 'true',
     },
     reducers: {
+        toggleSidebarCollapse: (state) => {
+            state.isSidebarCollapsed = !state.isSidebarCollapsed;
+            localStorage.setItem('parsu_sidebar_collapsed', String(state.isSidebarCollapsed));
+        },
+        setSidebarCollapse: (state, action) => {
+            state.isSidebarCollapsed = action.payload;
+            localStorage.setItem('parsu_sidebar_collapsed', String(action.payload));
+        },
         setChats: (state, action) => {
             state.chats = action.payload;
         },
@@ -79,6 +88,7 @@ const chatSlice = createSlice({
 export const { 
     setChats, setMessages, addMessage, setCurrentChatId, 
     setLoading, setIsGenerating, setError, setIsCreating, clearChat, appendChunk,
-    prependMessages, setHasMoreMessages, setMessagesPage, setTotalMessages, setIsLoadingMore
+    prependMessages, setHasMoreMessages, setMessagesPage, setTotalMessages, setIsLoadingMore,
+    toggleSidebarCollapse, setSidebarCollapse
 } = chatSlice.actions;
 export default chatSlice.reducer;

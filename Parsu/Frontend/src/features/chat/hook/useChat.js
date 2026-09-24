@@ -32,12 +32,14 @@ export const useChat = () => {
     const navigate = useNavigate(); // For navigating across pages
 
     // Sends user message, creates chat if needed, and sets up optimistic streaming
-    async function handleSendMessage(message, chatId, file, modelOptions = null, webSearch = false, memory = true) {
+    async function handleSendMessage(message, chatId, file, modelOptions = null, webSearch = false, memory = true, incognito = null) {
         try {
             dispatch(setError(null));
             dispatch(setLoading(true));
             dispatch(setIsGenerating(true));
             
+            const isIncognito = incognito !== null ? Boolean(incognito) : (localStorage.getItem('parsu_incognito') === '1');
+
             // If there is no chatId, a new chat is being created
             if (!chatId) {
                 dispatch(setIsCreating(true));
@@ -68,12 +70,14 @@ export const useChat = () => {
 
             // Obtain socket instance for receiving token streams
             const socket = getSocket();
-            const response = await sendMessage(message, chatId, file, socket?.id, modelOptions, webSearch, memory);
+            const response = await sendMessage(message, chatId, file, socket?.id, modelOptions, webSearch, memory, isIncognito);
             
-            // If a new chat was created, update current active chat ID and refresh list
+            // If a new chat was created, update current active chat ID and refresh list (skip sidebar sync if incognito)
             if (response.chat) {
                 dispatch(setCurrentChatId(response.chat._id));
-                handleGetChats();
+                if (!isIncognito && !response.chat.incognito) {
+                    handleGetChats();
+                }
             }
             
             // Refresh conversation messages from backend once streaming concludes

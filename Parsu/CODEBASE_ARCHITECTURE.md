@@ -228,4 +228,20 @@ Parsu AI is an AI-powered conversational search platform and social media comman
   - Performs semantic cosine similarity search across user's other conversation threads in MongoDB.
   - Injects top 3-4 concise recalled context snippets into Gemini and open models to maintain continuous memory across all chats with minimal token footprint.
 
+### 10. Desktop Sidebar Collapse Rail, GSAP Preloader, Route Reload & Library Fixes
+- **Desktop Sidebar Collapse into 64px Icon Rail**:
+  - Toggling sidebar collapse on desktop (`lg:`) contracts the sidebar from `w-56` to `w-16` while keeping navigation icons visible and centered with tooltips.
+  - Main layouts reflow smoothly from `lg:pl-56` to `lg:pl-16` using `cubic-bezier(0.4, 0, 0.2, 1)`.
+  - Mobile behavior remains a responsive sliding drawer (`w-[280px]`) unaffected by desktop rail collapse.
+- **Pointer Cursor System**:
+  - Restored standard system hand pointer cursor (`cursor: pointer !important;`) across all buttons, links, inputs, and interactive components.
+- **Route Reload & Refresh Preservation**:
+  - Guarded auth checks in `Protected.jsx` and `AdminProtected.jsx` to wait until authentication is confirmed before evaluating redirect logic, preventing unintended redirection to `/ai` on page reload.
+- **Library Action Fixes**:
+  - Fixed chat object ID resolution (`thread._id || thread.id`) in `ThreadCard.jsx` for rename, pin toggle, and delete actions.
+  - Added immediate re-fetch hooks in `Library.jsx` to reflect thread title and pin updates without reloading.
+- **Ultra-Luxury OLED GSAP Preloader**:
+  - Replaced SVG wave animations with an OLED dark HUD (`#050505`), floating glowing Parsu logo mark, precision numeric counter (0% to 100%), hairline neon progress bar, and buttery smooth GSAP timeline exit.
+
+
 

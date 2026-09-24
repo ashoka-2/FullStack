@@ -30,7 +30,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const productLinks = [
-    { to: '/', label: 'Search', icon: RiSearchLine },
+    { to: '/ai', label: 'Search', icon: RiSearchLine },
     { to: '/pricing', label: 'Pricing Plans', icon: RiPriceTag3Line },
     { to: '/library', label: 'Library', icon: RiBookOpenLine },
     { to: '/social-connections', label: 'Social Hub', icon: RiShareLine },
@@ -61,7 +61,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="w-full border-t border-zinc-200/70 dark:border-white/5 bg-white/70 dark:bg-[var(--bg-primary)]/80 backdrop-blur-xl mt-auto">
+    <footer className="w-full border-t border-white/[0.08] bg-[#0B0B0B] dark:bg-[#0B0B0B] text-zinc-400 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         {/* Main Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12">
@@ -69,42 +69,42 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="col-span-2 sm:col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--accent-cyan)] to-[var(--color-clear-hanada)] flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white">
-                <ParsuLogo size={19} className="text-white" />
+              <div className="w-8 h-8 rounded-xl bg-[#171717] border border-white/[0.08] flex items-center justify-center text-[var(--accent-cyan)] shadow-sm">
+                <ParsuLogo size={19} className="text-[var(--accent-cyan)]" />
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-base font-extrabold text-zinc-900 dark:text-white tracking-tight">PARSU</span>
+                <span className="text-base font-bold text-white tracking-tight">PARSU</span>
                 <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[var(--accent-cyan)] px-1.5 py-0.5 rounded shadow-xs">AI</span>
               </div>
             </div>
-            <p className="text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-xs mb-5">
-              AI-powered research assistant with multi-model intelligence, RAG search, and universal social publishing.
+            <p className="text-[13px] text-zinc-400 leading-relaxed max-w-xs mb-5">
+              AI-powered research assistant with multi-model intelligence, real-time search, and universal social publishing.
             </p>
             
             {/* System Status Indicator — clickable to /status */}
-            <div className="flex items-center gap-2 text-[11px] text-zinc-400 dark:text-zinc-500">
+            <div className="flex items-center gap-2 text-[11px] text-zinc-400">
               <Link 
                 to="/status" 
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 hover:bg-[var(--color-success)]/20 transition-all cursor-pointer group"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all cursor-pointer group"
                 title="View live service uptime & health"
               >
-                <RiCheckboxCircleLine className="w-3 h-3 text-[var(--color-success)] group-hover:scale-110 transition-transform" />
-                <span className="text-[var(--color-success)] font-semibold">All Systems Operational</span>
+                <RiCheckboxCircleLine className="w-3 h-3 text-emerald-400 group-hover:scale-110 transition-transform" />
+                <span className="text-emerald-400 font-semibold">All Systems Operational</span>
               </Link>
             </div>
           </div>
 
           {/* Product Links */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-200 mb-4">Product</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4">Product</h4>
             <ul className="space-y-2.5">
               {productLinks.map((link) => (
                 <li key={link.to}>
                   <Link 
                     to={link.to} 
-                    className="group flex items-center gap-2 text-[13px] text-zinc-500 dark:text-zinc-400 hover:text-[var(--accent-cyan)] transition-colors"
+                    className="group flex items-center gap-2 text-[13px] text-zinc-400 hover:text-white transition-colors"
                   >
-                    <link.icon className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 group-hover:text-[var(--accent-cyan)] transition-colors" />
+                    <link.icon className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" />
                     {link.label}
                   </Link>
                 </li>
@@ -114,30 +114,30 @@ const Footer = () => {
 
           {/* Legal Links */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-200 mb-4">Legal</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4">Legal</h4>
             <ul className="space-y-2.5">
               {legalLinks.map((link) => (
                 <li key={link.to}>
                   <Link 
                     to={link.to} 
-                    className="group flex items-center gap-2 text-[13px] text-zinc-500 dark:text-zinc-400 hover:text-[var(--accent-cyan)] transition-colors"
+                    className="group flex items-center gap-2 text-[13px] text-zinc-400 hover:text-white transition-colors"
                   >
-                    <link.icon className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 group-hover:text-[var(--accent-cyan)] transition-colors" />
+                    <link.icon className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" />
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
 
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-200 mb-4 mt-6">Resources</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4 mt-6">Resources</h4>
             <ul className="space-y-2.5">
               {resourceLinks.map((link) => (
                 <li key={link.to}>
                   <Link 
                     to={link.to} 
-                    className="group flex items-center gap-2 text-[13px] text-zinc-500 dark:text-zinc-400 hover:text-[var(--accent-cyan)] transition-colors"
+                    className="group flex items-center gap-2 text-[13px] text-zinc-400 hover:text-white transition-colors"
                   >
-                    <link.icon className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 group-hover:text-[var(--accent-cyan)] transition-colors" />
+                    <link.icon className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" />
                     {link.label}
                   </Link>
                 </li>
@@ -147,7 +147,7 @@ const Footer = () => {
 
           {/* Social Links */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-200 mb-4">Connect</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4">Connect</h4>
             <div className="flex flex-wrap gap-2">
               {socialLinks.map((social) => (
                 <a
@@ -155,28 +155,28 @@ const Footer = () => {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group w-9 h-9 flex items-center justify-center rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200/60 dark:border-white/10 hover:bg-[var(--accent-cyan)]/10 hover:border-[var(--accent-cyan)]/30 dark:hover:bg-[var(--accent-cyan)]/10 dark:hover:border-[var(--accent-cyan)]/30 transition-all"
+                  className="group w-9 h-9 flex items-center justify-center rounded-xl bg-[#171717] border border-white/[0.08] hover:bg-[#222222] hover:border-white/20 transition-all cursor-pointer"
                   title={social.label}
                 >
-                  <social.icon className="w-4 h-4 text-zinc-500 dark:text-zinc-400 group-hover:text-[var(--accent-cyan)] transition-colors" />
+                  <social.icon className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
                 </a>
               ))}
             </div>
-            <p className="text-[11px] text-zinc-400 dark:text-zinc-600 mt-4 leading-relaxed">
+            <p className="text-[11px] text-zinc-500 mt-4 leading-relaxed">
               Follow us for updates, tips, and AI insights across all platforms.
             </p>
           </div>
         </div>
 
         {/* Bottom Divider & Copyright */}
-        <div className="mt-10 pt-6 border-t border-zinc-200/60 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-[11px] text-zinc-400 dark:text-zinc-600">
-            © {currentYear} Parsu AI. Built with ❤️ — All rights reserved.
+        <div className="mt-10 pt-6 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-[11px] text-zinc-500">
+            © {currentYear} Parsu AI. Built with precision — All rights reserved.
           </p>
-          <div className="flex items-center gap-4 text-[11px] text-zinc-400 dark:text-zinc-600">
-            <Link to="/privacy" className="hover:text-[var(--accent-cyan)] transition-colors">Privacy</Link>
-            <Link to="/terms" className="hover:text-[var(--accent-cyan)] transition-colors">Terms</Link>
-            <Link to="/faq" className="hover:text-[var(--accent-cyan)] transition-colors">FAQ</Link>
+          <div className="flex items-center gap-4 text-[11px] text-zinc-500">
+            <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+            <Link to="/faq" className="hover:text-white transition-colors">FAQ</Link>
           </div>
         </div>
       </div>

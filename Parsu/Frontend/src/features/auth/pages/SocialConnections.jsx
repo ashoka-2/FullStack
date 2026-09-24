@@ -13,9 +13,11 @@ import {
     RiApps2Line,
     RiMenuLine,
     RiLoader4Line,
-    RiSendPlaneFill
+    RiSendPlaneFill,
+    RiSideBarLine
 } from '@remixicon/react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { toggleSidebarCollapse } from '../../chat/chat.slice';
 import { getConnectedAccounts, disconnectAccount, getOAuthUrl } from '../service/social.api';
 import { useSearchParams } from 'react-router';
 import gsap from 'gsap';
@@ -136,6 +138,7 @@ const SocialConnections = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const containerRef = useRef(null);
     const dispatch = useDispatch();
+    const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
 
     useEffect(() => {
         fetchAccounts();
@@ -235,20 +238,21 @@ const SocialConnections = () => {
             {/* Quick Switch Sidebar */}
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            {/* Main Content Column — NO overflow here */}
-            <div className="flex-1 flex flex-col min-h-0 lg:pl-56 transition-all duration-300">
+            {/* Main Content Column — dynamic padding based on sidebar collapse */}
+            <div className={`flex-1 flex flex-col min-h-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
                 {/* Header — shrink-0: naturally pinned, column never scrolls */}
-                <header className="shrink-0 z-30 bg-[var(--bg-primary)]/90 dark:bg-[var(--bg-primary)]/85 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/5 px-3.5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
+                <header className="shrink-0 z-30 bg-[#0B0B0B]/90 backdrop-blur-xl border-b border-white/[0.08] px-3.5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
                     <div className="flex items-center gap-2 sm:gap-3">
                         <button
                             type="button"
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer rounded-xl hover:bg-zinc-200/60 dark:hover:bg-white/5 active:scale-95"
+                            className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-400 hover:text-white transition-all cursor-pointer rounded-xl hover:bg-white/[0.06] active:scale-95"
                             title="Open Sidebar"
                         >
                             <RiMenuLine size={20} />
                         </button>
-                        <h1 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">
+
+                        <h1 className="text-sm sm:text-base font-bold text-zinc-100">
                             Social Hub
                         </h1>
                     </div>

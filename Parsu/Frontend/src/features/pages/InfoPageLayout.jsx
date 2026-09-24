@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router';
-import { RiMenuLine, RiArrowLeftLine } from '@remixicon/react';
+import { RiMenuLine, RiArrowLeftLine, RiSideBarLine } from '@remixicon/react';
+import { useSelector, useDispatch } from 'react-redux';
+import { toggleSidebarCollapse } from '../chat/chat.slice';
 import Sidebar from '../Components/Sidebar';
 import Footer from '../Components/Footer';
 
@@ -17,30 +19,33 @@ export default function InfoPageLayout({
     children 
 }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
+    const user = useSelector(state => state.auth.user);
+    const dispatch = useDispatch();
 
     return (
         <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30">
             {/* Shared Application Sidebar */}
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            {/* Main Page Body — flex column, NO overflow here */}
-            <div className="flex-1 flex flex-col min-h-0 lg:pl-56 transition-all duration-300">
+            {/* Main Page Body — dynamic padding based on sidebar collapse */}
+            <div className={`flex-1 flex flex-col min-h-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
 
                 {/* Header — shrink-0 pins it; column doesn't scroll so header stays fixed */}
-                <header className="shrink-0 z-30 bg-[var(--bg-primary)]/90 dark:bg-[var(--bg-primary)]/85 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/5 px-4 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
+                <header className="shrink-0 z-30 bg-[#0B0B0B]/90 backdrop-blur-xl border-b border-white/[0.08] px-4 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-2 -ml-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer rounded-xl hover:bg-zinc-200/60 dark:hover:bg-white/5"
+                            className="lg:hidden p-2 -ml-2 text-zinc-400 hover:text-white transition-all cursor-pointer rounded-xl hover:bg-white/[0.06]"
                             title="Open Sidebar"
                         >
                             <RiMenuLine size={20} />
                         </button>
 
                         <Link 
-                            to="/" 
-                            className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors p-1.5 rounded-lg hover:bg-zinc-200/60 dark:hover:bg-white/5"
+                            to={user ? "/ai" : "/"} 
+                            className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/[0.06]"
                         >
                             <RiArrowLeftLine size={16} />
                             <span>Home</span>

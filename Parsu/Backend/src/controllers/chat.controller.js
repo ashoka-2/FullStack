@@ -52,6 +52,7 @@ export async function sendMessage(req, res) {
 
         const primaryFile = uploadedFiles[0] || null;
 
+        const isIncognito = req.body.incognito === 'true' || req.body.incognito === true;
         let title = null, chat = null;
 
         if (!chatId) {
@@ -61,7 +62,8 @@ export async function sendMessage(req, res) {
             title = await generateChatTitle(message || fallbackTitle);
             chat = await chatModel.create({
                 user: req.user.id,
-                title
+                title,
+                incognito: isIncognito
             });
         }
 
@@ -134,7 +136,7 @@ export async function sendMessage(req, res) {
         }
 
         // ── Cross-Chat Memory (Vector Semantic Retrieval) ─────────────────────
-        const isMemoryEnabled = req.body.memory !== 'false' && req.body.memory !== false;
+        const isMemoryEnabled = !isIncognito && req.body.memory !== 'false' && req.body.memory !== false;
         let memoryContext = "";
 
         if (isMemoryEnabled && req.user?._id) {
@@ -280,23 +282,25 @@ export async function sendMessage(req, res) {
             aiMessage
         })
 
-        // Fire-and-forget: Generate embeddings for both messages (won't slow down response)
-        (async () => {
-            try {
-                const [userEmb, aiEmb] = await Promise.allSettled([
-                    generateEmbedding(userMessage.content),
-                    generateEmbedding(aiMessage.content)
-                ]);
-                if (userEmb.status === 'fulfilled' && userEmb.value) {
-                    await messageModel.updateOne({ _id: userMessage._id }, { $set: { embedding: userEmb.value } });
+        // Fire-and-forget: Generate embeddings for both messages (won't slow down response, skip if incognito)
+        if (!isIncognito) {
+            (async () => {
+                try {
+                    const [userEmb, aiEmb] = await Promise.allSettled([
+                        generateEmbedding(userMessage.content),
+                        generateEmbedding(aiMessage.content)
+                    ]);
+                    if (userEmb.status === 'fulfilled' && userEmb.value) {
+                        await messageModel.updateOne({ _id: userMessage._id }, { $set: { embedding: userEmb.value } });
+                    }
+                    if (aiEmb.status === 'fulfilled' && aiEmb.value) {
+                        await messageModel.updateOne({ _id: aiMessage._id }, { $set: { embedding: aiEmb.value } });
+                    }
+                } catch (embErr) {
+                    console.warn("⚠️ Embedding generation skipped:", embErr.message);
                 }
-                if (aiEmb.status === 'fulfilled' && aiEmb.value) {
-                    await messageModel.updateOne({ _id: aiMessage._id }, { $set: { embedding: aiEmb.value } });
-                }
-            } catch (embErr) {
-                console.warn("⚠️ Embedding generation skipped:", embErr.message);
-            }
-        })();
+            })();
+        }
     } catch (error) {
         console.error("Error in sendMessage controller:", error);
         const isOverload = /overload|429|503|quota|resource.*exhaust|high traffic|rate limit|capacity|failed to parse stream/i.test(error.message);
@@ -321,8 +325,9 @@ export async function getChats(req,res){
     const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
 
-    const totalChats = await chatModel.countDocuments({ user: user.id });
-    const chats = await chatModel.find({user: user.id})
+    const query = { user: user.id, incognito: { $ne: true } };
+    const totalChats = await chatModel.countDocuments(query);
+    const chats = await chatModel.find(query)
         .sort({ updatedAt: -1 })
         .skip(skip)
         .limit(limit);
@@ -430,8 +435,8 @@ export async function searchMessages(req, res) {
             return res.status(200).json({ results: [] });
         }
 
-        // 1. First fetch all chat IDs of the user
-        const userChats = await chatModel.find({ user: req.user.id }).select('_id title');
+        // 1. First fetch all non-incognito chat IDs of the user
+        const userChats = await chatModel.find({ user: req.user.id, incognito: { $ne: true } }).select('_id title');
         const chatMap = {};
         const chatIds = userChats.map(c => {
             chatMap[c._id.toString()] = c.title;
@@ -503,5 +508,37 @@ export async function rateMessageFeedback(req, res) {
             message: "Failed to record message feedback",
             error: error.message
         });
+    }
+}
+
+// ─── Rename Chat ────────────────────────────────────────────────────────────
+export async function renameChat(req, res) {
+    try {
+        const { chatId } = req.params;
+        const { title } = req.body;
+        if (!title || !title.trim()) {
+            return res.status(400).json({ success: false, message: "Title is required" });
+        }
+        const chat = await chatModel.findOne({ _id: chatId, user: req.user.id });
+        if (!chat) return res.status(404).json({ success: false, message: "Chat not found" });
+        chat.title = title.trim().slice(0, 200);
+        await chat.save();
+        res.json({ success: true, chat: { id: chat._id, title: chat.title } });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+}
+
+// ─── Toggle Pin Chat ────────────────────────────────────────────────────────
+export async function togglePinChat(req, res) {
+    try {
+        const { chatId } = req.params;
+        const chat = await chatModel.findOne({ _id: chatId, user: req.user.id });
+        if (!chat) return res.status(404).json({ success: false, message: "Chat not found" });
+        chat.isPinned = !chat.isPinned;
+        await chat.save();
+        res.json({ success: true, isPinned: chat.isPinned });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
     }
 }

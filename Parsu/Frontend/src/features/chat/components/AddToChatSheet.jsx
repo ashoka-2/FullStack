@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useSelector } from 'react-redux';
 import {
   RiCloseLine,
   RiCameraLine,
@@ -20,8 +22,8 @@ import { motion, AnimatePresence } from 'motion/react';
  * - Framer Motion slide-up spring animation when clicked
  * - Drag downwards to dismiss / close the sheet
  * - Mobile full-screen toggle support (desktop remains clean centered modal)
- * - Removed 'Add to project'
- * - 'Connectors' navigates to /social-connections
+ * - Rendered via React Portal directly into document.body to stay on top of all UI layers
+ * - Horizontally centered within the active ChatArea (excluding the sidebar) with smooth cubic-bezier transitions
  * - Web Search & Memory toggles
  * - 4 Squircle Action Cards: Camera, Photos, Videos, Files
  */
@@ -39,6 +41,7 @@ const AddToChatSheet = ({
 }) => {
   const navigate = useNavigate();
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const isSidebarCollapsed = useSelector((state) => state.chat?.isSidebarCollapsed);
 
   // Reset full screen on close
   useEffect(() => {
@@ -56,20 +59,29 @@ const AddToChatSheet = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[9995] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[9995] pointer-events-none">
           {/* Backdrop with fade animation */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm cursor-pointer"
+            className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm cursor-pointer pointer-events-auto"
             onClick={onClose}
             aria-label="Close backdrop"
           />
+
+          {/* Centered Modal Workspace Container (centered within chat area excluding sidebar) */}
+          <div
+            className={`fixed inset-0 ${
+              isSidebarCollapsed ? 'lg:left-16' : 'lg:left-56'
+            } flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}
+          >
 
           {/* Sheet / Modal Container with smooth spring slide-up and drag-to-dismiss */}
           <motion.div
@@ -293,8 +305,10 @@ const AddToChatSheet = ({
             </div>
           </motion.div>
         </div>
+      </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

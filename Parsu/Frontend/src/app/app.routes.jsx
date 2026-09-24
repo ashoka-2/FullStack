@@ -16,6 +16,12 @@ import ApiKeysSettingsPage from "../features/auth/pages/settings/ApiKeysSettings
 import MascotSettingsPage from "../features/auth/pages/settings/MascotSettingsPage";
 import VoiceSettingsPage from "../features/auth/pages/settings/VoiceSettingsPage";
 import SubscriptionSettingsPage from "../features/auth/pages/settings/SubscriptionSettingsPage";
+import MemorySettingsPage from "../features/auth/pages/settings/MemorySettingsPage";
+import GeneralSettingsPage from "../features/auth/pages/settings/GeneralSettingsPage";
+import NotificationsSettingsPage from "../features/auth/pages/settings/NotificationsSettingsPage";
+import SafetySettingsPage from "../features/auth/pages/settings/SafetySettingsPage";
+import StorageSettingsPage from "../features/auth/pages/settings/StorageSettingsPage";
+import ReportBugPage from "../features/auth/pages/settings/ReportBugPage";
 
 // Info Pages
 import PrivacyPolicy from "../features/pages/PrivacyPolicy";
@@ -37,7 +43,16 @@ import AdminApiUsagePage from "../features/admin/pages/AdminApiUsagePage";
 import AdminPricingPage from "../features/admin/pages/AdminPricingPage";
 import AdminProtected from "../features/admin/components/AdminProtected";
 
+import { useSelector } from "react-redux";
 import LandingPage from "../features/pages/LandingPage";
+
+const RootRoute = () => {
+    const user = useSelector(state => state.auth.user);
+    if (user) {
+        return <Navigate to="/ai" replace />;
+    }
+    return <LandingPage />;
+};
 
 export const router = createBrowserRouter([
     {
@@ -58,11 +73,11 @@ export const router = createBrowserRouter([
             },
             {
                 path: "/",
-                element: <LandingPage />
+                element: <RootRoute />
             },
             {
                 path: "/ai",
-                element: <Dashboard />
+                element: <Protected><Dashboard /></Protected>
             },
             {
                 path: "/dashboard",
@@ -130,6 +145,30 @@ export const router = createBrowserRouter([
                 path: "/settings/subscription",
                 element: <Protected><SubscriptionSettingsPage /></Protected>
             },
+            {
+                path: "/settings/memory",
+                element: <Protected><MemorySettingsPage /></Protected>
+            },
+            {
+                path: "/settings/general",
+                element: <Protected><GeneralSettingsPage /></Protected>
+            },
+            {
+                path: "/settings/notifications",
+                element: <Protected><NotificationsSettingsPage /></Protected>
+            },
+            {
+                path: "/settings/safety",
+                element: <Protected><SafetySettingsPage /></Protected>
+            },
+            {
+                path: "/settings/storage",
+                element: <Protected><StorageSettingsPage /></Protected>
+            },
+            {
+                path: "/settings/report-bug",
+                element: <Protected><ReportBugPage /></Protected>
+            },
             // Info / Legal Pages (public)
             {
                 path: "/privacy",
@@ -166,10 +205,6 @@ export const router = createBrowserRouter([
             {
                 path: "/maintenance",
                 element: <MaintenanceMode />
-            },
-            {
-                path: "/dashboard",
-                element: <Navigate to="/" />
             },
             {
                 // Legacy redirect

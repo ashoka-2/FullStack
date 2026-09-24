@@ -2,12 +2,13 @@ import api from "../../../utils/axios.js";
 
 export { api };
 
-export async function sendMessage(message, chatId, fileOrFiles, socketId, modelOptions = null, webSearch = false, memory = true) {
+export async function sendMessage(message, chatId, fileOrFiles, socketId, modelOptions = null, webSearch = false, memory = true, incognito = false) {
     const formData = new FormData();
     formData.append("message", message);
     if (chatId) formData.append("chat", chatId);
     if (webSearch) formData.append("webSearch", "true");
     if (memory !== undefined) formData.append("memory", String(memory));
+    if (incognito) formData.append("incognito", "true");
     if (fileOrFiles) {
         if (Array.isArray(fileOrFiles)) {
             fileOrFiles.forEach(f => {

@@ -154,9 +154,10 @@ const Auth = ({ initialMode }) => {
     }
   }, [reduxError, localError]);
 
-  // Redirect if already logged in
+  // Redirect if already logged in (respect location where user was prior to login)
+  const destination = location.state?.from?.pathname || "/ai";
   if (user && !loading) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={destination} replace />;
   }
 
   // Switch between Login, Register, and Forgot modes smoothly on the single /auth route without page reload

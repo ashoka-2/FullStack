@@ -7,11 +7,16 @@ import { setUser } from '../../auth/auth.slice';
 
 export default function AdminProtected({ children }) {
     const user = useSelector(state => state.auth.user);
+    const loading = useSelector(state => state.auth.loading);
     const dispatch = useDispatch();
     const [claiming, setClaiming] = useState(false);
     const [claimMsg, setClaimMsg] = useState('');
     const [claimErr, setClaimErr] = useState('');
     const [secretInput, setSecretInput] = useState('');
+
+    if (loading) {
+        return null;
+    }
 
     if (!user) {
         return <Navigate to="/auth" replace />;

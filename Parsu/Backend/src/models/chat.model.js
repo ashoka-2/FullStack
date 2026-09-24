@@ -10,6 +10,14 @@ const chatSchema = new mongoose.Schema({
         type:String,
         default:"New Chat",
         trim:true
+    },
+    isPinned: {
+        type: Boolean,
+        default: false
+    },
+    incognito: {
+        type: Boolean,
+        default: false
     }
 },{
     timestamps:true

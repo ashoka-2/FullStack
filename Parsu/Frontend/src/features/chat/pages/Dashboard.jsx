@@ -3,8 +3,8 @@ import { useSelector } from 'react-redux'
 import { useChat } from '../hook/useChat'
 import Sidebar from '../../Components/Sidebar'
 import ChatArea from '../components/ChatArea'
-import { RiMenuLine, RiLoginCircleLine, RiUserAddLine, RiSparkling2Line } from '@remixicon/react'
-import { setError } from '../chat.slice'
+import { RiMenuLine, RiLoginCircleLine, RiUserAddLine, RiSparkling2Line, RiSideBarLine } from '@remixicon/react'
+import { setError, toggleSidebarCollapse } from '../chat.slice'
 import { useDispatch } from 'react-redux'
 import { Link } from 'react-router'
 import ParsuLogo from '../../Components/ParsuLogo'
@@ -13,6 +13,7 @@ import { addToast } from '../../../utils/toast.slice'
 const Dashboard = () => {
     const { user } = useSelector(state => state.auth)
     const error = useSelector(state => state.chat.error)
+    const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed)
     const dispatch = useDispatch()
     const chat = useChat();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -35,20 +36,21 @@ const Dashboard = () => {
         <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
+            <div className={`flex-1 flex flex-col h-[100dvh] overflow-hidden relative ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarOpen ? 'opacity-50 blur-sm pointer-events-none lg:opacity-100 lg:blur-none lg:pointer-events-auto' : ''}`}>
 
-            <div className={`flex-1 flex flex-col h-[100dvh] overflow-hidden relative lg:pl-56 transition-all duration-300 ${isSidebarOpen ? 'opacity-50 blur-sm pointer-events-none lg:opacity-100 lg:blur-none lg:pointer-events-auto' : ''}`}>
-
-                {/* Header (Responsive: Mobile brand + hamburger + Auth actions) */}
-                <header className="flex items-center justify-between px-3 sm:px-6 h-12 sm:h-14 bg-[var(--bg-primary)]/90 dark:bg-[var(--bg-primary)]/85 backdrop-blur-md shrink-0 z-40 border-b border-zinc-200/80 dark:border-white/5">
+                {/* ChatGPT-style Header (Sidebar toggle, Brand, Auth actions) */}
+                <header className="flex items-center justify-between px-3 sm:px-6 h-12 sm:h-14 bg-[#0B0B0B]/90 backdrop-blur-md shrink-0 z-40 border-b border-white/[0.08]">
                     <div className="flex items-center gap-2">
+                        {/* Mobile sidebar toggle button */}
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-2 -ml-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-all rounded-lg active:scale-95 cursor-pointer"
+                            className="lg:hidden p-2 -ml-1 text-zinc-400 hover:text-white transition-all rounded-lg active:scale-95 cursor-pointer"
                             aria-label="Open sidebar"
                         >
                             <RiMenuLine size={20} />
                         </button>
-                        <div className="lg:hidden flex items-center gap-1.5">
+
+                        <div className="flex items-center gap-1.5">
                             <ParsuLogo className="w-5 h-5 text-[var(--accent-cyan)]" />
                             <span className="font-extrabold text-sm text-zinc-900 dark:text-white tracking-tight">PARSU</span>
                             <span className="text-[10px] font-black uppercase tracking-wider text-black bg-[var(--accent-cyan)] px-1 rounded">AI</span>

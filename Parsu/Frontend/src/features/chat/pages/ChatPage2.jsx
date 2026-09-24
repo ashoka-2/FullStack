@@ -4,21 +4,23 @@ import {
     RiMenuLine,
     RiShareLine,
     RiArrowDownLine,
-    RiCheckLine
+    RiCheckLine,
+    RiSpyLine,
+    RiSideBarLine
 } from '@remixicon/react';
 import Sidebar from '../../Components/Sidebar';
 import ParsuLogo from '../../Components/ParsuLogo';
 import ChatMessage from '../components/ChatMessage';
 import FollowUpInput from '../components/FollowUpInput';
 import { useChat } from '../hook/useChat';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { MessagesSkeleton, ThinkingSkeleton } from '../components/Skeletons';
-import { setError, setLoading } from '../chat.slice';
-import { useDispatch } from 'react-redux';
+import { setError, setLoading, toggleSidebarCollapse } from '../chat.slice';
 import { addToast } from '../../../utils/toast.slice';
 import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
 import ModelSelectorDropdown from '../components/ModelSelectorDropdown';
 import { saveQueueItem, getQueueItems, removeQueueItem } from '../../../utils/queueDb';
+import { useAiFeatureToggles } from '../../../utils/aiSettingsSync';
 
 const ChatPage2 = () => {
     // Extract chat id from URL parameters (e.g., /chat/123 -> id: 123)
@@ -48,37 +50,29 @@ const ChatPage2 = () => {
     const hasMoreMessages = useSelector(state => state.chat.hasMoreMessages);
     const messagesPage = useSelector(state => state.chat.messagesPage);
     const isLoadingMore = useSelector(state => state.chat.isLoadingMore);
+    const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
     const dispatch = useDispatch();
     const [latestMessageId, setLatestMessageId] = useState(null);
     const [showScrollButton, setShowScrollButton] = useState(false);
 
-    // Web Search toggle (Tavily search vs pure AI)
-    const [webSearch, setWebSearch] = useState(() => {
-        const saved = localStorage.getItem("parsu_web_search") ?? localStorage.getItem("perplexity_web_search");
-        return saved !== null ? saved === "true" : true; // Default ON
-    });
+    // Web Search and Cross-Chat Memory feature toggles synced across all pages & settings
+    const {
+        webSearch,
+        setWebSearch,
+        handleToggleWebSearch,
+        memoryEnabled,
+        setMemoryEnabled,
+        handleToggleMemory,
+    } = useAiFeatureToggles();
 
-    const handleToggleWebSearch = () => {
-        setWebSearch(prev => {
-            const next = !prev;
-            localStorage.setItem("parsu_web_search", String(next));
-            return next;
-        });
-    };
+    // Incognito state synced with localStorage and event
+    const [incognito, setIncognito] = useState(() => localStorage.getItem('parsu_incognito') === '1');
 
-    // Cross-Chat Memory toggle (read & recall across other chats)
-    const [memoryEnabled, setMemoryEnabled] = useState(() => {
-        const saved = localStorage.getItem("parsu_memory_enabled") ?? localStorage.getItem("perplexity_memory_enabled");
-        return saved !== null ? saved === "true" : true; // Default ON
-    });
-
-    const handleToggleMemory = () => {
-        setMemoryEnabled(prev => {
-            const next = !prev;
-            localStorage.setItem("parsu_memory_enabled", String(next));
-            return next;
-        });
-    };
+    useEffect(() => {
+        const handler = (e) => setIncognito(Boolean(e.detail));
+        window.addEventListener('parsu_incognito_change', handler);
+        return () => window.removeEventListener('parsu_incognito_change', handler);
+    }, []);
 
     // Share link button state
     const [isCopied, setIsCopied] = useState(false);
@@ -289,7 +283,7 @@ const ChatPage2 = () => {
         setFiles([]);
 
         try {
-            const response = await handleSendMessage(currentInput, id, filesToSend, selectedModel, webSearch, memoryEnabled);
+            const response = await handleSendMessage(currentInput, id, filesToSend, selectedModel, webSearch, memoryEnabled, incognito);
             if (response && response.aiMessage) {
                 setLatestMessageId(response.aiMessage._id);
                 setTimeout(scrollToBottom, 100);
@@ -313,7 +307,9 @@ const ChatPage2 = () => {
                         id, 
                         nextItem.fileObjects, 
                         nextItem.model || selectedModel,
-                        nextItem.webSearch !== undefined ? nextItem.webSearch : webSearch
+                        nextItem.webSearch !== undefined ? nextItem.webSearch : webSearch,
+                        memoryEnabled,
+                        incognito
                     );
                     if (response && response.aiMessage) {
                         setLatestMessageId(response.aiMessage._id);
@@ -368,26 +364,25 @@ const ChatPage2 = () => {
         <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            <div className={`flex-1 flex flex-col h-[100dvh] lg:pl-56 overflow-hidden relative transition-all duration-300`}>
+            <div className={`flex-1 flex flex-col h-[100dvh] ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} overflow-hidden relative transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
 
-                {/* Header Container */}
-                <header className={`h-12 sm:h-14 bg-[var(--bg-primary)] z-30 shrink-0 transition-all duration-300 ${isScrolled ? 'border-b border-zinc-200 dark:border-zinc-900 shadow-xs bg-[var(--bg-primary)]/95 dark:bg-[var(--bg-primary)]/95 backdrop-blur-md' : ''}`}>
+                {/* ChatGPT-style Header Container */}
+                <header className={`h-12 sm:h-14 bg-[#0B0B0B]/90 backdrop-blur-md z-30 shrink-0 border-b border-white/[0.08] transition-all duration-300`}>
                     <div className="max-w-[800px] mx-auto h-full flex items-center justify-between px-2.5 sm:px-6">
-                        <div className="flex items-center gap-2 sm:gap-4 overflow-hidden min-w-0">
+                        <div className="flex items-center gap-2 sm:gap-3 overflow-hidden min-w-0">
+                            {/* Mobile sidebar button */}
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-500 hover:text-zinc-700 dark:hover:text-white transition-all rounded-lg shrink-0 active:scale-95"
+                                className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-400 hover:text-white transition-all rounded-lg shrink-0 active:scale-95 cursor-pointer"
                                 aria-label="Open sidebar"
                             >
                                 <RiMenuLine size={20} />
                             </button>
-                            <div className="lg:hidden flex items-center gap-1.5 shrink-0">
+
+                            <div className="flex items-center gap-1.5 shrink-0">
                                 <ParsuLogo className="w-5 h-5 text-[var(--accent-cyan)] shrink-0" />
-                                <span className="font-bold text-sm text-zinc-900 dark:text-white truncate">Parsu</span>
+                                <span className="font-bold text-sm text-zinc-100 truncate">Parsu</span>
                             </div>
-                            <button className="hidden sm:flex items-center gap-2 text-[13px] font-bold text-zinc-900 dark:text-zinc-100 border-b-2 border-zinc-900 dark:border-white pb-3 mt-3 shrink-0">
-                                Knowledge
-                            </button>
                         </div>
 
                         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
@@ -413,6 +408,27 @@ const ChatPage2 = () => {
                         </div>
                     </div>
                 </header>
+
+                {/* Incognito Banner */}
+                {incognito && (
+                    <div className="bg-purple-950/40 border-b border-purple-500/20 px-3 sm:px-6 py-2 flex items-center justify-between text-xs text-purple-300 backdrop-blur-sm z-20 shrink-0">
+                        <div className="max-w-[800px] mx-auto w-full flex items-center gap-2">
+                            <RiSpyLine size={15} className="text-purple-400 shrink-0" />
+                            <span className="font-semibold text-purple-200">Incognito Mode Active</span>
+                            <span className="text-purple-300/70 hidden sm:inline">— Chats are private, not saved to your history, and cross-chat memory is disabled.</span>
+                            <button
+                                onClick={() => {
+                                    localStorage.setItem('parsu_incognito', '0');
+                                    setIncognito(false);
+                                    window.dispatchEvent(new CustomEvent('parsu_incognito_change', { detail: false }));
+                                }}
+                                className="ml-auto text-[11px] underline text-purple-400 hover:text-purple-200 cursor-pointer font-medium"
+                            >
+                                Turn off
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 <div ref={scrollerRef} data-lenis-prevent className="flex-1 overflow-y-auto px-4 md:px-6 py-8 md:py-16 pb-[300px] custom-scrollbar scroll-smooth relative">
                     <div className="max-w-[800px] mx-auto space-y-8 mb-32">
@@ -468,7 +484,7 @@ const ChatPage2 = () => {
 
                 {/* Move to bottom button */}
                 {showScrollButton && (
-                    <div className="absolute bottom-[180px] left-0 right-0 lg:pl-56 flex justify-center z-40 pointer-events-none">
+                    <div className={`absolute bottom-[180px] left-0 right-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} flex justify-center z-40 pointer-events-none transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
                         <button 
                             onClick={scrollToBottom}
                             className="bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-100 p-2.5 rounded-full shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-4 duration-300 group pointer-events-auto"

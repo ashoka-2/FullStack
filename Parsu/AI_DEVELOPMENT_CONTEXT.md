@@ -229,4 +229,32 @@
   - Extracts the top 3-4 concise memory snippets (~1-2 sentences each) and injects them into Gemini's `systemContent` and model context.
   - Asynchronously saves 768-dimension vectors for every user and AI message into MongoDB (`message.embedding`), saving tokens and providing instant context across all chats.
 
+---
+
+## 12. Desktop Sidebar Collapse Rail, GSAP Preloader, Route Reload & Library Fixes
+
+### 1. Desktop Icon Rail Collapse & GSAP-Grade Transitions
+- **Desktop Collapse into Icon Rail**: On viewports `>= 1024px` (`lg:`), collapsing the sidebar transitions it smoothly from `w-56` (224px) to `w-16` (64px icon rail).
+- **Persistent Visibility**: Navigation icons remain visible and centered with descriptive browser tooltips (`title={item.label}`). Top header features a dedicated toggle button to expand the rail.
+- **Dynamic Content Reflow**: Main content across `Dashboard`, `ChatPage2`, `Library`, `Settings`, `SocialConnections`, and `InfoPageLayout` dynamically animates between `lg:pl-56` and `lg:pl-16` using `transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`. React Portals (Prompt Studio) dynamically transition between `lg:left-56` and `lg:left-16`.
+- **Mobile Drawer Isolation**: On mobile devices (`< 1024px`), the sidebar remains a standard slide-in/out drawer (`w-[280px]`) and is unaffected by the desktop collapsed rail state.
+
+### 2. Standard Hand Pointer Cursor
+- Restored standard system hand pointer (`cursor: pointer !important;`) on hover over buttons, links, dropdowns, and interactive controls in `index.css`.
+- Removed custom SVG AI cursor for clean, responsive browser interaction.
+
+### 3. Route Reload & Refresh Preservation
+- Resolved issue where reloading protected routes (`/library`, `/settings`, `/chat/:id`) would redirect the user to `/ai`.
+- In `Protected.jsx` and `AdminProtected.jsx`, check `loading` state from Redux `auth.slice.js`; renders `null` until authentication is resolved rather than prematurely redirecting to `/auth` or `/ai`.
+
+### 4. Library Actions (Edit, Pin, Delete)
+- In `ThreadCard.jsx`, normalized ID resolution (`thread._id || thread.id`) across rename (`renameChat`), pin toggle (`togglePinChat`), and delete (`onDelete`) handlers.
+- Wired live list re-fetch callbacks (`onRename`, `onPinToggle`) in `Library.jsx` to ensure optimistic UI updates render immediately without manual page refresh.
+
+### 5. Ultra-Luxury OLED GSAP Preloader (`Loading.jsx`)
+- Replaced cartoonish liquid wave SVG animations with an ultra-sleek, minimalist OLED dark HUD (`#050505`).
+- Features a floating Parsu insignia with subtle GSAP breathing motion, a high-precision numeric percentage counter (0% to 100%), a hairline cyan progress bar, and real-time telemetry status logs.
+- Cinematic exit animation using `gsap.timeline()` with smooth scale, blur, and opacity fade.
+
+
 
