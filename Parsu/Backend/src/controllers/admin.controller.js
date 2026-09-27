@@ -1,9 +1,13 @@
 import userModel from "../models/user.model.js";
 import chatModel from "../models/chat.model.js";
 import messageModel from "../models/message.model.js";
+import documentModel from "../models/document.model.js";
 import SocialConnection from "../models/social.model.js";
 import ContactMessage from "../models/contact.model.js";
 import NewsletterSubscriber from "../models/newsletter.model.js";
+import PlatformSettings from "../models/platformSettings.model.js";
+import { deleteFile } from "../services/imagekit.service.js";
+import { executeModelChatStream } from "../services/model.service.js";
 
 /**
  * GET /api/admin/overview
@@ -665,7 +669,7 @@ export async function deleteNewsletterSubscriber(req, res) {
 
 /**
  * GET /api/admin/api-usage
- * Live API consumption & quota monitoring (Google Maps, AI models)
+ * Dynamic API consumption & quota monitoring - ONLY shows configured models!
  */
 export async function getAdminApiUsage(req, res) {
     try {
@@ -674,43 +678,90 @@ export async function getAdminApiUsage(req, res) {
 
         // Estimated usage metrics based on system activity
         const estimatedMapsRequests = Math.min(28500, Math.floor(totalChats * 3.2) + 24);
-        const mapsCostIncurred = 0.00; // Free under $200 monthly credit (up to 28,500 loads)
+        const mapsCostIncurred = 0.00;
         const mapsCreditRemaining = Math.max(0, 200 - (estimatedMapsRequests * 0.007)).toFixed(2);
 
-        const aiModelMetrics = [
-            {
+        // Dynamically build list based ONLY on models that have valid keys configured in process.env
+        const aiModelMetrics = [];
+
+        // 1. Google Gemini
+        if (process.env.GEMINI_API_KEY) {
+            aiModelMetrics.push({
                 provider: "Google Gemini",
-                model: "Gemini 2.5 Flash & 2.0 Flash",
-                totalCalls: Math.floor(totalMessages * 0.72) + 120,
+                model: "Gemini 3.6 Flash & 2.5 Flash",
+                totalCalls: Math.floor(totalMessages * 0.85) + 120,
                 estimatedTokens: (totalMessages * 650) + 45000,
                 status: "Operational",
-                latency: "280ms"
-            },
-            {
+                latency: "190ms",
+                configured: true,
+                isDefault: true
+            });
+        }
+
+        // 2. Anthropic Claude (Only if key provided)
+        if (process.env.ANTHROPIC_API_KEY) {
+            aiModelMetrics.push({
                 provider: "Anthropic",
                 model: "Claude 3.5 Sonnet",
-                totalCalls: Math.floor(totalMessages * 0.16) + 30,
-                estimatedTokens: (totalMessages * 280) + 12000,
+                totalCalls: Math.floor(totalMessages * 0.10),
+                estimatedTokens: (totalMessages * 250),
                 status: "Operational",
-                latency: "450ms"
-            },
-            {
+                latency: "450ms",
+                configured: true
+            });
+        }
+
+        // 3. OpenAI (Only if key provided)
+        if (process.env.OPENAI_API_KEY) {
+            aiModelMetrics.push({
                 provider: "OpenAI",
                 model: "GPT-4o & GPT-4o Mini",
-                totalCalls: Math.floor(totalMessages * 0.08) + 15,
-                estimatedTokens: (totalMessages * 140) + 8000,
+                totalCalls: Math.floor(totalMessages * 0.05),
+                estimatedTokens: (totalMessages * 150),
                 status: "Operational",
-                latency: "390ms"
-            },
-            {
+                latency: "390ms",
+                configured: true
+            });
+        }
+
+        // 4. Groq (Only if key provided)
+        if (process.env.GROQ_API_KEY) {
+            aiModelMetrics.push({
                 provider: "Groq",
                 model: "Llama 3.3 70B Versatile",
-                totalCalls: Math.floor(totalMessages * 0.04) + 8,
-                estimatedTokens: (totalMessages * 90) + 4000,
+                totalCalls: Math.floor(totalMessages * 0.02),
+                estimatedTokens: (totalMessages * 90),
                 status: "Operational",
-                latency: "110ms"
-            }
-        ];
+                latency: "110ms",
+                configured: true
+            });
+        }
+
+        // 5. Mistral (Only if key provided)
+        if (process.env.MISTRAL_API_KEY) {
+            aiModelMetrics.push({
+                provider: "Mistral",
+                model: "Open Mistral Nemo",
+                totalCalls: Math.floor(totalMessages * 0.03),
+                estimatedTokens: (totalMessages * 110),
+                status: "Operational",
+                latency: "220ms",
+                configured: true
+            });
+        }
+
+        // 6. DeepSeek (Only if key provided)
+        if (process.env.DEEPSEEK_API_KEY) {
+            aiModelMetrics.push({
+                provider: "DeepSeek",
+                model: "DeepSeek V3 / R1",
+                totalCalls: Math.floor(totalMessages * 0.02),
+                estimatedTokens: (totalMessages * 80),
+                status: "Operational",
+                latency: "290ms",
+                configured: true
+            });
+        }
 
         return res.status(200).json({
             success: true,
@@ -733,5 +784,328 @@ export async function getAdminApiUsage(req, res) {
             message: "Failed to load API usage statistics",
             error: err.message
         });
+    }
+}
+
+/**
+ * GET /api/admin/social-connections
+ * View which users have connected which socials across the entire platform
+ */
+export async function getAdminSocialConnections(req, res) {
+    try {
+        const { platform, search } = req.query;
+        const query = {};
+        if (platform && platform !== "all") {
+            query.platform = platform.toLowerCase();
+        }
+
+        const connections = await SocialConnection.find(query)
+            .populate("user", "username email profilePic role createdAt")
+            .sort({ createdAt: -1 });
+
+        // Filter by user search if provided
+        let filtered = connections;
+        if (search && search.trim()) {
+            const s = search.trim().toLowerCase();
+            filtered = connections.filter(c => 
+                (c.user?.username && c.user.username.toLowerCase().includes(s)) ||
+                (c.user?.email && c.user.email.toLowerCase().includes(s)) ||
+                (c.platformUsername && c.platformUsername.toLowerCase().includes(s))
+            );
+        }
+
+        // Platform breakdown stats
+        const platformsList = ["google", "instagram", "facebook", "twitter", "linkedin", "youtube", "tiktok", "pinterest"];
+        const platformCounts = {};
+        platformsList.forEach(p => { platformCounts[p] = 0; });
+        connections.forEach(c => {
+            if (platformCounts[c.platform] !== undefined) {
+                platformCounts[c.platform]++;
+            } else {
+                platformCounts[c.platform] = (platformCounts[c.platform] || 0) + 1;
+            }
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                totalConnections: filtered.length,
+                platformCounts,
+                connections: filtered
+            }
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Failed to load social connections",
+            error: err.message
+        });
+    }
+}
+
+/**
+ * DELETE /api/admin/social-connections/:id
+ * Disconnect or unlink a user's social connection
+ */
+export async function disconnectAdminSocialConnection(req, res) {
+    try {
+        const { id } = req.params;
+        const conn = await SocialConnection.findByIdAndDelete(id);
+        if (!conn) {
+            return res.status(404).json({ success: false, message: "Connection not found" });
+        }
+        return res.status(200).json({ success: true, message: `Disconnected ${conn.platform} connection successfully.` });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+}
+
+/**
+ * GET /api/admin/media-assets
+ * View all user uploaded and generated media assets across the platform
+ */
+export async function getAdminMediaAssets(req, res) {
+    try {
+        const { type = "all", search = "" } = req.query;
+
+        // Query messages with uploaded files
+        const messages = await messageModel.find({
+            $or: [
+                { file: { $ne: null } },
+                { "files.0": { $exists: true } }
+            ]
+        })
+        .populate({
+            path: "chat",
+            select: "user title",
+            populate: { path: "user", select: "username email profilePic" }
+        })
+        .sort({ createdAt: -1 })
+        .limit(120);
+
+        const assets = [];
+
+        messages.forEach(msg => {
+            const chatUser = msg.chat?.user || { username: "User", email: "user@parsuai.com" };
+            const chatTitle = msg.chat?.title || "Conversation";
+
+            // Process msg.files array
+            if (Array.isArray(msg.files) && msg.files.length > 0) {
+                msg.files.forEach((f, idx) => {
+                    if (f && f.url) {
+                        assets.push({
+                            id: `${msg._id}_${idx}`,
+                            messageId: msg._id,
+                            fileIndex: idx,
+                            url: f.url,
+                            name: f.name || "Attachment",
+                            fileType: f.fileType || (/\.(mp4|mov|webm)$/i.test(f.url) ? "video" : /\.(jpg|jpeg|png|webp|gif)$/i.test(f.url) ? "image" : "document"),
+                            size: f.size || 0,
+                            fileId: f.fileId || null,
+                            createdAt: msg.createdAt,
+                            user: chatUser,
+                            chatTitle
+                        });
+                    }
+                });
+            }
+
+            // Process legacy single file
+            if (msg.file && msg.file.url) {
+                assets.push({
+                    id: `${msg._id}_single`,
+                    messageId: msg._id,
+                    fileIndex: null,
+                    url: msg.file.url,
+                    name: msg.file.name || "Attachment",
+                    fileType: msg.file.fileType || (/\.(mp4|mov|webm)$/i.test(msg.file.url) ? "video" : /\.(jpg|jpeg|png|webp|gif)$/i.test(msg.file.url) ? "image" : "document"),
+                    size: msg.file.size || 0,
+                    fileId: msg.file.fileId || null,
+                    createdAt: msg.createdAt,
+                    user: chatUser,
+                    chatTitle
+                });
+            }
+        });
+
+        // Also query document vault documents
+        const docs = await documentModel.find().populate("user", "username email profilePic").sort({ createdAt: -1 }).limit(50);
+        docs.forEach(doc => {
+            if (doc.file?.url) {
+                assets.push({
+                    id: doc._id.toString(),
+                    documentId: doc._id,
+                    url: doc.file.url,
+                    name: doc.filename || "Document",
+                    fileType: "document",
+                    size: doc.originalSize || 0,
+                    fileId: doc.file?.fileId || null,
+                    createdAt: doc.createdAt,
+                    user: doc.user || { username: "User", email: "user@parsuai.com" },
+                    chatTitle: "RAG Vault Document"
+                });
+            }
+        });
+
+        // Filter by type
+        let filtered = assets;
+        if (type && type !== "all") {
+            filtered = assets.filter(a => a.fileType === type);
+        }
+
+        // Filter by search
+        if (search && search.trim()) {
+            const s = search.trim().toLowerCase();
+            filtered = filtered.filter(a =>
+                (a.name && a.name.toLowerCase().includes(s)) ||
+                (a.user?.username && a.user.username.toLowerCase().includes(s)) ||
+                (a.user?.email && a.user.email.toLowerCase().includes(s))
+            );
+        }
+
+        const counts = {
+            total: assets.length,
+            image: assets.filter(a => a.fileType === "image").length,
+            video: assets.filter(a => a.fileType === "video").length,
+            document: assets.filter(a => a.fileType === "document").length,
+        };
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                counts,
+                assets: filtered
+            }
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Failed to load media assets",
+            error: err.message
+        });
+    }
+}
+
+/**
+ * DELETE /api/admin/media-assets/:messageId
+ * Delete vulgar, inappropriate or harmful media content
+ */
+export async function deleteAdminMediaAsset(req, res) {
+    try {
+        const { messageId } = req.params;
+        const { fileIndex, fileId, documentId } = req.query;
+
+        if (documentId) {
+            await documentModel.findByIdAndDelete(documentId);
+            if (fileId) await deleteFile(fileId).catch(() => {});
+            return res.status(200).json({ success: true, message: "Document deleted successfully." });
+        }
+
+        const message = await messageModel.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ success: false, message: "Asset message not found" });
+        }
+
+        // Delete from CDN if fileId exists
+        if (fileId) {
+            await deleteFile(fileId).catch(() => {});
+        }
+
+        if (fileIndex !== undefined && fileIndex !== null && message.files && message.files.length > 0) {
+            const idx = parseInt(fileIndex, 10);
+            message.files.splice(idx, 1);
+            if (message.files.length === 0 && !message.file && (!message.content || message.content.startsWith("Sent a"))) {
+                await messageModel.findByIdAndDelete(messageId);
+            } else {
+                await message.save();
+            }
+        } else {
+            message.file = null;
+            message.files = [];
+            if (!message.content || message.content.startsWith("Sent a")) {
+                await messageModel.findByIdAndDelete(messageId);
+            } else {
+                await message.save();
+            }
+        }
+
+        return res.status(200).json({ success: true, message: "Asset deleted successfully." });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+}
+
+/**
+ * POST /api/admin/ai-test
+ * Run prompt evaluation, latency benchmark and custom instruction test in Admin AI Workspace
+ */
+export async function testAdminAiPrompt(req, res) {
+    try {
+        const { prompt, customInstructions, provider = "gemini", modelId = "gemini-3.6-flash" } = req.body;
+        if (!prompt) {
+            return res.status(400).json({ success: false, message: "Prompt is required" });
+        }
+
+        const startTime = Date.now();
+        const messages = [{ role: "user", content: prompt }];
+
+        const generatedText = await executeModelChatStream({
+            provider,
+            modelId,
+            messages,
+            customInstructions: customInstructions || "",
+            onChunk: () => {}
+        });
+
+        const latencyMs = Date.now() - startTime;
+        const estimatedTokens = Math.ceil((generatedText?.length || 0) / 4);
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                output: generatedText,
+                latencyMs,
+                estimatedTokens,
+                modelUsed: `${provider} (${modelId})`,
+                timestamp: new Date().toISOString()
+            }
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+}
+
+/**
+ * GET /api/admin/settings
+ * Retrieve global platform configurations
+ */
+export async function getAdminPlatformSettings(req, res) {
+    try {
+        let settings = await PlatformSettings.findOne();
+        if (!settings) {
+            settings = await PlatformSettings.create({});
+        }
+        return res.status(200).json({ success: true, data: settings });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+}
+
+/**
+ * PATCH /api/admin/settings
+ * Update global platform configurations
+ */
+export async function updateAdminPlatformSettings(req, res) {
+    try {
+        let settings = await PlatformSettings.findOne();
+        if (!settings) {
+            settings = await PlatformSettings.create(req.body);
+        } else {
+            Object.assign(settings, req.body);
+            await settings.save();
+        }
+        return res.status(200).json({ success: true, message: "Platform settings updated successfully.", data: settings });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 }

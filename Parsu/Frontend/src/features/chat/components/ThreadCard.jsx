@@ -189,7 +189,7 @@ const ThreadCard = ({ thread, viewMode, onDelete, onRename, onPinToggle }) => {
                 </button>
                 {/* Rename */}
                 <button onClick={startRename} title="Rename"
-                    className="p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer hidden sm:flex">
+                    className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer hidden sm:flex">
                     <RiPencilLine size={16} />
                 </button>
                 {/* Delete */}

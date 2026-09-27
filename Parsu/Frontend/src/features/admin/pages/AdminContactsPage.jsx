@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import gsap from 'gsap';
 import { createPortal } from 'react-dom';
 import {
   RiInboxArchiveLine,
@@ -42,12 +43,29 @@ export default function AdminContactsPage() {
     }
   };
 
+  const containerRef = useRef(null);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       loadData(1);
     }, 300);
     return () => clearTimeout(timer);
   }, [statusFilter, searchQuery]);
+
+  useEffect(() => {
+    if (!isLoading && containerRef.current) {
+      const ctx = gsap.context(() => {
+        gsap.from('.contact-inquiry-item', {
+          y: 12,
+          opacity: 0,
+          duration: 0.35,
+          stagger: 0.04,
+          ease: 'power2.out'
+        });
+      }, containerRef);
+      return () => ctx.revert();
+    }
+  }, [isLoading]);
 
   const handleStatusChange = async (id, newStatus) => {
     setActionId(id);
@@ -90,7 +108,7 @@ export default function AdminContactsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={containerRef} className="space-y-6 animate-in fade-in duration-200">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -137,9 +155,10 @@ export default function AdminContactsPage() {
         </div>
       </div>
 
-      {/* Messages Table */}
+      {/* Messages Table & Mobile Cards */}
       <div className="rounded-2xl bg-white dark:bg-[#11131a]/80 border border-zinc-200 dark:border-white/[0.08] shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-zinc-200 dark:border-white/[0.05] text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 bg-zinc-50/50 dark:bg-white/[0.01]">
@@ -169,7 +188,7 @@ export default function AdminContactsPage() {
                   <tr
                     key={c._id}
                     onClick={() => openMessage(c)}
-                    className="hover:bg-zinc-50 dark:hover:bg-white/[0.03] transition-colors cursor-pointer"
+                    className="contact-inquiry-item hover:bg-zinc-50 dark:hover:bg-white/[0.03] transition-colors cursor-pointer"
                   >
                     {/* Sender */}
                     <td className="py-3.5 px-5">
@@ -232,6 +251,67 @@ export default function AdminContactsPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Stacked Card View */}
+        <div className="md:hidden divide-y divide-zinc-200 dark:divide-white/[0.05]">
+          {isLoading ? (
+            <div className="py-12 text-center text-zinc-500 dark:text-zinc-400 text-xs">
+              <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-cyan-500" />
+              Loading customer inquiries...
+            </div>
+          ) : contacts.length === 0 ? (
+            <div className="py-12 text-center text-zinc-500 dark:text-zinc-400 text-xs">
+              No contact messages found.
+            </div>
+          ) : (
+            contacts.map((c) => (
+              <div
+                key={c._id}
+                onClick={() => openMessage(c)}
+                className="contact-inquiry-item p-4 space-y-2 hover:bg-zinc-50 dark:hover:bg-white/[0.02] cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold text-xs text-zinc-900 dark:text-white flex items-center gap-1.5">
+                    <span>{c.name}</span>
+                    {c.status === 'new' && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                    )}
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
+                    c.status === 'new'
+                      ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30'
+                      : c.status === 'replied'
+                      ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                      : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-white/10'
+                  }`}>
+                    {c.status}
+                  </span>
+                </div>
+                <p className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300 truncate">{c.subject}</p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2">{c.message}</p>
+                <div className="flex items-center justify-between text-[10px] text-zinc-400 pt-1">
+                  <span>{c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'N/A'}</span>
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <a
+                      href={`mailto:${c.email}?subject=Re: ${encodeURIComponent(c.subject)}`}
+                      onClick={() => handleStatusChange(c._id, 'replied')}
+                      className="p-1 rounded-lg text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/10"
+                    >
+                      <RiMailLine size={13} />
+                    </a>
+                    <button
+                      onClick={() => handleDelete(c._id)}
+                      disabled={actionId === c._id}
+                      className="p-1 rounded-lg text-zinc-400 hover:text-red-500"
+                    >
+                      <RiDeleteBinLine size={13} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Pagination */}

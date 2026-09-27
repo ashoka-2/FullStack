@@ -10,6 +10,9 @@ const toastSlice = createSlice({
             state.toasts.push({
                 id: Date.now(),
                 message: action.payload.message,
+                description: action.payload.description,
+                title: action.payload.title,
+                action: action.payload.action,
                 type: action.payload.type || "info",
             });
             // Max 3 toasts at once — shift oldest if exceeded

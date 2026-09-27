@@ -165,4 +165,21 @@ export const ToastContainer = () => {
   );
 };
 
+export const showToast = (type, message, description, title) => {
+  try {
+    // Dynamic import/lazy store lookup to prevent circular dependency
+    import('../../app/app.store').then(({ store }) => {
+      if (typeof type === 'string' && message === undefined) {
+        store.dispatch(addToast({ message: type, type: 'info' }));
+      } else {
+        store.dispatch(addToast({ type, message, description, title }));
+      }
+    }).catch(err => {
+      console.warn('Toast dispatch error:', err);
+    });
+  } catch (err) {
+    console.warn('Failed to dispatch toast:', err);
+  }
+};
+
 export default ToastItem;

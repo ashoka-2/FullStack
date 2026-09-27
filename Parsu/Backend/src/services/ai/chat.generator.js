@@ -41,7 +41,23 @@ async function runModelLoop(currentMessages, onChunk, modelWithTools, toolsMap, 
     console.log(`🤖 [${label}] Invoking (Iteration: ${iterations + 1})...`);
     const response = await modelWithTools.invoke(currentMessages);
 
-    if (!response.tool_calls || response.tool_calls.length === 0) break;
+    // If no tool calls were made:
+    if (!response.tool_calls || response.tool_calls.length === 0) {
+      const fullContent = typeof response.content === 'string' 
+        ? response.content 
+        : Array.isArray(response.content) 
+          ? response.content.map(c => typeof c === 'string' ? c : c?.text || "").join("")
+          : JSON.stringify(response.content);
+
+      if (onChunk && fullContent) {
+        // Stream out in rapid responsive chunks for smooth typing effect without a second roundtrip
+        const chunkSize = 28;
+        for (let i = 0; i < fullContent.length; i += chunkSize) {
+          onChunk(fullContent.slice(i, i + chunkSize));
+        }
+      }
+      return fullContent;
+    }
 
     console.log(`🛠️ [${label}] Tool Call: ${response.tool_calls.map(t => t.name).join(", ")}`);
     currentMessages.push(response);
@@ -69,7 +85,7 @@ async function runModelLoop(currentMessages, onChunk, modelWithTools, toolsMap, 
     iterations++;
   }
 
-  console.log(`📡 [${label}] Final streaming...`);
+  console.log(`📡 [${label}] Final streaming post-tools...`);
   let fullContent = "";
   try {
     const stream = await modelWithTools.stream(currentMessages);
@@ -164,9 +180,15 @@ export async function generateResponse(messages, onChunk, userContext) {
 
   const feedbackNotes = userContext?.feedbackInstruction ? `\n    ${userContext.feedbackInstruction}` : "";
   const memoryNotes = userContext?.memoryContext ? `\n    ${userContext.memoryContext}` : "";
+  const customInstructionsNote = userContext?.customInstructions 
+    ? `\n\n--- USER'S MANDATORY CUSTOM INSTRUCTIONS ---\nThe user has configured the following personal instructions that you MUST adhere to across all your responses:\n"${userContext.customInstructions}"\n---------------------------------------------\n` 
+    : "";
+  const userPersonaNote = (userContext?.userNickname || userContext?.userOccupation)
+    ? `User Profile: ${[userContext.userNickname ? `Name: ${userContext.userNickname}` : '', userContext.userOccupation ? `Role: ${userContext.userOccupation}` : ''].filter(Boolean).join(', ')}.\n`
+    : "";
 
   const systemContent = `You are a world-class AI assistant with supercharged multi-platform social media publishing capabilities. Current Date: ${today}.
-    
+    ${userPersonaNote}${customInstructionsNote}
     CRITICAL INSTRUCTIONS:
     ${webSearchInstruction}${feedbackNotes}${memoryNotes}
     

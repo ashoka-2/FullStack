@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import gsap from 'gsap';
 import { createPortal } from 'react-dom';
 import {
   RiUser3Line,
@@ -118,9 +119,26 @@ export default function AdminUsersPage() {
     }
   };
 
+  const containerRef = useRef(null);
+
   useEffect(() => {
     fetchUsers(1, false);
   }, [searchQuery, roleFilter, planFilter]);
+
+  useEffect(() => {
+    if (!isLoading && containerRef.current && users.length > 0 && page === 1) {
+      const ctx = gsap.context(() => {
+        gsap.from('.admin-user-row', {
+          y: 12,
+          opacity: 0,
+          duration: 0.35,
+          stagger: 0.03,
+          ease: 'power2.out'
+        });
+      }, containerRef);
+      return () => ctx.revert();
+    }
+  }, [isLoading, page]);
 
   // Infinite scroll observer setup
   useEffect(() => {
@@ -329,7 +347,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={containerRef} className="space-y-6 animate-in fade-in duration-200">
       
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -443,7 +461,7 @@ export default function AdminUsersPage() {
                   const isActing = actionUserId === u._id;
 
                   return (
-                    <tr key={u._id} className="hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
+                    <tr key={u._id} className="admin-user-row hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
                       {/* Identity */}
                       <td className="py-3.5 px-5">
                         <div className="flex items-center gap-3">

@@ -112,3 +112,68 @@ export async function getAdminApiUsage() {
     const res = await customAxios.get("/api/admin/api-usage");
     return res.data;
 }
+
+/**
+ * Social connections across all users
+ */
+export async function getAdminSocialConnections({ platform = "", search = "" } = {}) {
+    const params = new URLSearchParams();
+    if (platform && platform !== "all") params.append("platform", platform);
+    if (search) params.append("search", search);
+
+    const res = await customAxios.get(`/api/admin/social-connections?${params.toString()}`);
+    return res.data;
+}
+
+export async function disconnectAdminSocialConnection(id) {
+    const res = await customAxios.delete(`/api/admin/social-connections/${id}`);
+    return res.data;
+}
+
+/**
+ * User-uploaded & generated media vault
+ */
+export async function getAdminMediaAssets({ type = "all", search = "" } = {}) {
+    const params = new URLSearchParams();
+    if (type && type !== "all") params.append("type", type);
+    if (search) params.append("search", search);
+
+    const res = await customAxios.get(`/api/admin/media-assets?${params.toString()}`);
+    return res.data;
+}
+
+export async function deleteAdminMediaAsset(messageId, { fileIndex, fileId, documentId } = {}) {
+    const params = new URLSearchParams();
+    if (fileIndex !== undefined && fileIndex !== null) params.append("fileIndex", fileIndex);
+    if (fileId) params.append("fileId", fileId);
+    if (documentId) params.append("documentId", documentId);
+
+    const res = await customAxios.delete(`/api/admin/media-assets/${messageId}?${params.toString()}`);
+    return res.data;
+}
+
+/**
+ * AI Workspace test sandbox
+ */
+export async function testAdminAiPrompt({ prompt, customInstructions, provider, modelId }) {
+    const res = await customAxios.post("/api/admin/ai-test", {
+        prompt,
+        customInstructions,
+        provider,
+        modelId
+    });
+    return res.data;
+}
+
+/**
+ * Global platform settings
+ */
+export async function getAdminPlatformSettings() {
+    const res = await customAxios.get("/api/admin/settings");
+    return res.data;
+}
+
+export async function updateAdminPlatformSettings(settingsData) {
+    const res = await customAxios.patch("/api/admin/settings", settingsData);
+    return res.data;
+}

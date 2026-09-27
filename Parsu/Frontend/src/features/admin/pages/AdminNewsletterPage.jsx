@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import gsap from 'gsap';
 import {
   RiMailSendLine,
   RiSearchLine,
@@ -33,12 +34,29 @@ export default function AdminNewsletterPage() {
     }
   };
 
+  const containerRef = useRef(null);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       loadData(1);
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  useEffect(() => {
+    if (!isLoading && containerRef.current) {
+      const ctx = gsap.context(() => {
+        gsap.from('.newsletter-subscriber-item', {
+          y: 12,
+          opacity: 0,
+          duration: 0.35,
+          stagger: 0.04,
+          ease: 'power2.out'
+        });
+      }, containerRef);
+      return () => ctx.revert();
+    }
+  }, [isLoading]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Remove this subscriber from the list?")) return;
@@ -63,7 +81,7 @@ export default function AdminNewsletterPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={containerRef} className="space-y-6 animate-in fade-in duration-200">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -109,9 +127,10 @@ export default function AdminNewsletterPage() {
         </div>
       </div>
 
-      {/* Subscribers Table */}
+      {/* Subscribers Table & Mobile Cards */}
       <div className="rounded-2xl bg-white dark:bg-[#11131a]/80 border border-zinc-200 dark:border-white/[0.08] shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-zinc-200 dark:border-white/[0.05] text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 bg-zinc-50/50 dark:bg-white/[0.01]">
@@ -138,7 +157,7 @@ export default function AdminNewsletterPage() {
                 </tr>
               ) : (
                 subscribers.map((s) => (
-                  <tr key={s._id} className="hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
+                  <tr key={s._id} className="newsletter-subscriber-item hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
                     <td className="py-3.5 px-5 font-semibold text-zinc-900 dark:text-white">
                       {s.email}
                     </td>
@@ -172,6 +191,47 @@ export default function AdminNewsletterPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Stacked Card View */}
+        <div className="md:hidden divide-y divide-zinc-200 dark:divide-white/[0.05]">
+          {isLoading ? (
+            <div className="py-12 text-center text-zinc-500 dark:text-zinc-400 text-xs">
+              <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-cyan-500" />
+              Loading subscriber directory...
+            </div>
+          ) : subscribers.length === 0 ? (
+            <div className="py-12 text-center text-zinc-500 dark:text-zinc-400 text-xs">
+              No subscribers found.
+            </div>
+          ) : (
+            subscribers.map((s) => (
+              <div
+                key={s._id}
+                className="newsletter-subscriber-item p-4 space-y-2 hover:bg-zinc-50 dark:hover:bg-white/[0.02]"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-xs text-zinc-900 dark:text-white truncate">{s.email}</p>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    {s.status || 'active'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1">
+                  <span>Source: {s.source || 'website'}</span>
+                  <span>{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : 'N/A'}</span>
+                </div>
+                <div className="flex items-center justify-end pt-1">
+                  <button
+                    onClick={() => handleDelete(s._id)}
+                    disabled={actionId === s._id}
+                    className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                  >
+                    <RiDeleteBinLine size={14} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Pagination */}

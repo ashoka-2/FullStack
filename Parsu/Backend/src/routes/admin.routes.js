@@ -13,7 +13,14 @@ import {
     deleteContact,
     getAdminNewsletter,
     deleteNewsletterSubscriber,
-    getAdminApiUsage
+    getAdminApiUsage,
+    getAdminSocialConnections,
+    disconnectAdminSocialConnection,
+    getAdminMediaAssets,
+    deleteAdminMediaAsset,
+    testAdminAiPrompt,
+    getAdminPlatformSettings,
+    updateAdminPlatformSettings
 } from "../controllers/admin.controller.js";
 
 const adminRouter = Router();
@@ -42,5 +49,20 @@ adminRouter.delete("/newsletter/:id", deleteNewsletterSubscriber);
 
 // Live API Usage and Quota monitor
 adminRouter.get("/api-usage", getAdminApiUsage);
+
+// Social connections across all users
+adminRouter.get("/social-connections", getAdminSocialConnections);
+adminRouter.delete("/social-connections/:id", disconnectAdminSocialConnection);
+
+// User-uploaded & generated media assets vault (for review and moderation)
+adminRouter.get("/media-assets", getAdminMediaAssets);
+adminRouter.delete("/media-assets/:messageId", deleteAdminMediaAsset);
+
+// Admin AI Playground and sandbox test
+adminRouter.post("/ai-test", testAdminAiPrompt);
+
+// Global platform settings
+adminRouter.get("/settings", getAdminPlatformSettings);
+adminRouter.patch("/settings", updateAdminPlatformSettings);
 
 export default adminRouter;

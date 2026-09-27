@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import gsap from 'gsap';
 import { createPortal } from 'react-dom';
 import {
   RiUser3Line,
@@ -97,9 +98,26 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const containerRef = useRef(null);
+
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!isLoading && containerRef.current) {
+      const ctx = gsap.context(() => {
+        gsap.from('.admin-stat-card', {
+          y: 18,
+          opacity: 0,
+          duration: 0.45,
+          stagger: 0.08,
+          ease: 'power3.out'
+        });
+      }, containerRef);
+      return () => ctx.revert();
+    }
+  }, [isLoading]);
 
   const handleToggleGateway = async (newMode) => {
     setIsUpdatingMode(true);
@@ -180,7 +198,7 @@ export default function AdminDashboardPage() {
   const adminName = user?.username ? user.username.charAt(0).toUpperCase() + user.username.slice(1) : 'Admin';
 
   return (
-    <div className="space-y-7 animate-in fade-in duration-200">
+    <div ref={containerRef} className="space-y-7 animate-in fade-in duration-200">
       
       {/* ── 1. HeroUI Pro Greeting & Action Header ── */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-1">
@@ -287,7 +305,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Total Registered Accounts */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Total Users</span>
             <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
@@ -301,7 +319,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* AI Conversations & Messages */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">AI Queries & Chats</span>
             <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded-full">
@@ -315,7 +333,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Active Subscriptions */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Paid Subscribers</span>
             <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
@@ -329,7 +347,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Inbound Contacts & Tickets */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Inbound Inquiries</span>
             <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">

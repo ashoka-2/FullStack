@@ -217,13 +217,20 @@ export async function sendMessage(req, res) {
             }
         }
 
+        const customInstructions = fullUser?.memory?.customInstructions || fullUser?.customInstructions || "";
+        const userNickname = fullUser?.memory?.nickname || "";
+        const userOccupation = fullUser?.memory?.occupation || "";
+
         const userContextWithSearch = {
             ...(fullUser?.toObject ? fullUser.toObject() : fullUser),
             webSearch: shouldExecuteWebSearch,
             webSearchContext,
             uploadedMediaContext,
             feedbackInstruction,
-            memoryContext
+            memoryContext,
+            customInstructions,
+            userNickname,
+            userOccupation
         };
 
         const isNonGeminiProvider = targetProvider !== "gemini";
@@ -258,6 +265,7 @@ export async function sendMessage(req, res) {
                     apiKey: decryptedApiKey,
                     baseUrl: targetBaseUrl,
                     messages: chatHistoryForModel,
+                    customInstructions,
                     onChunk: (chunk) => {
                         if (socketId) {
                             io.to(socketId).emit("chunk", chunk);

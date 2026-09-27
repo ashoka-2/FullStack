@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import gsap from 'gsap';
 import {
   RiCpuLine,
   RiMapPinLine,
@@ -13,6 +14,7 @@ import { getAdminApiUsage } from '../service/admin.api';
 export default function AdminApiUsagePage() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const containerRef = useRef(null);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -32,11 +34,26 @@ export default function AdminApiUsagePage() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (!isLoading && containerRef.current) {
+      const ctx = gsap.context(() => {
+        gsap.from('.api-usage-card', {
+          y: 16,
+          opacity: 0,
+          duration: 0.45,
+          stagger: 0.1,
+          ease: 'power3.out'
+        });
+      }, containerRef);
+      return () => ctx.revert();
+    }
+  }, [isLoading]);
+
   const maps = data?.maps;
   const ai = data?.ai || [];
 
   return (
-    <div className="space-y-8">
+    <div ref={containerRef} className="space-y-8 animate-in fade-in duration-200">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -57,7 +74,7 @@ export default function AdminApiUsagePage() {
       </div>
 
       {/* Google Maps Quota Card */}
-      <section className="p-6 rounded-3xl bg-white dark:bg-[#11131a]/80 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl space-y-6">
+      <section className="api-usage-card p-6 rounded-3xl bg-white dark:bg-[#11131a]/80 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-white/[0.05] pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 dark:text-red-400 flex items-center justify-center">
@@ -127,7 +144,7 @@ export default function AdminApiUsagePage() {
       </section>
 
       {/* Multi-Model AI API Consumption */}
-      <section className="p-6 rounded-3xl bg-white dark:bg-[#11131a]/80 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl space-y-5">
+      <section className="api-usage-card p-6 rounded-3xl bg-white dark:bg-[#11131a]/80 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl space-y-5">
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/[0.05] pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">

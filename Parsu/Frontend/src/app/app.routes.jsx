@@ -41,6 +41,10 @@ import AdminNewsletterPage from "../features/admin/pages/AdminNewsletterPage";
 import AdminContactsPage from "../features/admin/pages/AdminContactsPage";
 import AdminApiUsagePage from "../features/admin/pages/AdminApiUsagePage";
 import AdminPricingPage from "../features/admin/pages/AdminPricingPage";
+import AdminSocialHubPage from "../features/admin/pages/AdminSocialHubPage";
+import AdminMediaVaultPage from "../features/admin/pages/AdminMediaVaultPage";
+import AdminAiWorkspacePage from "../features/admin/pages/AdminAiWorkspacePage";
+import AdminSettingsPage from "../features/admin/pages/AdminSettingsPage";
 import AdminProtected from "../features/admin/components/AdminProtected";
 
 import { useSelector } from "react-redux";
@@ -229,6 +233,13 @@ export const router = createBrowserRouter([
             { path: "dashboard", element: <AdminDashboardPage /> },
             { path: "users", element: <AdminUsersPage /> },
             { path: "pricing", element: <AdminPricingPage /> },
+            { path: "ai-workspace", element: <AdminAiWorkspacePage /> },
+            { path: "ai", element: <Navigate to="/admin/ai-workspace" replace /> },
+            { path: "social-connections", element: <AdminSocialHubPage /> },
+            { path: "social-hub", element: <Navigate to="/admin/social-connections" replace /> },
+            { path: "media-vault", element: <AdminMediaVaultPage /> },
+            { path: "library", element: <Navigate to="/admin/media-vault" replace /> },
+            { path: "settings", element: <AdminSettingsPage /> },
             { path: "newsletter", element: <AdminNewsletterPage /> },
             { path: "contacts", element: <AdminContactsPage /> },
             { path: "api-usage", element: <AdminApiUsagePage /> }
