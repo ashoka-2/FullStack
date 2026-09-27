@@ -289,6 +289,51 @@ export const desktopWindowsService = {
         return await runPowerShell(script);
     },
 
+    async getCurrentVolume() {
+        // Returns current master volume 0-100 via Windows Audio API (PowerShell)
+        const script = `
+            Add-Type -TypeDefinition @'
+using System.Runtime.InteropServices;
+[Guid("5CDF2C82-841E-4546-9722-0CF74078229A")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IAudioEndpointVolume {
+    int f1(); int f2(); int f3(); int f4();
+    int SetMasterVolumeLevelScalar(float fLevel, System.Guid pguidEventContext);
+    int f6();
+    int GetMasterVolumeLevelScalar(out float pfLevel);
+}
+[Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]
+[ClassInterface(ClassInterfaceType.None)]
+class MMDeviceEnumeratorClass {}
+'@
+            try {
+                $vol = [System.Convert]::ToInt32((Get-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Volume' -ErrorAction Stop).Master * 100)
+                Write-Output $vol
+            } catch {
+                Write-Output 50
+            }
+        `;
+        try {
+            const r = await runPowerShell(script);
+            const n = typeof r === 'number' ? r : parseInt(String(r).trim());
+            return isNaN(n) ? 50 : Math.max(0, Math.min(100, n));
+        } catch { return 50; }
+    },
+
+    async getCurrentBrightness() {
+        const script = `
+            try {
+                $b = (Get-WmiObject -Namespace root/wmi -Class WmiMonitorBrightness).CurrentBrightness
+                Write-Output $b
+            } catch { Write-Output 70 }
+        `;
+        try {
+            const r = await runPowerShell(script);
+            const n = typeof r === 'number' ? r : parseInt(String(r).trim());
+            return isNaN(n) ? 70 : Math.max(0, Math.min(100, n));
+        } catch { return 70; }
+    },
+
     async setBrightness(percent) {
         const clamped = Math.max(0, Math.min(100, percent));
         const script = `

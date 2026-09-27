@@ -10,10 +10,13 @@ import FloatingBlobMascot from '../features/Components/FloatingBlobMascot';
 import { ToastContainer } from '../features/Components/Toast';
 import ConnectionMonitor from '../features/Components/ConnectionMonitor';
 import ShapeOverlaysTransition from '../features/Components/ShapeOverlaysTransition';
+import { usePWA } from '../hooks/usePWA';
 
 const Layout = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    // Register service worker, push notifications & background sync
+    usePWA();
     const authLoading = useSelector(state => state.auth.loading);
     
     // Check if the user has already seen the initial loader in this browser session

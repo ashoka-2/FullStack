@@ -894,24 +894,20 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                 </ReactMarkdown>
                             </div>
 
-                            {/* HeroUI Pro AI Sources Accordion */}
-                            {(msg.sources?.length > 0 || (typeof contentToRender === 'string' && /sources|wireframe|citations/i.test(contentToRender))) && (
+                            {/* Web Sources — only shown when the backend returned real citations */}
+                            {msg.sources?.length > 0 && (
                                 <div className="mt-2">
                                     <button
                                         type="button"
                                         onClick={() => setIsSourcesOpen(prev => !prev)}
                                         className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 font-medium transition-colors cursor-pointer select-none"
                                     >
-                                        <span>{msg.sources?.length || 3} sources</span>
+                                        <span>{msg.sources.length} source{msg.sources.length !== 1 ? 's' : ''}</span>
                                         {isSourcesOpen ? <RiArrowUpSLine size={13} /> : <RiArrowDownSLine size={13} />}
                                     </button>
                                     {isSourcesOpen && (
                                         <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 animate-in fade-in duration-200">
-                                            {(msg.sources || [
-                                                { title: "Dashboard Architecture Patterns", domain: "docs.heroui.pro", url: "https://template-dashboard.heroui.pro" },
-                                                { title: "React 19 Server Components", domain: "react.dev", url: "https://react.dev" },
-                                                { title: "Web Grounding Index", domain: "parsu.ai", url: "/" }
-                                            ]).map((src, idx) => (
+                                            {msg.sources.map((src, idx) => (
                                                 <a
                                                     key={idx}
                                                     href={src.url}
@@ -930,6 +926,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                     )}
                                 </div>
                             )}
+
                         </div>
                     )}
                     {msg.content && (

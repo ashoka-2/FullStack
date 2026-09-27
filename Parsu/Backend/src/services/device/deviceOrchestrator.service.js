@@ -241,12 +241,30 @@ export const deviceOrchestratorService = {
                     case "get_metrics":
                         result = await desktopWindowsService.getSystemMetrics();
                         break;
-                    case "set_volume":
-                        result = await desktopWindowsService.setVolume(params.levelPercent);
+                    case "set_volume": {
+                        // Voice agent sends { level } or { delta: ±N }
+                        let volTarget;
+                        if (params.delta !== undefined) {
+                            const cur = await desktopWindowsService.getCurrentVolume?.() ?? 50;
+                            volTarget = Math.max(0, Math.min(100, cur + params.delta));
+                        } else {
+                            volTarget = params.level ?? params.levelPercent ?? 50;
+                        }
+                        result = await desktopWindowsService.setVolume(volTarget);
                         break;
-                    case "set_brightness":
-                        result = await desktopWindowsService.setBrightness(params.percent);
+                    }
+                    case "set_brightness": {
+                        // Voice agent sends { level } or { delta: ±N }
+                        let briTarget;
+                        if (params.delta !== undefined) {
+                            const cur = await desktopWindowsService.getCurrentBrightness?.() ?? 70;
+                            briTarget = Math.max(0, Math.min(100, cur + params.delta));
+                        } else {
+                            briTarget = params.level ?? params.percent ?? 70;
+                        }
+                        result = await desktopWindowsService.setBrightness(briTarget);
                         break;
+                    }
                     case "capture_screenshot":
                         result = await desktopWindowsService.captureScreenshot(params.bounds);
                         break;

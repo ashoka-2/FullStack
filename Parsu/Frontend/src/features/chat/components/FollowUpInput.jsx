@@ -14,15 +14,17 @@ import {
     RiFullscreenLine,
     RiFullscreenExitLine,
     RiCodeSSlashLine,
-    RiGlobalLine
+    RiGlobalLine,
+    RiVoiceprintLine
 } from '@remixicon/react';
 import ModelSelectorDropdown from './ModelSelectorDropdown';
 import ThinkingSelectorDropdown from './ThinkingSelectorDropdown';
 import AttachmentPreviewStrip from './AttachmentPreviewStrip';
 import MessageQueueTray from './MessageQueueTray';
 import AddToChatSheet from './AddToChatSheet';
+import VoiceMode from './VoiceMode';
 import { triggerBlobInteraction, triggerBlobTyping } from '../../../utils/blobReactions';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToast } from '../../../utils/toast.slice';
@@ -49,7 +51,8 @@ const FollowUpInput = ({
     webSearch = true,
     onToggleWebSearch,
     memoryEnabled = true,
-    onToggleMemory
+    onToggleMemory,
+    onOpenVoiceMode
 }) => {
     // Separate refs for each file type
     const videoInputRef = useRef(null);
@@ -59,11 +62,14 @@ const FollowUpInput = ({
     const dispatch = useDispatch();
     const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
 
-    // Speech Recognition (Voice to text) & Live Caption
+    // Speech Recognition (Voice to text — MIC button) & Live Caption
     const [isListening, setIsListening] = useState(false);
     const [liveCaption, setLiveCaption] = useState('');
     const recognitionRef = useRef(null);
     const baseInputRef = useRef('');
+
+    // Live Voice Conversation mode (orb, continuous TTS loop)
+    const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
 
     const handleToggleVoiceInput = () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -412,13 +418,33 @@ const FollowUpInput = ({
                             )}
 
                             {/*
-                             * Smart Send/Stop/Voice button:
-                             * - AI responding → Stop button (stops generation immediately)
-                             * - Input has text  → Send arrow (also queues if AI is responding)
-                             * - Input empty     → Voice mic (default, opens live voice)
+                             * MIC button — ALWAYS visible (speech-to-text → fills input field)
+                             * Only hidden when AI is responding without any typed text
+                             */}
+                            {!(isResponding && !(input.trim() || files.length > 0)) && (
+                                <button
+                                    type="button"
+                                    onClick={handleToggleVoiceInput}
+                                    className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-all cursor-pointer ${
+                                        isListening
+                                            ? 'bg-rose-500 text-white animate-pulse ring-2 ring-rose-500/40 shadow-lg'
+                                            : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'
+                                    }`}
+                                    title={isListening ? 'Listening… tap to stop' : 'Mic — speak to fill input'}
+                                    aria-label={isListening ? 'Stop mic' : 'Mic input'}
+                                >
+                                    {isListening ? <RiMicFill size={17} /> : <RiMicLine size={17} />}
+                                </button>
+                            )}
+
+                            {/*
+                             * Smart 3-state primary button:
+                             * - AI responding + no input → STOP (stop generation)
+                             * - Has text/files          → SEND arrow
+                             * - Empty input             → VOICE orb (live voice conversation)
                              */}
                             {isResponding && !(input.trim() || files.length > 0) ? (
-                                /* STOP button — visible only when responding and no pending input */
+                                /* STOP */
                                 <button
                                     type="button"
                                     onClick={onStopGenerating}
@@ -426,34 +452,32 @@ const FollowUpInput = ({
                                     title="Stop AI from generating"
                                     aria-label="Stop generating"
                                 >
-                                    {/* Square stop icon — solid center square inside circle */}
                                     <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-[3px] bg-current transition-transform group-hover:scale-110" />
                                 </button>
                             ) : (input.trim() || files.length > 0) ? (
-                                /* SEND / QUEUE ARROW — visible when user has typed something */
+                                /* SEND */
                                 <button
                                     type="button"
                                     onClick={onSubmit}
                                     className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-lg"
-                                    title={isResponding ? "Queue this message" : "Send message (Enter)"}
-                                    aria-label={isResponding ? "Queue message" : "Send"}
+                                    title={isResponding ? 'Queue this message' : 'Send message (Enter)'}
+                                    aria-label={isResponding ? 'Queue message' : 'Send'}
                                 >
                                     <RiArrowUpLine size={18} />
                                 </button>
                             ) : (
-                                /* VOICE MIC — default when nothing typed */
+                                /* VOICE ORB — only when input is empty */
                                 <button
                                     type="button"
-                                    onClick={handleToggleVoiceInput}
-                                    className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-all cursor-pointer ${
-                                        isListening
-                                            ? 'bg-rose-500 text-white animate-pulse ring-2 ring-rose-500/40 shadow-lg'
-                                            : 'bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-105 active:scale-95 shadow-lg'
-                                    }`}
-                                    title={isListening ? "Listening… tap to stop" : "Voice input — tap to speak"}
-                                    aria-label={isListening ? "Stop listening" : "Voice input"}
+                                    onClick={() => {
+                                        if (onOpenVoiceMode) onOpenVoiceMode();
+                                        else setIsVoiceModeOpen(true);
+                                    }}
+                                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 active:scale-95 text-black transition-all cursor-pointer shadow-lg shadow-[var(--accent-cyan)]/30"
+                                    title="Start live voice conversation"
+                                    aria-label="Voice conversation"
                                 >
-                                    {isListening ? <RiMicFill size={17} /> : <RiMicLine size={17} />}
+                                    <RiVoiceprintLine size={17} />
                                 </button>
                             )}
                         </div>
@@ -609,8 +633,24 @@ const FollowUpInput = ({
                                 />
                             </div>
 
-                            {/* Right Side Actions — 3-state: Stop / Send / Voice mic */}
+                            {/* Right Side Actions — always-visible MIC + 3-state: Stop / Send / Voice orb */}
                             <div className="flex items-center gap-2 shrink-0">
+                                {/* MIC — always present (speech-to-text) */}
+                                {!(isResponding && !(input.trim() || files.length > 0)) && (
+                                    <button
+                                        type="button"
+                                        onClick={handleToggleVoiceInput}
+                                        className={`w-9 h-9 flex items-center justify-center rounded-full transition-all cursor-pointer ${
+                                            isListening
+                                                ? 'bg-rose-500 text-white animate-pulse ring-2 ring-rose-500/40'
+                                                : 'text-zinc-400 hover:text-white hover:bg-zinc-700/60'
+                                        }`}
+                                        title={isListening ? 'Listening… tap to stop' : 'Mic — speak to fill input'}
+                                    >
+                                        {isListening ? <RiMicFill size={18} /> : <RiMicLine size={18} />}
+                                    </button>
+                                )}
+
                                 {isResponding && !(input.trim() || files.length > 0) ? (
                                     /* STOP */
                                     <button
@@ -627,7 +667,7 @@ const FollowUpInput = ({
                                         type="button"
                                         onClick={(e) => { setIsFullScreenEditor(false); onSubmit(e); }}
                                         className="px-4 py-2 h-9 flex items-center justify-center rounded-full bg-white text-black hover:bg-zinc-200 shadow-lg hover:scale-105 active:scale-95 cursor-pointer transition-all gap-1.5 text-xs font-bold"
-                                        title={isResponding ? "Queue this message" : "Send message"}
+                                        title={isResponding ? 'Queue this message' : 'Send message'}
                                     >
                                         {isResponding ? (
                                             <><RiPlayListAddLine size={15} /><span>Queue</span></>
@@ -636,25 +676,40 @@ const FollowUpInput = ({
                                         )}
                                     </button>
                                 ) : (
-                                    /* VOICE MIC */
+                                    /* VOICE ORB */
                                     <button
                                         type="button"
-                                        onClick={handleToggleVoiceInput}
-                                        className={`w-9 h-9 flex items-center justify-center rounded-full transition-all cursor-pointer ${
-                                            isListening
-                                                ? 'bg-rose-500 text-white animate-pulse ring-2 ring-rose-500/40'
-                                                : 'bg-white text-black hover:bg-zinc-200 hover:scale-105 active:scale-95'
-                                        }`}
-                                        title={isListening ? "Listening… tap to stop" : "Voice input"}
+                                        onClick={() => {
+                                            if (onOpenVoiceMode) onOpenVoiceMode();
+                                            else setIsVoiceModeOpen(true);
+                                        }}
+                                        className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 text-black active:scale-95 transition-all cursor-pointer shadow-lg shadow-[var(--accent-cyan)]/30"
+                                        title="Start live voice conversation"
                                     >
-                                        {isListening ? <RiMicFill size={18} /> : <RiMicLine size={18} />}
+                                        <RiVoiceprintLine size={18} />
                                     </button>
                                 )}
                             </div>
+
                         </div>
                     </div>
                 </div>,
                 document.body
+            )}
+            {/* VoiceMode — full-screen live voice conversation (rendered if no parent onOpenVoiceMode) */}
+            {!onOpenVoiceMode && (
+                <VoiceMode
+                    isOpen={isVoiceModeOpen}
+                    onClose={() => setIsVoiceModeOpen(false)}
+                    onSendMessage={async (text) => {
+                        try {
+                            const res = await onSubmit(null, text);
+                            return res?.aiMessage?.content || null;
+                        } catch {
+                            return null;
+                        }
+                    }}
+                />
             )}
         </div>
     );

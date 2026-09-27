@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'react-router';
 import {
     RiMenuLine,
@@ -6,7 +6,8 @@ import {
     RiArrowDownLine,
     RiCheckLine,
     RiSpyLine,
-    RiSideBarLine
+    RiSideBarLine,
+    RiVoiceprintLine
 } from '@remixicon/react';
 import Sidebar from '../../Components/Sidebar';
 import ParsuLogo from '../../Components/ParsuLogo';
@@ -22,6 +23,9 @@ import ModelSelectorDropdown from '../components/ModelSelectorDropdown';
 import { getStoredThinkingLevel } from '../components/ThinkingSelectorDropdown';
 import { saveQueueItem, getQueueItems, removeQueueItem } from '../../../utils/queueDb';
 import { useAiFeatureToggles } from '../../../utils/aiSettingsSync';
+import VoiceMode from '../components/VoiceMode';
+import { resolveIntent } from '../hook/useVoiceAgent';
+import { executeDeviceCommandApi } from '../../device/service/device.api';
 
 const ChatPage2 = () => {
     // Extract chat id from URL parameters (e.g., /chat/123 -> id: 123)
@@ -78,6 +82,7 @@ const ChatPage2 = () => {
 
     // Share link button state
     const [isCopied, setIsCopied] = useState(false);
+    const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
 
     // JellyBlob mascot reactive states
     const [blobMood, setBlobMood] = useState('curious');
@@ -253,13 +258,37 @@ const ChatPage2 = () => {
         return () => scroller.removeEventListener('scroll', handleScrollUp);
     }, [hasMoreMessages, isLoadingMore, messagesPage, id]);
 
-    const handleSendFollowUp = async (e) => {
+    const handleSendFollowUp = async (e, textOverride = null) => {
         if (e) e.preventDefault();
         const fileObjects = files.map(f => f.fileObject).filter(Boolean);
         const filesToSend = fileObjects.length > 1 ? fileObjects : (fileObjects[0] || null);
-        if (!input.trim() && !filesToSend) return;
+        const currentInput = textOverride !== null ? textOverride : input;
+        if (!currentInput.trim() && !filesToSend) return null;
 
-        const currentInput = input;
+        // Check if message is an instant device, URL, or navigation action
+        const intent = resolveIntent(currentInput);
+        if (intent) {
+            if (intent.type === 'device_cmd') {
+                executeDeviceCommandApi({
+                    targetSelector: intent.targetSelector || intent.params?.targetSelector,
+                    action: intent.action,
+                    params: intent.params,
+                    confirmed: true
+                }).then(() => {
+                    dispatch(addToast({ type: 'success', message: `⚡ ${intent.label}` }));
+                }).catch(err => {
+                    dispatch(addToast({ type: 'warning', message: `Device: ${err?.response?.data?.message || err.message}` }));
+                });
+            } else if (intent.type === 'open_url') {
+                window.open(intent.url, '_blank', 'noopener,noreferrer');
+                dispatch(addToast({ type: 'info', message: `🌐 Opening ${intent.label}` }));
+            } else if (intent.type === 'scroll') {
+                if (intent.to === 'top') scrollerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                else if (intent.to === 'bottom') scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight, behavior: 'smooth' });
+                else scrollerRef.current?.scrollBy({ top: intent.by, behavior: 'smooth' });
+                dispatch(addToast({ type: 'info', message: `Scrolling ${intent.by > 0 ? 'down' : 'up'}` }));
+            }
+        }
 
         // If AI is currently generating response, add message to queue!
         if (isGenerating) {
@@ -278,7 +307,7 @@ const ChatPage2 = () => {
             setInput('');
             setFiles([]);
             dispatch(addToast({ message: "Message added to queue! Saved offline & will automatically send when AI finishes.", type: "info" }));
-            return;
+            return null;
         }
 
         setInput(''); // Immediately clear input
@@ -290,9 +319,11 @@ const ChatPage2 = () => {
                 setLatestMessageId(response.aiMessage._id);
                 setTimeout(scrollToBottom, 100);
             }
+            return response;
         } catch (error) {
             console.error("Failed to send follow-up:", error);
-            setInput(currentInput); // Restore on error
+            if (textOverride === null) setInput(currentInput); // Restore on error
+            return null;
         }
     };
 
@@ -395,6 +426,16 @@ const ChatPage2 = () => {
                                 compact={true}
                                 placement="bottom"
                             />
+
+                            {/* Voice Agent Button */}
+                            <button
+                                onClick={() => setIsVoiceModeOpen(true)}
+                                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 active:scale-95 text-black transition-all cursor-pointer shadow-lg shadow-[var(--accent-cyan)]/30 shrink-0"
+                                title="Start Parsu Voice — Jarvis-style agent"
+                                aria-label="Voice agent"
+                            >
+                                <RiVoiceprintLine size={16} />
+                            </button>
 
                             <button 
                                 onClick={handleShare}
@@ -521,6 +562,7 @@ const ChatPage2 = () => {
                     onToggleWebSearch={handleToggleWebSearch}
                     memoryEnabled={memoryEnabled}
                     onToggleMemory={handleToggleMemory}
+                    onOpenVoiceMode={() => setIsVoiceModeOpen(true)}
                 />
 
                 {isSidebarOpen && (
@@ -529,6 +571,22 @@ const ChatPage2 = () => {
                         className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
                     />
                 )}
+
+                {/* Parsu Voice Agent — Jarvis mode */}
+                <VoiceMode
+                    isOpen={isVoiceModeOpen}
+                    onClose={() => setIsVoiceModeOpen(false)}
+                    lastAiMessage={messages.filter(m => m.role === 'ai').at(-1)?.content || ''}
+                    onSendMessage={async (text) => {
+                        try {
+                            const res = await handleSendFollowUp(null, text);
+                            return res?.aiMessage?.content || null;
+                        } catch (err) {
+                            console.error("VoiceMode send failed:", err);
+                            return null;
+                        }
+                    }}
+                />
             </div>
         </div>
 

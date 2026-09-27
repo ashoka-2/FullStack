@@ -1,54 +1,62 @@
 {
   "name": "Parsu AI",
-  "short_name": "Parsu AI",
-  "description": "Autonomous multi-model intelligence & creative studio for instant answers, deep research, code generation, and universal social media publishing.",
+  "short_name": "Parsu",
+  "description": "Autonomous multi-model AI with real-time cross-device control, deep research, code generation, and creative studio.",
   "start_url": "/",
+  "scope": "/",
   "id": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#080A0F",
   "theme_color": "#20B8CD",
-  "orientation": "portrait-primary",
+  "orientation": "any",
+  "prefer_related_applications": false,
   "icons": [
+    { "src": "/favicon-16x16.png",          "sizes": "16x16",   "type": "image/png" },
+    { "src": "/favicon-32x32.png",          "sizes": "32x32",   "type": "image/png" },
+    { "src": "/favicon-48x48.png",          "sizes": "48x48",   "type": "image/png" },
+    { "src": "/apple-touch-icon.png",       "sizes": "180x180", "type": "image/png" },
+    { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/parsu.svg",                  "sizes": "any",     "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
     {
-      "src": "/favicon-16x16.png",
-      "sizes": "16x16",
-      "type": "image/png"
+      "name": "New Chat",
+      "short_name": "Chat",
+      "description": "Start a new AI conversation",
+      "url": "/chat",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     },
     {
-      "src": "/favicon-32x32.png",
-      "sizes": "32x32",
-      "type": "image/png"
+      "name": "Devices",
+      "short_name": "Devices",
+      "description": "Manage linked devices",
+      "url": "/settings/devices",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     },
     {
-      "src": "/favicon-48x48.png",
-      "sizes": "48x48",
-      "type": "image/png"
-    },
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png"
-    },
-    {
-      "src": "/android-chrome-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/android-chrome-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/parsu.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "name": "Library",
+      "short_name": "Library",
+      "description": "Your documents and media",
+      "url": "/settings/library",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     }
   ],
-  "categories": ["productivity", "utilities", "education"],
+  "share_target": {
+    "action": "/chat",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "q",
+      "url": "url"
+    }
+  },
+  "protocol_handlers": [
+    { "protocol": "web+parsu", "url": "/chat?q=%s" }
+  ],
+  "categories": ["productivity", "utilities", "education", "lifestyle"],
   "lang": "en-US",
   "dir": "ltr"
 }

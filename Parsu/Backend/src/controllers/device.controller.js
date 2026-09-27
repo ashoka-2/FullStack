@@ -326,6 +326,27 @@ export async function runMacro(req, res) {
     }
 }
 
+// ─── Device Heartbeat (REST fallback for SW background sync) ─────────────────
+export async function deviceHeartbeat(req, res) {
+    try {
+        const { systemMetrics } = req.body;
+        // Update the user's default or most-recently-seen device
+        const device = await deviceModel.findOne(
+            { user: req.user.id, status: 'online' },
+            null,
+            { sort: { lastSeen: -1 } }
+        );
+        if (device) {
+            device.lastSeen = new Date();
+            if (systemMetrics) device.systemMetrics = { ...device.systemMetrics, ...systemMetrics };
+            await device.save();
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+}
+
 // ─── Clipboard Sync ──────────────────────────────────────────────────────────
 export async function syncClipboard(req, res) {
     try {
@@ -346,3 +367,4 @@ export async function syncClipboard(req, res) {
         res.status(500).json({ success: false, message: "Failed to sync clipboard", error: err.message });
     }
 }
+

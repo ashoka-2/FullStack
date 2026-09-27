@@ -14,7 +14,8 @@ import {
     getMacros,
     createMacro,
     runMacro,
-    syncClipboard
+    syncClipboard,
+    deviceHeartbeat
 } from "../controllers/device.controller.js";
 
 const router = Router();
@@ -25,6 +26,8 @@ router.use(authUser);
 // ─── Device Registry (auto-linking only, no manual pairing) ─────────────────
 router.get("/", getDevices);
 router.post("/auto-register", autoRegisterDevice);
+// REST heartbeat — used by SW background sync when no socket is available
+router.post("/heartbeat", deviceHeartbeat);
 
 // ─── Audit & Macros ──────────────────────────────────────────────────────────
 router.get("/audit/logs", getAuditLogs);

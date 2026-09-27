@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   RiArrowRightLine,
@@ -27,7 +27,8 @@ import {
   RiFullscreenLine,
   RiFullscreenExitLine,
   RiCodeSSlashLine,
-  RiSpyLine
+  RiSpyLine,
+  RiVoiceprintLine
 } from '@remixicon/react';
 import { useChat } from '../hook/useChat';
 import { useNavigate } from 'react-router';
@@ -44,8 +45,14 @@ import AttachmentPreviewStrip from './AttachmentPreviewStrip';
 import AddToChatSheet from './AddToChatSheet';
 import MatrixOrb from '../../Components/rare-ui/MatrixOrb';
 import { triggerBlobInteraction, triggerBlobTyping } from '../../../utils/blobReactions';
+import VoiceMode from './VoiceMode';
+import { resolveIntent } from '../hook/useVoiceAgent';
+import { executeDeviceCommandApi } from '../../device/service/device.api';
 
 const ChatArea = () => {
+  // Voice agent Jarvis overlay state
+  const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
+
   // Input message state
   const [input, setInput] = useState('');
   
@@ -345,6 +352,31 @@ const ChatArea = () => {
     // Do not send if neither text nor file is present, or if already loading
     if ((!messageToSend.trim() && !filesToSend) || loading) return;
 
+    // Check if message is an instant device, URL, or navigation action
+    const intent = resolveIntent(messageToSend);
+    if (intent) {
+      if (intent.type === 'device_cmd') {
+        executeDeviceCommandApi({
+          targetSelector: intent.targetSelector || intent.params?.targetSelector,
+          action: intent.action,
+          params: intent.params,
+          confirmed: true
+        }).then(() => {
+          dispatch(addToast({ type: 'success', message: `⚡ ${intent.label}` }));
+        }).catch(err => {
+          dispatch(addToast({ type: 'warning', message: `Device: ${err?.response?.data?.message || err.message}` }));
+        });
+      } else if (intent.type === 'open_url') {
+        window.open(intent.url, '_blank', 'noopener,noreferrer');
+        dispatch(addToast({ type: 'info', message: `🌐 Opening ${intent.label}` }));
+      } else if (intent.type === 'scroll') {
+        if (intent.to === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });
+        else if (intent.to === 'bottom') window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        else window.scrollBy({ top: intent.by, behavior: 'smooth' });
+        dispatch(addToast({ type: 'info', message: `Scrolling ${intent.by > 0 ? 'down' : 'up'}` }));
+      }
+    }
+
     try {
       // Clear input box immediately
       setInput('');
@@ -364,7 +396,8 @@ const ChatArea = () => {
       }));
       
       // Asynchronously handle message sending with selected model, webSearch, cross-chat memory, and thinking level (plus incognito)
-      handleSendMessage(messageToSend, null, filesToSend, selectedModel, webSearch, memoryEnabled, incognito, thinkingLevel).then(response => {
+      const sendPromise = handleSendMessage(messageToSend, null, filesToSend, selectedModel, webSearch, memoryEnabled, incognito, thinkingLevel);
+      sendPromise.then(response => {
         // Silently update URL once real chat ID is received
         if (response && response.chat) {
           navigate(`/chat/${response.chat._id}`, { replace: true });
@@ -372,9 +405,12 @@ const ChatArea = () => {
       }).catch(err => {
           console.error("Message send failed:", err);
       });
+
+      return await sendPromise;
       
     } catch (error) {
       console.error("Message send failed:", error); // Dev logging
+      return null;
     }
   };
 
@@ -771,36 +807,49 @@ const ChatArea = () => {
                   {isListening ? <RiMicFill size={18} className="text-rose-500" /> : <RiMicLine size={18} />}
                 </button>
 
-                <button
-                  onClick={(e) => {
-                    if (!user) {
-                      setBlobMood('surprised');
-                      navigate('/auth');
-                      return;
-                    }
-                    setBlobMood('hmm');
-                    onSubmit(e);
-                  }}
-                  onMouseEnter={() => {
-                    if (!user || input.trim() || files.length > 0) {
-                      setBlobMood('happy');
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    if (!loading) {
-                      setBlobMood(input.trim() ? 'curious' : 'neutral');
-                    }
-                  }}
-                  disabled={user && (!input.trim() && files.length === 0)}
-                  className={`w-8.5 h-8.5 flex items-center justify-center rounded-full transition-all cursor-pointer ${
-                    !user || input.trim() || files.length > 0 
-                      ? 'bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 hover:scale-105 active:scale-95' 
-                      : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600 opacity-50'
-                  }`}
-                  title="Send message"
-                >
-                  <RiArrowUpLine size={19} className="stroke-[2.5]" />
-                </button>
+                {/* 2-State Action: Live Voice Agent Orb (if input empty) vs Send Button (if text entered) */}
+                {(!input.trim() && files.length === 0) ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!user) {
+                        navigate('/auth');
+                        return;
+                      }
+                      setIsVoiceModeOpen(true);
+                    }}
+                    className="w-8.5 h-8.5 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 active:scale-95 transition-all cursor-pointer"
+                    title="Start live voice talk (Jarvis Agent)"
+                  >
+                    <RiVoiceprintLine size={18} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      if (!user) {
+                        setBlobMood('surprised');
+                        navigate('/auth');
+                        return;
+                      }
+                      setBlobMood('hmm');
+                      onSubmit(e);
+                    }}
+                    onMouseEnter={() => {
+                      if (!user || input.trim() || files.length > 0) {
+                        setBlobMood('happy');
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      if (!loading) {
+                        setBlobMood(input.trim() ? 'curious' : 'neutral');
+                      }
+                    }}
+                    className="w-8.5 h-8.5 flex items-center justify-center rounded-full transition-all cursor-pointer bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 hover:scale-105 active:scale-95"
+                    title="Send message"
+                  >
+                    <RiArrowUpLine size={19} className="stroke-[2.5]" />
+                  </button>
+                )}
               </div>
             </div>
             <p className="text-center text-[11px] text-zinc-400 dark:text-zinc-500 mt-2 font-medium">
@@ -1086,30 +1135,58 @@ const ChatArea = () => {
                   {isListening ? <RiMicFill size={19} className="text-rose-500" /> : <RiMicLine size={19} />}
                 </button>
 
-                {/* Send Prompt Button */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    setIsFullScreenEditor(false);
-                    onSubmit(e);
-                  }}
-                  disabled={!input.trim() && files.length === 0}
-                  className={`px-4 py-2 h-9 flex items-center justify-center rounded-full transition-all gap-1.5 text-xs font-bold ${
-                    input.trim() || files.length > 0 
-                      ? 'bg-white text-black hover:bg-zinc-200 shadow-lg hover:scale-105 cursor-pointer' 
-                      : 'bg-zinc-800 text-zinc-600 opacity-50 cursor-not-allowed'
-                  }`}
-                  title="Send prompt"
-                >
-                  <span>Send</span>
-                  <RiArrowUpLine size={16} />
-                </button>
+                {/* 2-State Action: Live Voice Agent Orb vs Send Button */}
+                {(!input.trim() && files.length === 0) ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!user) {
+                        navigate('/auth');
+                        return;
+                      }
+                      setIsFullScreenEditor(false);
+                      setIsVoiceModeOpen(true);
+                    }}
+                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 active:scale-95 transition-all cursor-pointer"
+                    title="Start live voice talk (Jarvis Agent)"
+                  >
+                    <RiVoiceprintLine size={18} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      setIsFullScreenEditor(false);
+                      onSubmit(e);
+                    }}
+                    className="px-4 py-2 h-9 flex items-center justify-center rounded-full transition-all gap-1.5 text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-lg hover:scale-105 cursor-pointer"
+                    title="Send prompt"
+                  >
+                    <span>Send</span>
+                    <RiArrowUpLine size={16} />
+                  </button>
+                )}
               </div>
             </div>
           </div>
         </div>,
         document.body
       )}
+
+      {/* Jarvis Voice Agent Overlay */}
+      <VoiceMode
+        isOpen={isVoiceModeOpen}
+        onClose={() => setIsVoiceModeOpen(false)}
+        onSendMessage={async (text) => {
+          try {
+            const res = await onSubmit(null, text);
+            return res?.aiMessage?.content || null;
+          } catch (err) {
+            console.error("VoiceMode send failed:", err);
+            return null;
+          }
+        }}
+      />
     </main>
   );
 };

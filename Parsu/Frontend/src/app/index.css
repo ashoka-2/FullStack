@@ -541,3 +541,30 @@ html, body {
     transform: scale(1);
   }
 }
+
+/* ── Voice Mode Orb — waveform bar animation ─────────────────────────────── */
+@keyframes voiceBar {
+  0%   { height: 15%; }
+  50%  { height: 85%; }
+  100% { height: 15%; }
+}
+
+/* ── SW update notification (subtle top banner) ──────────────────────────── */
+.sw-update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: var(--accent-cyan);
+  color: #080a0f;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  animation: slideDown 0.3s ease;
+}
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(0); }
+}
