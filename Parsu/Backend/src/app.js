@@ -99,6 +99,7 @@ import contactRouter from "./routes/contact.routes.js";
 import newsletterRouter from "./routes/newsletter.routes.js";
 import subscriptionRouter from "./routes/subscription.routes.js";
 import settingsRouter from "./routes/settings.routes.js";
+import deviceRouter from "./routes/device.routes.js";
 
 app.use("/api/auth", authRouter)
 app.use("/api/chats", chatRouter)
@@ -110,6 +111,7 @@ app.use("/api/contact", contactRouter)
 app.use("/api/newsletter", newsletterRouter)
 app.use("/api/subscription", subscriptionRouter)
 app.use("/api/settings", settingsRouter)
+app.use("/api/devices", deviceRouter)
 
 export default app;
 

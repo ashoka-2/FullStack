@@ -22,6 +22,7 @@ import NotificationsSettingsPage from "../features/auth/pages/settings/Notificat
 import SafetySettingsPage from "../features/auth/pages/settings/SafetySettingsPage";
 import StorageSettingsPage from "../features/auth/pages/settings/StorageSettingsPage";
 import ReportBugPage from "../features/auth/pages/settings/ReportBugPage";
+import DevicesPage from "../features/device/pages/DevicesPage";
 
 // Info Pages
 import PrivacyPolicy from "../features/pages/PrivacyPolicy";
@@ -172,6 +173,10 @@ export const router = createBrowserRouter([
             {
                 path: "/settings/report-bug",
                 element: <Protected><ReportBugPage /></Protected>
+            },
+            {
+                path: "/settings/devices",
+                element: <Protected><DevicesPage /></Protected>
             },
             // Info / Legal Pages (public)
             {

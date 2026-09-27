@@ -279,6 +279,27 @@ export async function fetchModelsForProvider(provider, apiKey, customBaseUrl = "
       } else if (provider === "openrouter") {
         // Top 50 popular models
         models = models.slice(0, 50);
+      } else if (provider === "nvidia") {
+        const priorityNvidia = [
+          "meta/llama-3.2-11b-vision-instruct",
+          "nvidia/llama-3.1-nemotron-70b-instruct",
+          "deepseek-ai/deepseek-r1",
+          "01-ai/yi-large",
+          "bigcode/starcoder2-15b"
+        ];
+        models = models.filter(m => 
+          !m.id.includes("deepseek-coder-6.7b") &&
+          !m.id.includes("llama-3.1-70b-instruct") &&
+          !m.id.includes("llama-3.3-70b-instruct")
+        );
+        models.sort((a, b) => {
+          const aIdx = priorityNvidia.findIndex(p => a.id === p);
+          const bIdx = priorityNvidia.findIndex(p => b.id === p);
+          if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+          if (aIdx !== -1) return -1;
+          if (bIdx !== -1) return 1;
+          return a.id.localeCompare(b.id);
+        });
       }
 
       return models.slice(0, 40); // Cap at 40 top models for performance
@@ -508,35 +529,58 @@ CRITICAL CITATION & LINK RULES:
   }
 
   let response;
-  try {
-    response = await axios({
+  let usedModel = resolvedModelId;
+
+  // Helper to make streaming or non-streaming chat completions request
+  const attemptChatRequest = async (targetModel, useStream = true, customTimeout = 14000) => {
+    return await axios({
       method: "post",
       url: `${targetUrl}/chat/completions`,
       headers,
       data: {
-        model: resolvedModelId,
+        model: targetModel,
         messages: formattedMessages,
-        stream: true,
+        stream: useStream,
         temperature: 0.7
       },
-      responseType: "stream"
+      responseType: useStream ? "stream" : "json",
+      timeout: customTimeout
     });
+  };
+
+  try {
+    response = await attemptChatRequest(usedModel, true, 14000);
   } catch (err) {
-    // If Mistral rejected with 429 Rate limit exceeded on a commercial model, automatically fallback to open-mistral-nemo
-    if (provider === "mistral" && resolvedModelId !== "open-mistral-nemo" && err.response?.status === 429) {
-      console.warn("⚠️ Mistral model was rate limited (429), automatically retrying with open-mistral-nemo...");
-      response = await axios({
-        method: "post",
-        url: `${targetUrl}/chat/completions`,
-        headers,
-        data: {
-          model: "open-mistral-nemo",
-          messages: formattedMessages,
-          stream: true,
-          temperature: 0.7
-        },
-        responseType: "stream"
-      });
+    const status = err.response?.status;
+    const isTimeout = err.code === "ECONNABORTED" || /timeout/i.test(err.message);
+
+    // 1. Mistral 429 rate limit fallback
+    if (provider === "mistral" && usedModel !== "open-mistral-nemo" && status === 429) {
+      console.warn("⚠️ Mistral model was rate limited (429), retrying with open-mistral-nemo...");
+      usedModel = "open-mistral-nemo";
+      response = await attemptChatRequest(usedModel, true, 14000);
+    }
+    // 2. NVIDIA model failure (404, 410, timeout, function not found, or unroutable model)
+    else if (provider === "nvidia" && usedModel !== "meta/llama-3.2-11b-vision-instruct" && (status === 404 || status === 410 || isTimeout || !status)) {
+      console.warn(`⚠️ NVIDIA model [${usedModel}] failed (${status || err.code || 'timeout'}), automatically falling back to active meta/llama-3.2-11b-vision-instruct...`);
+      usedModel = "meta/llama-3.2-11b-vision-instruct";
+      response = await attemptChatRequest(usedModel, true, 14000);
+    }
+    // 3. Fallback to non-streaming for custom/local endpoints that don't support SSE
+    else if (!isTimeout) {
+      try {
+        console.warn(`⚠️ Streaming request failed (${status}), attempting non-streaming fallback for [${usedModel}]...`);
+        const nonStreamRes = await attemptChatRequest(usedModel, false, 8000);
+        const text = nonStreamRes.data?.choices?.[0]?.message?.content || 
+                     nonStreamRes.data?.choices?.[0]?.text || "";
+        if (text) {
+          if (onChunk) onChunk(text);
+          return text;
+        }
+      } catch (nonStreamErr) {
+        throw err;
+      }
+      throw err;
     } else {
       throw err;
     }
@@ -553,7 +597,10 @@ CRITICAL CITATION & LINK RULES:
           if (dataStr === "[DONE]") continue;
           try {
             const parsed = JSON.parse(dataStr);
-            const delta = parsed.choices?.[0]?.delta?.content || "";
+            const delta = parsed.choices?.[0]?.delta?.content || 
+                          parsed.choices?.[0]?.delta?.reasoning_content || 
+                          parsed.choices?.[0]?.delta?.text || 
+                          parsed.choices?.[0]?.text || "";
             if (delta) {
               fullText += delta;
               onChunk(delta);

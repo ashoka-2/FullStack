@@ -25,10 +25,45 @@ const App = () => {
       dispatch(appendChunk(chunk));
     });
 
+    // Cross-Device Auto-Sync: Listen for incoming commands from user's other devices
+    socket.on("device:incoming_relay", ({ action, params, senderDeviceName }) => {
+      if (action === "open_url" && params?.url) {
+        window.open(params.url, "_blank");
+      } else if (action === "write_clipboard" && params?.text) {
+        navigator.clipboard?.writeText(params.text).catch(() => {});
+      } else if (action === "vibrate" && typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+      }
+    });
+
     return () => {
       socket.off("chunk");
+      socket.off("device:incoming_relay");
     };
   }, [isMaintenance]);
+
+  // When user is authenticated, automatically register this active device under their account
+  useEffect(() => {
+    if (!auth?.user?._id) return;
+    const socket = initializeSocketConnection();
+
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent.toLowerCase() : "";
+    const isAndroid = /android/i.test(ua);
+    const isIOS = /iphone|ipad|ipod/i.test(ua);
+    const isMac = /macintosh|mac os x/i.test(ua);
+    const platform = isAndroid ? "android" : isIOS ? "ios" : isMac ? "macos" : "windows";
+    const deviceType = (isAndroid || isIOS) ? "mobile" : "desktop";
+    const deviceName = isAndroid ? "Android Phone" : isIOS ? "Apple iPhone" : isMac ? "MacBook / iMac" : "Windows Desktop";
+
+    socket.emit("user:subscribe", auth.user._id);
+    socket.emit("device:auto_register", {
+      userId: auth.user._id,
+      platform,
+      deviceType,
+      name: `${deviceName} (${auth.user.name || 'User'})`,
+      userAgent: navigator.userAgent
+    });
+  }, [auth?.user?._id]);
 
   // When maintenance mode is active, users can only view the Maintenance Mode page
   if (isMaintenance) {

@@ -23,6 +23,7 @@ import {
     RiSideBarLine,
     RiLogoutBoxRLine,
     RiNotificationLine,
+    RiComputerLine,
 } from '@remixicon/react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router';
@@ -139,6 +140,14 @@ const SETTING_GROUPS = [
                 description: 'Connect Instagram, YouTube, Twitter and other social accounts.',
                 color: '#60A6AF',
                 glow: 'rgba(96,166,175,0.12)',
+            },
+            {
+                to: '/settings/devices',
+                icon: RiComputerLine,
+                title: 'Connected Devices',
+                description: 'Cross-device control agent for Windows, macOS & Android with sub-500ms execution.',
+                color: '#20b8cd',
+                glow: 'rgba(32,184,205,0.15)',
             },
         ],
     },
