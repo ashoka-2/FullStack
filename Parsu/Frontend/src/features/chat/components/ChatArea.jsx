@@ -459,7 +459,7 @@ const ChatArea = () => {
         
         {/* Brand header */}
         <div className="flex items-center gap-2.5 mb-4 opacity-90 hover:opacity-100 transition-opacity">
-          <ParsuLogo className="w-8 h-8 sm:w-9 sm:h-9 text-[var(--accent-cyan)] shrink-0" />
+          <ParsuLogo className="w-8 h-8 sm:w-9 sm:h-9 text-zinc-900 dark:text-white shrink-0" />
           <span className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
             Parsu <span className="text-[var(--accent-cyan)]">AI</span>
           </span>
@@ -891,14 +891,14 @@ const ChatArea = () => {
             {capabilities.map((cap, i) => {
                const Icon = cap.icon;
                return (
-                 <div key={i} className={`group flex flex-col gap-2 p-4 bg-[#111111] dark:bg-[#111111] border border-white/[0.08] hover:border-white/20 rounded-2xl transition-all cursor-default shadow-xs ${cap.bgHover}`}>
+                 <div key={i} className={`group flex flex-col gap-2 p-4 bg-white dark:bg-[#111111] border border-zinc-200/90 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/20 rounded-2xl transition-all cursor-default shadow-xs ${cap.bgHover}`}>
                    <div className="flex items-center gap-3">
-                     <div className={`w-8 h-8 rounded-xl bg-[#1A1A1A] border border-white/[0.08] flex items-center justify-center transition-colors shadow-xs ${cap.colorClass}`}>
+                     <div className={`w-8 h-8 rounded-xl bg-zinc-100 dark:bg-[#1A1A1A] border border-zinc-200/80 dark:border-white/[0.08] flex items-center justify-center transition-colors shadow-xs ${cap.colorClass}`}>
                         <Icon size={16} />
                      </div>
-                     <span className="text-[14px] font-semibold text-zinc-100">{cap.title}</span>
+                     <span className="text-[14px] font-semibold text-zinc-900 dark:text-zinc-100">{cap.title}</span>
                    </div>
-                   <p className="text-[12px] text-zinc-400 font-normal leading-[1.5] mt-1 pr-4">
+                   <p className="text-[12px] text-zinc-600 dark:text-zinc-400 font-normal leading-[1.5] mt-1 pr-4">
                      {cap.description}
                    </p>
                  </div>

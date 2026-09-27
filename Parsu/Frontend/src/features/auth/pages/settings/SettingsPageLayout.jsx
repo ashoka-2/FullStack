@@ -32,12 +32,12 @@ const SettingsPageLayout = ({ title, icon: Icon, description, children }) => {
             <div className={`flex-1 flex flex-col min-h-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
 
                 {/* Header — shrink-0: naturally pinned */}
-                <header className="shrink-0 z-30 border-b border-white/[0.08] bg-[#0B0B0B]/90 backdrop-blur-md px-3 sm:px-8 h-12 sm:h-14 flex items-center justify-between gap-2">
+                <header className="shrink-0 z-30 border-b border-zinc-200/80 dark:border-white/[0.08] bg-white/90 dark:bg-[#0B0B0B]/90 backdrop-blur-md px-3 sm:px-8 h-12 sm:h-14 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                         {/* Mobile sidebar toggle button */}
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-1.5 -ml-1 text-zinc-400 hover:text-white transition-all cursor-pointer rounded-lg active:scale-95 shrink-0"
+                            className="lg:hidden p-1.5 -ml-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer rounded-lg active:scale-95 shrink-0"
                             aria-label="Open navigation"
                         >
                             <RiMenuLine size={20} />
@@ -61,7 +61,7 @@ const SettingsPageLayout = ({ title, icon: Icon, description, children }) => {
                     </div>
 
                     {description && (
-                        <p className="hidden md:block text-xs text-zinc-400 truncate ml-auto shrink-0 max-w-xs">{description}</p>
+                        <p className="hidden md:block text-xs text-zinc-500 dark:text-zinc-400 truncate ml-auto shrink-0 max-w-xs">{description}</p>
                     )}
                 </header>
 

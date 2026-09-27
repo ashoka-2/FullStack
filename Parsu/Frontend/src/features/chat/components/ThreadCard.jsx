@@ -109,7 +109,7 @@ const ThreadCard = ({ thread, viewMode, onDelete, onRename, onPinToggle }) => {
                 to={`/chat/${threadId}`}
                 onMouseEnter={() => triggerBlobChatSelect()}
                 onClick={() => triggerBlobChatSelect()}
-                className="group flex flex-col p-5 bg-[#111111] border border-white/[0.08] rounded-3xl hover:border-white/20 hover:bg-[#161616] shadow-xs transition-all text-left relative"
+                className="group flex flex-col p-5 bg-white dark:bg-[#111111] border border-zinc-200/90 dark:border-white/[0.08] rounded-3xl hover:border-zinc-300 dark:hover:border-white/20 hover:bg-zinc-50 dark:hover:bg-[#161616] shadow-xs transition-all text-left relative"
             >
                 {/* Pin badge */}
                 {isPinned && (
@@ -119,18 +119,18 @@ const ThreadCard = ({ thread, viewMode, onDelete, onRename, onPinToggle }) => {
                 )}
 
                 <div className="flex justify-between items-start mb-4 gap-2">
-                    <div className="px-2.5 py-1 rounded-lg bg-[#1A1A1A] border border-white/[0.08] text-[10px] font-bold text-zinc-400 uppercase tracking-widest shrink-0">
+                    <div className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-[#1A1A1A] border border-zinc-200/90 dark:border-white/[0.08] text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest shrink-0">
                         {thread.date || 'Recent'}
                     </div>
                     {/* Actions */}
                     <div className="flex items-center gap-1 shrink-0"
                         onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
                         <button onClick={handlePin} title={isPinned ? 'Unpin' : 'Pin chat'}
-                            className="p-1.5 rounded-lg text-zinc-400 hover:text-[var(--accent-cyan)] hover:bg-white/[0.06] transition-all cursor-pointer">
+                            className="p-1.5 rounded-lg text-zinc-400 hover:text-[var(--accent-cyan)] hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer">
                             {isPinned ? <RiPushpin2Fill size={14} className="text-[var(--accent-cyan)]" /> : <RiPushpinLine size={14} />}
                         </button>
                         <button onClick={startRename} title="Rename chat"
-                            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer">
+                            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer">
                             <RiPencilLine size={14} />
                         </button>
                         <DeleteButton className="h-8.5 rounded-xl" onConfirm={handleConfirmDelete} />
@@ -140,11 +140,11 @@ const ThreadCard = ({ thread, viewMode, onDelete, onRename, onPinToggle }) => {
                 {isRenaming ? (
                     <RenameInput />
                 ) : (
-                    <h3 className="text-lg font-bold text-white group-hover:text-[var(--accent-cyan)] transition-colors line-clamp-1 mb-2">
+                    <h3 className="text-lg font-bold text-zinc-900 dark:text-white group-hover:text-[var(--accent-cyan)] transition-colors line-clamp-1 mb-2">
                         {thread.title}
                     </h3>
                 )}
-                <p className="text-sm text-zinc-400 font-normal leading-relaxed line-clamp-2">
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 font-normal leading-relaxed line-clamp-2">
                     {thread.desc}
                 </p>
             </Link>
@@ -157,11 +157,11 @@ const ThreadCard = ({ thread, viewMode, onDelete, onRename, onPinToggle }) => {
             to={`/chat/${threadId}`}
             onMouseEnter={() => triggerBlobChatSelect()}
             onClick={() => triggerBlobChatSelect()}
-            className="group flex items-center justify-between p-4 bg-[#111111] border border-white/[0.08] rounded-2xl hover:border-white/20 hover:bg-[#161616] shadow-xs transition-all cursor-pointer gap-3"
+            className="group flex items-center justify-between p-4 bg-white dark:bg-[#111111] border border-zinc-200/90 dark:border-white/[0.08] rounded-2xl hover:border-zinc-300 dark:hover:border-white/20 hover:bg-zinc-50 dark:hover:bg-[#161616] shadow-xs transition-all cursor-pointer gap-3"
         >
             <div className="flex items-center gap-4 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-xl bg-[#1A1A1A] border border-white/[0.08] flex items-center justify-center text-zinc-400 group-hover:text-[var(--accent-cyan)] transition-colors shrink-0 relative">
-                    <ParsuLogo size={22} />
+                <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-[#1A1A1A] border border-zinc-200/90 dark:border-white/[0.08] flex items-center justify-center text-zinc-600 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors shrink-0 relative">
+                    <ParsuLogo size={22} className="text-zinc-900 dark:text-white" />
                     {isPinned && (
                         <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[var(--accent-cyan)] rounded-full flex items-center justify-center shadow-xs">
                             <RiPushpin2Fill size={8} className="text-black" />
@@ -173,7 +173,7 @@ const ThreadCard = ({ thread, viewMode, onDelete, onRename, onPinToggle }) => {
                         <RenameInput />
                     ) : (
                         <>
-                            <h3 className="text-base font-bold text-white line-clamp-1 group-hover:text-[var(--accent-cyan)] transition-colors">{thread.title}</h3>
+                            <h3 className="text-base font-bold text-zinc-900 dark:text-white line-clamp-1 group-hover:text-[var(--accent-cyan)] transition-colors">{thread.title}</h3>
                             <p className="text-xs font-medium text-zinc-500 uppercase tracking-tighter mt-0.5">{thread.date || 'Recent'} · Thread</p>
                         </>
                     )}

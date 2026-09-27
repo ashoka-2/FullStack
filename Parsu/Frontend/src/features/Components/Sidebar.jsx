@@ -214,22 +214,22 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     <>
       <aside
         data-lenis-prevent="true"
-        className={`fixed top-0 left-0 z-[9990] h-[100dvh] flex flex-col bg-[#0B0B0B] text-zinc-400 transition-[width,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shrink-0 border-r border-white/[0.08] shadow-2xl lg:shadow-none
+        className={`fixed top-0 left-0 z-[9990] h-[100dvh] flex flex-col bg-white dark:bg-[#0B0B0B] text-zinc-600 dark:text-zinc-400 transition-[width,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shrink-0 border-r border-zinc-200/80 dark:border-white/[0.08] shadow-2xl lg:shadow-none
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
           ${isSidebarCollapsed ? 'w-[280px] xs:w-[290px] p-3 sm:p-3.5 lg:w-16 lg:px-2 lg:py-3' : 'w-[280px] xs:w-[290px] lg:w-56 p-3 sm:p-3.5'}`}
       >
         {/* Sidebar Header: Brand Mark, Name & Controls */}
-        <div className={`flex items-center ${isSidebarCollapsed ? 'justify-between lg:justify-center' : 'justify-between'} px-1 pt-0.5 pb-3 mb-2 border-b border-white/[0.08] shrink-0`}>
+        <div className={`flex items-center ${isSidebarCollapsed ? 'justify-between lg:justify-center' : 'justify-between'} px-1 pt-0.5 pb-3 mb-2 border-b border-zinc-200/80 dark:border-white/[0.08] shrink-0`}>
           {/* Logo & Brand text (shown on mobile, or on desktop when expanded) */}
           <Link
             to={user ? "/ai" : "/"}
             onClick={closeMobileSidebar}
             className={`flex items-center gap-2 group cursor-pointer overflow-hidden ${isSidebarCollapsed ? 'lg:hidden' : 'flex'}`}
           >
-            <ParsuLogo className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--accent-cyan)] group-hover:scale-105 transition-transform shrink-0" />
+            <ParsuLogo className="w-7 h-7 sm:w-8 sm:h-8 text-zinc-900 dark:text-white group-hover:scale-105 transition-transform shrink-0" />
             <div className="flex items-center gap-1.5 whitespace-nowrap">
-              <span className="font-extrabold text-[16px] sm:text-[17px] tracking-tight text-white">
+              <span className="font-extrabold text-[16px] sm:text-[17px] tracking-tight text-zinc-900 dark:text-white">
                 PARSU
               </span>
               <span className="px-1.5 py-0.5 rounded text-[10px] font-black tracking-wider text-black bg-[var(--accent-cyan)] shadow-xs">
@@ -243,7 +243,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <button
               type="button"
               onClick={() => dispatch(toggleSidebarCollapse())}
-              className="hidden lg:flex w-9 h-9 rounded-xl items-center justify-center text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"
+              className="hidden lg:flex w-9 h-9 rounded-xl items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.08] transition-all cursor-pointer"
               title="Expand sidebar"
               aria-label="Expand sidebar"
             >
@@ -256,7 +256,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <button
               type="button"
               onClick={() => dispatch(toggleSidebarCollapse())}
-              className="hidden lg:flex w-7 h-7 rounded-lg items-center justify-center text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer shrink-0"
+              className="hidden lg:flex w-7 h-7 rounded-lg items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.08] transition-all cursor-pointer shrink-0"
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
             >
@@ -268,7 +268,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="lg:hidden w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer shrink-0"
+            className="lg:hidden w-8 h-8 rounded-full flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer shrink-0"
             title="Close navigation"
             aria-label="Close navigation"
           >
@@ -290,9 +290,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 closeMobileSidebar();
               }}
               className={`w-full flex items-center ${isSidebarCollapsed ? 'px-3 lg:px-0 lg:justify-center' : 'px-3 justify-start'} py-2 rounded-xl transition-all duration-200 group cursor-pointer text-sm font-medium
-                ${item.active ? 'bg-[#1F1F1F] text-white border border-white/[0.08] shadow-xs' : 'text-zinc-400 hover:bg-[#171717] hover:text-white'}`}
+                ${item.active ? 'bg-zinc-100 dark:bg-[#1F1F1F] text-zinc-900 dark:text-white border border-zinc-200/90 dark:border-white/[0.08] shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-[#171717] hover:text-zinc-900 dark:hover:text-white'}`}
             >
-              <item.icon size={19} className={`shrink-0 ${item.active ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`} />
+              <item.icon size={19} className={`shrink-0 ${item.active ? 'text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'}`} />
               <span className={`${isSidebarCollapsed ? 'block lg:hidden' : 'block'} ml-3 truncate`}>{item.label}</span>
             </Link>
           ))}
@@ -308,9 +308,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               navigate('/ai');
             }}
             title="New Chat"
-            className={`${isSidebarCollapsed ? 'flex-1 px-3 py-2 lg:flex-none lg:w-10 lg:h-10 lg:p-0 lg:justify-center' : 'flex-1 px-3 py-2'} flex items-center gap-2 rounded-xl bg-[#171717] hover:bg-[#222222] border border-white/[0.08] text-white transition-all group cursor-pointer text-left text-sm font-medium`}
+            className={`${isSidebarCollapsed ? 'flex-1 px-3 py-2 lg:flex-none lg:w-10 lg:h-10 lg:p-0 lg:justify-center' : 'flex-1 px-3 py-2'} flex items-center gap-2 rounded-xl bg-zinc-100 dark:bg-[#171717] hover:bg-zinc-200/70 dark:hover:bg-[#222222] border border-zinc-200/90 dark:border-white/[0.08] text-zinc-900 dark:text-white transition-all group cursor-pointer text-left text-sm font-medium`}
           >
-            <RiAddLine size={19} className="text-zinc-400 group-hover:text-white shrink-0" />
+            <RiAddLine size={19} className="text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white shrink-0" />
             <span className={`${isSidebarCollapsed ? 'block lg:hidden' : 'block'}`}>New Chat</span>
           </button>
 
@@ -326,8 +326,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             className={[
               `flex items-center justify-center ${isSidebarCollapsed ? 'w-9 h-9 lg:w-10 lg:h-10' : 'w-9 h-9'} rounded-xl transition-all cursor-pointer shrink-0`,
               incognito
-                ? 'bg-purple-500/15 text-purple-400 border border-purple-500/30'
-                : 'text-zinc-400 hover:bg-white/[0.08] hover:text-white'
+                ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30'
+                : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/[0.08] hover:text-zinc-900 dark:hover:text-white'
             ].join(' ')}
           >
             <RiGhostLine size={17} />
@@ -337,8 +337,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {/* Incognito active banner (full width in expanded mode or mobile) */}
         {incognito && (
           <div className={`mx-1 mb-3 px-3 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center gap-2 ${isSidebarCollapsed ? 'block lg:hidden' : 'block'}`}>
-            <RiGhostLine size={13} className="text-purple-400 shrink-0" />
-            <span className="text-[11px] font-bold text-purple-400">Incognito active</span>
+            <RiGhostLine size={13} className="text-purple-500 dark:text-purple-400 shrink-0" />
+            <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400">Incognito active</span>
           </div>
         )}
 
@@ -350,8 +350,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
           <div className="flex-1 overflow-y-auto space-y-0.5 custom-scrollbar pb-4 pr-1">
             {!user ? (
-              <div className="p-3 mx-1 my-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-center shadow-2xs">
-                <p className="text-[11px] text-zinc-400 mb-2 leading-relaxed">Sign in to save and access your past chats.</p>
+              <div className="p-3 mx-1 my-2 rounded-xl bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200/90 dark:border-white/[0.08] text-center shadow-2xs">
+                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mb-2 leading-relaxed">Sign in to save and access your past chats.</p>
                 <Link 
                   to="/auth" 
                   onClick={closeMobileSidebar}
@@ -366,7 +366,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               <>
                 {isCreating && (
                     <div className="px-3 py-1.5 animate-pulse">
-                        <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
+                        <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4"></div>
                     </div>
                 )}
                 {/* Sort pinned first */}
@@ -400,7 +400,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                             }
                             if (e.key === 'Escape') setRenamingId(null);
                           }}
-                          className="flex-1 min-w-0 bg-zinc-800 border border-[var(--accent-cyan)]/50 rounded-md px-1.5 py-0.5 text-[12px] text-zinc-100 focus:outline-none"
+                          className="flex-1 min-w-0 bg-zinc-100 dark:bg-zinc-800 border border-[var(--accent-cyan)]/50 rounded-md px-1.5 py-0.5 text-[12px] text-zinc-900 dark:text-zinc-100 focus:outline-none"
                         />
                         <button onClick={async () => {
                           if (renameVal.trim() && renameVal.trim() !== thread.title) {
@@ -408,7 +408,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                             catch { dispatch(addToast({ type: 'error', message: 'Rename failed' })); }
                           }
                           setRenamingId(null);
-                        }} className="p-0.5 text-emerald-400 cursor-pointer"><RiCheckLine size={13} /></button>
+                        }} className="p-0.5 text-emerald-500 dark:text-emerald-400 cursor-pointer"><RiCheckLine size={13} /></button>
                       </div>
                     ) : (
                       <Link
@@ -416,7 +416,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                         onMouseEnter={() => triggerBlobChatSelect()}
                         onClick={() => { triggerBlobChatSelect(); closeMobileSidebar(); }}
                         className={`flex-1 flex items-center gap-1.5 text-left px-3 py-1.5 rounded-lg text-[13px] truncate transition-all font-medium cursor-pointer
-                        ${location.pathname === `/chat/${thread._id}` ? 'text-white bg-[#1F1F1F] shadow-xs border border-white/[0.08]' : 'text-zinc-400 hover:text-white hover:bg-[#171717]'}`}
+                        ${location.pathname === `/chat/${thread._id}` ? 'text-zinc-900 dark:text-white bg-zinc-100 dark:bg-[#1F1F1F] shadow-xs border border-zinc-200/90 dark:border-white/[0.08]' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#171717]'}`}
                       >
                         {isThisPinned && <RiPushpin2Fill size={10} className="text-[var(--accent-cyan)] shrink-0" />}
                         <span className="truncate">{thread.title || 'Untitled Chat'}</span>
@@ -436,7 +436,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                               setPinnedIds(prev => ({ ...prev, [thread._id]: !isThisPinned }));
                             } catch { /* silent fail */ }
                           }}
-                          className={`p-1 rounded cursor-pointer transition-colors ${isThisPinned ? 'text-[var(--accent-cyan)]' : 'text-zinc-500 hover:text-[var(--accent-cyan)]'}`}
+                          className={`p-1 rounded cursor-pointer transition-colors ${isThisPinned ? 'text-[var(--accent-cyan)]' : 'text-zinc-400 dark:text-zinc-500 hover:text-[var(--accent-cyan)]'}`}
                         >
                           <RiPushpin2Fill size={12} />
                         </button>
@@ -448,7 +448,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                             setRenameVal(thread.title || '');
                             setRenamingId(thread._id);
                           }}
-                          className="p-1 rounded text-zinc-500 hover:text-white cursor-pointer transition-colors"
+                          className="p-1 rounded text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer transition-colors"
                         >
                           <RiPencilLine size={12} />
                         </button>
@@ -456,7 +456,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                         <button
                           onMouseEnter={() => triggerBlobChatDeleteHover()}
                           onClick={() => { triggerBlobChatDeleteHover(); setTargetId(thread._id); setModalType('delete'); }}
-                          className="p-1 text-zinc-500 hover:text-red-400 transition-all cursor-pointer"
+                          className="p-1 text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 transition-all cursor-pointer"
                         >
                           <RiDeleteBinLine size={13} />
                         </button>
@@ -488,7 +488,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <Link
               to="/library"
               title="Recent Chats (Library)"
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
             >
               <RiHistoryLine size={19} />
             </Link>
@@ -496,13 +496,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         )}
 
         {/* Footer Area */}
-        <div className="mt-auto space-y-2 pt-2.5 pb-4 sm:pb-2 border-t border-white/[0.08] shrink-0">
+        <div className="mt-auto space-y-2 pt-2.5 pb-4 sm:pb-2 border-t border-zinc-200/80 dark:border-white/[0.08] shrink-0">
           
           {/* Theme Toggle Button */}
           <button 
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className={`w-full flex items-center ${isSidebarCollapsed ? 'px-3 lg:px-0 lg:justify-center' : 'px-3 justify-start'} py-2 rounded-xl hover:bg-white/[0.06] transition-all group cursor-pointer`}
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'px-3 lg:px-0 lg:justify-center' : 'px-3 justify-start'} py-2 rounded-xl text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-all group cursor-pointer`}
           >
             {theme === 'dark' ? (
                 <>
@@ -511,7 +511,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 </>
             ) : (
                 <>
-                  <RiMoonClearLine size={18} className="text-zinc-400 group-hover:text-indigo-400 shrink-0" />
+                  <RiMoonClearLine size={18} className="text-zinc-500 group-hover:text-indigo-600 shrink-0" />
                   <span className={`text-sm font-medium ${isSidebarCollapsed ? 'block lg:hidden' : 'block'} ml-3`}>Dark Mode</span>
                 </>
             )}
@@ -523,13 +523,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               <Link 
                 to="/settings"
                 title={`Profile & Settings (${user?.username || 'User'})`}
-                className="flex items-center gap-2 group w-full cursor-pointer hover:bg-white/[0.04] p-1.5 rounded-xl transition-colors"
+                className="flex items-center gap-2 group w-full cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/[0.04] p-1.5 rounded-xl transition-colors"
               >
                 {user?.profilePic ? (
                   <img 
                     src={user.profilePic} 
                     alt={user.username} 
-                    className="w-7 h-7 rounded-full object-cover border border-white/10 shrink-0"
+                    className="w-7 h-7 rounded-full object-cover border border-zinc-200 dark:border-white/10 shrink-0"
                   />
                 ) : (
                   <div className="w-7 h-7 rounded-full bg-teal-600 flex items-center justify-center text-[11px] font-bold text-white shrink-0">
@@ -537,10 +537,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   </div>
                 )}
                 <div className={`min-w-0 flex-1 ${isSidebarCollapsed ? 'block lg:hidden' : 'block'}`}>
-                  <p className="text-xs font-bold text-zinc-200 truncate group-hover:text-[var(--accent-cyan)] transition-colors">
+                  <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200 truncate group-hover:text-[var(--accent-cyan)] transition-colors">
                     {user?.username || 'User'}
                   </p>
-                  <p className="text-[10px] text-zinc-500 truncate">Settings & Profile</p>
+                  <p className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">Settings & Profile</p>
                 </div>
               </Link>
             </div>
@@ -575,7 +575,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       {/* Mobile Drawer Overlay */}
       <div
         onClick={() => setIsOpen(false)}
-        className={`lg:hidden fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[9985] transition-opacity duration-300 ${
+        className={`lg:hidden fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-xs z-[9985] transition-opacity duration-300 ${
           isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         aria-label="Close navigation backdrop"

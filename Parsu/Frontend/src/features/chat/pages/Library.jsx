@@ -199,18 +199,18 @@ const Library = () => {
 
             <div className={`flex-1 flex flex-col h-full ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} min-w-0 transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] w-full overflow-hidden`}>
                 {/* ChatGPT-style Header */}
-                <header className="shrink-0 h-12 sm:h-14 bg-[#0B0B0B]/90 backdrop-blur-md border-b border-white/[0.08] flex items-center justify-between px-3 sm:px-6 z-40">
+                <header className="shrink-0 h-12 sm:h-14 bg-white/90 dark:bg-[#0B0B0B]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-white/[0.08] flex items-center justify-between px-3 sm:px-6 z-40">
                     <div className="flex items-center gap-2">
                         {/* Mobile sidebar button */}
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-1.5 text-zinc-400 hover:text-white transition-all rounded-lg active:scale-95 cursor-pointer"
+                            className="lg:hidden p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all rounded-lg active:scale-95 cursor-pointer"
                             aria-label="Open sidebar"
                         >
                             <RiMenuLine size={20} />
                         </button>
 
-                        <span className="text-sm font-semibold text-zinc-100 flex items-center gap-1.5">
+                        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
                             <RiHistoryLine size={17} className="text-[var(--accent-cyan)]" /> Library & History
                         </span>
                     </div>
@@ -221,16 +221,16 @@ const Library = () => {
                 <main className="max-w-[1000px] mx-auto px-4 md:px-6 py-6 md:py-10">
  
                     <div className="hidden lg:flex items-center gap-3 mb-10 overflow-x-auto pb-2 custom-scrollbar hide-scrollbar">
-                        <div className="w-10 h-10 rounded-2xl bg-[#171717] border border-white/[0.08] flex items-center justify-center text-[var(--accent-cyan)] shrink-0 shadow-sm">
+                        <div className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-[#171717] border border-zinc-200/90 dark:border-white/[0.08] flex items-center justify-center text-[var(--accent-cyan)] shrink-0 shadow-sm">
                             <RiHistoryLine size={20} />
                         </div>
-                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white shrink-0">Chats</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white shrink-0">Chats</h1>
                     </div>
 
                     {/* ─── Search Bar + View Toggle + Upload Button ─────────────────────── */}
                     <div className="flex items-center gap-3 w-full">
                         <div className="relative group flex-1 md:w-64 max-w-sm">
-                            <ParsuLogo className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-[var(--color-clear-hanada)] transition-colors" size={19} />
+                            <ParsuLogo className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-focus-within:text-zinc-900 dark:group-focus-within:text-white transition-colors" size={19} />
                             <input
                                 className="w-full bg-white dark:bg-[var(--bg-primary)] border border-zinc-200/90 dark:border-white/5 rounded-xl pl-10 pr-4 py-2 text-sm font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[var(--color-clear-hanada)]/40 focus:ring-1 focus:ring-[#60A6AF]/20 shadow-2xs transition-all"
                                 placeholder="Search your chats..."

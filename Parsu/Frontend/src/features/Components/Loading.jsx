@@ -149,7 +149,7 @@ const Loading = ({ onFinished, authReady = true }) => {
       >
         {/* Animated Glowing Logo Mark */}
         <div ref={logoWrapperRef} className="relative mb-6 flex items-center justify-center">
-          <ParsuLogo size={52} className="text-[var(--accent-cyan)] drop-shadow-[0_0_25px_rgba(32,184,205,0.5)] animate-pulse" />
+          <ParsuLogo size={52} className="text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.4)] animate-pulse" />
         </div>
 
         {/* Brand Name */}

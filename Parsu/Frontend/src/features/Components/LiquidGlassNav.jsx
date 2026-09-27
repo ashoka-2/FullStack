@@ -177,7 +177,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
         className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${
           isScrolled
             ? 'bg-white/85 dark:bg-zinc-950/85 backdrop-blur-xl border-b border-zinc-200/80 dark:border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.5)]'
-            : 'bg-transparent border-b border-transparent'
+            : 'bg-white/50 dark:bg-transparent backdrop-blur-md dark:backdrop-blur-none border-b border-zinc-200/50 dark:border-transparent'
         }`}
       >
         <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
@@ -190,14 +190,10 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
           >
             <ParsuLogo
               size={30}
-              className={`transition-all duration-200 group-hover:scale-105 ${
-                isScrolled ? 'text-zinc-900 dark:text-white' : 'text-white'
-              }`}
+              className="transition-all duration-200 group-hover:scale-105 text-zinc-900 dark:text-white"
             />
             <div className="flex items-center gap-1 sm:gap-1.5">
-              <span className={`font-extrabold text-base sm:text-xl tracking-tight transition-colors drop-shadow-xs ${
-                isScrolled ? 'text-zinc-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300' : 'text-white group-hover:text-cyan-300'
-              }`}>
+              <span className="font-extrabold text-base sm:text-xl tracking-tight transition-colors drop-shadow-xs text-zinc-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300">
                 Parsu
               </span>
               <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-black bg-[var(--accent-cyan)] px-1.5 py-0.5 rounded shadow-xs">
@@ -217,11 +213,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
                   key={link.label}
                   href={location.pathname === '/' ? link.href : `/${link.href}`}
                   onClick={(e) => handleNavClick(e, link)}
-                  className={`px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all duration-150 drop-shadow-xs cursor-pointer ${
-                    isScrolled
-                      ? 'text-zinc-700 dark:text-white/90 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10'
-                      : 'text-white/90 hover:text-white hover:bg-white/10'
-                  }`}
+                  className="px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all duration-150 drop-shadow-xs cursor-pointer text-zinc-700 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100/80 dark:hover:bg-white/10"
                 >
                   {link.label}
                 </a>
@@ -229,11 +221,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
                 <Link
                   key={link.label}
                   to={link.href}
-                  className={`px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all duration-150 drop-shadow-xs ${
-                    isScrolled
-                      ? 'text-zinc-700 dark:text-white/90 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10'
-                      : 'text-white/90 hover:text-white hover:bg-white/10'
-                  }`}
+                  className="px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all duration-150 drop-shadow-xs text-zinc-700 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100/80 dark:hover:bg-white/10"
                 >
                   {link.label}
                 </Link>
@@ -247,16 +235,12 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             <button
               type="button"
               onClick={toggleTheme}
-              className={`hidden md:flex w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full items-center justify-center border active:scale-95 transition-all duration-150 cursor-pointer shadow-xs ${
-                isScrolled
-                  ? 'bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 border-zinc-200 dark:border-white/15 text-zinc-800 dark:text-white'
-                  : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
-              }`}
+              className="hidden md:flex w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full items-center justify-center border active:scale-95 transition-all duration-150 cursor-pointer shadow-xs bg-zinc-100/90 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 border-zinc-200/90 dark:border-white/15 text-zinc-800 dark:text-white"
               title="Toggle Light / Dark mode"
               aria-label="Toggle Theme"
             >
               {theme === 'light' ? (
-                <RiMoonLine size={15} className={`transition-transform duration-300 rotate-0 hover:-rotate-12 ${isScrolled ? 'text-zinc-800 dark:text-white' : 'text-white'}`} />
+                <RiMoonLine size={15} className="transition-transform duration-300 rotate-0 hover:-rotate-12 text-zinc-800 dark:text-white" />
               ) : (
                 <RiSunLine size={15} className="transition-transform duration-300 rotate-0 hover:rotate-45 text-amber-300" />
               )}
@@ -266,24 +250,16 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             {user ? (
               <Link
                 to="/settings"
-                className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all drop-shadow-xs ${
-                  isScrolled
-                    ? 'text-zinc-700 dark:text-white/90 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 border-zinc-200 dark:border-white/15'
-                    : 'text-white/90 hover:text-white hover:bg-white/10 border-white/15'
-                }`}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all drop-shadow-xs text-zinc-800 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100/80 dark:hover:bg-white/10 border-zinc-200/90 dark:border-white/15 bg-white/60 dark:bg-white/5"
                 title={`Logged in as ${user.name || user.username || 'User'}`}
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="max-w-[110px] truncate">{user.name || user.username || 'Account'}</span>
               </Link>
             ) : (
               <Link
                 to="/auth?mode=login"
-                className={`hidden sm:inline-flex px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold active:scale-95 transition-all duration-150 drop-shadow-xs ${
-                  isScrolled
-                    ? 'text-zinc-700 dark:text-white/90 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10'
-                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                }`}
+                className="hidden sm:inline-flex px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold active:scale-95 transition-all duration-150 drop-shadow-xs text-zinc-700 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100/80 dark:hover:bg-white/10"
               >
                 Sign In
               </Link>
@@ -305,11 +281,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             <button
               type="button"
               onClick={() => setIsMobileOpen(true)}
-              className={`md:hidden w-8.5 h-8.5 rounded-xl flex items-center justify-center border transition-colors cursor-pointer ${
-                isScrolled
-                  ? 'text-zinc-800 dark:text-white bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 border-zinc-200 dark:border-white/15'
-                  : 'text-white bg-white/10 hover:bg-white/20 border-white/15'
-              }`}
+              className="md:hidden w-8.5 h-8.5 rounded-xl flex items-center justify-center border transition-colors cursor-pointer text-zinc-800 dark:text-white bg-zinc-100/90 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 border-zinc-200/90 dark:border-white/15"
               aria-label="Open Navigation Menu"
             >
               <RiMenuLine size={20} />
@@ -318,11 +290,11 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
         </div>
       </header>
 
-      {/* ── Immersive Liquid Full-Screen Mobile Menu (Better than Scapegoat) ── */}
+      {/* ── Immersive Liquid Full-Screen Mobile Menu ── */}
       <div
         ref={menuOverlayRef}
         style={{ display: 'none', clipPath: 'circle(0% at calc(100% - 28px) 32px)' }}
-        className="fixed inset-0 z-[100] md:hidden bg-[#090a0f]/98 backdrop-blur-3xl text-white flex-col justify-between p-6 overflow-y-auto"
+        className="fixed inset-0 z-[100] md:hidden bg-white/98 dark:bg-[#090a0f]/98 backdrop-blur-3xl text-zinc-900 dark:text-white flex-col justify-between p-6 overflow-y-auto"
       >
         {/* Background Ambient Glows */}
         <div className="absolute top-1/4 -left-20 w-72 h-72 rounded-full bg-cyan-500/10 blur-[100px] pointer-events-none" />
@@ -335,9 +307,9 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             onClick={() => setIsMobileOpen(false)}
             className="flex items-center gap-2 group cursor-pointer"
           >
-            <ParsuLogo size={28} className="text-white group-hover:scale-105 transition-transform" />
+            <ParsuLogo size={28} className="text-zinc-900 dark:text-white group-hover:scale-105 transition-transform" />
             <div className="flex items-center gap-1">
-              <span className="font-extrabold text-lg tracking-tight text-white">Parsu</span>
+              <span className="font-extrabold text-lg tracking-tight text-zinc-900 dark:text-white">Parsu</span>
               <span className="text-[9px] font-black uppercase text-black bg-[var(--accent-cyan)] px-1.5 py-0.5 rounded">AI</span>
             </div>
           </Link>
@@ -346,7 +318,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
           <button
             type="button"
             onClick={() => setIsMobileOpen(false)}
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white active:scale-90 transition-all cursor-pointer shadow-lg"
+            className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 border border-zinc-200 dark:border-white/15 flex items-center justify-center text-zinc-800 dark:text-white active:scale-90 transition-all cursor-pointer shadow-lg"
             aria-label="Close Menu"
           >
             <RiCloseLine size={22} />
@@ -355,7 +327,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
 
         {/* Navigation Links — Staggered and Numbered */}
         <div className="flex-1 flex flex-col justify-center my-4 relative z-10 space-y-1">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-3 px-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 mb-3 px-2">
             Navigation
           </p>
           {navLinks.map((link, idx) => {
@@ -366,20 +338,20 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
                 href={location.pathname === '/' ? link.href : `/${link.href}`}
                 ref={(el) => (menuItemsRef.current[idx] = el)}
                 onClick={(e) => handleNavClick(e, link)}
-                className="group flex items-center justify-between py-3 px-3 rounded-2xl hover:bg-white/[0.06] transition-all duration-300 border-b border-white/[0.04] cursor-pointer"
+                className="group flex items-center justify-between py-3 px-3 rounded-2xl hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-all duration-300 border-b border-zinc-200/60 dark:border-white/[0.04] cursor-pointer"
               >
                 <div className="flex items-center gap-4">
                   <span className="text-xs font-mono font-bold text-[var(--accent-cyan)] opacity-70 group-hover:opacity-100">
                     {link.id}
                   </span>
                   <div className="flex items-center gap-2.5">
-                    <Icon size={18} className="text-zinc-400 group-hover:text-[var(--accent-cyan)] transition-colors" />
-                    <span className="text-2xl font-black tracking-tight text-white group-hover:text-cyan-300 group-hover:translate-x-1.5 transition-all duration-300">
+                    <Icon size={18} className="text-zinc-500 dark:text-zinc-400 group-hover:text-[var(--accent-cyan)] transition-colors" />
+                    <span className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 group-hover:translate-x-1.5 transition-all duration-300">
                       {link.label}
                     </span>
                   </div>
                 </div>
-                <RiArrowRightUpLine size={20} className="text-zinc-600 group-hover:text-[var(--accent-cyan)] group-hover:rotate-45 transition-all duration-300" />
+                <RiArrowRightUpLine size={20} className="text-zinc-400 dark:text-zinc-600 group-hover:text-[var(--accent-cyan)] group-hover:rotate-45 transition-all duration-300" />
               </a>
             ) : (
               <Link
@@ -387,20 +359,20 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
                 to={link.href}
                 ref={(el) => (menuItemsRef.current[idx] = el)}
                 onClick={() => setIsMobileOpen(false)}
-                className="group flex items-center justify-between py-3 px-3 rounded-2xl hover:bg-white/[0.06] transition-all duration-300 border-b border-white/[0.04]"
+                className="group flex items-center justify-between py-3 px-3 rounded-2xl hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-all duration-300 border-b border-zinc-200/60 dark:border-white/[0.04]"
               >
                 <div className="flex items-center gap-4">
                   <span className="text-xs font-mono font-bold text-[var(--accent-cyan)] opacity-70 group-hover:opacity-100">
                     {link.id}
                   </span>
                   <div className="flex items-center gap-2.5">
-                    <Icon size={18} className="text-zinc-400 group-hover:text-[var(--accent-cyan)] transition-colors" />
-                    <span className="text-2xl font-black tracking-tight text-white group-hover:text-cyan-300 group-hover:translate-x-1.5 transition-all duration-300">
+                    <Icon size={18} className="text-zinc-500 dark:text-zinc-400 group-hover:text-[var(--accent-cyan)] transition-colors" />
+                    <span className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 group-hover:translate-x-1.5 transition-all duration-300">
                       {link.label}
                     </span>
                   </div>
                 </div>
-                <RiArrowRightUpLine size={20} className="text-zinc-600 group-hover:text-[var(--accent-cyan)] group-hover:rotate-45 transition-all duration-300" />
+                <RiArrowRightUpLine size={20} className="text-zinc-400 dark:text-zinc-600 group-hover:text-[var(--accent-cyan)] group-hover:rotate-45 transition-all duration-300" />
               </Link>
             );
           })}
@@ -409,23 +381,23 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
         {/* Bottom Panel: Interactive Theme Switcher + User Status + Launch AI */}
         <div
           ref={(el) => (menuItemsRef.current[navLinks.length] = el)}
-          className="relative z-10 shrink-0 pt-4 border-t border-white/[0.08] space-y-3"
+          className="relative z-10 shrink-0 pt-4 border-t border-zinc-200/80 dark:border-white/[0.08] space-y-3"
         >
           {/* THEME TOGGLE CARD (Exclusive to Mobile Menu, removed from top bar) */}
-          <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200/80 dark:border-white/[0.08] backdrop-blur-xl flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
                 className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all ${
                   theme === 'light'
-                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
                     : 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20'
                 }`}
               >
                 {theme === 'light' ? <RiSunLine size={18} /> : <RiMoonLine size={18} />}
               </div>
               <div>
-                <p className="text-xs font-bold text-white uppercase tracking-wider">Appearance</p>
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider">Appearance</p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                   {theme === 'light' ? 'Light Theme' : 'Dark Theme'}
                 </p>
               </div>
@@ -434,11 +406,11 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white active:scale-95 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-white/10 hover:bg-zinc-100 dark:hover:bg-white/20 border border-zinc-200 dark:border-white/15 text-xs font-bold text-zinc-800 dark:text-white active:scale-95 transition-all cursor-pointer shadow-xs"
             >
               <span>{theme === 'light' ? 'Go Dark' : 'Go Light'}</span>
               {theme === 'light' ? (
-                <RiMoonLine size={13} className="text-zinc-300" />
+                <RiMoonLine size={13} className="text-zinc-600" />
               ) : (
                 <RiSunLine size={13} className="text-amber-300" />
               )}
@@ -451,9 +423,9 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
               <Link
                 to="/settings"
                 onClick={() => setIsMobileOpen(false)}
-                className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-xs font-bold text-white hover:bg-white/10 transition-colors"
+                className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-800 dark:text-white hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors"
               >
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-500">
                   <RiUser3Line size={13} />
                 </div>
                 <span className="truncate">{user.name || user.username || 'My Account'}</span>
@@ -462,7 +434,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
               <Link
                 to="/auth?mode=login"
                 onClick={() => setIsMobileOpen(false)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-xs font-bold text-white hover:bg-white/10 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/10 text-xs font-bold text-zinc-800 dark:text-white hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors"
               >
                 <RiLoginCircleLine size={15} />
                 <span>Sign In</span>

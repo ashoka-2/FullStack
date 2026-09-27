@@ -174,12 +174,12 @@ const Settings = () => {
             <div className={`flex-1 flex flex-col min-h-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
 
                 {/* ChatGPT-style Header — shrink-0: naturally pinned */}
-                <header className="shrink-0 z-30 border-b border-white/[0.08] bg-[#0B0B0B]/90 backdrop-blur-md px-3.5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
+                <header className="shrink-0 z-30 border-b border-zinc-200/80 dark:border-white/[0.08] bg-white/90 dark:bg-[#0B0B0B]/90 backdrop-blur-md px-3.5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         {/* Mobile sidebar toggle button */}
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-1.5 -ml-1 text-zinc-400 hover:text-white transition-all cursor-pointer rounded-lg active:scale-95"
+                            className="lg:hidden p-1.5 -ml-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer rounded-lg active:scale-95"
                             aria-label="Open navigation"
                         >
                             <RiMenuLine size={20} />
@@ -198,25 +198,25 @@ const Settings = () => {
 
                         {/* User identity card */}
                         {user && (
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 p-4 rounded-2xl bg-[#111111] border border-white/[0.08] shadow-sm">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 p-4 rounded-2xl bg-white dark:bg-[#111111] border border-zinc-200/90 dark:border-white/[0.08] shadow-sm">
                                 <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#1A1A1A] border border-white/[0.08] flex items-center justify-center text-[var(--accent-cyan)] font-black text-base sm:text-lg shrink-0 shadow-sm">
+                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-zinc-100 dark:bg-[#1A1A1A] border border-zinc-200/80 dark:border-white/[0.08] flex items-center justify-center text-[var(--accent-cyan)] font-black text-base sm:text-lg shrink-0 shadow-sm">
                                         {(user.name || user.username || 'U')[0].toUpperCase()}
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="font-bold text-sm sm:text-base text-white truncate">{user.name || user.username}</p>
-                                        <p className="text-xs text-zinc-400 truncate">{user.email}</p>
+                                        <p className="font-bold text-sm sm:text-base text-zinc-900 dark:text-white truncate">{user.name || user.username}</p>
+                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{user.email}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-white/[0.06] w-full sm:w-auto justify-between sm:justify-end">
+                                <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-zinc-200/60 dark:border-white/[0.06] w-full sm:w-auto justify-between sm:justify-end">
                                     <Link
                                         to="/settings/subscription"
-                                        className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 transition-all flex items-center gap-1"
+                                        className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 dark:text-cyan-400 border border-cyan-500/20 transition-all flex items-center gap-1"
                                     >
                                         <RiVipCrownLine size={12} />
                                         <span>{(user.subscription?.plan || 'free').toUpperCase()}</span>
                                     </Link>
-                                    <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/8 border border-emerald-500/15 px-2.5 py-1 rounded-full">
+                                    <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-500 dark:text-emerald-400 bg-emerald-500/8 border border-emerald-500/15 px-2.5 py-1 rounded-full">
                                         <RiShieldCheckLine size={12} />
                                         <span>Active</span>
                                     </div>
@@ -227,29 +227,29 @@ const Settings = () => {
                         {/* Settings card groups */}
                         {SETTING_GROUPS.map(({ label, cards }) => (
                             <div key={label} className="mb-8">
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-4 px-0.5">{label}</p>
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-4 px-0.5">{label}</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     {cards.map(({ to, icon: Icon, title, description }) => (
                                         <Link
                                             key={to}
                                             to={to}
-                                            className="group flex items-start gap-4 p-4 sm:p-5 rounded-2xl bg-[#111111] border border-white/[0.08] hover:border-white/20 hover:bg-[#161616] shadow-sm transition-all duration-200 active:scale-[0.98]"
+                                            className="group flex items-start gap-4 p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111111] border border-zinc-200/90 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/20 hover:bg-zinc-50 dark:hover:bg-[#161616] shadow-sm transition-all duration-200 active:scale-[0.98]"
                                         >
                                             {/* Icon badge - uniform monochrome with subtle hover transition */}
-                                            <div className="w-10 h-10 rounded-xl bg-[#1A1A1A] border border-white/[0.08] flex items-center justify-center shrink-0 text-zinc-300 group-hover:text-[var(--accent-cyan)] group-hover:border-[var(--accent-cyan)]/30 group-hover:scale-105 transition-all">
+                                            <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-[#1A1A1A] border border-zinc-200/80 dark:border-white/[0.08] flex items-center justify-center shrink-0 text-zinc-700 dark:text-zinc-300 group-hover:text-[var(--accent-cyan)] group-hover:border-[var(--accent-cyan)]/30 group-hover:scale-105 transition-all">
                                                 <Icon size={20} />
                                             </div>
 
                                             {/* Text */}
                                             <div className="min-w-0 flex-1">
-                                                <p className="font-semibold text-sm text-zinc-100 mb-0.5 group-hover:text-[var(--accent-cyan)] transition-colors">{title}</p>
-                                                <p className="text-xs text-zinc-400 leading-relaxed">{description}</p>
+                                                <p className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 mb-0.5 group-hover:text-[var(--accent-cyan)] transition-colors">{title}</p>
+                                                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">{description}</p>
                                             </div>
 
                                             {/* Arrow */}
                                             <RiArrowRightLine
                                                 size={16}
-                                                className="text-zinc-600 group-hover:text-[var(--accent-cyan)] group-hover:translate-x-0.5 transition-all mt-1 shrink-0"
+                                                className="text-zinc-400 dark:text-zinc-600 group-hover:text-[var(--accent-cyan)] group-hover:translate-x-0.5 transition-all mt-1 shrink-0"
                                             />
                                         </Link>
                                     ))}
@@ -260,20 +260,20 @@ const Settings = () => {
                         {/* Account Actions / Logout Section */}
                         {user && (
                             <div className="pt-2 pb-6">
-                                <div className="p-4 sm:p-5 rounded-2xl bg-[#111111] border border-red-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111111] border border-red-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div>
-                                        <p className="font-semibold text-sm text-white flex items-center gap-2">
-                                            <RiLogoutBoxRLine size={17} className="text-red-400" />
+                                        <p className="font-semibold text-sm text-zinc-900 dark:text-white flex items-center gap-2">
+                                            <RiLogoutBoxRLine size={17} className="text-red-500 dark:text-red-400" />
                                             <span>Sign Out of Parsu AI</span>
                                         </p>
-                                        <p className="text-xs text-zinc-400 mt-0.5">
+                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                                             End your current session on this browser. You can sign back in at any time.
                                         </p>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setShowLogoutModal(true)}
-                                        className="px-4 py-2 rounded-xl text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all cursor-pointer self-start sm:self-auto shrink-0 active:scale-[0.98]"
+                                        className="px-4 py-2 rounded-xl text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/20 transition-all cursor-pointer self-start sm:self-auto shrink-0 active:scale-[0.98]"
                                     >
                                         Log Out
                                     </button>

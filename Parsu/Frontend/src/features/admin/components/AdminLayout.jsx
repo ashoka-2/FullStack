@@ -148,7 +148,7 @@ export default function AdminLayout() {
             {mobileMenuOpen ? <RiCloseLine size={18} /> : <RiMenuLine size={18} />}
           </button>
           <div className="flex items-center gap-2">
-            <ParsuLogo size={24} className="text-cyan-500 dark:text-cyan-400" />
+            <ParsuLogo size={24} className="text-zinc-900 dark:text-white" />
             <span className="font-black text-[13px] text-zinc-900 dark:text-white tracking-tight">Parsu Console</span>
             <span className="px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase text-black bg-cyan-400 leading-none">ADMIN</span>
           </div>
@@ -180,7 +180,7 @@ export default function AdminLayout() {
         {/* Brand */}
         <div className="px-5 pt-6 pb-5 border-b border-zinc-200 dark:border-white/[0.05] shrink-0">
           <Link to="/admin/dashboard" className="flex items-center gap-3 group">
-            <ParsuLogo size={30} className="text-cyan-500 dark:text-cyan-400 group-hover:scale-105 transition-transform" />
+            <ParsuLogo size={30} className="text-zinc-900 dark:text-white group-hover:scale-105 transition-transform" />
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-black text-[13px] tracking-tight text-zinc-900 dark:text-white">Parsu AI</span>

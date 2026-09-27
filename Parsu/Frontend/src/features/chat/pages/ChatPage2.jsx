@@ -367,21 +367,21 @@ const ChatPage2 = () => {
             <div className={`flex-1 flex flex-col h-[100dvh] ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} overflow-hidden relative transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
 
                 {/* ChatGPT-style Header Container */}
-                <header className={`h-12 sm:h-14 bg-[#0B0B0B]/90 backdrop-blur-md z-30 shrink-0 border-b border-white/[0.08] transition-all duration-300`}>
+                <header className={`h-12 sm:h-14 bg-white/90 dark:bg-[#0B0B0B]/90 backdrop-blur-md z-30 shrink-0 border-b border-zinc-200/80 dark:border-white/[0.08] transition-all duration-300`}>
                     <div className="max-w-[800px] mx-auto h-full flex items-center justify-between px-2.5 sm:px-6">
                         <div className="flex items-center gap-2 sm:gap-3 overflow-hidden min-w-0">
                             {/* Mobile sidebar button */}
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-400 hover:text-white transition-all rounded-lg shrink-0 active:scale-95 cursor-pointer"
+                                className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all rounded-lg shrink-0 active:scale-95 cursor-pointer"
                                 aria-label="Open sidebar"
                             >
                                 <RiMenuLine size={20} />
                             </button>
 
                             <div className="flex items-center gap-2 shrink-0">
-                                <ParsuLogo size={24} className="text-[var(--accent-cyan)] shrink-0" />
-                                <span className="font-bold text-sm text-zinc-100 truncate">Parsu</span>
+                                <ParsuLogo size={24} className="text-zinc-900 dark:text-white shrink-0" />
+                                <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100 truncate">Parsu</span>
                             </div>
                         </div>
 

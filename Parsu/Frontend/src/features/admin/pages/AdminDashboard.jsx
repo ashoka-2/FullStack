@@ -122,7 +122,7 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-2 group">
-              <ParsuLogo size={28} className="text-cyan-400 group-hover:scale-105 transition-transform" />
+              <ParsuLogo size={28} className="text-white group-hover:scale-105 transition-transform" />
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-extrabold text-base tracking-tight text-white">Parsu AI</span>

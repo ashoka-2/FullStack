@@ -15,7 +15,7 @@ const SectionLabel = ({ children }) => (
 
 // ─── Settings Row ────────────────────────────────────────────────────────────
 const SettingRow = ({ icon: Icon, title, description, action, noBorder = false }) => (
-    <div className={`flex items-center justify-between gap-4 py-4 ${!noBorder ? 'border-b border-white/5' : ''}`}>
+    <div className={`flex items-center justify-between gap-4 py-4 ${!noBorder ? 'border-b border-zinc-100 dark:border-white/5' : ''}`}>
         <div className="flex items-center gap-3 min-w-0">
             {Icon && (
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
@@ -219,7 +219,7 @@ const MemorySettingsPage = () => {
                     <div>
                         <SectionLabel>Custom Instructions</SectionLabel>
                         <Surface className="pb-4">
-                            <div className="flex items-start gap-3 py-4 border-b border-white/5">
+                            <div className="flex items-start gap-3 py-4 border-b border-zinc-100 dark:border-white/5">
                                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
                                     style={{ background: 'rgba(32,184,205,0.08)' }}>
                                     <RiFileList2Line size={16} className="text-[var(--accent-cyan)]" />
@@ -274,7 +274,7 @@ const MemorySettingsPage = () => {
                             <SectionLabel>What Parsu AI knows about you</SectionLabel>
                             <Surface className="pb-4">
                                 {memorySummary && (
-                                    <div className="py-4 border-b border-white/5">
+                                    <div className="py-4 border-b border-zinc-100 dark:border-white/5">
                                         <div className="flex items-center gap-2 mb-2">
                                             <RiInformationLine size={14} className="text-[var(--accent-cyan)]" />
                                             <p className="text-xs font-bold text-zinc-500 uppercase tracking-wide">Summary</p>
