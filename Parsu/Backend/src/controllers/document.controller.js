@@ -268,3 +268,71 @@ export async function semanticMessageSearch(req, res) {
         });
     }
 }
+
+// ─── Get User's Uploaded Documents ──────────────────────────────────────────
+export async function getUserDocuments(req, res) {
+    try {
+        const documents = await documentModel.find({ user: req.user.id })
+            .select('-chunks.embedding')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        res.status(200).json({
+            success: true,
+            documents
+        });
+    } catch (error) {
+        console.error("Failed to fetch user documents:", error);
+        res.status(500).json({ success: false, message: "Could not retrieve documents", error: error.message });
+    }
+}
+
+// ─── Get Specific Document by ID (User or Admin) ────────────────────────────
+export async function getDocumentById(req, res) {
+    try {
+        const { documentId } = req.params;
+        const query = req.user.role === 'admin' 
+            ? { _id: documentId } 
+            : { _id: documentId, user: req.user.id };
+
+        const document = await documentModel.findOne(query)
+            .select('-chunks.embedding')
+            .populate("user", "username email profilePic")
+            .lean();
+
+        if (!document) {
+            return res.status(404).json({ success: false, message: "Document not found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            document
+        });
+    } catch (error) {
+        console.error("Failed to fetch document:", error);
+        res.status(500).json({ success: false, message: "Could not retrieve document", error: error.message });
+    }
+}
+
+// ─── Delete Document ────────────────────────────────────────────────────────
+export async function deleteDocument(req, res) {
+    try {
+        const { documentId } = req.params;
+        const query = req.user.role === 'admin' 
+            ? { _id: documentId } 
+            : { _id: documentId, user: req.user.id };
+
+        const document = await documentModel.findOneAndDelete(query);
+        if (!document) {
+            return res.status(404).json({ success: false, message: "Document not found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Document deleted successfully"
+        });
+    } catch (error) {
+        console.error("Failed to delete document:", error);
+        res.status(500).json({ success: false, message: "Could not delete document", error: error.message });
+    }
+}

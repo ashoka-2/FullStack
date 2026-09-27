@@ -16,6 +16,16 @@ export async function clearUserMemory() {
     return res.data;
 }
 
+export async function addMemoryFactApi(fact) {
+    const res = await api.post('/api/settings/memory/fact', { fact });
+    return res.data;
+}
+
+export async function deleteMemoryFactApi(index) {
+    const res = await api.delete(`/api/settings/memory/fact/${index}`);
+    return res.data;
+}
+
 // ─── Media ─────────────────────────────────────────────────────────────────
 export async function getUserMedia() {
     const res = await api.get('/api/settings/media');

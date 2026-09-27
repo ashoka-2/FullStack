@@ -1,6 +1,7 @@
 import axios from "axios";
 import SocialConnection from "../models/social.model.js";
 import messageModel from "../models/message.model.js";
+import userModel from "../models/user.model.js";
 
 const FB_GRAPH_VER = "v21.0";
 const IG_GRAPH_VER = "v21.0";
@@ -461,6 +462,34 @@ export async function publishToSocialPlatforms({
 }) {
     if (!userId) throw new Error("User ID is required for social publishing.");
 
+    // Check Free tier daily social post limit (10 posts per day)
+    const user = await userModel.findById(userId);
+    const isFreeTier = user?.subscription?.plan === 'free' && user?.role !== 'admin';
+    if (isFreeTier) {
+        const now = new Date();
+        const lastReset = user.usageQuotas?.lastQueryReset ? new Date(user.usageQuotas.lastQueryReset) : new Date(0);
+        const isDifferentDay = now.toDateString() !== lastReset.toDateString();
+        
+        let postsToday = user.usageQuotas?.socialPostsThisMonth || 0;
+        if (isDifferentDay) {
+            postsToday = 0;
+            await userModel.updateOne(
+                { _id: userId },
+                { $set: { "usageQuotas.socialPostsThisMonth": 0, "usageQuotas.lastQueryReset": now } }
+            );
+        }
+        
+        const limit = user.usageQuotas?.socialPostsLimit || 10;
+        if (postsToday >= limit) {
+            return {
+                successful: [],
+                failed: [],
+                notConnected: [],
+                summary: `Free tier limit reached: You can publish up to ${limit} social media posts per day (${postsToday}/${limit} used today). Upgrade to Pro for unlimited social posts.`
+            };
+        }
+    }
+
     // Fetch all connected platforms for this user
     const userConnections = await SocialConnection.find({
         user: userId,
@@ -561,6 +590,13 @@ export async function publishToSocialPlatforms({
                 error: err.message
             });
         }
+    }
+
+    if (isFreeTier && results.successful.length > 0) {
+        await userModel.updateOne(
+            { _id: userId },
+            { $inc: { "usageQuotas.socialPostsThisMonth": results.successful.length } }
+        ).catch(() => {});
     }
 
     return results;

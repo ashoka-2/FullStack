@@ -180,15 +180,41 @@ export async function generateResponse(messages, onChunk, userContext) {
 
   const feedbackNotes = userContext?.feedbackInstruction ? `\n    ${userContext.feedbackInstruction}` : "";
   const memoryNotes = userContext?.memoryContext ? `\n    ${userContext.memoryContext}` : "";
-  const customInstructionsNote = userContext?.customInstructions 
-    ? `\n\n--- USER'S MANDATORY CUSTOM INSTRUCTIONS ---\nThe user has configured the following personal instructions that you MUST adhere to across all your responses:\n"${userContext.customInstructions}"\n---------------------------------------------\n` 
+  const customInstructionsNote = (userContext?.customInstructions && userContext.customInstructions.trim())
+    ? `\n\n--- USER'S MANDATORY CUSTOM INSTRUCTIONS ---\nThe user has configured the following personal instructions that you MUST adhere to across all your responses:\n"${userContext.customInstructions.trim()}"\n---------------------------------------------\n` 
     : "";
   const userPersonaNote = (userContext?.userNickname || userContext?.userOccupation)
     ? `User Profile: ${[userContext.userNickname ? `Name: ${userContext.userNickname}` : '', userContext.userOccupation ? `Role: ${userContext.userOccupation}` : ''].filter(Boolean).join(', ')}.\n`
     : "";
 
-  const systemContent = `You are a world-class AI assistant with supercharged multi-platform social media publishing capabilities. Current Date: ${today}.
-    ${userPersonaNote}${customInstructionsNote}
+  // ── Thinking Level Directives (default: low for ultra-fast response) ──
+  const thinkingLevel = (userContext?.thinkingLevel || 'low').toLowerCase();
+  let thinkingInstruction = "\n--- REASONING DIRECTIVE (MODE: FAST / LOW THINKING BUDGET) ---\nBe ultra-fast, direct, and concise. Deliver immediate, high-accuracy answers without conversational fluff, unnecessary preambles, or excessive step-by-step narration.";
+  if (thinkingLevel === 'medium') {
+    thinkingInstruction = "\n--- REASONING DIRECTIVE (MODE: MEDIUM / BALANCED THINKING) ---\nProvide a balanced and structured response. Offer clear step-by-step logic, practical examples, and well-organized explanations.";
+  } else if (thinkingLevel === 'high' || thinkingLevel === 'hard') {
+    thinkingInstruction = "\n--- REASONING DIRECTIVE (MODE: HIGH / DEEP REASONING) ---\nEngage deep analytical thinking. Methodically explore edge cases, analyze subtleties, verify underlying principles, and deliver a comprehensive, highly thorough breakdown.";
+  }
+
+  // ── User Memory Facts & Persona (Learned facts from past statements) ──
+  let persistentMemoryNote = "";
+  if (userContext?.memorySummary || (Array.isArray(userContext?.memoryFacts) && userContext.memoryFacts.length > 0)) {
+    const factsList = (userContext.memoryFacts || []).map(f => `• ${f}`).join("\n");
+    persistentMemoryNote = `\n\n--- USER'S STORED FACTS & PERSONAL MEMORY ---\n` +
+      (userContext.memorySummary ? `Overall Summary: ${userContext.memorySummary}\n` : '') +
+      (factsList ? `Learned Facts:\n${factsList}\n` : '') +
+      `----------------------------------------------\n` +
+      `CRITICAL MEMORY DIRECTIVE: When the user asks about personal details they previously told you to remember (such as friends' names, favorite things, hobbies, or life facts), accurately recall them from this memory and respond naturally.\n`;
+  }
+
+  // ── Attached Document RAG Context (PDF / Docs) ──
+  let documentRagNote = "";
+  if (userContext?.documentRagContext) {
+    documentRagNote = `\n\n--- ATTACHED PDF / DOCUMENT RAG CONTEXT ---\n${userContext.documentRagContext}\n-------------------------------------------\n`;
+  }
+
+  const systemContent = `You are a world-class AI assistant with supercharged multi-platform social media publishing capabilities and deep document intelligence. Current Date: ${today}.
+    ${userPersonaNote}${customInstructionsNote}${thinkingInstruction}${persistentMemoryNote}${documentRagNote}
     CRITICAL INSTRUCTIONS:
     ${webSearchInstruction}${feedbackNotes}${memoryNotes}
     

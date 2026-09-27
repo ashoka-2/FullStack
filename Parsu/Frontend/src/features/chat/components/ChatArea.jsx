@@ -38,6 +38,7 @@ import { addToast } from '../../../utils/toast.slice';
 import ParsuLogo from '../../Components/ParsuLogo';
 import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
 import ModelSelectorDropdown from './ModelSelectorDropdown';
+import ThinkingSelectorDropdown, { getStoredThinkingLevel } from './ThinkingSelectorDropdown';
 import { useAiFeatureToggles } from '../../../utils/aiSettingsSync';
 import AttachmentPreviewStrip from './AttachmentPreviewStrip';
 import AddToChatSheet from './AddToChatSheet';
@@ -56,6 +57,9 @@ const ChatArea = () => {
 
   // Selected AI Model
   const [selectedModel, setSelectedModel] = useState(null);
+  
+  // Thinking Mode ('low' = Fast default, 'medium' = Balanced, 'high' = Deep Think)
+  const [thinkingLevel, setThinkingLevel] = useState(getStoredThinkingLevel);
   
   // Chat custom hook functions
   const { handleSendMessage, handleGetSuggestions, loading } = useChat();
@@ -359,8 +363,8 @@ const ChatArea = () => {
         }
       }));
       
-      // Asynchronously handle message sending with selected model, webSearch, and cross-chat memory (plus incognito)
-      handleSendMessage(messageToSend, null, filesToSend, selectedModel, webSearch, memoryEnabled, incognito).then(response => {
+      // Asynchronously handle message sending with selected model, webSearch, cross-chat memory, and thinking level (plus incognito)
+      handleSendMessage(messageToSend, null, filesToSend, selectedModel, webSearch, memoryEnabled, incognito, thinkingLevel).then(response => {
         // Silently update URL once real chat ID is received
         if (response && response.chat) {
           navigate(`/chat/${response.chat._id}`, { replace: true });
@@ -704,6 +708,12 @@ const ChatArea = () => {
                 <ModelSelectorDropdown
                   selectedModel={selectedModel}
                   onModelChange={setSelectedModel}
+                />
+
+                <ThinkingSelectorDropdown
+                  thinkingLevel={thinkingLevel}
+                  onChange={setThinkingLevel}
+                  placement="top"
                 />
 
                 {incognito && (

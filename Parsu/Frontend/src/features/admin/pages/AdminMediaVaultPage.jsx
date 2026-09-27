@@ -14,7 +14,8 @@ import {
   RiAlertLine,
   RiGridLine,
   RiListCheck,
-  RiPlayFill
+  RiPlayFill,
+  RiFilePdfLine
 } from '@remixicon/react';
 import { getAdminMediaAssets, deleteAdminMediaAsset } from '../service/admin.api';
 import DeleteButton from '../../Components/rare-ui/DeleteButton';
@@ -34,8 +35,9 @@ function MediaCardPreview({ asset }) {
   const name = asset.name || '';
 
   // Smart heuristic detection: URL extension overrides fallback fileType
-  const isVideo = (asset.fileType === 'video' || /\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(url) || /\.(mp4|mov|webm|mkv|avi)$/i.test(name)) && !/\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url);
-  const isImage = (asset.fileType === 'image' || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url) || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)$/i.test(name)) && !isVideo;
+  const isDoc = asset.fileType === 'document' || /\.(pdf|txt|md|doc|docx)(\?|$)/i.test(url) || /\.(pdf|txt|md|doc|docx)$/i.test(name);
+  const isVideo = (asset.fileType === 'video' || /\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(url) || /\.(mp4|mov|webm|mkv|avi)$/i.test(name)) && !/\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url) && !isDoc;
+  const isImage = (asset.fileType === 'image' || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url) || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)$/i.test(name)) && !isVideo && !isDoc;
 
   const handleMouseEnter = () => {
     if (isVideo && videoRef.current) {
@@ -56,10 +58,24 @@ function MediaCardPreview({ asset }) {
       <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-100 dark:bg-zinc-900/60 p-3 text-center">
         {isVideo ? (
           <RiVideoLine size={28} className="text-zinc-400 mb-1" />
+        ) : isDoc ? (
+          <RiFilePdfLine size={28} className="text-red-400 mb-1" />
         ) : (
           <RiImageLine size={28} className="text-zinc-400 mb-1" />
         )}
         <span className="text-[10px] text-zinc-500 line-clamp-1">{asset.name || 'Media Asset'}</span>
+      </div>
+    );
+  }
+
+  if (isDoc) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-100 dark:bg-zinc-900/90 p-4 text-center group-hover:bg-zinc-200/70 dark:group-hover:bg-zinc-800/80 transition-colors">
+        <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition-transform">
+          <RiFilePdfLine size={28} />
+        </div>
+        <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 line-clamp-1 max-w-[170px]">{asset.name || 'PDF Document'}</p>
+        <span className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">Click to view document</span>
       </div>
     );
   }
@@ -118,11 +134,20 @@ function MediaTableThumbnail({ asset }) {
   const url = asset.url || '';
   const name = asset.name || '';
 
-  const isVideo = (asset.fileType === 'video' || /\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(url) || /\.(mp4|mov|webm|mkv|avi)$/i.test(name)) && !/\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url);
-  const isImage = (asset.fileType === 'image' || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url) || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)$/i.test(name)) && !isVideo;
+  const isDoc = asset.fileType === 'document' || /\.(pdf|txt|md|doc|docx)(\?|$)/i.test(url) || /\.(pdf|txt|md|doc|docx)$/i.test(name);
+  const isVideo = (asset.fileType === 'video' || /\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(url) || /\.(mp4|mov|webm|mkv|avi)$/i.test(name)) && !/\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url) && !isDoc;
+  const isImage = (asset.fileType === 'image' || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url) || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)$/i.test(name)) && !isVideo && !isDoc;
 
   if (hasError) {
     return <RiFileTextLine size={18} className="text-zinc-400" />;
+  }
+
+  if (isDoc) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-red-500/10 text-red-500 rounded-md">
+        <RiFilePdfLine size={18} />
+      </div>
+    );
   }
 
   if (isImage) {

@@ -19,6 +19,7 @@ import { setError, setLoading, toggleSidebarCollapse } from '../chat.slice';
 import { addToast } from '../../../utils/toast.slice';
 import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
 import ModelSelectorDropdown from '../components/ModelSelectorDropdown';
+import { getStoredThinkingLevel } from '../components/ThinkingSelectorDropdown';
 import { saveQueueItem, getQueueItems, removeQueueItem } from '../../../utils/queueDb';
 import { useAiFeatureToggles } from '../../../utils/aiSettingsSync';
 
@@ -31,6 +32,7 @@ const ChatPage2 = () => {
     const [input, setInput] = useState(''); // Chat input field
     const [isScrolled, setIsScrolled] = useState(false); // Header shadow state on scroll
     const [selectedModel, setSelectedModel] = useState(null); // Active AI model for chat
+    const [thinkingLevel, setThinkingLevel] = useState(getStoredThinkingLevel); // AI Thinking Mode
     const [messageQueue, setMessageQueue] = useState([]); // Queued messages waiting for current response
     
     // References & Elements
@@ -283,7 +285,7 @@ const ChatPage2 = () => {
         setFiles([]);
 
         try {
-            const response = await handleSendMessage(currentInput, id, filesToSend, selectedModel, webSearch, memoryEnabled, incognito);
+            const response = await handleSendMessage(currentInput, id, filesToSend, selectedModel, webSearch, memoryEnabled, incognito, thinkingLevel);
             if (response && response.aiMessage) {
                 setLatestMessageId(response.aiMessage._id);
                 setTimeout(scrollToBottom, 100);
@@ -309,7 +311,8 @@ const ChatPage2 = () => {
                         nextItem.model || selectedModel,
                         nextItem.webSearch !== undefined ? nextItem.webSearch : webSearch,
                         memoryEnabled,
-                        incognito
+                        incognito,
+                        nextItem.thinkingLevel || thinkingLevel
                     );
                     if (response && response.aiMessage) {
                         setLatestMessageId(response.aiMessage._id);
@@ -507,6 +510,8 @@ const ChatPage2 = () => {
                     handleFileUpload={handleFileUpload}
                     selectedModel={selectedModel}
                     onModelChange={setSelectedModel}
+                    thinkingLevel={thinkingLevel}
+                    onThinkingChange={setThinkingLevel}
                     isResponding={isGenerating}
                     queue={messageQueue}
                     onStopGenerating={handleStopGenerating}

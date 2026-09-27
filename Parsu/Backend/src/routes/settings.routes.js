@@ -4,6 +4,8 @@ import {
     getUserSettings,
     updateUserSettings,
     clearMemory,
+    addMemoryFact,
+    deleteMemoryFact,
     getUserMedia,
     deleteUserMedia,
     submitBugReport,
@@ -19,6 +21,8 @@ const settingsRouter = Router();
 settingsRouter.get('/', authUser, getUserSettings);
 settingsRouter.put('/', authUser, updateUserSettings);
 settingsRouter.delete('/memory', authUser, clearMemory);
+settingsRouter.post('/memory/fact', authUser, addMemoryFact);
+settingsRouter.delete('/memory/fact/:index', authUser, deleteMemoryFact);
 
 // ── Media Management ────────────────────────────────────────────────────────
 settingsRouter.get('/media', authUser, getUserMedia);

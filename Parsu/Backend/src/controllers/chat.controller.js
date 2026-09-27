@@ -2,31 +2,80 @@ import { generateChatTitle, generateResponse, generateSuggestions } from "../ser
 import chatModel from "../models/chat.model.js";
 import userModel from "../models/user.model.js";
 import messageModel from "../models/message.model.js";
+import documentModel from "../models/document.model.js";
 import { uploadFile } from "../services/imagekit.service.js";
 import { getIO } from "../sockets/server.socket.js";
 import { executeModelChatStream } from "../services/model.service.js";
 import { decryptKey } from "../utils/encryption.utils.js";
-import { generateEmbedding, cosineSimilarity } from "../services/embedding.service.js";
+import { generateEmbedding, generateEmbeddings, chunkText, cosineSimilarity } from "../services/embedding.service.js";
+import { extractTextFromPdf } from "../services/pdf.service.js";
+import { extractAndStoreMemory } from "../services/memory.service.js";
 
 export async function sendMessage(req, res) {
     try {
         const { message, chat: chatId } = req.body;
+        const io = getIO();
+        const socketId = req.body.socketId;
+
+        // Fetch full user record including custom keys and memory
+        const fullUser = await userModel.findById(req.user.id).select("+customApiKeys.apiKey");
+        if (!fullUser) {
+            return res.status(404).json({ message: "User account not found." });
+        }
+
+        // ── Free Tier Message Limit Enforcement ──
+        const isFreeTier = fullUser.subscription?.plan === "free" && fullUser.role !== "admin";
+        if (isFreeTier) {
+            const now = new Date();
+            const lastReset = fullUser.usageQuotas?.lastQueryReset ? new Date(fullUser.usageQuotas.lastQueryReset) : new Date(0);
+            const isDifferentDay = now.toDateString() !== lastReset.toDateString();
+
+            let queriesToday = fullUser.usageQuotas?.queriesToday || 0;
+            if (isDifferentDay) {
+                queriesToday = 0;
+                await userModel.updateOne(
+                    { _id: fullUser._id },
+                    { $set: { "usageQuotas.queriesToday": 0, "usageQuotas.lastQueryReset": now } }
+                );
+            }
+
+            const limit = fullUser.usageQuotas?.queriesLimit || 50;
+            if (queriesToday >= limit) {
+                return res.status(429).json({
+                    message: `Daily message quota reached (${limit}/${limit} messages used today on Free tier). Upgrade to Pro for unlimited AI messages.`,
+                    limitReached: true,
+                    quotaType: "messages"
+                });
+            }
+
+            await userModel.updateOne(
+                { _id: fullUser._id },
+                { $inc: { "usageQuotas.queriesToday": 1 } }
+            );
+        }
+
         // Support both req.files (array) and req.file (single)
         const rawFiles = req.files && req.files.length > 0 ? req.files : (req.file ? [req.file] : []);
         const uploadedFiles = [];
+        let newlyIndexedDocument = null;
 
         if (rawFiles.length > 0) {
             for (const f of rawFiles) {
                 try {
                     let folder = "perplexity/chats";
-                    if (f.mimetype?.startsWith("image/")) {
+                    const isPdf = f.mimetype === "application/pdf" || (f.originalname && f.originalname.toLowerCase().endsWith(".pdf"));
+                    const isImage = f.mimetype?.startsWith("image/");
+                    const isVideo = f.mimetype?.startsWith("video/");
+
+                    if (isImage) {
                         folder = "perplexity/photos";
-                    } else if (f.mimetype?.startsWith("video/")) {
+                    } else if (isVideo) {
                         folder = "perplexity/videos";
-                    } else if (f.mimetype === "application/pdf" || f.mimetype?.startsWith("text/")) {
+                    } else if (isPdf || f.mimetype?.startsWith("text/")) {
                         folder = "perplexity/documents";
                     }
 
+                    // 1. Upload to ImageKit CDN
                     const uploaded = await uploadFile({
                         buffer: f.buffer,
                         filename: f.originalname,
@@ -34,10 +83,45 @@ export async function sendMessage(req, res) {
                     });
 
                     if (uploaded) {
-                        uploaded.fileType = f.mimetype?.startsWith("image/") ? "image"
-                            : f.mimetype?.startsWith("video/") ? "video"
-                            : "document";
+                        uploaded.fileType = isImage ? "image" : isVideo ? "video" : "document";
                         uploaded.mimetype = f.mimetype;
+
+                        // 2. If PDF, extract text, chunk, embed, and store in MongoDB vector database
+                        if (isPdf) {
+                            try {
+                                const extractedText = await extractTextFromPdf(f.buffer);
+                                if (extractedText && extractedText.trim()) {
+                                    const textChunks = chunkText(extractedText, 1500, 200);
+                                    const embeddings = await generateEmbeddings(textChunks);
+
+                                    const chunkDocs = textChunks.map((txt, idx) => ({
+                                        text: txt,
+                                        embedding: embeddings[idx] || []
+                                    })).filter(c => c.embedding && c.embedding.length > 0);
+
+                                    newlyIndexedDocument = await documentModel.create({
+                                        user: req.user.id,
+                                        chat: chatId || null,
+                                        filename: f.originalname,
+                                        originalSize: f.size,
+                                        mimeType: "application/pdf",
+                                        file: {
+                                            url: uploaded.url,
+                                            fileId: uploaded.fileId,
+                                            thumbnailUrl: uploaded.thumbnailUrl || null
+                                        },
+                                        chunks: chunkDocs,
+                                        totalChunks: chunkDocs.length
+                                    });
+
+                                    uploaded.documentId = newlyIndexedDocument._id;
+                                    console.log(`📄 [PDF RAG System] Successfully indexed PDF "${f.originalname}" with ${chunkDocs.length} vector embeddings into MongoDB.`);
+                                }
+                            } catch (pdfErr) {
+                                console.warn("⚠️ PDF text extraction/vector indexing error:", pdfErr.message);
+                            }
+                        }
+
                         uploadedFiles.push(uploaded);
                     }
                 } catch (error) {
@@ -51,25 +135,29 @@ export async function sendMessage(req, res) {
         }
 
         const primaryFile = uploadedFiles[0] || null;
-
         const isIncognito = req.body.incognito === 'true' || req.body.incognito === true;
         let title = null, chat = null;
 
         if (!chatId) {
             const fallbackTitle = primaryFile?.fileType === "video" ? "Video Analysis" 
                 : primaryFile?.fileType === "image" ? (uploadedFiles.length > 1 ? `Album (${uploadedFiles.length} photos)` : "Image Upload")
-                : "New Chat";
+                : (primaryFile?.fileType === "document" ? `Doc: ${primaryFile.name}` : "New Chat");
             title = await generateChatTitle(message || fallbackTitle);
             chat = await chatModel.create({
                 user: req.user.id,
                 title,
                 incognito: isIncognito
             });
+
+            // Link newly indexed document to chat if created
+            if (newlyIndexedDocument && chat) {
+                await documentModel.updateOne({ _id: newlyIndexedDocument._id }, { $set: { chat: chat._id } });
+            }
         }
 
         const defaultContent = primaryFile?.fileType === "video" ? "Sent a video" 
             : primaryFile?.fileType === "image" ? (uploadedFiles.length > 1 ? `Sent ${uploadedFiles.length} photos` : "Sent an image")
-            : "Sent an attachment";
+            : (primaryFile?.fileType === "document" ? `Uploaded PDF: ${primaryFile.name || "Document"}` : "Sent an attachment");
 
         const userMessage = await messageModel.create({
             chat: chatId || chat._id,
@@ -81,11 +169,6 @@ export async function sendMessage(req, res) {
 
         const messages = await messageModel.find({ chat: chatId || chat._id });
         
-        const io = getIO();
-        const socketId = req.body.socketId;
-
-        const fullUser = await userModel.findById(req.user.id).select("+customApiKeys.apiKey");
-
         const targetProvider = req.body.provider || fullUser?.selectedModel?.provider || "gemini";
         const targetModelId = req.body.modelId || fullUser?.selectedModel?.modelId || "gemini-2.5-flash";
         const isCustom = req.body.isCustom || false;
@@ -217,9 +300,68 @@ export async function sendMessage(req, res) {
             }
         }
 
-        const customInstructions = fullUser?.memory?.customInstructions || fullUser?.customInstructions || "";
+        // ── PDF & Document RAG Vector Retrieval ─────────────────────────────
+        let documentRagContext = "";
+        const targetDoc = newlyIndexedDocument || (chatId ? await documentModel.findOne({ chat: chatId }).sort({ createdAt: -1 }) : null);
+
+        if (targetDoc && targetDoc.chunks && targetDoc.chunks.length > 0) {
+            const userPrompt = (message || "").trim();
+            if (!userPrompt) {
+                // User uploaded document without any question!
+                // As requested: summarize core takeaways and ask what more they would like to know
+                const previewChunks = targetDoc.chunks.slice(0, 4).map(c => c.text).join("\n\n---\n\n");
+                documentRagContext = `The user uploaded the PDF document "${targetDoc.filename}" (View URL: ${targetDoc.file?.url || ''}) without asking any specific question.\n\n` +
+                    `PDF Content Excerpts:\n${previewChunks}\n\n` +
+                    `TASK INSTRUCTIONS:\n` +
+                    `1. Provide an executive summary of this document, mentioning key insights, topics, and important facts extracted from it.\n` +
+                    `2. Provide a clickable link to view the document: [📄 View PDF: ${targetDoc.filename}](${targetDoc.file?.url || ''})\n` +
+                    `3. Conclude by proactively asking the user: "What more would you like to know or explore about this document?" and suggest 3-4 specific follow-up questions they can ask based on its contents.\n`;
+            } else {
+                // User asked a question about the document
+                try {
+                    const queryVector = await generateEmbedding(userPrompt);
+                    let scoredChunks = [];
+                    for (const chunk of targetDoc.chunks) {
+                        if (!chunk.text) continue;
+                        let score = 0;
+                        if (queryVector && chunk.embedding && chunk.embedding.length > 0) {
+                            score = cosineSimilarity(queryVector, chunk.embedding);
+                        } else {
+                            const words = userPrompt.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+                            let matches = 0;
+                            const chunkLower = chunk.text.toLowerCase();
+                            for (const w of words) {
+                                if (chunkLower.includes(w)) matches++;
+                            }
+                            score = words.length > 0 ? (matches / words.length) * 0.5 : 0;
+                        }
+                        scoredChunks.push({ text: chunk.text, score });
+                    }
+
+                    scoredChunks.sort((a, b) => b.score - a.score);
+                    const topChunks = scoredChunks.slice(0, 4);
+
+                    documentRagContext = `Document: "${targetDoc.filename}" (View URL: ${targetDoc.file?.url || ''})\n\n` +
+                        `Relevant Excerpts Retrieved via Vector Cosine Similarity Search in MongoDB:\n` +
+                        topChunks.map((c, i) => `[Excerpt ${i + 1} - Relevance Score: ${(c.score * 100).toFixed(1)}%]:\n${c.text}`).join("\n\n") +
+                        `\n\nINSTRUCTION: Ground your answer strictly and accurately in the retrieved document context above. If referencing the document, include the direct link [${targetDoc.filename}](${targetDoc.file?.url || ''}).\n`;
+                } catch (ragErr) {
+                    console.warn("⚠️ Document RAG query error:", ragErr.message);
+                }
+            }
+        }
+
+        // ── Thinking Level & Reasoning Budget (Default: low for fastest results) ──
+        const rawThinking = req.body.thinkingLevel || fullUser?.preferences?.thinkingLevel || 'low';
+        const thinkingLevel = (rawThinking === 'hard' || rawThinking === 'deep') ? 'high'
+            : (rawThinking === 'normal' || rawThinking === 'fast') ? 'low'
+            : rawThinking;
+
+        const customInstructions = (fullUser?.memory?.customInstructions || fullUser?.customInstructions || "").trim();
         const userNickname = fullUser?.memory?.nickname || "";
         const userOccupation = fullUser?.memory?.occupation || "";
+        const memorySummary = fullUser?.memory?.summary || "";
+        const memoryFacts = Array.isArray(fullUser?.memory?.facts) ? fullUser.memory.facts : [];
 
         const userContextWithSearch = {
             ...(fullUser?.toObject ? fullUser.toObject() : fullUser),
@@ -230,7 +372,11 @@ export async function sendMessage(req, res) {
             memoryContext,
             customInstructions,
             userNickname,
-            userOccupation
+            userOccupation,
+            thinkingLevel,
+            memorySummary,
+            memoryFacts,
+            documentRagContext
         };
 
         const isNonGeminiProvider = targetProvider !== "gemini";
@@ -250,7 +396,8 @@ export async function sendMessage(req, res) {
                 const extraContext = (webSearchContext ? webSearchContext : "") + 
                     (uploadedMediaContext ? uploadedMediaContext : "") +
                     (feedbackInstruction ? feedbackInstruction : "") + 
-                    (memoryContext ? memoryContext : "");
+                    (memoryContext ? memoryContext : "") +
+                    (documentRagContext ? `\n\n--- DOCUMENT CONTEXT ---\n${documentRagContext}` : "");
                 if (extraContext && chatHistoryForModel.length > 0) {
                     const lastUserIndex = chatHistoryForModel.map(m => m.role).lastIndexOf("user");
                     if (lastUserIndex !== -1) {
@@ -266,6 +413,10 @@ export async function sendMessage(req, res) {
                     baseUrl: targetBaseUrl,
                     messages: chatHistoryForModel,
                     customInstructions,
+                    thinkingLevel,
+                    memorySummary,
+                    memoryFacts,
+                    documentRagContext,
                     onChunk: (chunk) => {
                         if (socketId) {
                             io.to(socketId).emit("chunk", chunk);
@@ -309,10 +460,14 @@ export async function sendMessage(req, res) {
             aiMessage
         })
 
-        // Fire-and-forget: Generate embeddings for both messages (won't slow down response, skip if incognito)
+        // Fire-and-forget: Generate embeddings for both messages and learn user facts into memory
         if (!isIncognito) {
             (async () => {
                 try {
+                    // 1. User memory and persona extractor (learn facts like "remember my friend name is Tez")
+                    await extractAndStoreMemory(req.user.id, message || userMessage.content);
+
+                    // 2. Vector embeddings for message search
                     const [userEmb, aiEmb] = await Promise.allSettled([
                         generateEmbedding(userMessage.content),
                         generateEmbedding(aiMessage.content)
@@ -324,7 +479,7 @@ export async function sendMessage(req, res) {
                         await messageModel.updateOne({ _id: aiMessage._id }, { $set: { embedding: aiEmb.value } });
                     }
                 } catch (embErr) {
-                    console.warn("⚠️ Embedding generation skipped:", embErr.message);
+                    console.warn("⚠️ Background memory/embedding task warning:", embErr.message);
                 }
             })();
         }

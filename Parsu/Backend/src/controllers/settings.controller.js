@@ -68,6 +68,56 @@ export async function clearMemory(req, res) {
     }
 }
 
+// ─── Add a Specific Fact to Memory ─────────────────────────────────────────
+export async function addMemoryFact(req, res) {
+    try {
+        const { fact } = req.body;
+        if (!fact || !fact.trim()) {
+            return res.status(400).json({ success: false, message: "Fact content is required" });
+        }
+
+        const user = await userModel.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        const currentFacts = Array.isArray(user.memory?.facts) ? [...user.memory.facts] : [];
+        const trimmed = fact.trim();
+        if (!currentFacts.includes(trimmed)) {
+            currentFacts.push(trimmed);
+        }
+
+        user.memory.facts = currentFacts.slice(-50);
+        user.memory.lastUpdated = new Date();
+        await user.save();
+
+        res.json({ success: true, message: "Fact added to memory", facts: user.memory.facts, summary: user.memory.summary });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+}
+
+// ─── Delete a Specific Fact from Memory ────────────────────────────────────
+export async function deleteMemoryFact(req, res) {
+    try {
+        const { index } = req.params;
+        const factIndex = parseInt(index, 10);
+
+        const user = await userModel.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        const currentFacts = Array.isArray(user.memory?.facts) ? [...user.memory.facts] : [];
+        if (factIndex >= 0 && factIndex < currentFacts.length) {
+            currentFacts.splice(factIndex, 1);
+            user.memory.facts = currentFacts;
+            user.memory.lastUpdated = new Date();
+            await user.save();
+        }
+
+        res.json({ success: true, message: "Fact removed from memory", facts: user.memory.facts, summary: user.memory.summary });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+}
+
 // ─── Get User Uploaded Media ───────────────────────────────────────────────
 export async function getUserMedia(req, res) {
     try {

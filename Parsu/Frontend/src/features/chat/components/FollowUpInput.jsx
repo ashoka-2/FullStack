@@ -17,6 +17,7 @@ import {
     RiGlobalLine
 } from '@remixicon/react';
 import ModelSelectorDropdown from './ModelSelectorDropdown';
+import ThinkingSelectorDropdown from './ThinkingSelectorDropdown';
 import AttachmentPreviewStrip from './AttachmentPreviewStrip';
 import MessageQueueTray from './MessageQueueTray';
 import AddToChatSheet from './AddToChatSheet';
@@ -38,6 +39,8 @@ const FollowUpInput = ({
     handleFileUpload,
     selectedModel,
     onModelChange,
+    thinkingLevel = 'low',
+    onThinkingChange,
     isResponding = false,
     queue = [],
     onStopGenerating,
@@ -384,6 +387,13 @@ const FollowUpInput = ({
                                 selectedModel={selectedModel}
                                 onModelChange={onModelChange}
                                 compact={true}
+                            />
+
+                            {/* AI Thinking Mode Selector */}
+                            <ThinkingSelectorDropdown
+                                thinkingLevel={thinkingLevel}
+                                onChange={onThinkingChange}
+                                placement="top"
                             />
                         </div>
 

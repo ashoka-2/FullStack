@@ -511,7 +511,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                 (() => {
                                     const single = allMediaItems[0];
                                     const isVideo = single.fileType === 'video' || single.mimetype?.startsWith('video/') || /\.(mp4|mov|webm)(\?|$)/i.test(single.url);
-                                    const isDoc = single.fileType === 'document' || single.mimetype === 'application/pdf' || /\.(pdf|txt|md|doc|docx)(\?|$)/i.test(single.url);
+                                    const isDoc = single.fileType === 'document' || single.mimetype === 'application/pdf' || /\.(pdf|txt|md|doc|docx)(\?|$)/i.test(single.url) || /\.(pdf|txt|md|doc|docx)$/i.test(single.name || '');
 
                                     if (isVideo) {
                                         return (
@@ -525,13 +525,22 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                         );
                                     } else if (isDoc) {
                                         return (
-                                            <a href={single.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3.5 bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
-                                                <div className="p-2 rounded-xl bg-red-500/10 text-red-500">
-                                                    <RiFilePdfLine size={20} />
+                                            <a 
+                                                href={single.url} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className="flex items-center gap-3 p-3.5 bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors group cursor-pointer"
+                                                title="Open and view PDF document in new tab"
+                                            >
+                                                <div className="p-2 rounded-xl bg-red-500/10 text-red-500 group-hover:bg-red-500/20 transition-colors">
+                                                    <RiFilePdfLine size={24} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-xs font-bold truncate">{single.name || "Document"}</p>
-                                                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Click to view</p>
+                                                    <p className="text-xs font-bold truncate text-zinc-900 dark:text-zinc-100">{single.name || "PDF Document"}</p>
+                                                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider flex items-center gap-1 mt-0.5">
+                                                        <span>View / Download Document</span>
+                                                        <span className="text-[var(--accent-cyan)]">↗</span>
+                                                    </p>
                                                 </div>
                                             </a>
                                         );

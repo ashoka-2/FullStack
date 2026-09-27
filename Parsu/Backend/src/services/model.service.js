@@ -303,12 +303,41 @@ export async function executeModelChatStream({
   baseUrl = "",
   messages = [],
   customInstructions = "",
+  thinkingLevel = "low",
+  memorySummary = "",
+  memoryFacts = [],
+  documentRagContext = "",
   onChunk = () => {}
 }) {
   let systemPrompt = `You are a world-class AI search assistant (Parsu AI). Provide comprehensive, accurate, well-structured, objective, and beautifully formatted markdown answers. Include clear headings, bullet points, and code blocks when applicable.
 CRITICAL CITATION & LINK RULES:
 1. When real-time web search findings are provided, cite facts clearly and ALWAYS provide a dedicated '### Sources & Citations' section with clickable markdown links [Source Title](URL) at the end of your response.
 2. Whenever user uploaded files, attachments, or published social media links are provided in context, always prominently provide the direct clickable markdown link [Platform Post / File Name](URL) so the user can immediately click and view it.`;
+
+  // Thinking level directives
+  const tLevel = (thinkingLevel || "low").toLowerCase();
+  if (tLevel === "medium") {
+    systemPrompt += `\n\n--- REASONING DIRECTIVE (MODE: MEDIUM / BALANCED) ---\nProvide a balanced and structured response. Offer clear step-by-step logic, practical examples, and well-organized explanations.`;
+  } else if (tLevel === "high" || tLevel === "hard") {
+    systemPrompt += `\n\n--- REASONING DIRECTIVE (MODE: HIGH / DEEP REASONING) ---\nEngage deep analytical thinking. Methodically explore edge cases, analyze subtleties, verify underlying principles, and deliver a comprehensive, highly thorough breakdown.`;
+  } else {
+    systemPrompt += `\n\n--- REASONING DIRECTIVE (MODE: FAST / LOW THINKING BUDGET) ---\nBe ultra-fast, direct, and concise. Deliver immediate, high-accuracy answers without conversational fluff, unnecessary preambles, or excessive step-by-step narration.`;
+  }
+
+  // Persistent user facts & memory
+  if (memorySummary || (Array.isArray(memoryFacts) && memoryFacts.length > 0)) {
+    const factsText = (memoryFacts || []).map(f => `• ${f}`).join("\n");
+    systemPrompt += `\n\n--- USER'S STORED FACTS & PERSONAL MEMORY ---\n` +
+      (memorySummary ? `Overall Summary: ${memorySummary}\n` : "") +
+      (factsText ? `Learned Facts:\n${factsText}\n` : "") +
+      `----------------------------------------------\n` +
+      `CRITICAL MEMORY DIRECTIVE: When the user asks about personal details they previously told you to remember (such as friends' names, favorite things, hobbies, or life facts), accurately recall them from this memory and respond naturally.`;
+  }
+
+  // Attached Document RAG Context
+  if (documentRagContext) {
+    systemPrompt += `\n\n--- ATTACHED PDF / DOCUMENT RAG CONTEXT ---\n${documentRagContext}\n-------------------------------------------`;
+  }
 
   if (customInstructions && customInstructions.trim()) {
     systemPrompt += `\n\n--- USER'S MANDATORY CUSTOM INSTRUCTIONS ---\nFollow the user's custom instructions:\n"${customInstructions.trim()}"\n---------------------------------------------`;
@@ -444,6 +473,8 @@ CRITICAL CITATION & LINK RULES:
     if (provider === "deepseek") resolvedKey = process.env.DEEPSEEK_API_KEY;
     if (provider === "openai") resolvedKey = process.env.OPENAI_API_KEY;
     if (provider === "openrouter") resolvedKey = process.env.OPENROUTER_API_KEY;
+    if (provider === "cohere") resolvedKey = process.env.COHERE_API_KEY;
+    if (provider === "perplexity") resolvedKey = process.env.PERPLEXITY_API_KEY;
   }
 
   if (!resolvedKey) {
