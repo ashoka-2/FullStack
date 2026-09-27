@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   RiFileCopyLine, 
   RiRefreshLine, 
@@ -168,6 +168,26 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
     const [isPosting, setIsPosting] = useState(false);
     const [publishFeedback, setPublishFeedback] = useState(null);
     const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
+    const shareModalRef = useRef(null);
+
+    // Dismiss share modal on outside click or Escape
+    useEffect(() => {
+        if (!isShareModalOpen) return;
+        function handleOutsideClick(e) {
+            if (shareModalRef.current && !shareModalRef.current.contains(e.target)) {
+                setIsShareModalOpen(false);
+            }
+        }
+        function handleKeyDown(e) {
+            if (e.key === 'Escape') setIsShareModalOpen(false);
+        }
+        document.addEventListener('mousedown', handleOutsideClick);
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isShareModalOpen]);
     // HeroUI Pro AI Showcase interactive states
     const [isToolsExpanded, setIsToolsExpanded] = useState(false);
     const [isApprovalOpen, setIsApprovalOpen] = useState(true);
@@ -551,7 +571,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
 
                             {/* Interactive Share to Socials Dropdown / Drawer */}
                             {isShareModalOpen && (
-                                <div className="p-3.5 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 animate-in slide-in-from-top-2 text-left">
+                                <div ref={shareModalRef} className="p-3.5 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 animate-in slide-in-from-top-2 text-left">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-[12px] font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                                             <RiSparklingLine size={14} className="text-amber-500" />

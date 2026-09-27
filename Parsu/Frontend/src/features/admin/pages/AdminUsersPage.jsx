@@ -29,6 +29,7 @@ import {
   deleteAdminUser,
   toggleAdminUserBlock
 } from '../service/admin.api';
+import DeleteButton from '../../Components/rare-ui/DeleteButton';
 
 export default function AdminUsersPage() {
   const currentUser = useSelector((state) => state.auth.user);
@@ -304,6 +305,32 @@ export default function AdminUsersPage() {
     }
   };
 
+  // Direct Delete via Rare UI DeleteButton
+  const handleDirectDeleteUser = async (userToDelete) => {
+    if (!userToDelete || currentUser?._id === userToDelete._id) return;
+    setActionUserId(userToDelete._id);
+    try {
+      const res = await deleteAdminUser(userToDelete._id);
+      if (res.success) {
+        setUsers((prev) => prev.filter((u) => u._id !== userToDelete._id));
+        setTotalCount((prev) => Math.max(0, prev - 1));
+        setNotification({
+          type: 'success',
+          message: `Account ${userToDelete.username} deleted permanently.`
+        });
+        setTimeout(() => setNotification(null), 4000);
+      }
+    } catch (err) {
+      setNotification({
+        type: 'error',
+        message: err.message || 'Failed to delete user.'
+      });
+      setTimeout(() => setNotification(null), 4000);
+    } finally {
+      setActionUserId(null);
+    }
+  };
+
   const getPlanBadge = (sub) => {
     const plan = sub?.plan || 'free';
     const status = sub?.status || 'active';
@@ -562,16 +589,14 @@ export default function AdminUsersPage() {
                             <RiForbidLine size={15} />
                           </button>
 
-                          {/* 4. Delete User Button */}
-                          <button
-                            type="button"
-                            onClick={() => setDeleteModalUser(u)}
-                            disabled={isActing || isSelf}
-                            title="Delete User permanently"
-                            className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-40"
-                          >
-                            <RiDeleteBinLine size={15} />
-                          </button>
+                          {/* 4. Rare UI Animated Delete Button */}
+                          {!isSelf && (
+                            <DeleteButton
+                              size="sm"
+                              title={`Delete ${u.username}`}
+                              onConfirm={() => handleDirectDeleteUser(u)}
+                            />
+                          )}
 
                         </div>
                       </td>
@@ -624,8 +649,14 @@ export default function AdminUsersPage() {
 
       {/* Subscription Mode Modal rendered via createPortal at the very top of DOM */}
       {editingUser && createPortal(
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#11131a] border border-zinc-200 dark:border-white/10 p-6 shadow-2xl relative">
+        <div
+          onClick={() => setEditingUser(null)}
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-150 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-3xl bg-white dark:bg-[#11131a] border border-zinc-200 dark:border-white/10 p-6 shadow-2xl relative cursor-default"
+          >
             <div className="flex items-start justify-between pb-4 border-b border-zinc-200 dark:border-white/[0.08]">
               <div>
                 <h3 className="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
@@ -711,8 +742,14 @@ export default function AdminUsersPage() {
 
       {/* Delete User Confirmation Modal rendered via createPortal at top of DOM */}
       {deleteModalUser && createPortal(
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#13141a] border border-red-500/20 p-6 shadow-2xl relative text-center">
+        <div
+          onClick={() => setDeleteModalUser(null)}
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-150 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#13141a] border border-red-500/20 p-6 shadow-2xl relative text-center cursor-default"
+          >
             <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 dark:text-red-400 flex items-center justify-center mx-auto mb-3">
               <RiAlertLine size={24} />
             </div>

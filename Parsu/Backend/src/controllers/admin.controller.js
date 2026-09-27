@@ -885,6 +885,20 @@ export async function getAdminMediaAssets(req, res) {
 
         const assets = [];
 
+        const detectFileType = (fileObj) => {
+            if (fileObj.fileType && (fileObj.fileType === 'image' || fileObj.fileType === 'video' || fileObj.fileType === 'document')) {
+                return fileObj.fileType;
+            }
+            const name = fileObj.name || "";
+            const url = fileObj.url || "";
+            const mimetype = fileObj.mimetype || "";
+            if (mimetype.startsWith("image/")) return "image";
+            if (mimetype.startsWith("video/")) return "video";
+            if (/\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(url) || /\.(mp4|mov|webm|mkv|avi)$/i.test(name)) return "video";
+            if (/\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url) || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)$/i.test(name)) return "image";
+            return "document";
+        };
+
         messages.forEach(msg => {
             const chatUser = msg.chat?.user || { username: "User", email: "user@parsuai.com" };
             const chatTitle = msg.chat?.title || "Conversation";
@@ -899,7 +913,7 @@ export async function getAdminMediaAssets(req, res) {
                             fileIndex: idx,
                             url: f.url,
                             name: f.name || "Attachment",
-                            fileType: f.fileType || (/\.(mp4|mov|webm)$/i.test(f.url) ? "video" : /\.(jpg|jpeg|png|webp|gif)$/i.test(f.url) ? "image" : "document"),
+                            fileType: detectFileType(f),
                             size: f.size || 0,
                             fileId: f.fileId || null,
                             createdAt: msg.createdAt,
@@ -918,7 +932,7 @@ export async function getAdminMediaAssets(req, res) {
                     fileIndex: null,
                     url: msg.file.url,
                     name: msg.file.name || "Attachment",
-                    fileType: msg.file.fileType || (/\.(mp4|mov|webm)$/i.test(msg.file.url) ? "video" : /\.(jpg|jpeg|png|webp|gif)$/i.test(msg.file.url) ? "image" : "document"),
+                    fileType: detectFileType(msg.file),
                     size: msg.file.size || 0,
                     fileId: msg.file.fileId || null,
                     createdAt: msg.createdAt,

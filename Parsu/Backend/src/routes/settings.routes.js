@@ -7,8 +7,10 @@ import {
     getUserMedia,
     deleteUserMedia,
     submitBugReport,
+    getUserBugReports,
     getAdminBugReports,
-    updateBugReportStatus
+    updateBugReportStatus,
+    deleteAdminBugReport
 } from '../controllers/settings.controller.js';
 
 const settingsRouter = Router();
@@ -24,9 +26,11 @@ settingsRouter.delete('/media/:fileId', authUser, deleteUserMedia);
 
 // ── Bug Reports (user) ──────────────────────────────────────────────────────
 settingsRouter.post('/bug-report', authUser, submitBugReport);
+settingsRouter.get('/bug-reports', authUser, getUserBugReports);
 
-// ── Bug Reports (admin) ─────────────────────────────────────────────────────
+// ── Bug Reports (admin fallback) ─────────────────────────────────────────────
 settingsRouter.get('/admin/bug-reports', authUser, requireAdmin, getAdminBugReports);
 settingsRouter.put('/admin/bug-reports/:id', authUser, requireAdmin, updateBugReportStatus);
+settingsRouter.delete('/admin/bug-reports/:id', authUser, requireAdmin, deleteAdminBugReport);
 
 export default settingsRouter;

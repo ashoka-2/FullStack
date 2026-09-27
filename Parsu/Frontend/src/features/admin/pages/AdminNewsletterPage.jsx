@@ -10,6 +10,7 @@ import {
   RiCheckFill
 } from '@remixicon/react';
 import { getAdminNewsletter, deleteNewsletterSubscriber } from '../service/admin.api';
+import DeleteButton from '../../Components/rare-ui/DeleteButton';
 
 export default function AdminNewsletterPage() {
   const [subscribers, setSubscribers] = useState([]);
@@ -178,18 +179,11 @@ export default function AdminNewsletterPage() {
                       {s.createdAt ? new Date(s.createdAt).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="py-3.5 px-5 text-right">
-                      <button
-                        onClick={() => handleDelete(s._id)}
-                        disabled={actionId === s._id}
-                        className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-[0.98] cursor-pointer"
+                      <DeleteButton
+                        size="sm"
                         title="Remove subscriber"
-                      >
-                        {actionId === s._id ? (
-                          <RiLoader4Line size={14} className="animate-spin" />
-                        ) : (
-                          <RiDeleteBinLine size={14} />
-                        )}
-                      </button>
+                        onConfirm={() => handleDelete(s._id)}
+                      />
                     </td>
                   </tr>
                 ))
@@ -226,13 +220,11 @@ export default function AdminNewsletterPage() {
                   <span className="font-mono">{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : 'N/A'}</span>
                 </div>
                 <div className="flex items-center justify-end pt-1">
-                  <button
-                    onClick={() => handleDelete(s._id)}
-                    disabled={actionId === s._id}
-                    className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-[0.98]"
-                  >
-                    <RiDeleteBinLine size={14} />
-                  </button>
+                  <DeleteButton
+                    size="sm"
+                    title="Remove subscriber"
+                    onConfirm={() => handleDelete(s._id)}
+                  />
                 </div>
               </div>
             ))

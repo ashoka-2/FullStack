@@ -52,6 +52,17 @@ const bugReportSchema = new mongoose.Schema({
     adminNotes: {
         type: String,
         default: ""
+    },
+    adminReply: {
+        type: String,
+        default: ""
+    },
+    adminRepliedAt: {
+        type: Date
+    },
+    adminRepliedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
     }
 }, { timestamps: true });
 

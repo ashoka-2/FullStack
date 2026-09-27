@@ -22,6 +22,11 @@ import {
     getAdminPlatformSettings,
     updateAdminPlatformSettings
 } from "../controllers/admin.controller.js";
+import {
+    getAdminBugReports,
+    updateBugReportStatus,
+    deleteAdminBugReport
+} from "../controllers/settings.controller.js";
 
 const adminRouter = Router();
 
@@ -64,5 +69,11 @@ adminRouter.post("/ai-test", testAdminAiPrompt);
 // Global platform settings
 adminRouter.get("/settings", getAdminPlatformSettings);
 adminRouter.patch("/settings", updateAdminPlatformSettings);
+
+// Bug Reports management & moderation
+adminRouter.get("/bug-reports", getAdminBugReports);
+adminRouter.patch("/bug-reports/:id", updateBugReportStatus);
+adminRouter.put("/bug-reports/:id", updateBugReportStatus);
+adminRouter.delete("/bug-reports/:id", deleteAdminBugReport);
 
 export default adminRouter;

@@ -59,6 +59,20 @@ export default function AdminDashboardPage() {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showColumnsDropdown, setShowColumnsDropdown] = useState(false);
   const [showGaGuide, setShowGaGuide] = useState(false);
+  const controlsRef = useRef(null);
+
+  // Close dropdowns when clicking anywhere outside
+  useEffect(() => {
+    function handleOutsideClick(e) {
+      if (controlsRef.current && !controlsRef.current.contains(e.target)) {
+        setShowFilterDropdown(false);
+        setShowSortDropdown(false);
+        setShowColumnsDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   const [visibleColumns, setVisibleColumns] = useState({
     id: true,
@@ -558,7 +572,7 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Interactive Filter, Sort, Columns Controls */}
-          <div className="flex items-center gap-2 flex-wrap relative">
+          <div ref={controlsRef} className="flex items-center gap-2 flex-wrap relative">
             
             {/* 1. Filter Dropdown Button */}
             <div className="relative">
@@ -833,8 +847,14 @@ export default function AdminDashboardPage() {
 
       {/* ── 7. Google Analytics 4 (GA4) Configuration Guide Modal via createPortal at top of DOM ── */}
       {showGaGuide && createPortal(
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-[#161718] border border-zinc-200 dark:border-white/10 shadow-2xl p-6 space-y-5">
+        <div
+          onClick={() => setShowGaGuide(false)}
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-xl rounded-3xl bg-white dark:bg-[#161718] border border-zinc-200 dark:border-white/10 shadow-2xl p-6 space-y-5 cursor-default"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-white/10">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-900 dark:text-zinc-100">

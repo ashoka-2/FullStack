@@ -20,7 +20,7 @@ import {
   RiSettings3Line,
   RiShareLine,
   RiFolder3Line,
-  RiArrowRightUpLine
+  RiBugLine
 } from '@remixicon/react';
 import ParsuLogo from '../../Components/ParsuLogo';
 import FloatingBlobMascot from '../../Components/FloatingBlobMascot';
@@ -34,6 +34,7 @@ const ADMIN_NAV_LINKS = [
   { href: '/admin/ai-workspace',       label: 'AI Diagnostics',    icon: RiSparkling2Line },
   { href: '/admin/social-connections', label: 'Social Hub',        icon: RiShareLine },
   { href: '/admin/media-vault',        label: 'Media Vault',       icon: RiFolder3Line },
+  { href: '/admin/bug-reports',        label: 'Bug Reports',       icon: RiBugLine },
   { href: '/admin/api-usage',          label: 'API Usage',         icon: RiCpuLine },
   { href: '/admin/contacts',           label: 'Inquiries',         icon: RiInboxArchiveLine },
   { href: '/admin/newsletter',         label: 'Newsletter',        icon: RiMailSendLine },
@@ -64,20 +65,12 @@ export default function AdminLayout() {
     }
   }, [location.pathname]);
 
-  // Sidebar item entrance on initial mount
   useEffect(() => {
-    if (sidebarRef.current) {
-      const ctx = gsap.context(() => {
-        gsap.from('.admin-nav-item', {
-          opacity: 0,
-          x: -6,
-          duration: 0.35,
-          stagger: 0.025,
-          ease: 'power2.out'
-        });
-      }, sidebarRef);
-      return () => ctx.revert();
-    }
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
@@ -222,20 +215,6 @@ export default function AdminLayout() {
                 );
               })}
             </div>
-          </div>
-
-          {/* Quick Exit to User Workspace */}
-          <div className="pt-2 border-t border-zinc-200/80 dark:border-white/[0.08]">
-            <Link
-              to="/ai"
-              className="flex items-center justify-between px-3 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200/80 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-white/[0.08] text-[12px] font-semibold transition-all active:scale-[0.98]"
-            >
-              <div className="flex items-center gap-2 pl-0.5">
-                <RiSparkling2Line size={15} className="text-zinc-500 dark:text-zinc-400" />
-                <span>Launch Chat App</span>
-              </div>
-              <RiArrowRightUpLine size={13} className="text-zinc-400" />
-            </Link>
           </div>
         </nav>
 

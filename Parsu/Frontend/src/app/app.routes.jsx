@@ -45,6 +45,7 @@ import AdminSocialHubPage from "../features/admin/pages/AdminSocialHubPage";
 import AdminMediaVaultPage from "../features/admin/pages/AdminMediaVaultPage";
 import AdminAiWorkspacePage from "../features/admin/pages/AdminAiWorkspacePage";
 import AdminSettingsPage from "../features/admin/pages/AdminSettingsPage";
+import AdminBugReportsPage from "../features/admin/pages/AdminBugReportsPage";
 import AdminProtected from "../features/admin/components/AdminProtected";
 
 import { useSelector } from "react-redux";
@@ -242,6 +243,7 @@ export const router = createBrowserRouter([
             { path: "settings", element: <AdminSettingsPage /> },
             { path: "newsletter", element: <AdminNewsletterPage /> },
             { path: "contacts", element: <AdminContactsPage /> },
+            { path: "bug-reports", element: <AdminBugReportsPage /> },
             { path: "api-usage", element: <AdminApiUsagePage /> }
         ]
     }

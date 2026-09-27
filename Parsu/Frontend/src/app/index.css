@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "react-loading-skeleton/dist/skeleton.css";
 
 @theme {
   /* Tailwind v4 class-based dark mode */
@@ -15,6 +16,19 @@
   --border: #e2e4e8;
   --muted: #ebecee;
   --muted-foreground: #71717a;
+
+  /* ── Complete Centralized Zinc Grayscale System ── */
+  --color-zinc-50: var(--zinc-50);
+  --color-zinc-100: var(--zinc-100);
+  --color-zinc-200: var(--zinc-200);
+  --color-zinc-300: var(--zinc-300);
+  --color-zinc-400: var(--zinc-400);
+  --color-zinc-500: var(--zinc-500);
+  --color-zinc-600: var(--zinc-600);
+  --color-zinc-700: var(--zinc-700);
+  --color-zinc-800: var(--zinc-800);
+  --color-zinc-900: var(--zinc-900);
+  --color-zinc-950: var(--zinc-950);
 
   /* ── Hanada Japanese Palette from User Reference ── */
   --color-deep-hanada: var(--color-deep-hanada, #192D68);
@@ -47,8 +61,10 @@
   --color-bg-secondary: var(--bg-secondary);
   --color-bg-surface: var(--bg-surface);
   --color-bg-surface-hover: var(--bg-surface-hover);
+  --color-bg-card: var(--bg-card);
   --color-border-primary: var(--border-primary);
   --color-border-secondary: var(--border-secondary);
+  --color-border-card: var(--border-card);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
@@ -67,6 +83,28 @@
     color-scheme: light dark;
     --background: #f4f5f7;
     --foreground: #18181b;
+
+    /* ══════════════════════════════════════════════════════════════════
+       0. CENTRALIZED ZINC SCALE & THEME VARIABLES
+       Edit these values once here to update every page site-wide!
+       ══════════════════════════════════════════════════════════════════ */
+    --zinc-50: #fafafa;
+    --zinc-100: #f4f4f5;
+    --zinc-200: #e4e4e7;
+    --zinc-300: #d4d4d8;
+    --zinc-400: #a1a1aa;
+    --zinc-500: #71717a;
+    --zinc-600: #52525b;
+    --zinc-700: #3f3f46;
+    --zinc-800: #27272a;
+    --zinc-900: #18181b;
+    --zinc-950: #09090b;
+
+    /* Card & Skeleton System */
+    --bg-card: #ffffff;
+    --border-card: #e2e4e8;
+    --skeleton-base: #e4e4e7;
+    --skeleton-highlight: #f4f4f5;
 
     /* ══════════════════════════════════════════════════════════════════
        1. HANADA JAPANESE PALETTE (From User Reference Image)
@@ -203,6 +241,28 @@
   .dark {
     --background: #0e100f;
     --foreground: #f4f4f5;
+
+    /* ══════════════════════════════════════════════════════════════════
+       0. CENTRALIZED ZINC SCALE & THEME VARIABLES (Dark Mode)
+       Edit these values once here to update every page site-wide!
+       ══════════════════════════════════════════════════════════════════ */
+    --zinc-50: #fafafa;
+    --zinc-100: #f4f4f5;
+    --zinc-200: #e4e4e7;
+    --zinc-300: #d4d4d8;
+    --zinc-400: #a1a1aa;
+    --zinc-500: #71717a;
+    --zinc-600: #52525b;
+    --zinc-700: #3f3f46;
+    --zinc-800: #27272a;
+    --zinc-900: #18181b;
+    --zinc-950: #09090b;
+
+    /* Dark Mode Cards & Skeletons */
+    --bg-card: #11131a;
+    --border-card: rgba(255, 255, 255, 0.08);
+    --skeleton-base: #18181b;
+    --skeleton-highlight: #27272a;
 
     /* ══════════════════════════════════════════════════════════════════
        1. HANADA JAPANESE PALETTE (Dark Mode Consistency)

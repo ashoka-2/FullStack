@@ -15,10 +15,14 @@ const Layout = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const authLoading = useSelector(state => state.auth.loading);
+    
+    // Check if the user has already seen the initial loader in this browser session
+    const hasLoadedThisSession = typeof window !== 'undefined' && sessionStorage.getItem('parsu_session_initialized') === 'true';
+
     // Track if the preloader has finished its animation sequence
-    const [loaderFinished, setLoaderFinished] = useState(false);
+    const [loaderFinished, setLoaderFinished] = useState(hasLoadedThisSession);
     // Track if we've received the first auth data
-    const [authWaitDone, setAuthWaitDone] = useState(false);
+    const [authWaitDone, setAuthWaitDone] = useState(hasLoadedThisSession);
 
     // Invalidate stale user session if restored from browser back-forward cache (bfcache)
     useEffect(() => {
@@ -104,8 +108,17 @@ const Layout = () => {
         return () => document.removeEventListener('click', handleGlobalLinkClick, { capture: true });
     }, [navigate]);
 
-    // When loader is active or initial auth has not completed, disable scroll
-    const isOverlayActive = !loaderFinished || !authWaitDone;
+    // When loader has already finished this session, NEVER show overlay on reload
+    const isOverlayActive = !hasLoadedThisSession && (!loaderFinished || !authWaitDone);
+
+    const handleLoaderFinished = () => {
+        setLoaderFinished(true);
+        try {
+            sessionStorage.setItem('parsu_session_initialized', 'true');
+        } catch (e) {
+            console.warn('SessionStorage unavailable', e);
+        }
+    };
 
     return (
         <ReactLenis
@@ -121,9 +134,9 @@ const Layout = () => {
         >
             <ConnectionMonitor>
                 <div className={`bg-[var(--bg-primary)] text-zinc-900 dark:text-zinc-100 transition-colors duration-300 min-h-screen relative ${isOverlayActive ? 'h-[100dvh] overflow-hidden' : ''}`}>
-                    {/* Animated initial loading curtain */}
+                    {/* Animated initial loading curtain (only on first session entry) */}
                     {isOverlayActive && (
-                        <Loading onFinished={() => setLoaderFinished(true)} authReady={authWaitDone} />
+                        <Loading onFinished={handleLoaderFinished} authReady={authWaitDone} />
                     )}
 
                     {/* Main app content with background data prefetching */}

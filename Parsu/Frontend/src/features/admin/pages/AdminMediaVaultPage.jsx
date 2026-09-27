@@ -12,13 +12,151 @@ import {
   RiCloseLine,
   RiExternalLinkLine,
   RiAlertLine,
-  RiCheckLine,
-  RiShieldCheckLine,
   RiGridLine,
-  RiListCheck
+  RiListCheck,
+  RiPlayFill
 } from '@remixicon/react';
 import { getAdminMediaAssets, deleteAdminMediaAsset } from '../service/admin.api';
+import DeleteButton from '../../Components/rare-ui/DeleteButton';
 import { showToast } from '../../Components/Toast';
+
+/**
+ * Bulletproof Media Card Preview
+ * Handles decoding first-frame for video (#t=0.001), hover preview playback,
+ * and graceful fallback for broken/unloaded images instead of pitch black void.
+ */
+function MediaCardPreview({ asset }) {
+  const [hasError, setHasError] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef(null);
+
+  const url = asset.url || '';
+  const name = asset.name || '';
+
+  // Smart heuristic detection: URL extension overrides fallback fileType
+  const isVideo = (asset.fileType === 'video' || /\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(url) || /\.(mp4|mov|webm|mkv|avi)$/i.test(name)) && !/\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url);
+  const isImage = (asset.fileType === 'image' || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url) || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)$/i.test(name)) && !isVideo;
+
+  const handleMouseEnter = () => {
+    if (isVideo && videoRef.current) {
+      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (isVideo && videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0.001;
+      setIsPlaying(false);
+    }
+  };
+
+  if (hasError) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-100 dark:bg-zinc-900/60 p-3 text-center">
+        {isVideo ? (
+          <RiVideoLine size={28} className="text-zinc-400 mb-1" />
+        ) : (
+          <RiImageLine size={28} className="text-zinc-400 mb-1" />
+        )}
+        <span className="text-[10px] text-zinc-500 line-clamp-1">{asset.name || 'Media Asset'}</span>
+      </div>
+    );
+  }
+
+  if (isImage) {
+    return (
+      <img
+        src={asset.thumbnailUrl || asset.url}
+        alt={asset.name}
+        onError={() => setHasError(true)}
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      />
+    );
+  }
+
+  if (isVideo) {
+    // Append #t=0.001 so chromium/firefox/safari generates a first-frame preview instead of a black rectangle
+    const videoSrc = url.includes('#') ? url : `${url}#t=0.001`;
+    return (
+      <div
+        className="w-full h-full relative"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <video
+          ref={videoRef}
+          src={videoSrc}
+          preload="metadata"
+          muted
+          playsInline
+          onError={() => setHasError(true)}
+          className="w-full h-full object-cover"
+        />
+        {/* Play Icon Badge indicator */}
+        <div className={`absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-white text-[9px] font-bold tracking-wider flex items-center gap-1 transition-opacity ${isPlaying ? 'opacity-0' : 'opacity-100'}`}>
+          <RiPlayFill size={10} className="fill-white" />
+          <span>VIDEO</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 p-4 text-zinc-500 dark:text-zinc-400">
+      <RiFileTextLine size={30} className="text-zinc-700 dark:text-zinc-300" />
+      <span className="text-[11px] font-mono text-center truncate max-w-[160px]">{asset.name}</span>
+    </div>
+  );
+}
+
+/**
+ * Thumbnail for Table View
+ */
+function MediaTableThumbnail({ asset }) {
+  const [hasError, setHasError] = useState(false);
+  const url = asset.url || '';
+  const name = asset.name || '';
+
+  const isVideo = (asset.fileType === 'video' || /\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(url) || /\.(mp4|mov|webm|mkv|avi)$/i.test(name)) && !/\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url);
+  const isImage = (asset.fileType === 'image' || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(url) || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)$/i.test(name)) && !isVideo;
+
+  if (hasError) {
+    return <RiFileTextLine size={18} className="text-zinc-400" />;
+  }
+
+  if (isImage) {
+    return (
+      <img
+        src={asset.thumbnailUrl || asset.url}
+        alt={asset.name}
+        onError={() => setHasError(true)}
+        className="w-full h-full object-cover"
+      />
+    );
+  }
+
+  if (isVideo) {
+    const videoSrc = url.includes('#') ? url : `${url}#t=0.001`;
+    return (
+      <div className="relative w-full h-full">
+        <video
+          src={videoSrc}
+          preload="metadata"
+          muted
+          playsInline
+          onError={() => setHasError(true)}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+          <RiPlayFill size={10} className="text-white fill-white" />
+        </div>
+      </div>
+    );
+  }
+
+  return <RiFileTextLine size={18} className="text-zinc-400" />;
+}
 
 export default function AdminMediaVaultPage() {
   const [assets, setAssets] = useState([]);
@@ -75,11 +213,6 @@ export default function AdminMediaVaultPage() {
   };
 
   const handleDelete = async (asset) => {
-    const isConfirmed = window.confirm(
-      `MODERATION ACTION:\nAre you sure you want to delete this ${asset.fileType} (${asset.name})?\n\nThis will remove it permanently from the CDN and chat history.`
-    );
-    if (!isConfirmed) return;
-
     setDeletingId(asset.id);
     try {
       const res = await deleteAdminMediaAsset(asset.messageId || asset.id, {
@@ -230,8 +363,6 @@ export default function AdminMediaVaultPage() {
         /* Grid Cards */
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {assets.map((asset) => {
-            const isImage = asset.fileType === 'image';
-            const isVideo = asset.fileType === 'video';
             const userObj = asset.user || { username: 'User' };
 
             return (
@@ -241,26 +372,7 @@ export default function AdminMediaVaultPage() {
               >
                 {/* Media Preview Box */}
                 <div className="relative aspect-video bg-zinc-100 dark:bg-black/50 flex items-center justify-center overflow-hidden">
-                  {isImage ? (
-                    <img
-                      src={asset.url}
-                      alt={asset.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                  ) : isVideo ? (
-                    <video
-                      src={asset.url}
-                      className="w-full h-full object-cover"
-                      muted
-                      playsInline
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center gap-2 p-4 text-zinc-500 dark:text-zinc-400">
-                      <RiFileTextLine size={30} className="text-zinc-700 dark:text-zinc-300" />
-                      <span className="text-[11px] font-mono text-center truncate max-w-[160px]">{asset.name}</span>
-                    </div>
-                  )}
+                  <MediaCardPreview asset={asset} />
 
                   {/* Badge */}
                   <span className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-black/75 text-white backdrop-blur-md">
@@ -306,15 +418,12 @@ export default function AdminMediaVaultPage() {
                       </div>
                       <span className="truncate font-medium text-zinc-700 dark:text-zinc-300">{userObj.username}</span>
                     </div>
-                    <button
-                      onClick={() => handleDelete(asset)}
-                      disabled={deletingId === asset.id}
-                      className="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50 active:scale-95"
+
+                    <DeleteButton
+                      size="sm"
                       title="Delete vulgar or policy-violating file"
-                    >
-                      <RiDeleteBinLine size={12} />
-                      <span>{deletingId === asset.id ? 'Deleting...' : 'Delete'}</span>
-                    </button>
+                      onConfirm={() => handleDelete(asset)}
+                    />
                   </div>
                 </div>
               </div>
@@ -346,13 +455,7 @@ export default function AdminMediaVaultPage() {
                           onClick={() => setPreviewAsset(asset)}
                           className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
                         >
-                          {asset.fileType === 'image' ? (
-                            <img src={asset.url} alt={asset.name} className="w-full h-full object-cover" />
-                          ) : asset.fileType === 'video' ? (
-                            <RiVideoLine size={20} className="text-zinc-500" />
-                          ) : (
-                            <RiFileTextLine size={20} className="text-zinc-500" />
-                          )}
+                          <MediaTableThumbnail asset={asset} />
                         </div>
                       </td>
                       <td className="px-5 py-3">
@@ -380,15 +483,11 @@ export default function AdminMediaVaultPage() {
                           >
                             <RiEyeLine size={14} />
                           </button>
-                          <button
-                            onClick={() => handleDelete(asset)}
-                            disabled={deletingId === asset.id}
-                            className="px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1 disabled:opacity-50 active:scale-95"
-                            title="Delete inappropriate content"
-                          >
-                            <RiDeleteBinLine size={13} />
-                            <span>{deletingId === asset.id ? 'Deleting...' : 'Delete'}</span>
-                          </button>
+                          <DeleteButton
+                            size="sm"
+                            title="Delete file"
+                            onConfirm={() => handleDelete(asset)}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -424,13 +523,13 @@ export default function AdminMediaVaultPage() {
 
             {/* Media Body */}
             <div className="p-4 flex-1 overflow-auto flex items-center justify-center bg-zinc-100 dark:bg-black/60 min-h-[300px]">
-              {previewAsset.fileType === 'image' ? (
+              {previewAsset.fileType === 'image' || /\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?|$)/i.test(previewAsset.url) ? (
                 <img
                   src={previewAsset.url}
                   alt={previewAsset.name}
                   className="max-h-[60vh] max-w-full object-contain rounded-xl shadow-lg"
                 />
-              ) : previewAsset.fileType === 'video' ? (
+              ) : previewAsset.fileType === 'video' || /\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(previewAsset.url) ? (
                 <video
                   src={previewAsset.url}
                   controls

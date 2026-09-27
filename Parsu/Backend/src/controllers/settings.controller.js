@@ -185,17 +185,38 @@ export async function submitBugReport(req, res) {
     }
 }
 
+// ─── User: Get Own Bug Reports ─────────────────────────────────────────────
+export async function getUserBugReports(req, res) {
+    try {
+        const reports = await bugReportModel
+            .find({ user: req.user.id })
+            .sort({ createdAt: -1 });
+
+        res.json({ success: true, reports });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+}
+
 // ─── Admin: Get All Bug Reports ────────────────────────────────────────────
 export async function getAdminBugReports(req, res) {
     try {
-        const { status, severity, page = 1, limit = 20 } = req.query;
+        const { status, severity, category, search, page = 1, limit = 20 } = req.query;
         const filter = {};
-        if (status) filter.status = status;
-        if (severity) filter.severity = severity;
+        if (status && status !== 'all') filter.status = status;
+        if (severity && severity !== 'all') filter.severity = severity;
+        if (category && category !== 'all') filter.category = category;
+        if (search) {
+            filter.$or = [
+                { title: { $regex: search, $options: "i" } },
+                { description: { $regex: search, $options: "i" } }
+            ];
+        }
 
         const reports = await bugReportModel
             .find(filter)
             .populate("user", "username email profilePic")
+            .populate("adminRepliedBy", "username email")
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(parseInt(limit));
@@ -207,18 +228,41 @@ export async function getAdminBugReports(req, res) {
     }
 }
 
-// ─── Admin: Update Bug Report Status ──────────────────────────────────────
+// ─── Admin: Update Bug Report Status & Reply ──────────────────────────────
 export async function updateBugReportStatus(req, res) {
     try {
         const { id } = req.params;
-        const { status, adminNotes } = req.body;
+        const { status, adminNotes, adminReply } = req.body;
+
+        const updateFields = {};
+        if (status !== undefined) updateFields.status = status;
+        if (adminNotes !== undefined) updateFields.adminNotes = adminNotes;
+        if (adminReply !== undefined) {
+            updateFields.adminReply = adminReply;
+            updateFields.adminRepliedAt = new Date();
+            updateFields.adminRepliedBy = req.user.id;
+        }
+
         const report = await bugReportModel.findByIdAndUpdate(
             id,
-            { $set: { status, adminNotes } },
+            { $set: updateFields },
             { new: true }
-        );
+        ).populate("user", "username email profilePic");
+
         if (!report) return res.status(404).json({ success: false, message: "Report not found" });
         res.json({ success: true, report });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+}
+
+// ─── Admin: Delete Bug Report ──────────────────────────────────────────────
+export async function deleteAdminBugReport(req, res) {
+    try {
+        const { id } = req.params;
+        const report = await bugReportModel.findByIdAndDelete(id);
+        if (!report) return res.status(404).json({ success: false, message: "Report not found" });
+        res.json({ success: true, message: "Bug report deleted successfully" });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }

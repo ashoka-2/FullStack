@@ -33,6 +33,11 @@ export async function submitBugReport(payload) {
     return res.data;
 }
 
+export async function getUserBugReports() {
+    const res = await api.get('/api/settings/bug-reports');
+    return res.data;
+}
+
 // ─── Chat Thread Actions ───────────────────────────────────────────────────
 export async function renameChat(chatId, title) {
     const res = await api.put(`/api/chats/${chatId}/rename`, { title });

@@ -13,6 +13,7 @@ import {
   RiExternalLinkLine
 } from '@remixicon/react';
 import { getAdminContacts, updateContactStatus, deleteContact } from '../service/admin.api';
+import DeleteButton from '../../Components/rare-ui/DeleteButton';
 
 export default function AdminContactsPage() {
   const [contacts, setContacts] = useState([]);
@@ -236,14 +237,11 @@ export default function AdminContactsPage() {
                         >
                           <RiMailLine size={14} />
                         </a>
-                        <button
-                          onClick={() => handleDelete(c._id)}
-                          disabled={actionId === c._id}
-                          className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-[0.98] cursor-pointer"
+                        <DeleteButton
+                          size="sm"
                           title="Delete message"
-                        >
-                          <RiDeleteBinLine size={14} />
-                        </button>
+                          onConfirm={() => handleDelete(c._id)}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -300,13 +298,11 @@ export default function AdminContactsPage() {
                     >
                       <RiMailLine size={13} />
                     </a>
-                    <button
-                      onClick={() => handleDelete(c._id)}
-                      disabled={actionId === c._id}
-                      className="p-1 rounded-lg text-zinc-400 hover:text-red-500"
-                    >
-                      <RiDeleteBinLine size={13} />
-                    </button>
+                    <DeleteButton
+                      size="sm"
+                      title="Delete message"
+                      onConfirm={() => handleDelete(c._id)}
+                    />
                   </div>
                 </div>
               </div>
@@ -343,8 +339,14 @@ export default function AdminContactsPage() {
 
       {/* Message Viewer Modal rendered via createPortal at top of DOM */}
       {selectedMessage && createPortal(
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-[#12141c] border border-zinc-200 dark:border-white/10 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+        <div
+          onClick={() => setSelectedMessage(null)}
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-150 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-[#12141c] border border-zinc-200 dark:border-white/10 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 cursor-default"
+          >
             <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/10 pb-3">
               <div>
                 <h3 className="text-base font-bold text-zinc-900 dark:text-white">{selectedMessage.subject}</h3>

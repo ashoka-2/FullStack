@@ -177,3 +177,29 @@ export async function updateAdminPlatformSettings(settingsData) {
     const res = await customAxios.patch("/api/admin/settings", settingsData);
     return res.data;
 }
+
+/**
+ * Bug reports management
+ */
+export async function getAdminBugReports({ page = 1, limit = 20, status = "", severity = "", category = "", search = "" } = {}) {
+    const params = new URLSearchParams();
+    if (page) params.append("page", page);
+    if (limit) params.append("limit", limit);
+    if (status && status !== "all") params.append("status", status);
+    if (severity && severity !== "all") params.append("severity", severity);
+    if (category && category !== "all") params.append("category", category);
+    if (search) params.append("search", search);
+
+    const res = await customAxios.get(`/api/admin/bug-reports?${params.toString()}`);
+    return res.data;
+}
+
+export async function updateAdminBugReport(id, updateData) {
+    const res = await customAxios.patch(`/api/admin/bug-reports/${id}`, updateData);
+    return res.data;
+}
+
+export async function deleteAdminBugReport(id) {
+    const res = await customAxios.delete(`/api/admin/bug-reports/${id}`);
+    return res.data;
+}
