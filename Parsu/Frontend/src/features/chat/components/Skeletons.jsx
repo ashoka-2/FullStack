@@ -37,25 +37,47 @@ export const MessagesSkeleton = () => (
   </div>
 );
 
-export const ThinkingSkeleton = () => (
-  <div className="flex flex-col items-center sm:items-start gap-4 py-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
-    <div className="flex items-center gap-3">
-      <MatrixOrb size={44} state="thinking" color="#20b8cd" dots={10} />
-      <div className="flex flex-col">
-        <span className="text-[13px] font-bold text-zinc-800 dark:text-zinc-200 tracking-wide">
-          Parsu AI is thinking...
-        </span>
-        <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
-          Reasoning and formulating response
-        </span>
+export const ThinkingSkeleton = () => {
+  const [stepIndex, setStepIndex] = React.useState(0);
+  const [elapsed, setElapsed] = React.useState(0);
+
+  const steps = [
+    "Thinking…",
+    "Analyzing your request…",
+    "Retrieving context & memory…",
+    "Synthesizing response…"
+  ];
+
+  React.useEffect(() => {
+    const t = setInterval(() => setElapsed(e => +(e + 0.5).toFixed(1)), 500);
+    const s = setInterval(() => setStepIndex(i => (i + 1) % steps.length), 2000);
+    return () => { clearInterval(t); clearInterval(s); };
+  }, [steps.length]);
+
+  return (
+    <div className="flex flex-col gap-3 py-3 px-1 max-w-2xl animate-in fade-in duration-300">
+      {/* Sleek single status line with MatrixOrb */}
+      <div className="flex items-center gap-2.5">
+        <MatrixOrb size={26} state="thinking" color="#20b8cd" dots={8} />
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 font-mono tracking-wide animate-pulse">
+            {steps[stepIndex]}
+          </span>
+          <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">
+            {elapsed}s
+          </span>
+        </div>
+      </div>
+
+      {/* Shimmering placeholder lines like standard AI apps */}
+      <div className="space-y-2.5 pl-8 max-w-xl">
+        <ThemedSkeleton height={14} width="90%" borderRadius="0.375rem" />
+        <ThemedSkeleton height={14} width="75%" borderRadius="0.375rem" />
+        <ThemedSkeleton height={14} width="40%" borderRadius="0.375rem" />
       </div>
     </div>
-    <div className="space-y-2 w-full pl-0 sm:pl-14 max-w-xl">
-      <ThemedSkeleton height={14} borderRadius="0.4rem" />
-      <ThemedSkeleton width="80%" height={14} borderRadius="0.4rem" />
-    </div>
-  </div>
-);
+  );
+};
 
 export const LibrarySkeleton = ({ viewMode }) => (
   <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'flex flex-col gap-4'}>

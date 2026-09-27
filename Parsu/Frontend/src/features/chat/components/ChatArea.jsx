@@ -361,8 +361,12 @@ const ChatArea = () => {
           action: intent.action,
           params: intent.params,
           confirmed: true
-        }).then(() => {
-          dispatch(addToast({ type: 'success', message: `⚡ ${intent.label}` }));
+        }).then((res) => {
+          if (res?.success === false || res?.launched === false) {
+            dispatch(addToast({ type: 'warning', message: res?.error || res?.message || 'App not found, sir, and could not be opened.' }));
+          } else {
+            dispatch(addToast({ type: 'success', message: `⚡ ${intent.label}` }));
+          }
         }).catch(err => {
           dispatch(addToast({ type: 'warning', message: `Device: ${err?.response?.data?.message || err.message}` }));
         });

@@ -21,6 +21,8 @@ export const ACTION_TIERS = {
     focus_window: "mutating",
     simulate_click: "mutating",
     simulate_type: "mutating",
+    type_text: "mutating",
+    whatsapp_message: "mutating",
     write_file: "mutating",
     set_clipboard: "mutating",
     set_volume: "mutating",
@@ -200,6 +202,9 @@ export const deviceOrchestratorService = {
                         break;
                     case "launch_app":
                         result = await desktopWindowsService.launchApp(params.appOrPath, params.args);
+                        if (result && result.launched === false) {
+                            throw new Error(result.error || `App '${params.appOrPath}' not found and could not open.`);
+                        }
                         break;
                     case "close_process":
                         result = await desktopWindowsService.closeProcess(params.processIdOrName, params.force);
@@ -215,6 +220,15 @@ export const deviceOrchestratorService = {
                         break;
                     case "simulate_type":
                         result = await desktopWindowsService.simulateType(params.text);
+                        break;
+                    case "type_text":
+                        result = await desktopWindowsService.typeText(params.text, params.targetApp, params.pressEnter);
+                        break;
+                    case "whatsapp_message":
+                        result = await desktopWindowsService.whatsappSendMessage({
+                            contactOrPhone: params.contactOrPhone,
+                            message: params.message
+                        });
                         break;
                     case "search_files":
                         result = await desktopWindowsService.searchFiles(params.searchTerm, params.startDir, params.maxResults);

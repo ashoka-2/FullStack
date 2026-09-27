@@ -1,22 +1,28 @@
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import util from "util";
 import fs from "fs/promises";
 import path from "path";
 import os from "os";
 
-const execPromise = util.promisify(exec);
+const execFilePromise = util.promisify(execFile);
 
 /**
  * Execute a secure PowerShell command and return structured JSON
+ * Uses an ephemeral script file to completely eliminate Windows command-line character limits
  */
-async function runPowerShell(script, timeoutMs = 8000) {
+async function runPowerShell(script, timeoutMs = 12000) {
+    const tmpFile = path.join(os.tmpdir(), `parsu_ps_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.ps1`);
     try {
-        // Encode in Base64 UTF-16LE to prevent quote-escaping syntax issues
-        const buffer = Buffer.from(script, 'utf16le');
-        const encoded = buffer.toString('base64');
-        const command = `powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand ${encoded}`;
-        
-        const { stdout, stderr } = await execPromise(command, {
+        await fs.writeFile(tmpFile, script, 'utf8');
+
+        const { stdout, stderr } = await execFilePromise("powershell.exe", [
+            "-NoProfile",
+            "-NonInteractive",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            tmpFile
+        ], {
             timeout: timeoutMs,
             maxBuffer: 10 * 1024 * 1024,
             windowsHide: true
@@ -36,6 +42,8 @@ async function runPowerShell(script, timeoutMs = 8000) {
         }
     } catch (err) {
         throw new Error(`Windows Automation Error: ${err.message}`);
+    } finally {
+        await fs.unlink(tmpFile).catch(() => {});
     }
 }
 
@@ -53,12 +61,105 @@ export const desktopWindowsService = {
     },
 
     async launchApp(appOrPath, args = "") {
+        const cleanTarget = String(appOrPath || "").trim();
         const script = `
-            $p = Start-Process -FilePath "${appOrPath}" ${args ? `-ArgumentList '${args}'` : ''} -PassThru
+            $target = "${cleanTarget.replace(/"/g, '`"')}".Trim()
+            $launched = $false
+            $pName = ""
+            $appPid = 0
+
+            # 1. Known Windows Universal Protocol Schemes
+            $uriMap = @{
+                "calculator"     = "calculator:"
+                "calc"           = "calculator:"
+                "calc.exe"       = "calculator:"
+                "camera"         = "microsoft.windows.camera:"
+                "settings"       = "ms-settings:"
+                "clock"          = "ms-clock:"
+                "alarms"         = "ms-clock:"
+                "photos"         = "ms-photos:"
+                "paint"          = "mspaint.exe"
+                "paint.exe"      = "mspaint.exe"
+                "mspaint"        = "mspaint.exe"
+                "mspaint.exe"    = "mspaint.exe"
+                "notepad"        = "notepad.exe"
+                "notepad.exe"    = "notepad.exe"
+                "explorer"       = "explorer.exe"
+                "explorer.exe"   = "explorer.exe"
+                "files"          = "explorer.exe"
+                "terminal"       = "wt.exe"
+                "cmd"            = "cmd.exe"
+                "cmd.exe"        = "cmd.exe"
+                "powershell"     = "powershell.exe"
+                "powershell.exe" = "powershell.exe"
+                "store"          = "ms-windows-store:"
+                "calendar"       = "outlookcal:"
+                "mail"           = "outlookmail:"
+            }
+            $targetLower = $target.ToLower()
+
+            if ($uriMap.ContainsKey($targetLower)) {
+                try {
+                    $proc = Start-Process $uriMap[$targetLower] -PassThru -ErrorAction SilentlyContinue
+                    $launched = $true
+                    $pName = $target
+                    if ($proc) { $appPid = $proc.Id }
+                } catch {}
+            }
+
+            # 2. Search Get-StartApps (detects Android Studio, VS Code, Chrome, VLC, Telegram, etc.)
+            if (-not $launched) {
+                try {
+                    $found = Get-StartApps | Where-Object { 
+                        $_.Name -like "*$target*" -or 
+                        $_.AppID -like "*$target*" 
+                    } | Select-Object -First 1
+
+                    if ($found) {
+                        Start-Process "shell:AppsFolder\$($found.AppID)" -ErrorAction Stop
+                        $launched = $true
+                        $pName = $found.Name
+                    }
+                } catch {}
+            }
+
+            # 3. Direct execution via Start-Process
+            if (-not $launched) {
+                try {
+                    $proc = Start-Process -FilePath $target ${args ? `-ArgumentList '${args}'` : ''} -PassThru -ErrorAction Stop
+                    $launched = $true
+                    $pName = $proc.ProcessName
+                    if ($proc) { $appPid = $proc.Id }
+                } catch {}
+            }
+
+            # 4. Windows Search Bar Fallback (WinKey -> Type Name -> Enter)
+            if (-not $launched) {
+                try {
+                    $wshell = New-Object -ComObject wscript.shell
+                    $wshell.SendKeys("^{ESC}")
+                    Start-Sleep -Milliseconds 400
+                    $wshell.SendKeys($target)
+                    Start-Sleep -Milliseconds 600
+                    $wshell.SendKeys("{ENTER}")
+                    Start-Sleep -Milliseconds 800
+
+                    # Verify if a matching process was started
+                    $check = Get-Process | Where-Object { $_.ProcessName -like "*$target*" } | Select-Object -First 1
+                    if ($check) {
+                        $launched = $true
+                        $pName = $check.ProcessName
+                        $appPid = $check.Id
+                    }
+                } catch {}
+            }
+
             [PSCustomObject]@{
-                launched = $true
-                processId = $p.Id
-                processName = $p.ProcessName
+                launched = $launched
+                appName = $target
+                processName = $pName
+                processId = $appPid
+                error = if (-not $launched) { "App not found and could not open." } else { $null }
             } | ConvertTo-Json -Compress
         `;
         return await runPowerShell(script);
@@ -144,14 +245,173 @@ export const desktopWindowsService = {
     },
 
     async simulateType(text) {
-        // Escape characters for SendKeys: + ^ % ~ { } [ ]
-        const escaped = text.replace(/([+^%~{}()\[\]])/g, "{$1}").replace(/"/g, '`"');
+        return this.typeText(text, null, false);
+    },
+
+    async typeText(text, targetApp = null, pressEnter = false) {
+        const cleanTarget = (targetApp || "").trim().toLowerCase();
         const script = `
             Add-Type -AssemblyName System.Windows.Forms
-            [System.Windows.Forms.SendKeys]::SendWait("${escaped}")
-            [PSCustomObject]@{ typed = $true; length = ${text.length} } | ConvertTo-Json -Compress
+            Add-Type @"
+                using System;
+                using System.Runtime.InteropServices;
+                public class Win32TypeHelper {
+                    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+                    [DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+                }
+"@
+            $target = "${cleanTarget}".Trim()
+            if ($target) {
+                $foundProc = Get-Process | Where-Object { 
+                    $_.ProcessName.ToLower() -like "*$target*" -or 
+                    $_.MainWindowTitle.ToLower() -like "*$target*" 
+                } | Select-Object -First 1
+
+                if (-not $foundProc -or $foundProc.MainWindowHandle -eq [IntPtr]::Zero) {
+                    Start-Process $target -ErrorAction SilentlyContinue
+                    Start-Sleep -Milliseconds 700
+                    $foundProc = Get-Process | Where-Object { 
+                        $_.ProcessName.ToLower() -like "*$target*" -or 
+                        $_.MainWindowTitle.ToLower() -like "*$target*" 
+                    } | Select-Object -First 1
+                }
+
+                if ($foundProc -and $foundProc.MainWindowHandle -ne [IntPtr]::Zero) {
+                    [Win32TypeHelper]::ShowWindowAsync($foundProc.MainWindowHandle, 9) | Out-Null
+                    [Win32TypeHelper]::SetForegroundWindow($foundProc.MainWindowHandle) | Out-Null
+                    Start-Sleep -Milliseconds 300
+                }
+            }
+
+            # Use clipboard paste for guaranteed accuracy with unicode, symbols, and formatting
+            $content = @"
+${text}
+"@
+            Set-Clipboard -Value $content
+            Start-Sleep -Milliseconds 150
+            $wshell = New-Object -ComObject wscript.shell
+            $wshell.SendKeys("^v")
+            ${pressEnter ? `
+            Start-Sleep -Milliseconds 150
+            $wshell.SendKeys("{ENTER}")
+            ` : ""}
+
+            [PSCustomObject]@{
+                typed = $true
+                targetApp = $target
+                length = $content.Length
+            } | ConvertTo-Json -Compress
         `;
         return await runPowerShell(script);
+    },
+
+    async whatsappSendMessage({ contactOrPhone, message }) {
+        const targetClean = String(contactOrPhone || "").trim();
+        const msgClean = String(message || "").trim();
+        const isPhone = /^[+]?[\d\s\-()]{7,16}$/.test(targetClean);
+        const digitsOnly = targetClean.replace(/[\s\-()+]/g, "");
+
+        const script = `
+            Add-Type -AssemblyName System.Windows.Forms
+            Add-Type @"
+                using System;
+                using System.Runtime.InteropServices;
+                public class Win32WaHelper {
+                    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+                    [DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+                }
+"@
+            $waApp = Get-StartApps | Where-Object { $_.Name -like "*WhatsApp*" -or $_.AppID -like "*WhatsApp*" } | Select-Object -First 1
+            $isInstalled = [bool]$waApp -or (Get-Command "WhatsApp.exe" -ErrorAction SilentlyContinue)
+
+            if (-not $isInstalled) {
+                # Fallback to WhatsApp Web
+                ${isPhone ? `
+                    Start-Process "https://web.whatsapp.com/send?phone=${digitsOnly}&text=${encodeURIComponent(msgClean)}"
+                ` : `
+                    Start-Process "https://web.whatsapp.com"
+                `}
+                [PSCustomObject]@{
+                    success = $true
+                    method = "web"
+                    message = "WhatsApp desktop is not installed. Opened WhatsApp Web."
+                } | ConvertTo-Json -Compress
+                exit
+            }
+
+            # WhatsApp Desktop is installed
+            ${isPhone ? `
+                # 1. Phone number direct protocol launch
+                $uri = "whatsapp://send?phone=${digitsOnly}&text=${encodeURIComponent(msgClean)}"
+                Start-Process $uri -ErrorAction SilentlyContinue
+                Start-Sleep -Milliseconds 2200
+
+                $waProc = Get-Process | Where-Object { $_.ProcessName -like "*WhatsApp*" } | Select-Object -First 1
+                $wshell = New-Object -ComObject wscript.shell
+                if ($waProc -and $waProc.MainWindowHandle -ne [IntPtr]::Zero) {
+                    [Win32WaHelper]::ShowWindowAsync($waProc.MainWindowHandle, 9) | Out-Null
+                    [Win32WaHelper]::SetForegroundWindow($waProc.MainWindowHandle) | Out-Null
+                    Start-Sleep -Milliseconds 600
+                    $wshell.SendKeys("{ENTER}")
+                }
+                [PSCustomObject]@{
+                    success = $true
+                    sent = $true
+                    method = "desktop_phone"
+                    target = "${digitsOnly}"
+                } | ConvertTo-Json -Compress
+            ` : `
+                # 2. Contact Name or Open Chat
+                $waProc = Get-Process | Where-Object { $_.ProcessName -like "*WhatsApp*" } | Select-Object -First 1
+                if (-not $waProc) {
+                    if ($waApp) {
+                        Start-Process "shell:AppsFolder\$($waApp.AppID)" -ErrorAction SilentlyContinue
+                    } else {
+                        Start-Process "WhatsApp.exe" -ErrorAction SilentlyContinue
+                    }
+                    Start-Sleep -Milliseconds 2500
+                    $waProc = Get-Process | Where-Object { $_.ProcessName -like "*WhatsApp*" } | Select-Object -First 1
+                }
+
+                if ($waProc -and $waProc.MainWindowHandle -ne [IntPtr]::Zero) {
+                    [Win32WaHelper]::ShowWindowAsync($waProc.MainWindowHandle, 9) | Out-Null
+                    [Win32WaHelper]::SetForegroundWindow($waProc.MainWindowHandle) | Out-Null
+                    Start-Sleep -Milliseconds 500
+                }
+
+                $contact = "${targetClean.replace(/"/g, '`"')}"
+                $msg = @"
+${msgClean}
+"@
+                $wshell = New-Object -ComObject wscript.shell
+
+                if ($contact) {
+                    # Press Ctrl + F to search contacts
+                    $wshell.SendKeys("^f")
+                    Start-Sleep -Milliseconds 350
+                    Set-Clipboard -Value $contact
+                    $wshell.SendKeys("^v")
+                    Start-Sleep -Milliseconds 750
+                    $wshell.SendKeys("{ENTER}")
+                    Start-Sleep -Milliseconds 550
+                }
+
+                # Paste message into chat and send
+                Set-Clipboard -Value $msg
+                Start-Sleep -Milliseconds 250
+                $wshell.SendKeys("^v")
+                Start-Sleep -Milliseconds 250
+                $wshell.SendKeys("{ENTER}")
+
+                [PSCustomObject]@{
+                    success = $true
+                    sent = $true
+                    contact = $contact
+                    message = $msg
+                } | ConvertTo-Json -Compress
+            `}
+        `;
+        return await runPowerShell(script, 18000);
     },
 
     // ── 3. File System Operations (with Undo / Recycle Bin Safety) ───────────

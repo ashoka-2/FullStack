@@ -69,7 +69,7 @@ export default function VoiceMode({ isOpen, onClose, onSendMessage, lastAiMessag
 
     useEffect(() => {
         if (isOpen) {
-            agent.speak("Hi! I'm Parsu. What can I do for you?", () => agent.startListening());
+            agent.speak("J.A.R.V.I.S online. At your service, sir. What can I do for you?", () => agent.startListening());
         } else {
             agent.stopAll();
         }

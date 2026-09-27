@@ -146,29 +146,110 @@ export function resolveIntent(text) {
         return { type: 'device_cmd', targetSelector, action: 'capture_screenshot', params: { targetSelector }, label: 'Taking screenshot' };
     }
 
+    // ── Calendar event scheduling & opening ──
+    const calMatch = t.match(/^(?:add|schedule|create|put)\s+(?:event|meeting|reminder|task)?\s*(.+?)\s*(?:to|in|on)?\s*calendar$/i) ||
+                     t.match(/^(?:add|schedule|create)\s+(?:to|in)?\s*calendar\s*:?\s*(.+)$/i);
+    if (calMatch) {
+        const title = calMatch[1].trim();
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}`;
+        return { type: 'open_url', url, label: `Calendar event "${title}"` };
+    }
+    if (t === 'calendar' || t === 'open calendar' || t === 'view calendar') {
+        return { type: 'open_url', url: 'https://calendar.google.com', label: 'Google Calendar' };
+    }
+
     // ── Close desktop app ──
-    const closeAppMatch = t.match(/^close\s+(.+)/i);
+    const closeAppMatch = t.match(/^(?:close|quit|kill|exit)\s+(?:the\s+)?([a-zA-Z0-9_\-\s.]+?)(?:\s+app)?$/i);
     if (closeAppMatch) {
         const target = closeAppMatch[1].trim();
-        for (const [name, exe] of Object.entries(DESKTOP_APPS)) {
-            if (target === name || target.includes(name)) {
-                return { type: 'device_cmd', targetSelector, action: 'close_process', params: { processIdOrName: exe.replace('.exe', ''), targetSelector }, label: `Closing ${name}` };
-            }
-        }
+        const exe = DESKTOP_APPS[target.toLowerCase()] || target;
+        return { type: 'device_cmd', targetSelector, action: 'close_process', params: { processIdOrName: exe.replace('.exe', ''), targetSelector }, label: `Closing ${target}` };
     }
 
-    // ── Open desktop/mobile app ──
-    for (const [name, exe] of Object.entries(DESKTOP_APPS)) {
-        if (t.includes(`open ${name}`) || t.includes(`launch ${name}`) || t.includes(`start ${name}`) || t === `open ${name}`) {
-            return { type: 'device_cmd', targetSelector, action: 'launch_app', params: { appOrPath: exe, targetSelector }, label: `Opening ${name}` };
-        }
+    // ── WhatsApp messaging commands ──
+    // e.g. "open whatsapp and send message <message> to <person>" or "open whatsapp and message <person> <message>"
+    const waOpenSendMatch = t.match(/^(?:open\s+whatsapp\s+(?:and\s+)?(?:send\s+(?:a\s+)?message\s+(?:to\s+)?|message\s+))([a-zA-Z0-9_+]+)\s+(?:saying\s+|that\s+|message\s+:?\s*)?(.+)$/i);
+    if (waOpenSendMatch) {
+        const contactOrPhone = waOpenSendMatch[1].trim();
+        const message = waOpenSendMatch[2].trim();
+        return {
+            type: 'device_cmd',
+            targetSelector,
+            action: 'whatsapp_message',
+            params: { contactOrPhone, message, targetSelector },
+            label: `Sending WhatsApp to ${contactOrPhone}: "${message}"`
+        };
     }
 
-    // ── Navigate internal routes ──
-    for (const [key, route] of Object.entries(APP_ROUTES)) {
-        if (t === key || t === `open ${key}` || t === `go to ${key}` || t === `navigate to ${key}`) {
-            return { type: 'navigate', route, label: key };
-        }
+    // e.g. "send [a] [whatsapp] message [to] <person> [saying/with] <message>"
+    const waSendToMatch = t.match(/^(?:send\s+(?:a\s+)?(?:whatsapp\s+)?message\s+(?:to\s+)?([a-zA-Z0-9_+]+)\s+(?:saying\s+|with\s+|message\s+:?\s*)?(.+?)(?:\s+on\s+whatsapp)?)$/i) ||
+                          t.match(/^(?:message|tell)\s+([a-zA-Z0-9_+]+)\s+(?:that\s+|saying\s+)?(.+?)\s+on\s+whatsapp$/i);
+    if (waSendToMatch) {
+        const contactOrPhone = waSendToMatch[1].trim();
+        const message = waSendToMatch[2].trim();
+        return {
+            type: 'device_cmd',
+            targetSelector,
+            action: 'whatsapp_message',
+            params: { contactOrPhone, message, targetSelector },
+            label: `Sending WhatsApp to ${contactOrPhone}: "${message}"`
+        };
+    }
+
+    // e.g. "in whatsapp send message <message>" or "send message <message> in whatsapp" (current active chat)
+    const waCurrentChatMatch = t.match(/^(?:in\s+whatsapp\s+send\s+(?:a\s+)?message\s+:?\s*(.+)|send\s+(?:a\s+)?message\s+:?\s*(.+?)\s+in\s+whatsapp)$/i);
+    if (waCurrentChatMatch) {
+        const message = (waCurrentChatMatch[1] || waCurrentChatMatch[2]).trim();
+        return {
+            type: 'device_cmd',
+            targetSelector,
+            action: 'whatsapp_message',
+            params: { contactOrPhone: null, message, targetSelector },
+            label: `Sending WhatsApp message: "${message}"`
+        };
+    }
+
+    // ── Type in specific app: "type <text> in <app>" or "write <text> in <app>" ──
+    const typeInAppMatch = t.match(/^(?:type|write|insert|put)\s+["']?(.+?)["']?\s+(?:in|into|on)\s+([a-zA-Z0-9_\-\s.]+?)(?:\s+(?:app|window|file))?$/i);
+    if (typeInAppMatch) {
+        const text = typeInAppMatch[1].trim();
+        const app = typeInAppMatch[2].trim();
+        const exe = DESKTOP_APPS[app.toLowerCase()] || app;
+        return { 
+            type: 'device_cmd', 
+            targetSelector, 
+            action: 'type_text', 
+            params: { text, targetApp: exe, pressEnter: false, targetSelector }, 
+            label: `Typing "${text}" in ${app}` 
+        };
+    }
+
+    // ── "in <app> type/write <text>" ──
+    const inAppTypeMatch = t.match(/^(?:in|into|on)\s+([a-zA-Z0-9_\-\s.]+?)\s+(?:app\s+)?(?:type|write|insert)\s+["']?(.+?)["']?$/i);
+    if (inAppTypeMatch) {
+        const app = inAppTypeMatch[1].trim();
+        const text = inAppTypeMatch[2].trim();
+        const exe = DESKTOP_APPS[app.toLowerCase()] || app;
+        return { 
+            type: 'device_cmd', 
+            targetSelector, 
+            action: 'type_text', 
+            params: { text, targetApp: exe, pressEnter: false, targetSelector }, 
+            label: `Typing "${text}" in ${app}` 
+        };
+    }
+
+    // ── Generic type into active window: "type <text>" or "write <text>" ──
+    const typeGenericMatch = t.match(/^(?:type|write)\s+["']?(.+?)["']?$/i);
+    if (typeGenericMatch && !t.startsWith('type of') && !t.startsWith('type in ') && !t.startsWith('type into ')) {
+        const text = typeGenericMatch[1].trim();
+        return { 
+            type: 'device_cmd', 
+            targetSelector, 
+            action: 'type_text', 
+            params: { text, targetApp: null, pressEnter: false, targetSelector }, 
+            label: `Typing "${text}"` 
+        };
     }
 
     // ── Search inside specific website (e.g. "search cats on youtube", "search shoes on amazon") ──
@@ -187,11 +268,33 @@ export function resolveIntent(text) {
         if (siteKey === 'reddit') return { type: 'open_url', url: `https://reddit.com/search/?q=${qEnc}`, label: `Reddit: "${query}"` };
     }
 
-    // ── Open known website ──
+    // ── Open known website directly ──
     for (const [name, url] of Object.entries(SITE_MAP)) {
         if (t === name || t === `open ${name}` || t === `go to ${name}` || t === `launch ${name}`) {
             return { type: 'open_url', url, label: name };
         }
+    }
+
+    // ── Navigate internal routes ──
+    for (const [key, route] of Object.entries(APP_ROUTES)) {
+        if (t === key || t === `open ${key}` || t === `go to ${key}` || t === `navigate to ${key}`) {
+            return { type: 'navigate', route, label: key };
+        }
+    }
+
+    // ── Universal App / Website / Route open (including apps searched via Windows Searchbar) ──
+    const openGenericMatch = t.match(/^(?:open|launch|start)\s+(?:the\s+)?([a-zA-Z0-9_\-\s.]+?)(?:\s+app)?$/i);
+    if (openGenericMatch) {
+        const rawName = openGenericMatch[1].trim().toLowerCase();
+        if (APP_ROUTES[rawName]) {
+            return { type: 'navigate', route: APP_ROUTES[rawName], label: rawName };
+        }
+        if (SITE_MAP[rawName]) {
+            return { type: 'open_url', url: SITE_MAP[rawName], label: rawName };
+        }
+        // Generic app launch
+        const exe = DESKTOP_APPS[rawName] || rawName;
+        return { type: 'device_cmd', targetSelector, action: 'launch_app', params: { appOrPath: exe, targetSelector }, label: `Opening ${rawName}` };
     }
 
     // ── Open any explicit URL ──
@@ -262,17 +365,20 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
         if (cur.trim()) chunks.push(cur.trim());
 
         const voices = window.speechSynthesis.getVoices();
-        const voice = voices.find(v =>
-            (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('neural')) && v.lang.startsWith('en')
-        ) || voices.find(v => v.lang === 'en-US') || voices[0];
+        // Priority: Charon voice -> deep British/natural/neural male voices (Daniel, George, Guy, David) -> Google US/UK English -> system default
+        const voice = voices.find(v => v.name.toLowerCase().includes('charon'))
+            || voices.find(v => (v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('george') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('guy') || v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('neural')) && v.lang.startsWith('en'))
+            || voices.find(v => (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('english')) && v.lang.startsWith('en'))
+            || voices.find(v => v.lang === 'en-US' || v.lang === 'en-GB')
+            || voices[0];
 
         let idx = 0;
         const next = () => {
             if (idx >= chunks.length || stoppedRef.current) { setStatus('idle'); onDone?.(); return; }
             const utt = new SpeechSynthesisUtterance(chunks[idx++]);
             utt.voice = voice || null;
-            utt.rate = 1.08;
-            utt.pitch = 1;
+            utt.rate = 1.05;
+            utt.pitch = 0.95; // Deep, composed, confident Charon Jarvis tone
             utt.volume = 1;
             if (idx === 1) { utt.onstart = () => setStatus('speaking'); }
             utt.onend = next;
@@ -293,10 +399,16 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
                 params,
                 confirmed: true, // auto-confirm for voice commands
             });
-            return data;
+            if (data?.success === false || data?.launched === false) {
+                const errMsg = data?.error || data?.message || 'App not found, sir, and could not be opened.';
+                dispatch(addToast({ type: 'warning', message: `Device: ${errMsg}` }));
+                return { success: false, error: errMsg, message: errMsg };
+            }
+            return { success: true, ...data };
         } catch (err) {
-            dispatch(addToast({ type: 'warning', message: `Device: ${err?.response?.data?.message || err.message}` }));
-            return null;
+            const errMsg = err?.response?.data?.message || err.message || 'App not found, sir, and could not be opened.';
+            dispatch(addToast({ type: 'warning', message: `Device: ${errMsg}` }));
+            return { success: false, error: errMsg, message: errMsg };
         }
     }, [dispatch]);
 
@@ -305,22 +417,27 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
         if (!intent) {
             // Send to AI
             setStatus('thinking');
-            setFeedback('Thinking…');
+            setFeedback('Processing…');
             setHistory(p => [...p, { role: 'user', content: rawText }]);
             try {
                 const reply = await onSendMessage(rawText);
                 if (reply && !stoppedRef.current) {
                     setHistory(p => [...p, { role: 'ai', content: reply }]);
                     setFeedback(reply.length > 80 ? reply.slice(0, 80) + '…' : reply);
-                    speak(reply, () => { if (!stoppedRef.current) startListening(); });
+
+                    let spokenReply = reply;
+                    if (!reply.trim().endsWith('?') && !reply.toLowerCase().includes('what else') && !reply.toLowerCase().includes('what\'s next')) {
+                        spokenReply = `${reply}. Yes sir, what's next?`;
+                    }
+                    speak(spokenReply, () => { if (!stoppedRef.current) startListening(); });
                 } else {
                     setStatus('idle');
-                    setFeedback('Tap mic to speak');
+                    setFeedback('At your service, sir. Tap mic or speak.');
                     setTimeout(() => { if (!stoppedRef.current) startListening(); }, 400);
                 }
             } catch {
                 setStatus('idle');
-                setFeedback('Error — tap mic to retry');
+                setFeedback('I encountered an issue, sir. Tap mic to retry.');
             }
             return;
         }
@@ -328,14 +445,15 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
         const { type, label = '' } = intent;
 
         if (type === 'close') {
-            speak('Closing.', () => { stoppedRef.current = true; onClose(); });
+            speak('Goodbye, sir. Systems on standby.', () => { stoppedRef.current = true; onClose(); });
             return;
         }
 
         if (type === 'navigate') {
             setStatus('action'); setFeedback(`Opening ${label}…`);
             setHistory(p => [...p, { role: 'action', content: `→ ${label}` }]);
-            speak(`Opening ${label}.`, () => {
+            const voiceMsg = `Opening ${label}, sir. Yes sir, what's next?`;
+            speak(voiceMsg, () => {
                 navigate(intent.route);
                 setTimeout(() => { if (!stoppedRef.current) startListening(); }, 800);
             });
@@ -345,7 +463,8 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
         if (type === 'open_url') {
             setStatus('action'); setFeedback(label);
             setHistory(p => [...p, { role: 'action', content: `🌐 ${label}` }]);
-            speak(`Opening ${label}.`, () => {
+            const voiceMsg = `Opening ${label}, sir. Yes sir, what's next?`;
+            speak(voiceMsg, () => {
                 window.open(intent.url, '_blank', 'noopener,noreferrer');
                 setTimeout(() => { if (!stoppedRef.current) startListening(); }, 600);
             });
@@ -356,22 +475,33 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
             if (intent.to === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });
             else if (intent.to === 'bottom') window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
             else window.scrollBy({ top: intent.by, behavior: 'smooth' });
-            speak('Done.', () => { if (!stoppedRef.current) startListening(); });
+            speak("Right away, sir. Yes sir, what's next?", () => { if (!stoppedRef.current) startListening(); });
             return;
         }
 
         if (type === 'clipboard_last') {
             const text = lastAiMessage || '';
-            if (text) { navigator.clipboard.writeText(text); speak('Copied the last response.', () => { if (!stoppedRef.current) startListening(); }); }
-            else speak('No response to copy.', () => { if (!stoppedRef.current) startListening(); });
+            if (text) {
+                navigator.clipboard.writeText(text);
+                speak("Copied to clipboard, sir. Yes sir, what's next?", () => { if (!stoppedRef.current) startListening(); });
+            } else {
+                speak("No response available to copy, sir. What else can I assist you with?", () => { if (!stoppedRef.current) startListening(); });
+            }
             return;
         }
 
         if (type === 'device_cmd') {
             setHistory(p => [...p, { role: 'action', content: `⚡ ${label}` }]);
             const result = await executeDeviceCommand(intent.action, intent.params, label, intent.targetSelector);
-            const msg = result?.success !== false ? `Done. ${label}.` : `Could not complete: ${label}.`;
-            speak(msg, () => { if (!stoppedRef.current) startListening(); });
+            if (result && result.success !== false) {
+                const voiceMsg = `Done, sir. ${label}. Yes sir, what's next?`;
+                setFeedback(voiceMsg);
+                speak(voiceMsg, () => { if (!stoppedRef.current) startListening(); });
+            } else {
+                const failMsg = result?.message || 'App not found, sir, and could not be opened.';
+                setFeedback(failMsg);
+                speak(failMsg, () => { if (!stoppedRef.current) startListening(); });
+            }
             return;
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
