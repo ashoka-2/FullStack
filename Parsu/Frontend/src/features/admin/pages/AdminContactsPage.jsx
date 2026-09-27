@@ -137,7 +137,7 @@ export default function AdminContactsPage() {
             placeholder="Search by name, email, or subject..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500"
+            className="w-full bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-zinc-400 dark:focus:border-white/30 focus:ring-1 focus:ring-zinc-400/20"
           />
         </div>
 
@@ -145,7 +145,7 @@ export default function AdminContactsPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full sm:w-auto bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+            className="w-full sm:w-auto bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none focus:border-zinc-400 dark:focus:border-white/30 cursor-pointer"
           >
             <option value="">All Inquiries</option>
             <option value="new">New (Unread)</option>
@@ -173,7 +173,7 @@ export default function AdminContactsPage() {
               {isLoading ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-zinc-500 dark:text-zinc-400">
-                    <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-cyan-500" />
+                    <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-zinc-600 dark:text-zinc-400" />
                     Loading customer inquiries...
                   </td>
                 </tr>
@@ -195,10 +195,10 @@ export default function AdminContactsPage() {
                       <div className="font-semibold text-zinc-900 dark:text-white flex items-center gap-1.5">
                         <span>{c.name}</span>
                         {c.status === 'new' && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-white"></span>
                         )}
                       </div>
-                      <div className="text-[11px] text-zinc-500 dark:text-zinc-400">{c.email}</div>
+                      <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">{c.email}</div>
                     </td>
 
                     {/* Subject & Preview */}
@@ -208,7 +208,7 @@ export default function AdminContactsPage() {
                     </td>
 
                     {/* Date */}
-                    <td className="py-3.5 px-4 text-[11px] text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-[11px] text-zinc-500 dark:text-zinc-400 whitespace-nowrap font-mono">
                       {c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'N/A'}
                     </td>
 
@@ -216,9 +216,9 @@ export default function AdminContactsPage() {
                     <td className="py-3.5 px-4">
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                         c.status === 'new'
-                          ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30'
+                          ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 border-zinc-800 dark:border-white/20'
                           : c.status === 'replied'
-                          ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                           : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-white/10'
                       }`}>
                         {c.status}
@@ -231,7 +231,7 @@ export default function AdminContactsPage() {
                         <a
                           href={`mailto:${c.email}?subject=Re: ${encodeURIComponent(c.subject)}`}
                           onClick={() => handleStatusChange(c._id, 'replied')}
-                          className="p-1.5 rounded-lg text-zinc-500 hover:text-cyan-600 dark:text-zinc-400 dark:hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+                          className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-colors"
                           title="Reply via Email"
                         >
                           <RiMailLine size={14} />
@@ -239,7 +239,7 @@ export default function AdminContactsPage() {
                         <button
                           onClick={() => handleDelete(c._id)}
                           disabled={actionId === c._id}
-                          className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-[0.98] cursor-pointer"
                           title="Delete message"
                         >
                           <RiDeleteBinLine size={14} />
@@ -257,7 +257,7 @@ export default function AdminContactsPage() {
         <div className="md:hidden divide-y divide-zinc-200 dark:divide-white/[0.05]">
           {isLoading ? (
             <div className="py-12 text-center text-zinc-500 dark:text-zinc-400 text-xs">
-              <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-cyan-500" />
+              <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-zinc-600 dark:text-zinc-400" />
               Loading customer inquiries...
             </div>
           ) : contacts.length === 0 ? (
@@ -275,14 +275,14 @@ export default function AdminContactsPage() {
                   <div className="font-semibold text-xs text-zinc-900 dark:text-white flex items-center gap-1.5">
                     <span>{c.name}</span>
                     {c.status === 'new' && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-white"></span>
                     )}
                   </div>
                   <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
                     c.status === 'new'
-                      ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30'
+                      ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 border-zinc-800 dark:border-white/20'
                       : c.status === 'replied'
-                      ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                       : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-white/10'
                   }`}>
                     {c.status}
@@ -291,12 +291,12 @@ export default function AdminContactsPage() {
                 <p className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300 truncate">{c.subject}</p>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2">{c.message}</p>
                 <div className="flex items-center justify-between text-[10px] text-zinc-400 pt-1">
-                  <span>{c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'N/A'}</span>
+                  <span className="font-mono">{c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'N/A'}</span>
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <a
                       href={`mailto:${c.email}?subject=Re: ${encodeURIComponent(c.subject)}`}
                       onClick={() => handleStatusChange(c._id, 'replied')}
-                      className="p-1 rounded-lg text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/10"
+                      className="p-1 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/[0.08]"
                     >
                       <RiMailLine size={13} />
                     </a>
@@ -349,7 +349,7 @@ export default function AdminContactsPage() {
               <div>
                 <h3 className="text-base font-bold text-zinc-900 dark:text-white">{selectedMessage.subject}</h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                  From: {selectedMessage.name} (<a href={`mailto:${selectedMessage.email}`} className="text-cyan-600 dark:text-cyan-400 hover:underline">{selectedMessage.email}</a>)
+                  From: {selectedMessage.name} (<a href={`mailto:${selectedMessage.email}`} className="text-zinc-900 dark:text-white underline font-mono">{selectedMessage.email}</a>)
                 </p>
               </div>
               <button
@@ -370,7 +370,7 @@ export default function AdminContactsPage() {
                 <select
                   value={selectedMessage.status}
                   onChange={(e) => handleStatusChange(selectedMessage._id, e.target.value)}
-                  className="bg-zinc-50 dark:bg-black/50 border border-zinc-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-zinc-800 dark:text-zinc-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+                  className="bg-zinc-50 dark:bg-black/50 border border-zinc-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-zinc-800 dark:text-zinc-300 focus:outline-none focus:border-zinc-400 dark:focus:border-white/30 cursor-pointer"
                 >
                   <option value="new">New</option>
                   <option value="read">Read</option>
@@ -382,7 +382,7 @@ export default function AdminContactsPage() {
                 <a
                   href={`mailto:${selectedMessage.email}?subject=Re: ${encodeURIComponent(selectedMessage.subject)}`}
                   onClick={() => handleStatusChange(selectedMessage._id, 'replied')}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 text-black font-bold text-xs hover:opacity-90 transition-all shadow-md"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 font-semibold text-xs transition-all active:scale-[0.98] shadow-sm"
                 >
                   <RiMailLine size={14} />
                   <span>Reply via Email</span>

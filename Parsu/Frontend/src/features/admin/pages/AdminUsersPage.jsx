@@ -311,8 +311,8 @@ export default function AdminUsersPage() {
     if (plan === 'ultra' || plan === 'enterprise') {
       return (
         <div className="flex flex-col gap-0.5 items-start">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-gradient-to-r from-amber-500/20 to-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
-            <RiVipCrownLine size={12} className="text-amber-500 dark:text-amber-400" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 border border-zinc-800 dark:border-white/20 shadow-sm">
+            <RiVipCrownLine size={12} className="text-amber-400" />
             Ultra Plan
           </span>
           <span className="text-[10px] text-zinc-500 dark:text-zinc-400 capitalize">
@@ -325,7 +325,7 @@ export default function AdminUsersPage() {
     if (plan === 'pro' || plan === 'starter') {
       return (
         <div className="flex flex-col gap-0.5 items-start">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-cyan-500/15 text-cyan-700 dark:text-[var(--accent-cyan)] border border-cyan-500/30">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-zinc-100 dark:bg-white/[0.08] text-zinc-900 dark:text-zinc-200 border border-zinc-200 dark:border-white/10">
             <RiSparkling2Line size={12} />
             Pro Plan
           </span>
@@ -347,7 +347,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div ref={containerRef} className="space-y-6 animate-in fade-in duration-200">
+    <div ref={containerRef} className="space-y-6">
       
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -363,7 +363,7 @@ export default function AdminUsersPage() {
         <button
           type="button"
           onClick={() => fetchUsers(1, false)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/10 transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/10 transition-all active:scale-[0.98] cursor-pointer"
         >
           <RiRefreshLine size={14} className={isLoading ? 'animate-spin' : ''} />
           <span>Refresh</span>
@@ -395,7 +395,7 @@ export default function AdminUsersPage() {
             placeholder="Search by username or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500"
+            className="w-full bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-zinc-400 dark:focus:border-white/30 focus:ring-1 focus:ring-zinc-400/20"
           />
         </div>
 
@@ -404,7 +404,7 @@ export default function AdminUsersPage() {
           <select
             value={planFilter}
             onChange={(e) => setPlanFilter(e.target.value)}
-            className="bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+            className="bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none focus:border-zinc-400 dark:focus:border-white/30 cursor-pointer"
           >
             <option value="">All Plans</option>
             <option value="free">Free Starter</option>
@@ -416,7 +416,7 @@ export default function AdminUsersPage() {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none focus:border-cyan-500 cursor-pointer"
+            className="bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none focus:border-zinc-400 dark:focus:border-white/30 cursor-pointer"
           >
             <option value="">All Roles</option>
             <option value="admin">Administrators</option>
@@ -443,7 +443,7 @@ export default function AdminUsersPage() {
               {isLoading && users.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-zinc-500 dark:text-zinc-400">
-                    <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-cyan-500" />
+                    <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-zinc-600 dark:text-zinc-400" />
                     Loading user records...
                   </td>
                 </tr>
@@ -474,7 +474,7 @@ export default function AdminUsersPage() {
                             <div className="font-semibold text-zinc-900 dark:text-white flex items-center gap-1.5">
                               <span>{u.username}</span>
                               {isSelf && (
-                                <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-normal">(You)</span>
+                                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-normal">(You)</span>
                               )}
                             </div>
                             <div className="text-[11px] text-zinc-500 dark:text-zinc-400">{u.email}</div>
@@ -505,7 +505,7 @@ export default function AdminUsersPage() {
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                             isAdmin
-                              ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30'
+                              ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 border-zinc-800 dark:border-white/20'
                               : 'bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-white/10'
                           }`}
                         >
@@ -514,7 +514,7 @@ export default function AdminUsersPage() {
                       </td>
 
                       {/* Joined Date */}
-                      <td className="py-3.5 px-4 text-[11px] text-zinc-500 dark:text-zinc-400">
+                      <td className="py-3.5 px-4 text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
                         {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
                       </td>
 
@@ -527,7 +527,7 @@ export default function AdminUsersPage() {
                             type="button"
                             onClick={() => openSubscriptionModal(u)}
                             title="Assign Subscription Plan"
-                            className="p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white transition-all active:scale-[0.98] cursor-pointer"
                           >
                             <RiExchangeDollarLine size={15} />
                           </button>
@@ -538,7 +538,7 @@ export default function AdminUsersPage() {
                             onClick={() => handleRoleToggle(u)}
                             disabled={isActing || isSelf}
                             title={isAdmin ? "Demote to User" : "Promote to Admin"}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-40 ${
+                            className={`p-1.5 rounded-lg transition-all active:scale-[0.98] cursor-pointer disabled:opacity-40 ${
                               isAdmin
                                 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
                                 : 'bg-zinc-100 dark:bg-white/[0.04] text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-white/[0.08] dark:hover:text-white'
@@ -553,7 +553,7 @@ export default function AdminUsersPage() {
                             onClick={() => handleToggleBlock(u)}
                             disabled={isActing || isSelf}
                             title={isBlocked ? "Unblock User" : "Block User"}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-40 ${
+                            className={`p-1.5 rounded-lg transition-all active:scale-[0.98] cursor-pointer disabled:opacity-40 ${
                               isBlocked
                                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
                                 : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
@@ -568,7 +568,7 @@ export default function AdminUsersPage() {
                             onClick={() => setDeleteModalUser(u)}
                             disabled={isActing || isSelf}
                             title="Delete User permanently"
-                            className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors cursor-pointer disabled:opacity-40"
+                            className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-40"
                           >
                             <RiDeleteBinLine size={15} />
                           </button>
@@ -586,7 +586,7 @@ export default function AdminUsersPage() {
         {/* Sentinel element for infinite scroll observer */}
         <div ref={observerSentinelRef} className="w-full flex items-center justify-center min-h-[16px]">
           {isLoadingMore && (
-            <div className="flex items-center gap-2 text-xs text-cyan-600 dark:text-cyan-400 font-semibold py-2">
+            <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 font-semibold py-2">
               <RiLoader4Line size={16} className="animate-spin" />
               <span>Fetching next 10 users...</span>
             </div>
@@ -604,7 +604,7 @@ export default function AdminUsersPage() {
               type="button"
               onClick={() => fetchUsers(page + 1, true)}
               disabled={isLoadingMore}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-[var(--accent-cyan)] border border-cyan-500/20 font-bold transition-all cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 font-semibold transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 shadow-sm"
             >
               {isLoadingMore ? (
                 <>
@@ -629,17 +629,19 @@ export default function AdminUsersPage() {
             <div className="flex items-start justify-between pb-4 border-b border-zinc-200 dark:border-white/[0.08]">
               <div>
                 <h3 className="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <RiVipCrownLine size={18} className="text-cyan-600 dark:text-[var(--accent-cyan)]" />
+                  <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200 dark:border-white/[0.08] flex items-center justify-center text-zinc-800 dark:text-zinc-200">
+                    <RiVipCrownLine size={15} />
+                  </div>
                   <span>Assign Subscription</span>
                 </h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                   Update plan tier and privileges for {editingUser.username}.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingUser(null)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer"
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer transition-colors"
               >
                 <RiCloseLine size={18} />
               </button>
@@ -651,7 +653,7 @@ export default function AdminUsersPage() {
                 <select
                   value={subForm.plan}
                   onChange={(e) => setSubForm({ ...subForm, plan: e.target.value })}
-                  className="w-full bg-zinc-50 dark:bg-black/50 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-zinc-50 dark:bg-black/50 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-zinc-400 dark:focus:border-white/30"
                 >
                   <option value="free">Free Starter</option>
                   <option value="pro">Pro Plan</option>
@@ -664,7 +666,7 @@ export default function AdminUsersPage() {
                 <select
                   value={subForm.status}
                   onChange={(e) => setSubForm({ ...subForm, status: e.target.value })}
-                  className="w-full bg-zinc-50 dark:bg-black/50 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-zinc-50 dark:bg-black/50 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-zinc-400 dark:focus:border-white/30"
                 >
                   <option value="active">Active</option>
                   <option value="cancelled">Cancelled</option>
@@ -677,7 +679,7 @@ export default function AdminUsersPage() {
                 <select
                   value={subForm.billingCycle}
                   onChange={(e) => setSubForm({ ...subForm, billingCycle: e.target.value })}
-                  className="w-full bg-zinc-50 dark:bg-black/50 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-zinc-50 dark:bg-black/50 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-zinc-400 dark:focus:border-white/30"
                 >
                   <option value="monthly">Monthly</option>
                   <option value="yearly">Yearly</option>
@@ -696,7 +698,7 @@ export default function AdminUsersPage() {
                 <button
                   type="submit"
                   disabled={isSavingSub}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 cursor-pointer disabled:opacity-50 shadow-md"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 cursor-pointer disabled:opacity-50 shadow-sm transition-all active:scale-[0.98]"
                 >
                   {isSavingSub ? 'Saving...' : 'Save Plan'}
                 </button>
@@ -733,7 +735,7 @@ export default function AdminUsersPage() {
                 type="button"
                 onClick={confirmDeleteUser}
                 disabled={isDeleting}
-                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-red-500 hover:bg-red-600 text-white cursor-pointer disabled:opacity-50 shadow-md"
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-red-500 hover:bg-red-600 text-white cursor-pointer disabled:opacity-50 shadow-md transition-all active:scale-[0.98]"
               >
                 {isDeleting ? 'Deleting...' : 'Yes, Delete'}
               </button>

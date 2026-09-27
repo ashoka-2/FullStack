@@ -115,10 +115,10 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0f12] text-zinc-100 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-300">
+    <div className="min-h-screen bg-[#090a0f] text-zinc-100 flex flex-col font-sans selection:bg-white/20 selection:text-white">
       
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-[#12141a]/80 backdrop-blur-xl border-b border-white/10 px-6 py-4">
+      <header className="sticky top-0 z-40 bg-[#11131a]/80 backdrop-blur-xl border-b border-white/[0.08] px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-2 group">
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-extrabold text-base tracking-tight text-white">Parsu AI</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/10 text-white border border-white/20">
                     Admin Portal
                   </span>
                 </div>
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
 
             <Link
               to="/"
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-semibold transition-all cursor-pointer"
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/15 text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer"
             >
               <RiArrowLeftLine size={14} />
               <span>Back to App</span>
@@ -181,10 +181,10 @@ export default function AdminDashboard() {
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           {/* Total Users */}
-          <div className="p-5 rounded-3xl bg-[#14161f]/70 border border-white/10 hover:border-cyan-500/30 transition-all shadow-xl backdrop-blur-md">
+          <div className="p-5 rounded-3xl bg-[#14161f]/70 border border-white/[0.08] hover:border-white/20 transition-all shadow-xl backdrop-blur-md">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Total Users</span>
-              <div className="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white flex items-center justify-center">
                 <RiUser3Line size={16} />
               </div>
             </div>
@@ -262,7 +262,7 @@ export default function AdminDashboard() {
           <div className="lg:col-span-2 p-6 rounded-3xl bg-[#14161f]/70 border border-white/10 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <div className="flex items-center gap-2">
-                <RiGlobalLine size={18} className="text-cyan-400" />
+                <RiGlobalLine size={18} className="text-zinc-300" />
                 <h3 className="text-sm font-bold uppercase tracking-wider text-white">
                   Google Cloud Platform Services Status
                 </h3>
@@ -286,7 +286,7 @@ export default function AdminDashboard() {
                 <p className="text-[11px] text-zinc-400 mt-2">
                   Maps JavaScript API & Places Autocomplete.
                 </p>
-                <div className="mt-2.5 pt-2 border-t border-white/5 text-[10px] text-cyan-400 font-medium">
+                <div className="mt-2.5 pt-2 border-t border-white/5 text-[10px] text-zinc-300 font-medium">
                   {overview?.integrations?.googleMaps?.freeQuota}
                 </div>
               </div>
@@ -375,7 +375,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-zinc-400">Total Pageviews (30 Days)</span>
-                  <span className="font-bold text-cyan-400">
+                  <span className="font-bold text-white font-mono">
                     {overview?.analytics?.totalPageviewsThisMonth || '350+'}
                   </span>
                 </div>
@@ -394,7 +394,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
                         <div
-                          className="bg-gradient-to-r from-cyan-500 to-teal-400 h-full rounded-full"
+                          className="bg-white h-full rounded-full"
                           style={{ width: `${src.percentage}%` }}
                         ></div>
                       </div>
@@ -404,7 +404,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-[11px] text-cyan-300">
+            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-[11px] text-zinc-300">
               💡 <strong>Tip:</strong> Add <code className="bg-black/30 px-1 py-0.5 rounded">VITE_GA_MEASUREMENT_ID</code> to frontend environment to connect your live GA4 production container.
             </div>
           </div>
@@ -416,7 +416,7 @@ export default function AdminDashboard() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <RiShieldUserLine size={20} className="text-cyan-400" />
+                <RiShieldUserLine size={20} className="text-zinc-300" />
                 <span>User Directory & Role Governance</span>
               </h3>
               <p className="text-xs text-zinc-400 mt-1">
@@ -433,14 +433,14 @@ export default function AdminDashboard() {
                   placeholder="Search by name or email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-cyan-400"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-white/30"
                 />
               </div>
 
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-cyan-400 cursor-pointer"
+                className="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-white/30 cursor-pointer"
               >
                 <option value="">All Roles</option>
                 <option value="admin">Admins Only</option>
@@ -466,7 +466,7 @@ export default function AdminDashboard() {
                 {isLoadingUsers ? (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-zinc-500">
-                      <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-cyan-400" />
+                      <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-zinc-400" />
                       Loading users directory...
                     </td>
                   </tr>
@@ -497,7 +497,7 @@ export default function AdminDashboard() {
                               <div className="font-semibold text-white flex items-center gap-1.5">
                                 <span>{u.username}</span>
                                 {isSelf && (
-                                  <span className="text-[10px] text-cyan-400 font-normal">(You)</span>
+                                  <span className="text-[10px] text-zinc-400 font-normal">(You)</span>
                                 )}
                               </div>
                               <div className="text-[11px] text-zinc-400">{u.email}</div>
@@ -537,7 +537,7 @@ export default function AdminDashboard() {
                           <span
                             className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                               isAdmin
-                                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                                ? 'bg-white/15 text-white border-white/20'
                                 : 'bg-white/5 text-zinc-400 border-white/10'
                             }`}
                           >
@@ -553,7 +553,7 @@ export default function AdminDashboard() {
                             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50 ${
                               isAdmin
                                 ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20'
-                                : 'bg-gradient-to-r from-cyan-500 to-teal-500 text-black shadow-md shadow-cyan-500/10 hover:scale-[1.02]'
+                                : 'bg-white text-zinc-950 hover:bg-zinc-100 shadow-sm active:scale-[0.98]'
                             }`}
                           >
                             {isActing ? (

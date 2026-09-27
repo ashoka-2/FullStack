@@ -86,7 +86,12 @@ export default function AdminNewsletterPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Newsletter Audience</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200 dark:border-white/[0.08] flex items-center justify-center text-zinc-800 dark:text-zinc-200">
+              <RiMailSendLine size={18} />
+            </div>
+            <span>Newsletter Audience</span>
+          </h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
             Audience mailing list subscribed via Parsu AI landing pages and footer opt-ins.
           </p>
@@ -96,7 +101,7 @@ export default function AdminNewsletterPage() {
           {subscribers.length > 0 && (
             <button
               onClick={handleCopyAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/10 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/10 transition-all active:scale-[0.98] cursor-pointer"
             >
               {copied ? <RiCheckFill size={14} className="text-emerald-500" /> : <RiFileCopyLine size={14} />}
               <span>{copied ? 'Copied Emails' : 'Copy All Emails'}</span>
@@ -105,7 +110,7 @@ export default function AdminNewsletterPage() {
 
           <button
             onClick={() => loadData(pagination.page)}
-            className="p-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white border border-zinc-200 dark:border-white/10 transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white border border-zinc-200 dark:border-white/10 transition-all active:scale-[0.98] cursor-pointer"
             title="Refresh"
           >
             <RiRefreshLine size={14} className={isLoading ? 'animate-spin' : ''} />
@@ -122,7 +127,7 @@ export default function AdminNewsletterPage() {
             placeholder="Search subscriber email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-cyan-500"
+            className="w-full bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-zinc-400 dark:focus:border-white/30 focus:ring-1 focus:ring-zinc-400/20"
           />
         </div>
       </div>
@@ -145,7 +150,7 @@ export default function AdminNewsletterPage() {
               {isLoading ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-zinc-500 dark:text-zinc-400">
-                    <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-cyan-500" />
+                    <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-zinc-600 dark:text-zinc-400" />
                     Loading subscriber directory...
                   </td>
                 </tr>
@@ -158,7 +163,7 @@ export default function AdminNewsletterPage() {
               ) : (
                 subscribers.map((s) => (
                   <tr key={s._id} className="newsletter-subscriber-item hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3.5 px-5 font-semibold text-zinc-900 dark:text-white">
+                    <td className="py-3.5 px-5 font-semibold text-zinc-900 dark:text-white font-mono">
                       {s.email}
                     </td>
                     <td className="py-3.5 px-4">
@@ -166,17 +171,17 @@ export default function AdminNewsletterPage() {
                         {s.status || 'active'}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <td className="py-3.5 px-4 text-[11px] text-zinc-500 dark:text-zinc-400 capitalize">
                       {s.source || 'website'}
                     </td>
-                    <td className="py-3.5 px-4 text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <td className="py-3.5 px-4 text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
                       {s.createdAt ? new Date(s.createdAt).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="py-3.5 px-5 text-right">
                       <button
                         onClick={() => handleDelete(s._id)}
                         disabled={actionId === s._id}
-                        className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-[0.98] cursor-pointer"
                         title="Remove subscriber"
                       >
                         {actionId === s._id ? (
@@ -197,7 +202,7 @@ export default function AdminNewsletterPage() {
         <div className="md:hidden divide-y divide-zinc-200 dark:divide-white/[0.05]">
           {isLoading ? (
             <div className="py-12 text-center text-zinc-500 dark:text-zinc-400 text-xs">
-              <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-cyan-500" />
+              <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-zinc-600 dark:text-zinc-400" />
               Loading subscriber directory...
             </div>
           ) : subscribers.length === 0 ? (
@@ -211,20 +216,20 @@ export default function AdminNewsletterPage() {
                 className="newsletter-subscriber-item p-4 space-y-2 hover:bg-zinc-50 dark:hover:bg-white/[0.02]"
               >
                 <div className="flex items-center justify-between">
-                  <p className="font-semibold text-xs text-zinc-900 dark:text-white truncate">{s.email}</p>
+                  <p className="font-semibold text-xs text-zinc-900 dark:text-white truncate font-mono">{s.email}</p>
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                     {s.status || 'active'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1">
-                  <span>Source: {s.source || 'website'}</span>
-                  <span>{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : 'N/A'}</span>
+                  <span className="capitalize">Source: {s.source || 'website'}</span>
+                  <span className="font-mono">{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : 'N/A'}</span>
                 </div>
                 <div className="flex items-center justify-end pt-1">
                   <button
                     onClick={() => handleDelete(s._id)}
                     disabled={actionId === s._id}
-                    className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                    className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-all active:scale-[0.98]"
                   >
                     <RiDeleteBinLine size={14} />
                   </button>

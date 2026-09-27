@@ -203,7 +203,7 @@ export default function AdminDashboardPage() {
       {/* ── 1. HeroUI Pro Greeting & Action Header ── */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-1">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-base shadow-md">
+          <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 flex items-center justify-center font-bold text-base shadow-xs border border-zinc-300 dark:border-white/10">
             {adminName.charAt(0)}
           </div>
           <div>
@@ -225,13 +225,13 @@ export default function AdminDashboardPage() {
               placeholder="Search telemetry..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-cyan-500/50"
+              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-zinc-400 dark:focus:border-white/30 focus:ring-1 focus:ring-zinc-400/20"
             />
           </div>
 
           <button
             type="button"
-            className="w-8 h-8 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer shrink-0 active:scale-95"
             title="Notifications"
           >
             <RiNotification3Line size={16} />
@@ -239,7 +239,7 @@ export default function AdminDashboardPage() {
 
           <Link
             to="/admin/users"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black font-bold text-xs shadow-md shrink-0 transition-transform active:scale-95 cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 font-bold text-xs shadow-xs shrink-0 transition-transform active:scale-95 cursor-pointer"
           >
             <RiUserAddLine size={14} />
             <span>+ Invite</span>
@@ -268,7 +268,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <button
             onClick={loadData}
-            className="w-8 h-8 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer active:scale-95"
             title="Refresh metrics"
           >
             <RiRefreshLine size={15} className={isLoading ? 'animate-spin' : ''} />
@@ -293,7 +293,7 @@ export default function AdminDashboardPage() {
                 message: 'Admin performance summary downloaded successfully.'
               }));
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-xs font-semibold text-zinc-700 dark:text-white border border-zinc-200 dark:border-white/10 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-xs font-semibold text-zinc-700 dark:text-white border border-zinc-200 dark:border-white/10 transition-colors cursor-pointer active:scale-95"
           >
             <RiDownload2Line size={14} />
             <span>Download</span>
@@ -305,7 +305,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Total Registered Accounts */}
-        <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-xs backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Total Users</span>
             <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
@@ -319,10 +319,10 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* AI Conversations & Messages */}
-        <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-xs backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">AI Queries & Chats</span>
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200/80 dark:border-white/[0.08] px-1.5 py-0.5 rounded-full">
               <RiChat3Line size={12} /> Realtime
             </span>
           </div>
@@ -333,7 +333,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Active Subscriptions */}
-        <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-xs backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Paid Subscribers</span>
             <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
@@ -347,7 +347,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Inbound Contacts & Tickets */}
-        <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-xs backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Inbound Inquiries</span>
             <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
@@ -363,9 +363,9 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ── 4. Razorpay Testing vs Payable Mode Switcher Banner ── */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-blue-500/5 to-purple-500/10 border border-cyan-500/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/20 flex items-center justify-center text-[var(--accent-cyan)] shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-800 dark:text-zinc-200 shrink-0">
             <RiShieldCheckLine size={20} />
           </div>
           <div>
@@ -409,7 +409,7 @@ export default function AdminDashboardPage() {
 
           <Link
             to="/admin/pricing"
-            className="px-3.5 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/15 text-zinc-800 dark:text-white font-semibold text-xs border border-zinc-200 dark:border-white/10"
+            className="px-3.5 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/15 text-zinc-800 dark:text-white font-semibold text-xs border border-zinc-200 dark:border-white/10 transition-colors"
           >
             Manage Plans
           </Link>
@@ -420,7 +420,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Chart 1: Platform Activity Flow Bar Chart */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#11131a]/85 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#11131a]/85 border border-zinc-200 dark:border-white/[0.08] shadow-xs backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-white/[0.05]">
             <div>
               <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Platform Activity Flow</h3>
@@ -443,7 +443,7 @@ export default function AdminDashboardPage() {
             <div>
               <div className="flex items-center gap-1 text-base font-extrabold text-zinc-900 dark:text-white">
                 <span>{totalChatsCount}</span>
-                <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 flex items-center"><RiArrowUpLine size={10} /> Live</span>
+                <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-300 flex items-center"><RiArrowUpLine size={10} /> Live</span>
               </div>
               <span className="text-[10px] text-zinc-500">Conversations</span>
             </div>
@@ -462,7 +462,7 @@ export default function AdminDashboardPage() {
               <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
                 <div
                   style={{ height: bar.height }}
-                  className="w-full max-w-[22px] rounded-t-lg bg-gradient-to-t from-cyan-600 to-[var(--accent-cyan)] group-hover:brightness-125 transition-all"
+                  className="w-full max-w-[22px] rounded-t-lg bg-zinc-800 dark:bg-zinc-200 group-hover:bg-zinc-950 dark:group-hover:bg-white transition-all"
                 />
                 <span className="text-[9px] text-zinc-500 font-mono">{bar.label}</span>
               </div>
@@ -471,7 +471,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Chart 2: Google Analytics 4 (GA4) Realtime Traffic & Config Status */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#11131a]/85 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl flex flex-col justify-between">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#11131a]/85 border border-zinc-200 dark:border-white/[0.08] shadow-xs backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-white/[0.05]">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
@@ -480,7 +480,7 @@ export default function AdminDashboardPage() {
             <button
               type="button"
               onClick={() => setShowGaGuide(true)}
-              className="text-xs text-cyan-600 dark:text-[var(--accent-cyan)] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+              className="text-xs text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:underline flex items-center gap-1 font-semibold cursor-pointer"
             >
               <RiInformationLine size={14} />
               <span>GCP Setup Guide</span>
@@ -505,19 +505,21 @@ export default function AdminDashboardPage() {
               <line x1="0" y1="70" x2="500" y2="70" stroke="rgba(150,150,150,0.15)" />
               <line x1="0" y1="110" x2="500" y2="110" stroke="rgba(150,150,150,0.15)" />
 
-              {/* Line 1 (Blue / Direct Visits) */}
+              {/* Line 1 (Dark Grey / Direct Visits) */}
               <path
                 d="M 0 120 Q 50 30 100 90 T 200 55 T 300 85 T 400 25 T 500 70"
                 fill="none"
-                stroke="#3b82f6"
+                stroke="currentColor"
+                className="text-zinc-400 dark:text-zinc-600"
                 strokeWidth="2.5"
                 strokeLinecap="round"
               />
-              {/* Line 2 (Cyan / Organic AI Queries) */}
+              {/* Line 2 (Crisp High-Contrast / Organic AI Queries) */}
               <path
                 d="M 0 130 Q 60 60 120 105 T 220 75 T 320 95 T 420 40 T 500 90"
                 fill="none"
-                stroke="#20b8cd"
+                stroke="currentColor"
+                className="text-zinc-900 dark:text-zinc-100"
                 strokeWidth="2"
                 strokeLinecap="round"
               />
@@ -531,8 +533,8 @@ export default function AdminDashboardPage() {
 
           <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-white/[0.05] flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-blue-500" /> Direct Visits
-              <span className="w-2 h-2 rounded-full bg-cyan-400 ml-2" /> AI Chats
+              <span className="w-2 h-2 rounded-full bg-zinc-400 dark:bg-zinc-600" /> Direct Visits
+              <span className="w-2 h-2 rounded-full bg-zinc-900 dark:bg-white ml-2" /> AI Chats
             </span>
             <button
               onClick={() => setShowGaGuide(true)}
@@ -550,7 +552,7 @@ export default function AdminDashboardPage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-white/[0.06]">
           <div className="flex items-center gap-2">
             <h3 className="text-base font-bold text-zinc-900 dark:text-white">All Employees & Registered Accounts</h3>
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-white/[0.06] text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-white/[0.08]">
               {filteredUsers.length} shown of {totalUsersCount}
             </span>
           </div>
@@ -567,16 +569,16 @@ export default function AdminDashboardPage() {
                   setShowSortDropdown(false);
                   setShowColumnsDropdown(false);
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer active:scale-95 ${
                   selectedRole !== 'all' || selectedProvider !== 'all'
-                    ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/40'
+                    ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 border-transparent shadow-xs'
                     : 'bg-zinc-100 dark:bg-white/[0.04] text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-white/5 hover:bg-zinc-200 dark:hover:bg-white/[0.08]'
                 }`}
               >
                 <RiFilter3Line size={13} />
                 <span>Filter</span>
                 {(selectedRole !== 'all' || selectedProvider !== 'all') && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-zinc-950" />
                 )}
               </button>
 
@@ -636,7 +638,7 @@ export default function AdminDashboardPage() {
                   setShowFilterDropdown(false);
                   setShowColumnsDropdown(false);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.04] text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/5 hover:bg-zinc-200 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.04] text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/5 hover:bg-zinc-200 dark:hover:bg-white/[0.08] transition-colors cursor-pointer active:scale-95"
               >
                 <RiArrowUpDownLine size={13} />
                 <span>Sort ({sortField})</span>
@@ -663,7 +665,7 @@ export default function AdminDashboardPage() {
                         setShowSortDropdown(false);
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-left transition-colors cursor-pointer ${
-                        sortField === s.field ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5'
+                        sortField === s.field ? 'bg-zinc-900 text-white dark:bg-white/10 dark:text-white font-semibold' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5'
                       }`}
                     >
                       <span>{s.label}</span>
@@ -685,7 +687,7 @@ export default function AdminDashboardPage() {
                   setShowFilterDropdown(false);
                   setShowSortDropdown(false);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.04] text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/5 hover:bg-zinc-200 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.04] text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/5 hover:bg-zinc-200 dark:hover:bg-white/[0.08] transition-colors cursor-pointer active:scale-95"
               >
                 <RiLayoutColumnLine size={13} />
                 <span>Columns</span>
@@ -703,7 +705,7 @@ export default function AdminDashboardPage() {
                         type="checkbox"
                         checked={visibleColumns[col]}
                         onChange={() => setVisibleColumns((prev) => ({ ...prev, [col]: !prev[col] }))}
-                        className="rounded border-zinc-300 dark:border-zinc-700 text-cyan-500 focus:ring-0"
+                        className="rounded border-zinc-300 dark:border-zinc-700 accent-zinc-900 dark:accent-white focus:ring-0"
                       />
                     </label>
                   ))}
@@ -753,7 +755,7 @@ export default function AdminDashboardPage() {
                       {visibleColumns.member && (
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-full bg-cyan-600 flex items-center justify-center text-[11px] font-bold text-white shrink-0">
+                            <div className="w-7 h-7 rounded-lg bg-zinc-900 text-white dark:bg-white/10 dark:text-zinc-200 border border-zinc-200 dark:border-white/10 flex items-center justify-center text-[11px] font-bold shrink-0">
                               {initials}
                             </div>
                             <div>
@@ -835,7 +837,7 @@ export default function AdminDashboardPage() {
           <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-[#161718] border border-zinc-200 dark:border-white/10 shadow-2xl p-6 space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-white/10">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-[var(--accent-cyan)]">
+                <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-900 dark:text-zinc-100">
                   <RiKeyLine size={18} />
                 </div>
                 <div>
@@ -855,11 +857,11 @@ export default function AdminDashboardPage() {
             <div className="space-y-3.5 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
               <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/5">
                 <h4 className="font-bold text-zinc-900 dark:text-white mb-1 flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-[var(--accent-cyan)] text-black font-extrabold flex items-center justify-center text-[10px]">1</span>
+                  <span className="w-5 h-5 rounded-full bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 font-bold flex items-center justify-center text-[10px]">1</span>
                   Google Cloud Console (GCP)
                 </h4>
                 <p className="text-zinc-600 dark:text-zinc-400 pl-6.5">
-                  1. Visit <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="text-cyan-600 dark:text-cyan-400 underline">console.cloud.google.com</a>.<br />
+                  1. Visit <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="text-zinc-900 dark:text-white underline">console.cloud.google.com</a>.<br />
                   2. Enable the <strong>Google Analytics Data API v1</strong>.<br />
                   3. In <strong>IAM & Admin &rarr; Service Accounts</strong>, click <em>Create Service Account</em>, assign the role <strong>Viewer</strong>, and create a <strong>JSON Key</strong>.
                 </p>
@@ -867,7 +869,7 @@ export default function AdminDashboardPage() {
 
               <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/5">
                 <h4 className="font-bold text-zinc-900 dark:text-white mb-1 flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-[var(--accent-cyan)] text-black font-extrabold flex items-center justify-center text-[10px]">2</span>
+                  <span className="w-5 h-5 rounded-full bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 font-bold flex items-center justify-center text-[10px]">2</span>
                   Google Analytics 4 (GA4) Property
                 </h4>
                 <p className="text-zinc-600 dark:text-zinc-400 pl-6.5">
@@ -879,10 +881,10 @@ export default function AdminDashboardPage() {
 
               <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/5">
                 <h4 className="font-bold text-zinc-900 dark:text-white mb-1 flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-[var(--accent-cyan)] text-black font-extrabold flex items-center justify-center text-[10px]">3</span>
+                  <span className="w-5 h-5 rounded-full bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 font-bold flex items-center justify-center text-[10px]">3</span>
                   Environment Variables (.env)
                 </h4>
-                <pre className="mt-1 p-2 rounded-xl bg-zinc-900 dark:bg-black/60 text-[11px] font-mono text-cyan-400 dark:text-cyan-300 overflow-x-auto border border-zinc-700/50 dark:border-white/5">
+                <pre className="mt-1 p-2 rounded-xl bg-zinc-900 dark:bg-black/60 text-[11px] font-mono text-zinc-200 overflow-x-auto border border-zinc-700/50 dark:border-white/5">
 {`GA_PROPERTY_ID=123456789
 GA_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
 GA_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n"

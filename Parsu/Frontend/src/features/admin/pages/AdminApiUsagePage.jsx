@@ -77,7 +77,7 @@ export default function AdminApiUsagePage() {
       <section className="api-usage-card p-6 rounded-3xl bg-white dark:bg-[#11131a]/80 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-white/[0.05] pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 dark:text-red-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200 dark:border-white/[0.08] text-zinc-800 dark:text-zinc-200 flex items-center justify-center">
               <RiMapPinLine size={20} />
             </div>
             <div>
@@ -87,8 +87,8 @@ export default function AdminApiUsagePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               <span>100% Free Tier Protected</span>
             </span>
           </div>
@@ -100,14 +100,14 @@ export default function AdminApiUsagePage() {
             <span className="text-zinc-600 dark:text-zinc-400">
               Monthly Usage: <strong className="text-zinc-900 dark:text-white font-mono">{maps?.usedThisMonth ?? 34}</strong> / {maps?.monthlyFreeLimit ?? 28500} loads
             </span>
-            <span className="text-cyan-600 dark:text-cyan-400 font-mono font-bold">
+            <span className="text-zinc-900 dark:text-white font-mono font-bold">
               {maps?.percentUsed ?? '0.1'}% Used
             </span>
           </div>
 
-          <div className="w-full bg-zinc-100 dark:bg-white/[0.05] rounded-full h-2.5 overflow-hidden">
+          <div className="w-full bg-zinc-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 h-full rounded-full transition-all duration-500"
+              className="bg-zinc-900 dark:bg-white h-full rounded-full transition-all duration-500"
               style={{ width: `${Math.max(2, parseFloat(maps?.percentUsed || 0.5))}%` }}
             ></div>
           </div>
@@ -115,29 +115,29 @@ export default function AdminApiUsagePage() {
 
         {/* Quota KPI Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-          <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.04]">
+          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.04]">
             <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Free Allowance</span>
-            <div className="text-lg font-bold text-zinc-900 dark:text-white mt-1">28,500</div>
+            <div className="text-lg font-bold text-zinc-900 dark:text-white mt-1 font-mono">28,500</div>
             <span className="text-[10px] text-zinc-500 dark:text-zinc-400">loads every month</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.04]">
+          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.04]">
             <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Remaining Credit</span>
-            <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+            <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1 font-mono">
               ${maps?.freeCreditRemainingUSD ?? '200.00'}
             </div>
             <span className="text-[10px] text-zinc-500 dark:text-zinc-400">of $200.00 monthly</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.04]">
+          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.04]">
             <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Billed Cost</span>
-            <div className="text-lg font-bold text-zinc-900 dark:text-white mt-1">$0.00</div>
+            <div className="text-lg font-bold text-zinc-900 dark:text-white mt-1 font-mono">$0.00</div>
             <span className="text-[10px] text-emerald-600 dark:text-emerald-400">zero excess charges</span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.04]">
+          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.04]">
             <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Recommended Cap</span>
-            <div className="text-lg font-bold text-cyan-600 dark:text-cyan-400 mt-1">900 / day</div>
+            <div className="text-lg font-bold text-zinc-900 dark:text-white mt-1 font-mono">900 / day</div>
             <span className="text-[10px] text-zinc-500 dark:text-zinc-400">set in Google Console</span>
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function AdminApiUsagePage() {
       <section className="api-usage-card p-6 rounded-3xl bg-white dark:bg-[#11131a]/80 border border-zinc-200 dark:border-white/[0.08] shadow-sm backdrop-blur-xl space-y-5">
         <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/[0.05] pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200 dark:border-white/[0.08] text-zinc-800 dark:text-zinc-200 flex items-center justify-center">
               <RiCpuLine size={20} />
             </div>
             <div>
@@ -166,7 +166,7 @@ export default function AdminApiUsagePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-bold text-sm text-zinc-900 dark:text-white flex items-center gap-2">
-                    <RiSparklingFill size={14} className="text-cyan-500" />
+                    <RiSparklingFill size={14} className="text-zinc-700 dark:text-zinc-300" />
                     <span>{item.provider}</span>
                   </div>
                   <div className="text-[11px] text-zinc-500 dark:text-zinc-400">{item.model}</div>
@@ -184,7 +184,7 @@ export default function AdminApiUsagePage() {
                 </div>
                 <div>
                   <span className="text-[10px] text-zinc-500 block uppercase">Tokens (Est.)</span>
-                  <span className="font-mono font-bold text-cyan-600 dark:text-cyan-400">{item.estimatedTokens.toLocaleString()}</span>
+                  <span className="font-mono font-bold text-zinc-900 dark:text-white">{item.estimatedTokens.toLocaleString()}</span>
                 </div>
                 <div>
                   <span className="text-[10px] text-zinc-500 block uppercase">Latency</span>
