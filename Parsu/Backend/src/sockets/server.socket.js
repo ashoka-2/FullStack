@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import Device from "../models/device.model.js";
+import crypto from "crypto";
 
 let io;
 
@@ -16,13 +17,13 @@ export function initSocket(httpServer) {
         }
     });
 
-    console.log("[Socket.IO] Server is Running with Cross-Device Protocol...");
+    console.log("[Socket.IO] Server is Running with Zero-Token Account-Linked Device Protocol...");
 
     io.on("connection", (socket) => {
         let connectedDeviceId = null;
         let connectedUserId = null;
 
-        // User client room subscription
+        // ─── User Room Subscription ────────────────────────────────────────────────
         socket.on("user:subscribe", (userId) => {
             if (userId) {
                 socket.join(`user:${userId}`);
@@ -30,7 +31,9 @@ export function initSocket(httpServer) {
             }
         });
 
-        // Account-Linked Zero-Config Auto-Registration (same email/account across Mobile & Desktop)
+        // ─── Account-Linked Zero-Config Auto-Registration ─────────────────────────
+        // Fires automatically when any app (web, desktop companion, mobile) starts
+        // while the user is logged in. No token shown, no CLI command needed.
         socket.on("device:auto_register", async ({ userId, platform, deviceType, name, userAgent, systemMetrics }) => {
             try {
                 if (!userId) return;
@@ -53,13 +56,14 @@ export function initSocket(httpServer) {
                     if (systemMetrics) device.systemMetrics = { ...device.systemMetrics, ...systemMetrics };
                     await device.save();
                 } else {
-                    const pairingToken = `psu_dev_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+                    // Generate internal-only device secret — never shown to user
+                    const deviceSecret = crypto.randomBytes(32).toString("hex");
                     device = await Device.create({
                         user: connectedUserId,
                         name: defaultName,
                         deviceType: effectiveType,
                         platform: effectivePlatform,
-                        pairingToken,
+                        deviceSecret,
                         status: "online",
                         systemInfo: { osVersion: userAgent || "", hostname: defaultName },
                         capabilities: [
@@ -74,26 +78,30 @@ export function initSocket(httpServer) {
                 connectedDeviceId = device._id.toString();
                 socket.join(`device:${connectedDeviceId}`);
 
-                socket.emit("device:auto_registered", {
-                    success: true,
-                    device
-                });
+                // Safe serialisation — strip deviceSecret
+                const safeDevice = device.toObject();
+                delete safeDevice.deviceSecret;
+
+                socket.emit("device:auto_registered", { success: true, device: safeDevice });
 
                 // Notify all active devices under this user about the updated device list
                 const allUserDevices = await Device.find({ user: connectedUserId }).lean();
-                io.to(`user:${connectedUserId}`).emit("device:sync_list", allUserDevices);
-                console.log(`[Socket.IO] Account-sync active: ${device.name} (${device.platform}) for user ${connectedUserId}`);
+                const safeList = allUserDevices.map(d => { delete d.deviceSecret; return d; });
+                io.to(`user:${connectedUserId}`).emit("device:sync_list", safeList);
+
+                console.log(`[Socket.IO] Auto-linked: ${device.name} (${device.platform}) for user ${connectedUserId}`);
             } catch (err) {
                 console.error("[Socket.IO] device:auto_register error:", err.message);
             }
         });
 
-        // Direct device-to-device command relay (e.g. mobile controlling desktop or vice versa)
+        // ─── Device-to-Device Command Relay ───────────────────────────────────────
+        // e.g. mobile → "open Chrome on my PC"; desktop → "read my phone's notifications"
         socket.on("device:relay_command", ({ targetDeviceId, action, params, senderDeviceName }) => {
             if (targetDeviceId && connectedUserId) {
                 io.to(`device:${targetDeviceId}`).emit("device:incoming_relay", {
                     senderDeviceId: connectedDeviceId,
-                    senderDeviceName: senderDeviceName || "Paired Companion",
+                    senderDeviceName: senderDeviceName || "Paired Device",
                     action,
                     params,
                     timestamp: new Date().toISOString()
@@ -101,61 +109,26 @@ export function initSocket(httpServer) {
             }
         });
 
-        // Companion device registration via pairingToken
-        socket.on("device:register", async ({ pairingToken, systemInfo, capabilities }) => {
-            try {
-                if (!pairingToken) return socket.emit("device:error", { message: "Missing pairing token" });
-
-                const device = await Device.findOne({ pairingToken });
-                if (!device) {
-                    return socket.emit("device:error", { message: "Invalid pairing token" });
-                }
-
-                connectedDeviceId = device._id.toString();
-                connectedUserId = device.user.toString();
-
-                device.status = "online";
-                device.lastSeen = new Date();
-                if (systemInfo) device.systemInfo = { ...device.systemInfo, ...systemInfo };
-                if (capabilities && Array.isArray(capabilities)) device.capabilities = capabilities;
-                await device.save();
-
-                socket.join(`user:${connectedUserId}`);
-                socket.join(`device:${connectedDeviceId}`);
-
-                socket.emit("device:registered", {
-                    success: true,
-                    deviceId: connectedDeviceId,
-                    name: device.name,
-                    platform: device.platform
+        // ─── Relay Command Result Back to Originating Device ──────────────────────
+        socket.on("device:relay_result", ({ senderDeviceId, auditId, success, result, error }) => {
+            if (senderDeviceId && connectedUserId) {
+                io.to(`device:${senderDeviceId}`).emit("device:relay_completed", {
+                    auditId,
+                    success,
+                    result,
+                    error,
+                    executingDeviceId: connectedDeviceId
                 });
-
-                // Notify frontend user clients about device status change
-                io.to(`user:${connectedUserId}`).emit("device:status_change", {
-                    deviceId: connectedDeviceId,
-                    status: "online",
-                    lastSeen: device.lastSeen,
-                    systemMetrics: device.systemMetrics
-                });
-
-                console.log(`[Socket.IO] Device paired and online: ${device.name} (${device.platform})`);
-            } catch (err) {
-                console.error("[Socket.IO] device:register error:", err.message);
-                socket.emit("device:error", { message: err.message });
             }
         });
 
-        // Device Heartbeat & Telemetry update
+        // ─── Device Heartbeat & Telemetry ─────────────────────────────────────────
         socket.on("device:heartbeat", async (data) => {
             try {
                 if (!connectedDeviceId) return;
-                const update = {
-                    status: "online",
-                    lastSeen: new Date()
-                };
-                if (data?.systemMetrics) {
-                    update.systemMetrics = data.systemMetrics;
-                }
+                const update = { status: "online", lastSeen: new Date() };
+                if (data?.systemMetrics) update.systemMetrics = data.systemMetrics;
+
                 const device = await Device.findByIdAndUpdate(connectedDeviceId, update, { new: true });
                 if (device && connectedUserId) {
                     io.to(`user:${connectedUserId}`).emit("device:telemetry", {
@@ -169,7 +142,7 @@ export function initSocket(httpServer) {
             }
         });
 
-        // Clipboard sync from device/client to all active user nodes
+        // ─── Clipboard Sync ────────────────────────────────────────────────────────
         socket.on("device:clipboard_sync", async ({ text, mimeType = "text/plain" }) => {
             try {
                 if (!connectedUserId || !text) return;
@@ -184,7 +157,20 @@ export function initSocket(httpServer) {
             }
         });
 
-        // Forward remote device execution response back to orchestrator
+        // ─── Cross-Device Chat Sync (Task E) ──────────────────────────────────────
+        // Messages sent on any device appear on all other devices in real time
+        socket.on("chat:message_sent", ({ chatId, message }) => {
+            if (connectedUserId) {
+                socket.to(`user:${connectedUserId}`).emit("chat:message_synced", {
+                    chatId,
+                    message,
+                    fromDeviceId: connectedDeviceId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        });
+
+        // ─── Orchestrator Action Response ──────────────────────────────────────────
         socket.on("device:action_response", ({ auditId, success, result, error }) => {
             if (connectedUserId) {
                 io.to(`user:${connectedUserId}`).emit("device:action_finished", {
@@ -196,7 +182,7 @@ export function initSocket(httpServer) {
             }
         });
 
-        // Handle disconnect
+        // ─── Disconnect ────────────────────────────────────────────────────────────
         socket.on("disconnect", async () => {
             if (connectedDeviceId) {
                 try {
@@ -211,7 +197,7 @@ export function initSocket(httpServer) {
                             lastSeen: new Date()
                         });
                     }
-                    console.log(`[Socket.IO] Device disconnected: ${connectedDeviceId}`);
+                    console.log(`[Socket.IO] Device offline: ${connectedDeviceId}`);
                 } catch (err) {
                     console.error("[Socket.IO] Disconnect update error:", err.message);
                 }
@@ -221,8 +207,6 @@ export function initSocket(httpServer) {
 }
 
 export function getIO() {
-    if (!io) {
-        return null;
-    }
+    if (!io) return null;
     return io;
 }

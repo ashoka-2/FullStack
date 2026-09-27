@@ -1,153 +1,213 @@
 #!/usr/bin/env node
 /**
- * Parsu Desktop Companion Service (Task 1)
- * 
- * Standalone companion agent running on the target desktop/laptop.
- * Connects securely to Parsu Orchestrator using pairing token,
- * streams system telemetry, and executes privileged OS automations.
- * 
+ * Parsu Desktop Companion Service
+ *
+ * Standalone background agent running on the target desktop/laptop.
+ * Connects to the Parsu Orchestrator using the user's existing JWT session —
+ * NO pairing token to copy, NO CLI flags to paste. Just open the app while
+ * logged in and this device appears automatically in Settings → Devices.
+ *
  * Usage:
- *   node parsu-desktop-companion.js --token <PAIRING_TOKEN> [--server http://localhost:5000]
+ *   PARSU_JWT=<your_jwt_token> node parsu-desktop-companion.js [--server http://localhost:5000]
+ *
+ * The JWT is obtained automatically by the desktop app from the logged-in session.
+ * It is never printed to the console.
  */
 
 import { io } from "socket.io-client";
 import os from "os";
+import fetch from "node-fetch";
 import { desktopWindowsService } from "../services/device/desktopWindows.service.js";
 
+// ─── Configuration ─────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
-let token = process.env.PARSU_PAIRING_TOKEN || "";
-let serverUrl = process.env.PARSU_SERVER_URL || "http://localhost:5000";
+const serverUrl = (() => {
+    const idx = args.indexOf("--server");
+    return idx !== -1 && args[idx + 1] ? args[idx + 1] : (process.env.PARSU_SERVER_URL || "http://localhost:5000");
+})();
 
-for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--token" && args[i + 1]) token = args[i + 1];
-    if (args[i] === "--server" && args[i + 1]) serverUrl = args[i + 1];
-}
+const JWT = process.env.PARSU_JWT || "";
 
-if (!token) {
-    console.error("❌ Error: Device pairing token required.");
-    console.error("Usage: node parsu-desktop-companion.js --token <PAIRING_TOKEN> [--server http://localhost:5000]");
+if (!JWT) {
+    console.error("❌ Parsu Desktop Companion: No JWT session found.");
+    console.error("   Please log into the Parsu web/desktop app first. The companion will");
+    console.error("   automatically pick up your session — no token to copy.");
     process.exit(1);
 }
 
-console.log(`\n======================================================`);
-console.log(`🚀 Parsu Desktop Companion Agent v1.0`);
-console.log(`🖥️  Host: ${os.hostname()} (${os.platform()} ${os.arch()})`);
-console.log(`🔗 Target Server: ${serverUrl}`);
-console.log(`🔑 Pairing Token: ${token.substring(0, 8)}...`);
-console.log(`======================================================\n`);
+// ─── Detect platform ────────────────────────────────────────────────────────────
+const platform = process.platform === "darwin" ? "macos" : process.platform === "linux" ? "linux" : "windows";
+const deviceName = `${os.hostname()} (${platform === "macos" ? "Mac" : platform === "linux" ? "Linux" : "Windows"})`;
 
-const socket = io(serverUrl, {
-    transports: ["websocket", "polling"],
-    reconnection: true,
-    reconnectionDelay: 2000
-});
+console.log(`\n📡 Parsu Desktop Companion Agent`);
+console.log(`🖥️  Host: ${os.hostname()} · ${os.type()} ${os.release()}`);
+console.log(`🔗 Server: ${serverUrl}\n`);
 
-socket.on("connect", () => {
-    console.log(`✅ Connected to Parsu Orchestrator (Socket ID: ${socket.id})`);
-    
-    // Register device
-    const systemInfo = {
-        osVersion: `${os.type()} ${os.release()}`,
-        hostname: os.hostname(),
-        arch: os.arch(),
-        monitors: 1
-    };
+// ─── Step 1: Auto-register this device via REST (uses JWT, no token shown) ──────
+let registeredDevice = null;
 
-    socket.emit("device:register", {
-        pairingToken: token,
-        systemInfo,
-        capabilities: [
-            "app_control",
-            "input_simulation",
-            "file_system",
-            "clipboard",
-            "system_settings",
-            "screen_capture",
-            "screen_vision_ocr",
-            "notifications",
-            "macros",
-            "browser_control"
-        ]
-    });
-});
-
-socket.on("device:registered", (data) => {
-    console.log(`✨ Successfully registered as device: "${data.name}" [${data.deviceId}]`);
-    startTelemetryHeartbeat();
-});
-
-socket.on("device:error", (err) => {
-    console.error(`❌ Registration Error:`, err.message);
-});
-
-// Execute action requested from the central orchestrator
-socket.on("device:execute_action", async (payload) => {
-    const { auditId, action, params } = payload;
-    console.log(`\n⚡ Received Action Request: [${action}] (Audit: ${auditId})`);
-    
+async function autoRegister() {
     try {
-        let result;
-        switch (action) {
-            case "launch_app":
-                result = await desktopWindowsService.launchApp(params.appName);
-                break;
-            case "close_app":
-                result = await desktopWindowsService.closeApp(params.processName);
-                break;
-            case "list_processes":
-                result = await desktopWindowsService.listRunningProcesses(params.limit);
-                break;
-            case "window_control":
-                result = await desktopWindowsService.controlWindow(params.windowTitle, params.windowAction);
-                break;
-            case "simulate_input":
-                result = await desktopWindowsService.simulateInput(params.type, params.payload);
-                break;
-            case "file_operation":
-                result = await desktopWindowsService.fileOperation(params.operation, params.fileParams);
-                break;
-            case "read_clipboard":
-                result = await desktopWindowsService.readClipboard();
-                break;
-            case "write_clipboard":
-                result = await desktopWindowsService.writeClipboard(params.text);
-                break;
-            case "system_settings":
-                result = await desktopWindowsService.controlSystemSettings(params.setting, params.value);
-                break;
-            case "take_screenshot":
-                result = await desktopWindowsService.takeScreenshot(params.region);
-                break;
-            case "send_notification":
-                result = await desktopWindowsService.sendNotification(params.title, params.message);
-                break;
-            case "browser_open":
-                result = await desktopWindowsService.openBrowserUrl(params.url);
-                break;
-            default:
-                throw new Error(`Unsupported companion action: ${action}`);
-        }
-
-        console.log(`✅ Action [${action}] completed successfully.`);
-        socket.emit("device:action_response", {
-            auditId,
-            success: true,
-            result
+        const res = await fetch(`${serverUrl}/api/devices/auto-register`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${JWT}`
+            },
+            body: JSON.stringify({
+                name: deviceName,
+                deviceType: "desktop",
+                platform,
+                userAgent: `NodeJS/${process.version} ${os.type()}/${os.release()}`
+            })
         });
+
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || "Registration failed");
+        registeredDevice = data.device;
+        console.log(`✅ Auto-linked as: "${registeredDevice.name}" [${registeredDevice._id}]`);
     } catch (err) {
-        console.error(`❌ Action [${action}] failed:`, err.message);
-        socket.emit("device:action_response", {
-            auditId,
-            success: false,
-            error: err.message
-        });
+        console.error("❌ Auto-registration failed:", err.message);
+        console.error("   Make sure you are logged in and the server is reachable.");
+        process.exit(1);
     }
-});
+}
 
+// ─── Step 2: Open persistent WebSocket connection ────────────────────────────────
+async function connectSocket() {
+    await autoRegister();
+
+    const socket = io(serverUrl, {
+        transports: ["websocket", "polling"],
+        reconnection: true,
+        reconnectionDelay: 2000,
+        auth: { token: JWT }   // JWT passed in socket handshake auth, not visible
+    });
+
+    socket.on("connect", () => {
+        console.log(`🔌 Connected to Parsu relay (${socket.id})`);
+
+        // Announce this device to the account channel using account-based auto-register
+        socket.emit("device:auto_register", {
+            userId: registeredDevice?.user,
+            platform,
+            deviceType: "desktop",
+            name: deviceName,
+            userAgent: `NodeJS/${process.version} ${os.type()}/${os.release()}`
+        });
+
+        startHeartbeat(socket);
+    });
+
+    socket.on("device:auto_registered", ({ success, device }) => {
+        if (success) {
+            console.log(`✨ Device sync confirmed: "${device.name}" is live`);
+        }
+    });
+
+    // ─── Execute cross-device actions sent from other devices / AI chat ─────────
+    socket.on("device:incoming_relay", async ({ senderDeviceId, senderDeviceName, action, params }) => {
+        console.log(`\n⚡ Relay command from "${senderDeviceName}": [${action}]`);
+        let result;
+        try {
+            switch (action) {
+                case "launch_app":
+                    result = await desktopWindowsService.launchApp(params.appName);
+                    break;
+                case "close_app":
+                    result = await desktopWindowsService.closeApp(params.processName);
+                    break;
+                case "list_processes":
+                    result = await desktopWindowsService.listRunningProcesses(params.limit);
+                    break;
+                case "window_control":
+                    result = await desktopWindowsService.controlWindow(params.windowTitle, params.windowAction);
+                    break;
+                case "simulate_input":
+                    result = await desktopWindowsService.simulateInput(params.type, params.payload);
+                    break;
+                case "file_operation":
+                    result = await desktopWindowsService.fileOperation(params.operation, params.fileParams);
+                    break;
+                case "read_clipboard":
+                    result = await desktopWindowsService.readClipboard();
+                    break;
+                case "write_clipboard":
+                    result = await desktopWindowsService.writeClipboard(params.text);
+                    break;
+                case "set_clipboard":
+                    result = await desktopWindowsService.writeClipboard(params.text);
+                    break;
+                case "system_settings":
+                    result = await desktopWindowsService.controlSystemSettings(params.setting, params.value);
+                    break;
+                case "take_screenshot":
+                    result = await desktopWindowsService.takeScreenshot(params.region);
+                    break;
+                case "send_notification":
+                    result = await desktopWindowsService.sendNotification(params.title, params.message);
+                    break;
+                case "browser_open":
+                case "open_url":
+                    result = await desktopWindowsService.openBrowserUrl(params.url);
+                    break;
+                case "get_stats":
+                    result = await desktopWindowsService.getSystemStats();
+                    break;
+                default:
+                    throw new Error(`Unsupported companion action: ${action}`);
+            }
+
+            console.log(`✅ [${action}] completed`);
+            socket.emit("device:relay_result", {
+                senderDeviceId,
+                success: true,
+                result
+            });
+        } catch (err) {
+            console.error(`❌ [${action}] failed:`, err.message);
+            socket.emit("device:relay_result", {
+                senderDeviceId,
+                success: false,
+                error: err.message
+            });
+        }
+    });
+
+    // Legacy orchestrator-dispatched action (backward compat)
+    socket.on("device:execute_action", async ({ auditId, action, params }) => {
+        console.log(`\n⚡ Orchestrator action: [${action}] (Audit: ${auditId})`);
+        try {
+            let result;
+            switch (action) {
+                case "launch_app": result = await desktopWindowsService.launchApp(params.appName); break;
+                case "close_app": result = await desktopWindowsService.closeApp(params.processName); break;
+                case "take_screenshot": result = await desktopWindowsService.takeScreenshot(params.region); break;
+                case "browser_open": result = await desktopWindowsService.openBrowserUrl(params.url); break;
+                default: throw new Error(`Unsupported action: ${action}`);
+            }
+            socket.emit("device:action_response", { auditId, success: true, result });
+        } catch (err) {
+            socket.emit("device:action_response", { auditId, success: false, error: err.message });
+        }
+    });
+
+    socket.on("disconnect", () => {
+        console.log("⚠️  Disconnected. Reconnecting automatically...");
+        stopHeartbeat();
+    });
+
+    socket.on("connect_error", (err) => {
+        console.error("❌ Connection error:", err.message);
+    });
+
+    return socket;
+}
+
+// ─── Telemetry Heartbeat ──────────────────────────────────────────────────────────
 let heartbeatTimer = null;
-function startTelemetryHeartbeat() {
-    if (heartbeatTimer) clearInterval(heartbeatTimer);
-    
+function startHeartbeat(socket) {
+    stopHeartbeat();
     heartbeatTimer = setInterval(async () => {
         try {
             const stats = await desktopWindowsService.getSystemStats();
@@ -159,13 +219,21 @@ function startTelemetryHeartbeat() {
                     isCharging: stats.isCharging ?? true
                 }
             });
-        } catch (e) {
-            // silent heartbeat err
+        } catch {
+            // silent heartbeat error — reconnect handles it
         }
-    }, 5000);
+    }, 10000);
 }
 
-socket.on("disconnect", () => {
-    console.log("⚠️ Disconnected from Parsu Orchestrator. Reconnecting...");
-    if (heartbeatTimer) clearInterval(heartbeatTimer);
+function stopHeartbeat() {
+    if (heartbeatTimer) {
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = null;
+    }
+}
+
+// ─── Boot ──────────────────────────────────────────────────────────────────────
+connectSocket().catch(err => {
+    console.error("Fatal error:", err.message);
+    process.exit(1);
 });

@@ -411,39 +411,51 @@ const FollowUpInput = ({
                                 </button>
                             )}
 
-                            <button 
-                                type="button"
-                                onClick={handleToggleVoiceInput}
-                                className={`p-1.5 sm:p-2 rounded-full transition-all cursor-pointer ${
-                                    isListening 
-                                        ? 'text-rose-500 bg-rose-500/15 animate-pulse ring-2 ring-rose-500/30' 
-                                        : 'text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
-                                }`}
-                                title={isListening ? "Listening... Click to stop" : "Voice input (Speech to text)"}
-                            >
-                                {isListening ? <RiMicFill size={18} className="text-rose-500" /> : <RiMicLine size={18} />}
-                            </button>
-                            <button 
-                                onClick={onSubmit}
-                                disabled={!input.trim() && files.length === 0}
-                                className={`px-2.5 sm:px-3 py-1.5 h-8 sm:h-9 flex items-center justify-center rounded-full transition-all gap-1 text-xs font-bold ${
-                                    input.trim() || files.length > 0 
-                                        ? isResponding
-                                            ? 'bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 shadow-md cursor-pointer'
-                                            : 'bg-zinc-900 dark:bg-white text-white dark:text-black shadow-lg hover:scale-105 cursor-pointer' 
-                                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-300 dark:text-zinc-600 opacity-50 cursor-not-allowed'
-                                }`}
-                                title={isResponding ? "Add message to queue" : "Send message"}
-                            >
-                                {isResponding ? (
-                                    <>
-                                        <RiPlayListAddLine size={14} />
-                                        <span>Queue</span>
-                                    </>
-                                ) : (
+                            {/*
+                             * Smart Send/Stop/Voice button:
+                             * - AI responding → Stop button (stops generation immediately)
+                             * - Input has text  → Send arrow (also queues if AI is responding)
+                             * - Input empty     → Voice mic (default, opens live voice)
+                             */}
+                            {isResponding && !(input.trim() || files.length > 0) ? (
+                                /* STOP button — visible only when responding and no pending input */
+                                <button
+                                    type="button"
+                                    onClick={onStopGenerating}
+                                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-lg group"
+                                    title="Stop AI from generating"
+                                    aria-label="Stop generating"
+                                >
+                                    {/* Square stop icon — solid center square inside circle */}
+                                    <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-[3px] bg-current transition-transform group-hover:scale-110" />
+                                </button>
+                            ) : (input.trim() || files.length > 0) ? (
+                                /* SEND / QUEUE ARROW — visible when user has typed something */
+                                <button
+                                    type="button"
+                                    onClick={onSubmit}
+                                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-lg"
+                                    title={isResponding ? "Queue this message" : "Send message (Enter)"}
+                                    aria-label={isResponding ? "Queue message" : "Send"}
+                                >
                                     <RiArrowUpLine size={18} />
-                                )}
-                            </button>
+                                </button>
+                            ) : (
+                                /* VOICE MIC — default when nothing typed */
+                                <button
+                                    type="button"
+                                    onClick={handleToggleVoiceInput}
+                                    className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-all cursor-pointer ${
+                                        isListening
+                                            ? 'bg-rose-500 text-white animate-pulse ring-2 ring-rose-500/40 shadow-lg'
+                                            : 'bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-105 active:scale-95 shadow-lg'
+                                    }`}
+                                    title={isListening ? "Listening… tap to stop" : "Voice input — tap to speak"}
+                                    aria-label={isListening ? "Stop listening" : "Voice input"}
+                                >
+                                    {isListening ? <RiMicFill size={17} /> : <RiMicLine size={17} />}
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -597,51 +609,47 @@ const FollowUpInput = ({
                                 />
                             </div>
 
-                            {/* Right Side Actions */}
+                            {/* Right Side Actions — 3-state: Stop / Send / Voice mic */}
                             <div className="flex items-center gap-2 shrink-0">
-                                {/* Microphone Button */}
-                                <button
-                                    type="button"
-                                    onClick={handleToggleVoiceInput}
-                                    className={`p-2 rounded-full transition-all cursor-pointer ${
-                                        isListening 
-                                            ? 'text-rose-500 bg-rose-500/15 animate-pulse ring-2 ring-rose-500/30' 
-                                            : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'
-                                    }`}
-                                    title={isListening ? "Listening... Click to stop" : "Voice input (Speech to text)"}
-                                >
-                                    {isListening ? <RiMicFill size={19} className="text-rose-500" /> : <RiMicLine size={19} />}
-                                </button>
-
-                                {/* Send / Queue Button */}
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        setIsFullScreenEditor(false);
-                                        onSubmit(e);
-                                    }}
-                                    disabled={!input.trim() && files.length === 0}
-                                    className={`px-4 py-2 h-9 flex items-center justify-center rounded-full transition-all gap-1.5 text-xs font-bold ${
-                                        input.trim() || files.length > 0 
-                                            ? isResponding
-                                                ? 'bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 shadow-md cursor-pointer'
-                                                : 'bg-white text-black hover:bg-zinc-200 shadow-lg hover:scale-105 cursor-pointer' 
-                                            : 'bg-zinc-800 text-zinc-600 opacity-50 cursor-not-allowed'
-                                    }`}
-                                    title={isResponding ? "Add message to queue" : "Send message"}
-                                >
-                                    {isResponding ? (
-                                        <>
-                                            <RiPlayListAddLine size={15} />
-                                            <span>Queue</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span>Send</span>
-                                            <RiArrowUpLine size={16} />
-                                        </>
-                                    )}
-                                </button>
+                                {isResponding && !(input.trim() || files.length > 0) ? (
+                                    /* STOP */
+                                    <button
+                                        type="button"
+                                        onClick={onStopGenerating}
+                                        className="w-9 h-9 flex items-center justify-center rounded-full bg-white text-black hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-lg group"
+                                        title="Stop AI from generating"
+                                    >
+                                        <span className="w-3.5 h-3.5 rounded-[3px] bg-current group-hover:scale-110 transition-transform" />
+                                    </button>
+                                ) : (input.trim() || files.length > 0) ? (
+                                    /* SEND / QUEUE */
+                                    <button
+                                        type="button"
+                                        onClick={(e) => { setIsFullScreenEditor(false); onSubmit(e); }}
+                                        className="px-4 py-2 h-9 flex items-center justify-center rounded-full bg-white text-black hover:bg-zinc-200 shadow-lg hover:scale-105 active:scale-95 cursor-pointer transition-all gap-1.5 text-xs font-bold"
+                                        title={isResponding ? "Queue this message" : "Send message"}
+                                    >
+                                        {isResponding ? (
+                                            <><RiPlayListAddLine size={15} /><span>Queue</span></>
+                                        ) : (
+                                            <><span>Send</span><RiArrowUpLine size={16} /></>
+                                        )}
+                                    </button>
+                                ) : (
+                                    /* VOICE MIC */
+                                    <button
+                                        type="button"
+                                        onClick={handleToggleVoiceInput}
+                                        className={`w-9 h-9 flex items-center justify-center rounded-full transition-all cursor-pointer ${
+                                            isListening
+                                                ? 'bg-rose-500 text-white animate-pulse ring-2 ring-rose-500/40'
+                                                : 'bg-white text-black hover:bg-zinc-200 hover:scale-105 active:scale-95'
+                                        }`}
+                                        title={isListening ? "Listening… tap to stop" : "Voice input"}
+                                    >
+                                        {isListening ? <RiMicFill size={18} /> : <RiMicLine size={18} />}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

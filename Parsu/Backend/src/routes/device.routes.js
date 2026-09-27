@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { authUser } from "../middlewares/auth.middleware.js";
 import {
-    pairDevice,
     autoRegisterDevice,
     getDevices,
     getDeviceById,
+    renameDevice,
+    setDefaultDevice,
     unpairDevice,
     executeDeviceCommand,
     confirmAction,
@@ -21,23 +22,28 @@ const router = Router();
 // All device routes require authentication
 router.use(authUser);
 
-// Device Registry & Pairing
+// ─── Device Registry (auto-linking only, no manual pairing) ─────────────────
 router.get("/", getDevices);
 router.post("/auto-register", autoRegisterDevice);
-router.post("/pair", pairDevice);
+
+// ─── Audit & Macros ──────────────────────────────────────────────────────────
 router.get("/audit/logs", getAuditLogs);
 router.get("/macros", getMacros);
 router.post("/macros", createMacro);
 router.post("/macros/:macroId/run", runMacro);
+
+// ─── Clipboard ───────────────────────────────────────────────────────────────
 router.post("/clipboard/sync", syncClipboard);
 
-// Command Execution & Confirmation Lifecycle
+// ─── Command Execution & Confirmation Lifecycle ──────────────────────────────
 router.post("/execute", executeDeviceCommand);
 router.post("/confirm/:auditId", confirmAction);
 router.post("/undo/:auditId", undoAction);
 
-// Specific Device Management
+// ─── Per-Device Management (rename, set-default, unlink) ────────────────────
 router.get("/:deviceId", getDeviceById);
+router.patch("/:deviceId/rename", renameDevice);
+router.patch("/:deviceId/default", setDefaultDevice);
 router.delete("/:deviceId", unpairDevice);
 
 export default router;

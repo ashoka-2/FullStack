@@ -3,32 +3,36 @@ import {
     RiComputerLine,
     RiSmartphoneLine,
     RiMacLine,
-    RiAddLine,
+    RiTabletLine,
     RiRefreshLine,
     RiDeleteBin6Line,
     RiCheckLine,
     RiCloseLine,
     RiLoader4Line,
-    RiTerminalBoxLine,
     RiTimeLine,
     RiBattery2ChargeLine,
     RiCpuLine,
     RiRamLine,
     RiFlashlightLine,
     RiClipboardLine,
-    RiCameraLine,
     RiNotificationLine,
     RiArrowGoBackLine,
-    RiQrCodeLine,
     RiPlayLine,
-    RiKey2Line,
     RiInformationLine,
-    RiShieldCheckLine
+    RiShieldCheckLine,
+    RiEditLine,
+    RiStarLine,
+    RiStarFill,
+    RiWifiLine,
+    RiLinkM,
+    RiLinksLine,
+    RiChat3Line,
 } from '@remixicon/react';
 import SettingsPageLayout from '../../auth/pages/settings/SettingsPageLayout';
 import {
     getDevicesApi,
-    pairDeviceApi,
+    renameDeviceApi,
+    setDefaultDeviceApi,
     unpairDeviceApi,
     executeDeviceCommandApi,
     confirmDeviceActionApi,
@@ -53,14 +57,12 @@ export default function DevicesPage() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    // Pair device modal
-    const [showPairModal, setShowPairModal] = useState(false);
-    const [pairPlatform, setPairPlatform] = useState('windows');
-    const [pairDeviceName, setPairDeviceName] = useState('');
-    const [pairingResult, setPairingResult] = useState(null);
-    const [pairingLoading, setPairingLoading] = useState(false);
+    // Inline rename state
+    const [renamingId, setRenamingId] = useState(null);
+    const [renameValue, setRenameValue] = useState('');
+    const [renameLoading, setRenameLoading] = useState(false);
 
-    // Command runner tester
+    // Command runner
     const [selectedDevice, setSelectedDevice] = useState(null);
     const [testAction, setTestAction] = useState('get_stats');
     const [executingCommand, setExecutingCommand] = useState(false);
@@ -70,7 +72,7 @@ export default function DevicesPage() {
     const [confirmModalData, setConfirmModalData] = useState(null);
     const [confirmLoading, setConfirmLoading] = useState(false);
 
-    // Clipboard test
+    // Clipboard sync
     const [clipboardText, setClipboardText] = useState('');
     const [syncingClipboard, setSyncingClipboard] = useState(false);
 
@@ -103,7 +105,26 @@ export default function DevicesPage() {
     useEffect(() => {
         loadData();
         const interval = setInterval(() => loadData(true), 8000);
-        return () => clearInterval(interval);
+
+        // Listen for real-time device sync
+        const socket = initializeSocketConnection();
+        const handleSyncList = (updatedDevices) => {
+            setDevices(updatedDevices.map(d => { delete d.deviceSecret; return d; }));
+        };
+        socket.on('device:sync_list', handleSyncList);
+        socket.on('device:status_change', () => loadData(true));
+        socket.on('device:telemetry', ({ deviceId, systemMetrics, lastSeen }) => {
+            setDevices(prev => prev.map(d =>
+                d._id === deviceId ? { ...d, systemMetrics, lastSeen } : d
+            ));
+        });
+
+        return () => {
+            clearInterval(interval);
+            socket.off('device:sync_list', handleSyncList);
+            socket.off('device:status_change');
+            socket.off('device:telemetry');
+        };
     }, []);
 
     useEffect(() => {
@@ -116,43 +137,51 @@ export default function DevicesPage() {
         }
     }, [loading]);
 
-    const handlePairDevice = async (e) => {
-        e.preventDefault();
-        if (!pairDeviceName.trim()) {
-            dispatch(addToast({ type: 'error', message: 'Device name is required' }));
-            return;
-        }
+    const handleStartRename = (dev) => {
+        setRenamingId(dev._id);
+        setRenameValue(dev.name);
+    };
 
-        setPairingLoading(true);
+    const handleSaveRename = async (deviceId) => {
+        if (!renameValue.trim()) return;
+        setRenameLoading(true);
         try {
-            const res = await pairDeviceApi({
-                name: pairDeviceName,
-                platform: pairPlatform,
-                deviceType: ['android', 'ios'].includes(pairPlatform) ? 'mobile' : 'desktop'
-            });
-
+            const res = await renameDeviceApi(deviceId, renameValue.trim());
             if (res.success) {
-                setPairingResult(res.device);
-                dispatch(addToast({ type: 'success', message: 'Device registered! Use the token to connect.' }));
-                loadData(true);
+                dispatch(addToast({ type: 'success', message: 'Device renamed' }));
+                setDevices(prev => prev.map(d => d._id === deviceId ? { ...d, name: renameValue.trim() } : d));
             }
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: err.response?.data?.message || 'Pairing failed' }));
+        } catch {
+            dispatch(addToast({ type: 'error', message: 'Failed to rename device' }));
         } finally {
-            setPairingLoading(false);
+            setRenameLoading(false);
+            setRenamingId(null);
         }
     };
 
-    const handleUnpair = async (deviceId) => {
-        if (!window.confirm('Are you sure you want to unpair this device?')) return;
+    const handleSetDefault = async (deviceId) => {
+        try {
+            const res = await setDefaultDeviceApi(deviceId);
+            if (res.success) {
+                dispatch(addToast({ type: 'success', message: 'Default device updated' }));
+                setDevices(prev => prev.map(d => ({ ...d, isDefault: d._id === deviceId })));
+            }
+        } catch {
+            dispatch(addToast({ type: 'error', message: 'Failed to set default device' }));
+        }
+    };
+
+    const handleUnlink = async (deviceId, name) => {
+        if (!window.confirm(`Unlink "${name}" from your account? It will need to log in again to reconnect.`)) return;
         try {
             const res = await unpairDeviceApi(deviceId);
             if (res.success) {
-                dispatch(addToast({ type: 'success', message: 'Device unpaired successfully' }));
-                loadData(true);
+                dispatch(addToast({ type: 'success', message: `"${name}" unlinked from your account` }));
+                setDevices(prev => prev.filter(d => d._id !== deviceId));
+                if (selectedDevice === deviceId) setSelectedDevice(null);
             }
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: 'Failed to unpair device' }));
+        } catch {
+            dispatch(addToast({ type: 'error', message: 'Failed to unlink device' }));
         }
     };
 
@@ -161,33 +190,26 @@ export default function DevicesPage() {
             dispatch(addToast({ type: 'error', message: 'Please select a target device' }));
             return;
         }
-
         setExecutingCommand(true);
         setLastExecutionResult(null);
-
         try {
             let params = {};
             if (testAction === 'send_notification') {
-                params = { title: 'Parsu Cross-Device Agent', message: 'Sub-500ms automation round-trip verified!' };
+                params = { title: 'Parsu Cross-Device Agent', message: 'Automation verified!' };
             } else if (testAction === 'write_clipboard') {
-                params = { text: 'Pasted securely from Parsu AI Orchestrator' };
+                params = { text: 'Pasted from Parsu AI Orchestrator' };
             } else if (testAction === 'close_app') {
                 params = { processName: 'notepad' };
             }
 
-            const res = await executeDeviceCommandApi({
-                deviceId: selectedDevice,
-                action: testAction,
-                params
-            });
+            const res = await executeDeviceCommandApi({ deviceId: selectedDevice, action: testAction, params });
 
             if (res.requiresConfirmation) {
-                const targetDev = devices.find(d => d._id === selectedDevice);
                 setConfirmModalData({
                     auditId: res.auditId,
                     action: testAction,
                     tier: res.tier,
-                    device: targetDev,
+                    device: devices.find(d => d._id === selectedDevice),
                     params
                 });
             } else {
@@ -204,32 +226,21 @@ export default function DevicesPage() {
             }
         } catch (err) {
             const errMsg = err.response?.data?.message || err.message;
-            setLastExecutionResult({
-                status: 'failed',
-                action: testAction,
-                error: errMsg,
-                device: devices.find(d => d._id === selectedDevice)
-            });
+            setLastExecutionResult({ status: 'failed', action: testAction, error: errMsg });
             dispatch(addToast({ type: 'error', message: errMsg }));
         } finally {
             setExecutingCommand(false);
         }
     };
 
-    const handleConfirmAction = async (auditId, rememberSession) => {
+    const handleConfirmAction = async (auditId) => {
         setConfirmLoading(true);
         try {
             const res = await confirmDeviceActionApi(auditId);
             if (res.success) {
                 dispatch(addToast({ type: 'success', message: 'Action authorized and executed!' }));
                 setConfirmModalData(null);
-                setLastExecutionResult({
-                    status: 'completed',
-                    action: res.audit?.action,
-                    tier: res.audit?.tier,
-                    executionTimeMs: res.audit?.executionTimeMs,
-                    step: 'Action authorized by user and executed'
-                });
+                setLastExecutionResult({ status: 'completed', action: res.audit?.action, tier: res.audit?.tier, executionTimeMs: res.audit?.executionTimeMs, step: 'Authorized and executed' });
                 loadData(true);
             }
         } catch (err) {
@@ -243,11 +254,11 @@ export default function DevicesPage() {
         try {
             const res = await undoDeviceActionApi(auditId);
             if (res.success) {
-                dispatch(addToast({ type: 'success', message: 'Action successfully reversed!' }));
+                dispatch(addToast({ type: 'success', message: 'Action reversed!' }));
                 loadData(true);
             }
-        } catch (err) {
-            dispatch(addToast({ type: 'error', message: err.response?.data?.message || 'Undo failed' }));
+        } catch {
+            dispatch(addToast({ type: 'error', message: 'Undo failed' }));
         }
     };
 
@@ -257,35 +268,13 @@ export default function DevicesPage() {
         try {
             const res = await syncClipboardApi({ text: clipboardText, targetDeviceId: selectedDevice });
             if (res.success) {
-                dispatch(addToast({ type: 'success', message: 'Clipboard broadcasted to paired devices!' }));
+                dispatch(addToast({ type: 'success', message: 'Clipboard synced to all paired devices!' }));
                 setClipboardText('');
             }
-        } catch (err) {
+        } catch {
             dispatch(addToast({ type: 'error', message: 'Failed to sync clipboard' }));
         } finally {
             setSyncingClipboard(false);
-        }
-    };
-
-    const onlineCount = devices.filter(d => d.status === 'online').length;
-
-    const handleBluetoothScan = async () => {
-        if (typeof navigator === 'undefined' || !navigator.bluetooth) {
-            dispatch(addToast({
-                type: 'info',
-                message: 'Web Bluetooth is not available in this browser. Account auto-sync is active across your devices!'
-            }));
-            return;
-        }
-        try {
-            const dev = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
-            if (dev) {
-                dispatch(addToast({ type: 'success', message: `Nearby Bluetooth device detected: ${dev.name || 'Device'}` }));
-            }
-        } catch (e) {
-            if (e.name !== 'NotFoundError') {
-                dispatch(addToast({ type: 'error', message: e.message }));
-            }
         }
     };
 
@@ -295,210 +284,229 @@ export default function DevicesPage() {
             return;
         }
         const socket = initializeSocketConnection();
-        socket.emit("device:relay_command", {
+        socket.emit('device:relay_command', {
             targetDeviceId: selectedDevice,
             action,
             params,
             senderDeviceName: 'Parsu Web'
         });
-        dispatch(addToast({ type: 'success', message: `Relayed command to paired device!` }));
+        dispatch(addToast({ type: 'success', message: 'Command relayed to device!' }));
+    };
+
+    const onlineCount = devices.filter(d => d.status === 'online').length;
+
+    const getDeviceIcon = (dev) => {
+        if (['android', 'ios'].includes(dev.platform)) return <RiSmartphoneLine size={18} className="text-emerald-400" />;
+        if (dev.platform === 'macos') return <RiMacLine size={18} className="text-zinc-300" />;
+        if (dev.deviceType === 'tablet') return <RiTabletLine size={18} className="text-violet-400" />;
+        return <RiComputerLine size={18} className="text-[var(--accent-cyan)]" />;
     };
 
     return (
         <SettingsPageLayout
-            title="Connected Devices & Agent Control"
-            icon={RiComputerLine}
-            description="Control desktop, mobile, and tablets from one unified AI agent."
+            title="Connected Devices"
+            icon={RiLinksLine}
+            description="Devices linked to your account appear here automatically — no token, no setup."
         >
             <div ref={containerRef} className="space-y-6">
 
-                {/* Hero / Overview Bar */}
+                {/* Stats Row */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="p-3.5 rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06]">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">Total Devices</span>
-                        <span className="text-xl font-bold text-zinc-900 dark:text-white">{devices.length}</span>
-                    </div>
-                    <div className="p-3.5 rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06]">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">Online Now</span>
-                        <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-xl font-bold text-emerald-400">{onlineCount}</span>
+                    {[
+                        { label: 'Total Devices', value: devices.length, color: 'text-zinc-100' },
+                        { label: 'Online Now', value: onlineCount, color: 'text-emerald-400', dot: true },
+                        { label: 'Avg Latency', value: '< 350ms', color: 'text-[var(--accent-cyan)] font-mono' },
+                        { label: 'Security', value: '3-Tier Guard', color: 'text-emerald-400', icon: RiShieldCheckLine },
+                    ].map((stat) => (
+                        <div key={stat.label} className="p-3.5 rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06]">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">{stat.label}</span>
+                            <div className="flex items-center gap-2">
+                                {stat.dot && <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />}
+                                {stat.icon && <stat.icon size={13} className={stat.color} />}
+                                <span className={`text-base font-bold ${stat.color}`}>{stat.value}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div className="p-3.5 rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06]">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">Execution Speed</span>
-                        <span className="text-xl font-bold text-[var(--accent-cyan)] font-mono">&lt; 350ms</span>
-                    </div>
-                    <div className="p-3.5 rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06]">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">Security Tier</span>
-                        <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1 mt-1">
-                            <RiShieldCheckLine size={15} /> 3-Tier Guard
-                        </span>
-                    </div>
+                    ))}
                 </div>
 
-                {/* Account-Linked Auto-Sync Info Banner */}
-                <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-r from-[var(--accent-cyan)]/[0.08] to-emerald-500/[0.06] border border-[var(--accent-cyan)]/20 relative overflow-hidden">
-                    <div className="flex items-start justify-between gap-4 flex-wrap sm:flex-nowrap">
-                        <div className="space-y-1">
-                            <div className="flex items-center gap-2">
+                {/* Account-Link Info Banner */}
+                <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-r from-[var(--accent-cyan)]/[0.08] to-emerald-500/[0.06] border border-[var(--accent-cyan)]/20">
+                    <div className="flex items-start gap-4 flex-wrap sm:flex-nowrap">
+                        <div className="flex-1 space-y-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
                                 <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                                <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
-                                    Instant Account-Linked Cross-Device Sync
-                                </h3>
-                                <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
-                                    Zero Setup
-                                </span>
+                                <h3 className="text-xs sm:text-sm font-bold text-white">Zero-Setup Account Sync</h3>
+                                <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">Spotify Connect Style</span>
                             </div>
-                            <p className="text-xs text-zinc-300/90 leading-relaxed max-w-xl">
-                                Any phone, tablet, or computer logged in as <strong className="text-[var(--accent-cyan)]">{user?.email || 'your account'}</strong> is automatically paired and synced in real-time. Control your desktop from your mobile, or trigger actions on your mobile from your desktop, seamlessly over WiFi and cloud.
+                            <p className="text-xs text-zinc-300/90 leading-relaxed">
+                                Any device logged into <strong className="text-[var(--accent-cyan)]">{user?.email || 'your account'}</strong> appears here automatically. Open the Parsu app, log in — done. No token to copy, no command to paste.
                             </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                            <button
-                                onClick={handleBluetoothScan}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-zinc-200 text-xs font-medium border border-white/[0.08] transition-all cursor-pointer"
-                                title="Scan for nearby Bluetooth peers"
+                            <a
+                                href="/chat"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--accent-cyan)]/15 border border-[var(--accent-cyan)]/30 text-[var(--accent-cyan)] text-xs font-semibold hover:bg-[var(--accent-cyan)]/25 transition-all cursor-pointer"
+                                title="Control devices via AI chat"
                             >
-                                <RiFlashlightLine size={14} className="text-amber-400" />
-                                Nearby Bluetooth Scan
-                            </button>
+                                <RiChat3Line size={14} />
+                                Control via Chat
+                            </a>
                         </div>
                     </div>
                 </div>
 
-                {/* Paired Devices Section */}
+                {/* Linked Devices */}
                 <div className="rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06] p-5">
                     <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                         <div>
                             <h2 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                                Paired Devices & Machines
+                                <RiLinkM size={15} className="text-[var(--accent-cyan)]" />
+                                Linked Devices
                             </h2>
-                            <p className="text-xs text-zinc-500 mt-0.5">
-                                Select a device to monitor hardware telemetry or run automations.
-                            </p>
+                            <p className="text-xs text-zinc-500 mt-0.5">Click a device to select it as a command target. Set one as your default.</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => { setRefreshing(true); loadData(true); }}
-                                className="p-2 text-zinc-400 hover:text-white rounded-xl bg-zinc-100 dark:bg-white/[0.04] transition-colors"
-                                title="Refresh device states"
-                            >
-                                <RiRefreshLine size={16} className={refreshing ? 'animate-spin' : ''} />
-                            </button>
-                            <button
-                                onClick={() => { setShowPairModal(true); setPairingResult(null); }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--accent-cyan)] text-black font-semibold text-xs hover:brightness-110 active:scale-95 transition-all shadow-sm"
-                            >
-                                <RiAddLine size={16} /> Pair New Device
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => { setRefreshing(true); loadData(true); }}
+                            className="p-2 text-zinc-400 hover:text-white rounded-xl bg-zinc-100 dark:bg-white/[0.04] hover:bg-zinc-200 dark:hover:bg-white/[0.08] transition-all cursor-pointer"
+                            title="Refresh device states"
+                        >
+                            <RiRefreshLine size={16} className={refreshing ? 'animate-spin' : ''} />
+                        </button>
                     </div>
 
                     {loading ? (
                         <div className="py-12 flex flex-col items-center justify-center gap-2 text-zinc-400 text-xs">
                             <RiLoader4Line size={24} className="animate-spin text-[var(--accent-cyan)]" />
-                            Discovering paired companions...
+                            <span>Discovering your linked devices...</span>
                         </div>
                     ) : devices.length === 0 ? (
                         <div className="py-12 text-center border border-dashed border-zinc-200 dark:border-white/[0.08] rounded-2xl p-6">
-                            <RiComputerLine size={36} className="mx-auto text-zinc-500 mb-2 opacity-50" />
-                            <h3 className="text-sm font-semibold text-zinc-300">No companion devices paired yet</h3>
-                            <p className="text-xs text-zinc-500 max-w-sm mx-auto mt-1 mb-4">
-                                Pair your desktop, laptop, or mobile phone to give Parsu real hands and eyes across your devices.
+                            <RiWifiLine size={36} className="mx-auto text-zinc-500 mb-3 opacity-50" />
+                            <h3 className="text-sm font-semibold text-zinc-300">No devices linked yet</h3>
+                            <p className="text-xs text-zinc-500 max-w-sm mx-auto mt-1">
+                                Open the Parsu desktop or mobile app and log into this account. This device will appear here instantly — no setup needed.
                             </p>
-                            <button
-                                onClick={() => setShowPairModal(true)}
-                                className="px-3.5 py-1.5 rounded-xl bg-[var(--accent-cyan)] text-black font-semibold text-xs hover:brightness-110 active:scale-95 transition-all"
-                            >
-                                Pair First Device
-                            </button>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                             {devices.map((dev) => {
                                 const isSelected = selectedDevice === dev._id;
                                 const isOnline = dev.status === 'online';
-                                const isMobile = ['android', 'ios'].includes(dev.platform);
+                                const isRenaming = renamingId === dev._id;
 
                                 return (
                                     <div
                                         key={dev._id}
-                                        onClick={() => setSelectedDevice(dev._id)}
-                                        className={`rounded-xl p-4 border transition-all cursor-pointer relative ${
+                                        onClick={() => !isRenaming && setSelectedDevice(dev._id)}
+                                        className={`rounded-xl p-4 border transition-all cursor-pointer relative group ${
                                             isSelected
                                                 ? 'border-[var(--accent-cyan)] bg-[var(--accent-cyan)]/[0.03] shadow-lg shadow-[var(--accent-cyan)]/5'
                                                 : 'border-zinc-200/60 dark:border-white/[0.06] hover:border-zinc-300 dark:hover:border-white/[0.12] bg-zinc-50/50 dark:bg-white/[0.02]'
                                         }`}
                                     >
                                         <div className="flex items-start justify-between gap-3">
-                                            <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                                 <div className="w-9 h-9 rounded-xl bg-zinc-200/60 dark:bg-white/[0.06] flex items-center justify-center shrink-0">
-                                                    {isMobile ? (
-                                                        <RiSmartphoneLine size={18} className="text-emerald-400" />
-                                                    ) : dev.platform === 'macos' ? (
-                                                        <RiMacLine size={18} className="text-zinc-200" />
-                                                    ) : (
-                                                        <RiComputerLine size={18} className="text-[var(--accent-cyan)]" />
-                                                    )}
+                                                    {getDeviceIcon(dev)}
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                                                            {dev.name}
-                                                        </h3>
-                                                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded uppercase bg-zinc-200 dark:bg-white/[0.06] text-zinc-400">
-                                                            {dev.platform}
-                                                        </span>
-                                                    </div>
+                                                <div className="min-w-0 flex-1">
+                                                    {isRenaming ? (
+                                                        <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                                                            <input
+                                                                autoFocus
+                                                                value={renameValue}
+                                                                onChange={e => setRenameValue(e.target.value)}
+                                                                onKeyDown={e => { if (e.key === 'Enter') handleSaveRename(dev._id); if (e.key === 'Escape') setRenamingId(null); }}
+                                                                className="flex-1 bg-zinc-100 dark:bg-zinc-800 border border-[var(--accent-cyan)]/50 rounded-lg px-2 py-0.5 text-xs text-zinc-100 outline-none focus:border-[var(--accent-cyan)] min-w-0"
+                                                            />
+                                                            <button
+                                                                onClick={() => handleSaveRename(dev._id)}
+                                                                disabled={renameLoading}
+                                                                className="p-1 rounded-lg bg-[var(--accent-cyan)]/20 text-[var(--accent-cyan)] hover:bg-[var(--accent-cyan)]/30 transition-all cursor-pointer"
+                                                            >
+                                                                {renameLoading ? <RiLoader4Line size={13} className="animate-spin" /> : <RiCheckLine size={13} />}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setRenamingId(null)}
+                                                                className="p-1 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-white/5 transition-all cursor-pointer"
+                                                            >
+                                                                <RiCloseLine size={13} />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                            <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate max-w-[130px]">{dev.name}</h3>
+                                                            <span className="text-[9px] font-mono px-1 py-px rounded uppercase bg-zinc-200 dark:bg-white/[0.06] text-zinc-400">{dev.platform}</span>
+                                                            {dev.isDefault && (
+                                                                <span className="text-[9px] font-bold px-1 py-px rounded bg-[var(--accent-cyan)]/15 text-[var(--accent-cyan)] border border-[var(--accent-cyan)]/20">Default</span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                     <div className="flex items-center gap-1.5 mt-0.5">
                                                         <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`} />
                                                         <span className="text-[11px] text-zinc-400 capitalize">{dev.status}</span>
-                                                        <span className="text-zinc-600 text-xs">•</span>
-                                                        <span className="text-[11px] text-zinc-500 font-mono">
-                                                            {dev.systemInfo?.hostname || 'Companion Node'}
-                                                        </span>
+                                                        <span className="text-zinc-600">·</span>
+                                                        <span className="text-[11px] text-zinc-500">{dev.deviceType}</span>
+                                                        {dev.lastSeen && (
+                                                            <>
+                                                                <span className="text-zinc-600">·</span>
+                                                                <span className="text-[10px] text-zinc-600">{new Date(dev.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleUnpair(dev._id); }}
-                                                className="text-zinc-500 hover:text-rose-400 p-1 rounded-lg transition-colors"
-                                                title="Unpair Device"
-                                            >
-                                                <RiDeleteBin6Line size={15} />
-                                            </button>
+                                            {/* Device Action Buttons */}
+                                            <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                                                {/* Rename */}
+                                                <button
+                                                    onClick={() => handleStartRename(dev)}
+                                                    className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-all cursor-pointer"
+                                                    title="Rename device"
+                                                >
+                                                    <RiEditLine size={14} />
+                                                </button>
+                                                {/* Set as default */}
+                                                <button
+                                                    onClick={() => handleSetDefault(dev._id)}
+                                                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${dev.isDefault ? 'text-amber-400 hover:bg-amber-400/10' : 'text-zinc-500 hover:text-amber-400 hover:bg-amber-400/10'}`}
+                                                    title={dev.isDefault ? 'Current default device' : 'Set as default device'}
+                                                >
+                                                    {dev.isDefault ? <RiStarFill size={14} /> : <RiStarLine size={14} />}
+                                                </button>
+                                                {/* Unlink */}
+                                                <button
+                                                    onClick={() => handleUnlink(dev._id, dev.name)}
+                                                    className="p-1.5 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                                                    title="Unlink this device"
+                                                >
+                                                    <RiDeleteBin6Line size={14} />
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {/* Telemetry Metrics */}
                                         {isOnline && dev.systemMetrics && (
-                                            <div className="mt-3.5 pt-3 border-t border-zinc-200/50 dark:border-white/[0.04] grid grid-cols-3 gap-2 text-center text-xs">
-                                                <div className="bg-zinc-100 dark:bg-white/[0.03] p-1.5 rounded-lg">
-                                                    <div className="flex items-center justify-center gap-1 text-[10px] text-zinc-400 mb-0.5">
-                                                        <RiCpuLine size={11} /> CPU
+                                            <div className="mt-3.5 pt-3 border-t border-zinc-200/50 dark:border-white/[0.04] grid grid-cols-3 gap-2 text-center">
+                                                {[
+                                                    { icon: RiCpuLine, label: 'CPU', value: `${dev.systemMetrics.cpuUsagePercent || 0}%` },
+                                                    { icon: RiRamLine, label: 'RAM', value: dev.systemMetrics.ramUsageMb ? `${Math.round(dev.systemMetrics.ramUsageMb / 1024)}GB` : 'N/A' },
+                                                    { icon: RiBattery2ChargeLine, label: 'Battery', value: `${dev.systemMetrics.batteryPercent ?? 100}%` },
+                                                ].map(m => (
+                                                    <div key={m.label} className="bg-zinc-100 dark:bg-white/[0.03] p-1.5 rounded-lg">
+                                                        <div className="flex items-center justify-center gap-1 text-[10px] text-zinc-400 mb-0.5">
+                                                            <m.icon size={10} /> {m.label}
+                                                        </div>
+                                                        <span className="font-mono text-xs font-semibold text-zinc-800 dark:text-zinc-200">{m.value}</span>
                                                     </div>
-                                                    <span className="font-mono text-xs font-semibold text-zinc-200">
-                                                        {dev.systemMetrics.cpuUsagePercent || 0}%
-                                                    </span>
-                                                </div>
-                                                <div className="bg-zinc-100 dark:bg-white/[0.03] p-1.5 rounded-lg">
-                                                    <div className="flex items-center justify-center gap-1 text-[10px] text-zinc-400 mb-0.5">
-                                                        <RiRamLine size={11} /> RAM
-                                                    </div>
-                                                    <span className="font-mono text-xs font-semibold text-zinc-200">
-                                                        {dev.systemMetrics.ramUsageMb ? `${Math.round(dev.systemMetrics.ramUsageMb / 1024)}GB` : 'N/A'}
-                                                    </span>
-                                                </div>
-                                                <div className="bg-zinc-100 dark:bg-white/[0.03] p-1.5 rounded-lg">
-                                                    <div className="flex items-center justify-center gap-1 text-[10px] text-zinc-400 mb-0.5">
-                                                        <RiBattery2ChargeLine size={11} /> Battery
-                                                    </div>
-                                                    <span className="font-mono text-xs font-semibold text-zinc-200">
-                                                        {dev.systemMetrics.batteryPercent ?? 100}%
-                                                    </span>
-                                                </div>
+                                                ))}
                                             </div>
+                                        )}
+
+                                        {/* Selected indicator */}
+                                        {isSelected && (
+                                            <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[var(--accent-cyan)] shadow-[0_0_6px_rgba(32,184,205,0.6)]" />
                                         )}
                                     </div>
                                 );
@@ -507,21 +515,21 @@ export default function DevicesPage() {
                     )}
                 </div>
 
-                {/* Sub-500ms Command Playground & Cross-Device Actions */}
+                {/* Quick Automation Dispatcher */}
                 <div className="rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06] p-5">
                     <h2 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2 mb-1">
                         <RiFlashlightLine size={16} className="text-amber-400" />
                         Quick Automation Dispatcher
                     </h2>
                     <p className="text-xs text-zinc-500 mb-4">
-                        Test instant OS commands directly against the selected companion device.
+                        Test instant OS commands on the selected companion device. You can also just ask the AI in chat!
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                         <select
                             value={testAction}
                             onChange={(e) => setTestAction(e.target.value)}
-                            className="bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-white/[0.08] text-xs rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-[var(--accent-cyan)] font-mono"
+                            className="flex-1 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-white/[0.08] text-xs rounded-xl px-3 py-2 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-[var(--accent-cyan)] font-mono"
                         >
                             <option value="get_stats">System Telemetry & Stats (Read-Only)</option>
                             <option value="list_processes">List Running Processes (Read-Only)</option>
@@ -529,78 +537,69 @@ export default function DevicesPage() {
                             <option value="read_clipboard">Read System Clipboard (Read-Only)</option>
                             <option value="send_notification">Send Native OS Notification (Mutating)</option>
                             <option value="write_clipboard">Write to Clipboard (Mutating)</option>
-                            <option value="close_app">Close Application [Notepad] (Destructive - Asks Permission)</option>
+                            <option value="close_app">Close Notepad (Destructive – Asks Permission)</option>
                         </select>
 
                         <button
                             onClick={handleExecuteAction}
                             disabled={executingCommand || !selectedDevice}
-                            className="px-4 py-2 rounded-xl bg-[var(--accent-cyan)] text-black font-semibold text-xs hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                            className="px-4 py-2 rounded-xl bg-[var(--accent-cyan)] text-black font-semibold text-xs hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                         >
                             {executingCommand ? (
-                                <>
-                                    <RiLoader4Line size={14} className="animate-spin" /> Dispatching...
-                                </>
+                                <><RiLoader4Line size={14} className="animate-spin" /> Dispatching...</>
                             ) : (
-                                <>
-                                    <RiPlayLine size={14} /> Execute Command
-                                </>
+                                <><RiPlayLine size={14} /> Execute Command</>
                             )}
                         </button>
                     </div>
 
-                    {/* Result Badge */}
                     {lastExecutionResult && (
                         <div className="mt-4">
                             <DeviceItemizedActionBadge
                                 {...lastExecutionResult}
-                                onConfirm={(auditId) => handleConfirmAction(auditId, false)}
+                                onConfirm={(auditId) => handleConfirmAction(auditId)}
                                 onUndo={handleUndo}
                             />
                         </div>
                     )}
                 </div>
 
-                {/* Cross-Device Universal Clipboard */}
+                {/* Universal Clipboard Sync */}
                 <div className="rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06] p-5">
                     <h2 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2 mb-1">
                         <RiClipboardLine size={16} className="text-emerald-400" />
                         Universal Clipboard Sync
                     </h2>
-                    <p className="text-xs text-zinc-500 mb-3">
-                        Broadcast text instantly across your phone and all connected computers.
-                    </p>
+                    <p className="text-xs text-zinc-500 mb-3">Broadcast text instantly across all your connected devices.</p>
 
                     <div className="flex gap-2">
                         <input
                             type="text"
                             value={clipboardText}
                             onChange={(e) => setClipboardText(e.target.value)}
-                            placeholder="Type or paste text to sync across paired devices..."
-                            className="flex-1 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-white/[0.08] text-xs rounded-xl px-3 py-2 text-zinc-200 focus:outline-none focus:border-[var(--accent-cyan)]"
+                            placeholder="Type or paste text to sync across linked devices..."
+                            className="flex-1 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-white/[0.08] text-xs rounded-xl px-3 py-2 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-[var(--accent-cyan)]"
                             onKeyDown={(e) => { if (e.key === 'Enter') handleSyncClipboard(); }}
                         />
                         <button
                             onClick={handleSyncClipboard}
                             disabled={syncingClipboard || !clipboardText.trim()}
-                            className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-white transition-all disabled:opacity-50"
+                            className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-white transition-all disabled:opacity-50 cursor-pointer"
                         >
-                            {syncingClipboard ? 'Syncing...' : 'Sync Everywhere'}
+                            {syncingClipboard ? 'Syncing...' : 'Sync'}
                         </button>
                     </div>
                 </div>
 
-                {/* Audit Log Table */}
+                {/* Audit Log */}
                 <div className="rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06] p-5">
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <h2 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                                 <RiTimeLine size={16} className="text-zinc-400" />
-                                Cross-Device Action Audit Log
+                                Action Audit Log
                             </h2>
-                            <p className="text-xs text-zinc-500 mt-0.5">
-                                Live itemized record of every automation command, duration, and safety status.
-                            </p>
+                            <p className="text-xs text-zinc-500 mt-0.5">Live record of every automation command, duration, and safety status.</p>
                         </div>
                     </div>
 
@@ -611,41 +610,33 @@ export default function DevicesPage() {
                             <table className="w-full text-left text-xs">
                                 <thead>
                                     <tr className="border-b border-zinc-200/60 dark:border-white/[0.06] text-zinc-400">
-                                        <th className="pb-2 font-medium">Timestamp</th>
-                                        <th className="pb-2 font-medium">Device</th>
+                                        <th className="pb-2 font-medium">Time</th>
                                         <th className="pb-2 font-medium">Action</th>
                                         <th className="pb-2 font-medium">Tier</th>
-                                        <th className="pb-2 font-medium">Duration</th>
+                                        <th className="pb-2 font-medium">ms</th>
                                         <th className="pb-2 font-medium">Status</th>
                                         <th className="pb-2 font-medium text-right">Undo</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-zinc-200/40 dark:divide-white/[0.04]">
                                     {auditLogs.map((log) => (
-                                        <tr key={log._id} className="hover:bg-white/[0.02]">
+                                        <tr key={log._id} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02]">
                                             <td className="py-2.5 text-zinc-400 font-mono text-[11px]">
-                                                {new Date(log.createdAt).toLocaleTimeString()}
+                                                {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                             </td>
-                                            <td className="py-2.5 text-zinc-200 font-medium">
-                                                {log.device?.name || 'Local Machine'}
-                                            </td>
-                                            <td className="py-2.5 font-mono text-[var(--accent-cyan)]">
-                                                {log.action}
-                                            </td>
+                                            <td className="py-2.5 font-mono text-[var(--accent-cyan)] text-[11px]">{log.action}</td>
                                             <td className="py-2.5">
                                                 <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
                                                     log.tier === 'destructive' ? 'bg-rose-500/10 text-rose-400' :
                                                     log.tier === 'mutating' ? 'bg-amber-500/10 text-amber-400' :
                                                     'bg-emerald-500/10 text-emerald-400'
-                                                }`}>
-                                                    {log.tier}
-                                                </span>
+                                                }`}>{log.tier}</span>
                                             </td>
                                             <td className="py-2.5 font-mono text-zinc-400 text-[11px]">
-                                                {log.executionTimeMs ? `${log.executionTimeMs}ms` : '—'}
+                                                {log.executionTimeMs ? `${log.executionTimeMs}` : '—'}
                                             </td>
                                             <td className="py-2.5">
-                                                <span className={`capitalize ${log.status === 'completed' ? 'text-emerald-400' : log.status === 'failed' ? 'text-rose-400' : 'text-amber-400'}`}>
+                                                <span className={`capitalize text-[11px] ${log.status === 'completed' ? 'text-emerald-400' : log.status === 'failed' ? 'text-rose-400' : 'text-amber-400'}`}>
                                                     {log.status}
                                                 </span>
                                             </td>
@@ -653,14 +644,14 @@ export default function DevicesPage() {
                                                 {log.canUndo && !log.undone ? (
                                                     <button
                                                         onClick={() => handleUndo(log._id)}
-                                                        className="text-[11px] text-zinc-400 hover:text-white px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700"
+                                                        className="text-[11px] text-zinc-400 hover:text-white px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors cursor-pointer flex items-center gap-1 ml-auto"
                                                     >
-                                                        Undo
+                                                        <RiArrowGoBackLine size={11} /> Undo
                                                     </button>
                                                 ) : log.undone ? (
                                                     <span className="text-[10px] text-zinc-500">Reversed</span>
                                                 ) : (
-                                                    <span className="text-zinc-600">—</span>
+                                                    <span className="text-zinc-700">—</span>
                                                 )}
                                             </td>
                                         </tr>
@@ -672,128 +663,6 @@ export default function DevicesPage() {
                 </div>
 
             </div>
-
-            {/* Pair Device Modal */}
-            {showPairModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-                    <div className="w-full max-w-lg rounded-2xl bg-[#0e1117] border border-zinc-800 shadow-2xl p-6 text-zinc-100 flex flex-col gap-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-base font-bold text-white flex items-center gap-2">
-                                <RiKey2Line size={18} className="text-[var(--accent-cyan)]" />
-                                Pair a New Device
-                            </h3>
-                            <button
-                                onClick={() => setShowPairModal(false)}
-                                className="text-zinc-400 hover:text-white"
-                            >
-                                <RiCloseLine size={20} />
-                            </button>
-                        </div>
-
-                        {!pairingResult ? (
-                            <form onSubmit={handlePairDevice} className="space-y-4">
-                                <div>
-                                    <label className="text-xs font-semibold text-zinc-400 block mb-1.5">
-                                        Device Platform
-                                    </label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {[
-                                            { id: 'windows', name: 'Windows', icon: RiComputerLine },
-                                            { id: 'macos', name: 'macOS', icon: RiMacLine },
-                                            { id: 'android', name: 'Android', icon: RiSmartphoneLine },
-                                        ].map(item => (
-                                            <button
-                                                key={item.id}
-                                                type="button"
-                                                onClick={() => setPairPlatform(item.id)}
-                                                className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${
-                                                    pairPlatform === item.id
-                                                        ? 'border-[var(--accent-cyan)] bg-[var(--accent-cyan)]/10 text-white'
-                                                        : 'border-zinc-800 hover:border-zinc-700 text-zinc-400'
-                                                }`}
-                                            >
-                                                <item.icon size={20} />
-                                                <span className="text-xs font-medium">{item.name}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="text-xs font-semibold text-zinc-400 block mb-1.5">
-                                        Device Nickname
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={pairDeviceName}
-                                        onChange={(e) => setPairDeviceName(e.target.value)}
-                                        placeholder="e.g. My Work Laptop, Pixel 8 Pro"
-                                        required
-                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[var(--accent-cyan)]"
-                                    />
-                                </div>
-
-                                {pairPlatform === 'android' && (
-                                    <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-900/30 text-xs text-emerald-300">
-                                        ℹ️ Android pairing will utilize the Parsu Accessibility Service for deep automation (tap, swipe, app launch, notifications).
-                                    </div>
-                                )}
-
-                                <div className="flex justify-end gap-2 pt-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPairModal(false)}
-                                        className="px-4 py-2 rounded-xl text-xs text-zinc-400 hover:text-white"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={pairingLoading}
-                                        className="px-4 py-2 rounded-xl bg-[var(--accent-cyan)] text-black font-semibold text-xs hover:brightness-110 active:scale-95 transition-all"
-                                    >
-                                        {pairingLoading ? 'Generating Token...' : 'Generate Pairing Token'}
-                                    </button>
-                                </div>
-                            </form>
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800">
-                                    <span className="text-[11px] text-zinc-400 block mb-1">Your Pairing Token:</span>
-                                    <div className="flex items-center justify-between gap-2">
-                                        <code className="font-mono text-sm text-[var(--accent-cyan)] break-all font-bold">
-                                            {pairingResult.pairingToken}
-                                        </code>
-                                        <button
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(pairingResult.pairingToken);
-                                                dispatch(addToast({ type: 'success', message: 'Token copied to clipboard!' }));
-                                            }}
-                                            className="px-2.5 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors shrink-0"
-                                        >
-                                            Copy
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="text-xs text-zinc-400 space-y-1.5">
-                                    <span className="font-semibold text-zinc-200 block">Desktop Setup Command:</span>
-                                    <pre className="font-mono text-[11px] p-2.5 rounded-lg bg-black/60 border border-white/[0.06] text-zinc-300 overflow-x-auto">
-                                        node parsu-desktop-companion.js --token {pairingResult.pairingToken}
-                                    </pre>
-                                </div>
-
-                                <button
-                                    onClick={() => setShowPairModal(false)}
-                                    className="w-full py-2 rounded-xl bg-[var(--accent-cyan)] text-black font-semibold text-xs hover:brightness-110"
-                                >
-                                    Done
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
 
             {/* Confirmation Modal */}
             <DeviceConfirmActionModal

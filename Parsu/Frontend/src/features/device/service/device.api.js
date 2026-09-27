@@ -11,13 +11,18 @@ export async function autoRegisterDeviceApi(payload) {
     return res.data;
 }
 
-export async function pairDeviceApi(payload) {
-    const res = await api.post('/api/devices/pair', payload);
+export async function getDeviceByIdApi(deviceId) {
+    const res = await api.get(`/api/devices/${deviceId}`);
     return res.data;
 }
 
-export async function getDeviceByIdApi(deviceId) {
-    const res = await api.get(`/api/devices/${deviceId}`);
+export async function renameDeviceApi(deviceId, name) {
+    const res = await api.patch(`/api/devices/${deviceId}/rename`, { name });
+    return res.data;
+}
+
+export async function setDefaultDeviceApi(deviceId) {
+    const res = await api.patch(`/api/devices/${deviceId}/default`);
     return res.data;
 }
 
@@ -32,8 +37,8 @@ export async function executeDeviceCommandApi(payload) {
     return res.data;
 }
 
-export async function confirmDeviceActionApi(auditId) {
-    const res = await api.post(`/api/devices/confirm/${auditId}`);
+export async function confirmDeviceActionApi(auditId, payload = {}) {
+    const res = await api.post(`/api/devices/confirm/${auditId}`, payload);
     return res.data;
 }
 
