@@ -5,23 +5,22 @@ import {
     RiCompass3Line,
     RiLayoutGridLine,
     RiListCheck2,
-    RiMenuLine,
     RiMessage2Line,
     RiCalendarLine,
     RiSortDesc,
     RiSortAsc,
-    RiUploadCloud2Line,
-    RiSideBarLine
+    RiUploadCloud2Line
 } from '@remixicon/react';
 import { useNavigate } from 'react-router';
 import Sidebar from '../../Components/Sidebar';
 import ThreadCard from '../components/ThreadCard';
 import MessageSearchResults from '../components/MessageSearchResults';
 import ParsuLogo from '../../Components/ParsuLogo';
+import ChatNavbar from '../components/ChatNavbar';
 import { useChat } from '../hook/useChat';
 import { useSelector, useDispatch } from 'react-redux';
 import { LibrarySkeleton } from '../components/Skeletons';
-import { setError, toggleSidebarCollapse } from '../chat.slice';
+import { setError } from '../chat.slice';
 import { addToast } from '../../../utils/toast.slice';
 import ConfirmationModal from '../../Components/ConfirmationModal';
 import { triggerBlobLibrarySearch, triggerBlobChatDeleted } from '../../../utils/blobReactions';
@@ -198,23 +197,13 @@ const Library = () => {
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             <div className={`flex-1 flex flex-col h-full ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} min-w-0 transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] w-full overflow-hidden`}>
-                {/* ChatGPT-style Header */}
-                <header className="shrink-0 h-12 sm:h-14 bg-white/90 dark:bg-[#0B0B0B]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-white/[0.08] flex items-center justify-between px-3 sm:px-6 z-40">
-                    <div className="flex items-center gap-2">
-                        {/* Mobile sidebar button */}
-                        <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all rounded-lg active:scale-95 cursor-pointer"
-                            aria-label="Open sidebar"
-                        >
-                            <RiMenuLine size={20} />
-                        </button>
-
-                        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-                            <RiHistoryLine size={17} className="text-[var(--accent-cyan)]" /> Library & History
-                        </span>
-                    </div>
-                </header>
+                {/* Main AI Chatbot Navbar (ChatGPT-style) */}
+                <ChatNavbar
+                    onOpenSidebar={() => setIsSidebarOpen(true)}
+                    title="Library & History"
+                    showShareButton={false}
+                    showVoiceButton={false}
+                />
 
                 {/* Scrollable content — only this area scrolls */}
                 <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">

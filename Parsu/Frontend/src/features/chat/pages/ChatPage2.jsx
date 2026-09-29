@@ -1,25 +1,20 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'react-router';
 import {
-    RiMenuLine,
-    RiShareLine,
     RiArrowDownLine,
-    RiCheckLine,
-    RiSpyLine,
-    RiSideBarLine,
-    RiVoiceprintLine
+    RiSpyLine
 } from '@remixicon/react';
 import Sidebar from '../../Components/Sidebar';
-import ParsuLogo from '../../Components/ParsuLogo';
 import ChatMessage from '../components/ChatMessage';
 import FollowUpInput from '../components/FollowUpInput';
 import { useChat } from '../hook/useChat';
 import { useSelector, useDispatch } from 'react-redux';
 import { MessagesSkeleton, ThinkingSkeleton } from '../components/Skeletons';
-import { setError, setLoading, toggleSidebarCollapse } from '../chat.slice';
+import { setError, setLoading } from '../chat.slice';
 import { addToast } from '../../../utils/toast.slice';
 import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
-import ModelSelectorDropdown from '../components/ModelSelectorDropdown';
+import ChatNavbar from '../components/ChatNavbar';
+import { getModels } from '../service/model.api';
 import { getStoredThinkingLevel } from '../components/ThinkingSelectorDropdown';
 import { saveQueueItem, getQueueItems, removeQueueItem } from '../../../utils/queueDb';
 import { useAiFeatureToggles } from '../../../utils/aiSettingsSync';
@@ -52,6 +47,7 @@ const ChatPage2 = () => {
 
     // Redux selectors for messages, pagination, and error states
     const messages = useSelector(state => state.chat.messages);
+    const chats = useSelector(state => state.chat.chats);
     const error = useSelector(state => state.chat.error);
     const hasMoreMessages = useSelector(state => state.chat.hasMoreMessages);
     const messagesPage = useSelector(state => state.chat.messagesPage);
@@ -99,6 +95,21 @@ const ChatPage2 = () => {
         window.addEventListener('model_auto_switched', handleAutoSwitch);
         return () => window.removeEventListener('model_auto_switched', handleAutoSwitch);
     }, []);
+
+    // Initialize model preference from backend or user custom key on mount
+    useEffect(() => {
+        let mounted = true;
+        getModels().then(data => {
+            if (mounted && data?.success) {
+                const activeCustom = data.customModels?.[0];
+                const initial = (user?.customApiKeys?.some(k => k.isActive !== false && k.apiKey) && activeCustom)
+                    ? activeCustom
+                    : (data.selectedModel || data.defaultModels?.[0]);
+                if (initial) setSelectedModel(initial);
+            }
+        }).catch(() => {});
+        return () => { mounted = false; };
+    }, [user]);
 
     // Share link button state
     const [isCopied, setIsCopied] = useState(false);
@@ -445,58 +456,13 @@ const ChatPage2 = () => {
 
             <div className={`flex-1 flex flex-col h-[100dvh] ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} overflow-hidden relative transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
 
-                {/* ChatGPT-style Header Container */}
-                <header className={`h-12 sm:h-14 bg-white/90 dark:bg-[#0B0B0B]/90 backdrop-blur-md z-30 shrink-0 border-b border-zinc-200/80 dark:border-white/[0.08] transition-all duration-300`}>
-                    <div className="max-w-[800px] mx-auto h-full flex items-center justify-between px-2.5 sm:px-6">
-                        <div className="flex items-center gap-2 sm:gap-3 overflow-hidden min-w-0">
-                            {/* Mobile sidebar button */}
-                            <button
-                                onClick={() => setIsSidebarOpen(true)}
-                                className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all rounded-lg shrink-0 active:scale-95 cursor-pointer"
-                                aria-label="Open sidebar"
-                            >
-                                <RiMenuLine size={20} />
-                            </button>
-
-                            <div className="flex items-center gap-2 shrink-0">
-                                <ParsuLogo size={24} className="text-zinc-900 dark:text-white shrink-0" />
-                                <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100 truncate">Parsu</span>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-                            <ModelSelectorDropdown
-                                selectedModel={selectedModel}
-                                onModelChange={setSelectedModel}
-                                compact={true}
-                                placement="bottom"
-                            />
-
-                            {/* Voice Agent Button */}
-                            <button
-                                onClick={() => setIsVoiceModeOpen(true)}
-                                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 active:scale-95 text-black transition-all cursor-pointer shadow-lg shadow-[var(--accent-cyan)]/30 shrink-0"
-                                title="Start Parsu Voice — Jarvis-style agent"
-                                aria-label="Voice agent"
-                            >
-                                <RiVoiceprintLine size={16} />
-                            </button>
-
-                            <button 
-                                onClick={handleShare}
-                                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl transition-all text-[11px] font-bold shrink-0 border
-                                        ${isCopied 
-                                            ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400' 
-                                            : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200'
-                                        }`}
-                                title="Share conversation"
-                            >
-                                {isCopied ? <RiCheckLine size={13} /> : <RiShareLine size={13} />}
-                                <span className="hidden md:inline">{isCopied ? "Copied" : "Share"}</span>
-                            </button>
-                        </div>
-                    </div>
-                </header>
+                {/* Main AI Chatbot Navbar (ChatGPT-style) */}
+                <ChatNavbar
+                    onOpenSidebar={() => setIsSidebarOpen(true)}
+                    title={chats.find(c => c._id === id)?.title}
+                    chatId={id}
+                    onOpenVoice={() => setIsVoiceModeOpen(true)}
+                />
 
                 {/* Incognito Banner */}
                 {incognito && (

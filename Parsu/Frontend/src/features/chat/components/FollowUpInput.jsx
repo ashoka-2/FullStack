@@ -17,7 +17,6 @@ import {
     RiGlobalLine,
     RiVoiceprintLine
 } from '@remixicon/react';
-import ModelSelectorDropdown from './ModelSelectorDropdown';
 import ThinkingSelectorDropdown from './ThinkingSelectorDropdown';
 import AttachmentPreviewStrip from './AttachmentPreviewStrip';
 import MessageQueueTray from './MessageQueueTray';
@@ -388,12 +387,6 @@ const FollowUpInput = ({
                                 <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
                             </button>
 
-                            {/* AI Model Selector */}
-                            <ModelSelectorDropdown
-                                selectedModel={selectedModel}
-                                onModelChange={onModelChange}
-                                compact={true}
-                            />
 
                             {/* AI Thinking Mode Selector */}
                             <ThinkingSelectorDropdown
@@ -624,13 +617,6 @@ const FollowUpInput = ({
                                     <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-600'}`} />
                                 </button>
 
-                                {/* Model Selector */}
-                                <ModelSelectorDropdown
-                                    selectedModel={selectedModel}
-                                    onModelChange={onModelChange}
-                                    compact={true}
-                                    placement="top"
-                                />
                             </div>
 
                             {/* Right Side Actions — always-visible MIC + 3-state: Stop / Send / Voice orb */}

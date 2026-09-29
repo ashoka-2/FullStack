@@ -18,18 +18,19 @@ import {
  * soft variant styling (default, accent/info, success, warning, danger),
  * and interactive action buttons at bottom-right.
  */
-const ToastItem = ({ id, message, description, title, type = 'default', action, duration = 4500 }) => {
+const ToastItem = ({ id, message, description, title, type = 'default', action, duration = 4000 }) => {
   const dispatch = useDispatch();
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
+    const timeMs = Number(duration) > 0 ? Number(duration) : 4000;
     const exitTimer = setTimeout(() => {
       setIsExiting(true);
-    }, Math.max(1000, duration - 300));
+    }, Math.max(400, timeMs - 300));
 
     const removeTimer = setTimeout(() => {
       dispatch(removeToast(id));
-    }, duration);
+    }, timeMs);
 
     return () => {
       clearTimeout(exitTimer);

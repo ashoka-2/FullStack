@@ -38,7 +38,7 @@ import { setError, setMessages } from '../chat.slice';
 import { addToast } from '../../../utils/toast.slice';
 import ParsuLogo from '../../Components/ParsuLogo';
 import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
-import ModelSelectorDropdown from './ModelSelectorDropdown';
+import { getModels } from '../service/model.api';
 import ThinkingSelectorDropdown, { getStoredThinkingLevel } from './ThinkingSelectorDropdown';
 import { useAiFeatureToggles } from '../../../utils/aiSettingsSync';
 import AttachmentPreviewStrip from './AttachmentPreviewStrip';
@@ -71,7 +71,8 @@ const ChatArea = () => {
   // Chat custom hook functions
   const { handleSendMessage, handleGetSuggestions, loading } = useChat();
   
-  // Global error & layout state from Redux
+  // Global auth, error & layout state from Redux
+  const user = useSelector(state => state.auth.user);
   const error = useSelector(state => state.chat.error);
   const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
   const dispatch = useDispatch();
@@ -126,6 +127,21 @@ const ChatArea = () => {
     window.addEventListener('model_auto_switched', handleAutoSwitch);
     return () => window.removeEventListener('model_auto_switched', handleAutoSwitch);
   }, []);
+
+  // Initialize model preference from backend or user custom key on mount
+  useEffect(() => {
+    let mounted = true;
+    getModels().then(data => {
+      if (mounted && data?.success) {
+        const activeCustom = data.customModels?.[0];
+        const initial = (user?.customApiKeys?.some(k => k.isActive !== false && k.apiKey) && activeCustom)
+          ? activeCustom
+          : (data.selectedModel || data.defaultModels?.[0]);
+        if (initial) setSelectedModel(initial);
+      }
+    }).catch(() => {});
+    return () => { mounted = false; };
+  }, [user]);
 
   // Speech Recognition (Voice to Text) state & Live Caption
   const [isListening, setIsListening] = useState(false);
@@ -348,8 +364,6 @@ const ChatArea = () => {
     }
   ];
 
-  // Global auth state
-  const user = useSelector(state => state.auth.user);
 
   // Handle message submission on Enter, send button, or suggestion click
   const onSubmit = async (e, text = null) => {
@@ -785,11 +799,6 @@ const ChatArea = () => {
                   <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
                 </button>
 
-                <ModelSelectorDropdown
-                  selectedModel={selectedModel}
-                  onModelChange={setSelectedModel}
-                />
-
                 <ThinkingSelectorDropdown
                   thinkingLevel={thinkingLevel}
                   onChange={setThinkingLevel}
@@ -1154,13 +1163,6 @@ const ChatArea = () => {
                   <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-600'}`} />
                 </button>
 
-                {/* Model Selector */}
-                <ModelSelectorDropdown
-                  selectedModel={selectedModel}
-                  onModelChange={setSelectedModel}
-                  compact={true}
-                  placement="top"
-                />
               </div>
 
               {/* Right Side Actions */}

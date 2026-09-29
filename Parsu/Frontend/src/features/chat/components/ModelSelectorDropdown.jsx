@@ -78,21 +78,11 @@ export default function ModelSelectorDropdown({
       if (onModelChange) {
         onModelChange(normalized);
       }
-
-      // Show friendly toast informing user of the automatic switch
-      if (switched.reason) {
-        dispatch(addToast({
-          type: "info",
-          title: "Model Switched",
-          message: switched.reason,
-          duration: 4000
-        }));
-      }
     }
 
     window.addEventListener("model_auto_switched", handleAutoSwitch);
     return () => window.removeEventListener("model_auto_switched", handleAutoSwitch);
-  }, [onModelChange, dispatch]);
+  }, [onModelChange]);
 
   // Load models from API
   useEffect(() => {
