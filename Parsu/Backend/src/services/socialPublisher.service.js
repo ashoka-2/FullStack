@@ -462,10 +462,14 @@ export async function publishToSocialPlatforms({
 }) {
     if (!userId) throw new Error("User ID is required for social publishing.");
 
-    // Check Free tier daily social post limit (10 posts per day)
-    const user = await userModel.findById(userId);
-    const isFreeTier = user?.subscription?.plan === 'free' && user?.role !== 'admin';
-    if (isFreeTier) {
+    // Check daily social post limit based on user subscription plan and custom API keys
+    const user = await userModel.findById(userId).select("+customApiKeys.apiKey");
+    const plan = user?.subscription?.plan || 'free';
+    const isUltra = plan === 'ultra' || user?.role === 'admin';
+    const isPro = plan === 'pro';
+    const hasCustomKey = Boolean(user?.customApiKeys && user.customApiKeys.some(k => k.isActive !== false && k.apiKey)) || Boolean(user?.geminiApiKey);
+
+    if (!isUltra) {
         const now = new Date();
         const lastReset = user.usageQuotas?.lastQueryReset ? new Date(user.usageQuotas.lastQueryReset) : new Date(0);
         const isDifferentDay = now.toDateString() !== lastReset.toDateString();
@@ -479,13 +483,21 @@ export async function publishToSocialPlatforms({
             );
         }
         
-        const limit = user.usageQuotas?.socialPostsLimit || 10;
+        let limit = 10;
+        if (isPro) {
+            limit = 50; // Pro users get 50 posts per day
+        } else if (hasCustomKey) {
+            limit = 20; // Free with custom key gets 20 posts per day
+        } else {
+            limit = 10; // Free without custom key gets 10 posts per day
+        }
+
         if (postsToday >= limit) {
             return {
                 successful: [],
                 failed: [],
                 notConnected: [],
-                summary: `Free tier limit reached: You can publish up to ${limit} social media posts per day (${postsToday}/${limit} used today). Upgrade to Pro for unlimited social posts.`
+                summary: `Daily social publishing limit reached: You can publish up to ${limit} posts per day (${postsToday}/${limit} used today). ${!hasCustomKey ? 'Add your custom API key in Settings to unlock 20 daily posts, or upgrade to Pro for 50 posts.' : 'Upgrade to Pro or Ultra for expanded limits.'}`
             };
         }
     }

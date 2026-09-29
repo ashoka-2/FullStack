@@ -13,8 +13,9 @@ import {
   RiCloseLine
 } from "@remixicon/react";
 import { useNavigate } from "react-router";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { getModels, setSelectedModel } from "../service/model.api";
+import { addToast } from "../../../utils/toast.slice.js";
 
 // Monochromatic Apple/AI-design styling for model provider badges (no rainbow colors)
 const NEUTRAL_THEME = {
@@ -54,8 +55,44 @@ export default function ModelSelectorDropdown({
   const dropdownRef = useRef(null);
   const popoverRef = useRef(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const user = useSelector(state => state.auth?.user);
   const [popoverCoords, setPopoverCoords] = useState({ top: 0, left: 0, width: 384, openUpward: false });
+
+  // Listen for automatic model switches (vision routing or quota failover)
+  useEffect(() => {
+    function handleAutoSwitch(e) {
+      const switched = e.detail;
+      if (!switched || !switched.modelId) return;
+
+      const normalized = {
+        id: switched.modelId,
+        modelId: switched.modelId,
+        name: switched.name || switched.modelName || switched.modelId,
+        modelName: switched.name || switched.modelName || switched.modelId,
+        provider: switched.provider || "gemini",
+        badge: switched.badge || (switched.reason?.toLowerCase().includes("vision") ? "Vision" : "Fast"),
+        isCustom: switched.isCustom || false
+      };
+
+      if (onModelChange) {
+        onModelChange(normalized);
+      }
+
+      // Show friendly toast informing user of the automatic switch
+      if (switched.reason) {
+        dispatch(addToast({
+          type: "info",
+          title: "Model Switched",
+          message: switched.reason,
+          duration: 4000
+        }));
+      }
+    }
+
+    window.addEventListener("model_auto_switched", handleAutoSwitch);
+    return () => window.removeEventListener("model_auto_switched", handleAutoSwitch);
+  }, [onModelChange, dispatch]);
 
   // Load models from API
   useEffect(() => {

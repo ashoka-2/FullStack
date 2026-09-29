@@ -75,63 +75,65 @@ export default function Pricing() {
             id: 'free',
             name: 'Starter',
             badge: 'Free Forever',
-            desc: 'Essential multi-model AI reasoning for individuals and students.',
+            desc: 'Essential multi-model AI reasoning, live web search & custom model BYOK integration.',
             monthlyPrice: 0,
             yearlyPrice: 0,
             period: 'Free forever',
             icon: RiFlashlightLine,
             isFree: true,
-            isBlur: false,
+            isComingSoon: false,
             features: [
-                'Unlimited Gemini 2.5 Flash queries',
-                'Live web search with Tavily grounding',
-                'Upload images, PDFs & text files',
-                'AI social connector previews',
-                'Standard response speed & rate limits',
-                'Public community support'
+                '50 AI messages per day (built-in models)',
+                'Unlimited AI messages when custom API key added',
+                '2 RAG file uploads per day (5 with custom API key)',
+                '10 social media posts daily (20 with custom API key)',
+                'Live internet search with real-time citations',
+                'Multimodal vision image analysis & captioning',
+                'Standard response speed & community support'
             ]
         },
         {
             id: 'pro',
             name: 'Pro',
             badge: 'Most Popular',
-            desc: 'Advanced intelligence with flagship reasoning models and deep web search.',
+            desc: 'Advanced intelligence with flagship reasoning models and expanded quotas.',
             monthlyPrice: currency === 'INR' ? 499 : 9,
             yearlyPrice: currency === 'INR' ? 399 : 7,
             period: billingCycle === 'yearly' ? 'billed annually' : 'billed monthly',
             icon: RiSparkling2Line,
             popular: true,
             isFree: false,
-            isBlur: !isPricingPublished,
+            isComingSoon: true,
             features: [
-                'Everything in Starter',
-                'Full access to Claude 3.7 Sonnet & GPT-4o',
-                'Unlimited deep internet research & citations',
-                'Persistent memory & custom user instructions',
-                'Multi-file RAG document analysis',
-                'Higher context window (200k tokens)',
-                'Priority inference GPU queue'
+                '50 AI messages per day on built-in flagship models',
+                'Unlimited AI messages when custom API key added',
+                '10 RAG file uploads per day (15 with custom API key)',
+                '50 social media posts daily (with or without custom key)',
+                'Full access to Claude 3.7 Sonnet, GPT-4o & Gemini Pro',
+                'Cross-chat vector memory & custom instructions',
+                'Priority inference GPU queue & fast responses'
             ]
         },
         {
             id: 'ultra',
             name: 'Ultra',
             badge: 'Maximum Power',
-            desc: 'Unrestricted frontier reasoning, massive context, and dedicated resources.',
+            desc: 'Unrestricted frontier reasoning, massive context, and unlimited everything.',
             monthlyPrice: currency === 'INR' ? 999 : 19,
             yearlyPrice: currency === 'INR' ? 799 : 15,
             period: billingCycle === 'yearly' ? 'billed annually' : 'billed monthly',
             icon: RiCpuLine,
             isFree: false,
-            isBlur: !isPricingPublished,
+            isComingSoon: true,
             features: [
-                'Everything in Pro',
-                'Frontier reasoning: o1, o3-mini & DeepSeek R1',
+                'Everything Unlimited — No daily caps or restrictions',
+                'Unlimited AI messages across all frontier models',
+                'Unlimited RAG document & PDF uploads',
+                'Unlimited social media posts across all platforms',
+                'Frontier models: OpenAI o1, o3-mini & DeepSeek R1',
                 'Massive 1M+ token context window',
-                'Custom API Key BYOK integration',
                 'Dedicated high-throughput compute pipeline',
-                'Early access to experimental multi-modal skills',
-                '24/7 Priority support & private channels'
+                '24/7 Priority support & VIP private channel'
             ]
         }
     ];
@@ -392,24 +394,8 @@ export default function Pricing() {
 
                                 {/* Features List & Action Container */}
                                 <div className="p-7 sm:p-8 flex-1 flex flex-col justify-between relative">
-                                    
-                                    {/* Fully blurred stealth overlay if unreleased */}
-                                    {isBlurred && (
-                                        <div className="absolute inset-0 z-20 backdrop-blur-md bg-white/70 dark:bg-black/60 flex flex-col items-center justify-center p-6 text-center select-none pointer-events-none rounded-b-3xl">
-                                            <div className="w-14 h-14 rounded-2xl bg-zinc-200/80 dark:bg-white/[0.08] border border-zinc-300 dark:border-white/15 flex items-center justify-center text-[var(--accent-cyan)] mb-3 shadow-xl shadow-cyan-500/10">
-                                                <RiLockLine size={24} />
-                                            </div>
-                                            <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-[var(--accent-cyan)]/15 border border-[var(--accent-cyan)]/30 text-[var(--accent-cyan)] mb-1.5">
-                                                Coming Soon
-                                            </span>
-                                            <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 max-w-[200px] leading-relaxed">
-                                                Will be unlocked upon official launch.
-                                            </p>
-                                        </div>
-                                    )}
-
                                     {/* Features */}
-                                    <ul className={`space-y-3.5 mb-8 ${isBlurred ? 'filter blur-[3px] opacity-25 select-none pointer-events-none' : ''}`}>
+                                    <ul className="space-y-3.5 mb-8">
                                         {tier.features.map((feat, fIdx) => (
                                             <li key={fIdx} className="flex items-start gap-3 text-xs text-zinc-700 dark:text-zinc-300">
                                                 <div className="w-4 h-4 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[var(--accent-cyan)] flex items-center justify-center shrink-0 mt-0.5">
@@ -421,14 +407,15 @@ export default function Pricing() {
                                     </ul>
 
                                     {/* CTA Button */}
-                                    <div className={`relative ${isBlurred ? 'filter blur-[2px] opacity-30 select-none pointer-events-none' : 'z-10'}`}>
-                                        {isBlurred ? (
+                                    <div className="relative z-10">
+                                        {tier.isComingSoon ? (
                                             <button
                                                 type="button"
-                                                disabled
-                                                className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-zinc-400 cursor-not-allowed text-center uppercase tracking-wider"
+                                                disabled={true}
+                                                className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-zinc-400 dark:text-zinc-500 cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-wider select-none shadow-none"
                                             >
-                                                Coming Soon
+                                                <RiLockLine size={14} />
+                                                <span>Coming Soon</span>
                                             </button>
                                         ) : tier.isFree ? (
                                             <Link

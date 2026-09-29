@@ -5,7 +5,7 @@ import messageModel from "../models/message.model.js";
 import documentModel from "../models/document.model.js";
 import { uploadFile } from "../services/imagekit.service.js";
 import { getIO } from "../sockets/server.socket.js";
-import { executeModelChatStream } from "../services/model.service.js";
+import { executeModelChatStream, doesModelSupportVision, getModelDisplayName } from "../services/model.service.js";
 import { decryptKey } from "../utils/encryption.utils.js";
 import { generateEmbedding, generateEmbeddings, chunkText, cosineSimilarity } from "../services/embedding.service.js";
 import { extractTextFromPdf } from "../services/pdf.service.js";
@@ -24,8 +24,11 @@ export async function sendMessage(req, res) {
         }
 
         // ── Free Tier Message Limit Enforcement ──
+        // If a user has added active custom API keys, they can send unlimited messages through their custom keys/models!
+        const hasActiveCustomKeys = (fullUser.customApiKeys && fullUser.customApiKeys.some(k => k.isActive !== false && k.apiKey)) || Boolean(fullUser.geminiApiKey);
         const isFreeTier = fullUser.subscription?.plan === "free" && fullUser.role !== "admin";
-        if (isFreeTier) {
+
+        if (isFreeTier && !hasActiveCustomKeys) {
             const now = new Date();
             const lastReset = fullUser.usageQuotas?.lastQueryReset ? new Date(fullUser.usageQuotas.lastQueryReset) : new Date(0);
             const isDifferentDay = now.toDateString() !== lastReset.toDateString();
@@ -42,12 +45,18 @@ export async function sendMessage(req, res) {
             const limit = fullUser.usageQuotas?.queriesLimit || 50;
             if (queriesToday >= limit) {
                 return res.status(429).json({
-                    message: `Daily message quota reached (${limit}/${limit} messages used today on Free tier). Upgrade to Pro for unlimited AI messages.`,
+                    message: `Daily message quota reached (${limit}/${limit} messages used today on Free tier). Add your own custom AI model API keys in Settings to enjoy unlimited messaging, or upgrade to Pro!`,
                     limitReached: true,
                     quotaType: "messages"
                 });
             }
 
+            await userModel.updateOne(
+                { _id: fullUser._id },
+                { $inc: { "usageQuotas.queriesToday": 1 } }
+            );
+        } else {
+            // User has custom API keys or paid plan: track queries for dashboard statistics without blocking
             await userModel.updateOne(
                 { _id: fullUser._id },
                 { $inc: { "usageQuotas.queriesToday": 1 } }
@@ -86,8 +95,44 @@ export async function sendMessage(req, res) {
                         uploaded.fileType = isImage ? "image" : isVideo ? "video" : "document";
                         uploaded.mimetype = f.mimetype;
 
-                        // 2. If PDF, extract text, chunk, embed, and store in MongoDB vector database
+                        // 2. If PDF, enforce RAG document quota and extract vector embeddings
                         if (isPdf) {
+                            const userPlan = fullUser.subscription?.plan || "free";
+                            const isUltraUser = userPlan === "ultra" || userPlan === "enterprise" || fullUser.role === "admin";
+                            const isProUser = userPlan === "pro";
+
+                            let docLimit = 2;
+                            if (isUltraUser) {
+                                docLimit = -1;
+                            } else if (isProUser) {
+                                docLimit = hasActiveCustomKeys ? 15 : 10;
+                            } else {
+                                docLimit = hasActiveCustomKeys ? 5 : 2;
+                            }
+
+                            if (docLimit !== -1) {
+                                const now = new Date();
+                                const lastReset = fullUser.usageQuotas?.lastQueryReset ? new Date(fullUser.usageQuotas.lastQueryReset) : new Date(0);
+                                const isDifferentDay = now.toDateString() !== lastReset.toDateString();
+                                let docsToday = isDifferentDay ? 0 : (fullUser.usageQuotas?.documentUploadsToday || 0);
+
+                                if (docsToday >= docLimit) {
+                                    return res.status(429).json({
+                                        message: `Daily RAG document upload limit reached (${docsToday}/${docLimit} documents uploaded today). ${!hasActiveCustomKeys ? 'Add your custom API key in Settings to increase to ' + (isProUser ? '15' : '5') + ' uploads/day, or upgrade plan!' : 'Upgrade to Pro or Ultra for expanded upload limits!'}`,
+                                        limitReached: true,
+                                        quotaType: "documents"
+                                    });
+                                }
+
+                                await userModel.updateOne(
+                                    { _id: fullUser._id },
+                                    { 
+                                        $set: isDifferentDay ? { "usageQuotas.documentUploadsToday": 1, "usageQuotas.lastQueryReset": now } : {},
+                                        $inc: isDifferentDay ? {} : { "usageQuotas.documentUploadsToday": 1 }
+                                    }
+                                );
+                            }
+
                             try {
                                 const extractedText = await extractTextFromPdf(f.buffer);
                                 if (extractedText && extractedText.trim()) {
@@ -169,12 +214,35 @@ export async function sendMessage(req, res) {
 
         const messages = await messageModel.find({ chat: chatId || chat._id });
         
-        const targetProvider = req.body.provider || fullUser?.selectedModel?.provider || "gemini";
-        const targetModelId = req.body.modelId || fullUser?.selectedModel?.modelId || "gemini-2.5-flash";
-        const isCustom = req.body.isCustom || false;
-        const keyId = req.body.keyId;
+        // Collect multimodal images for model execution (from current upload or attachments)
+        const imagesForModel = [];
+        if (rawFiles && rawFiles.length > 0) {
+            for (const f of rawFiles) {
+                if (f.mimetype?.startsWith("image/")) {
+                    imagesForModel.push({
+                        name: f.originalname,
+                        mimeType: f.mimetype,
+                        base64: f.buffer ? f.buffer.toString("base64") : null
+                    });
+                }
+            }
+        }
+        if (uploadedFiles && uploadedFiles.length > 0) {
+            for (const up of uploadedFiles) {
+                if (up.fileType === "image" && !imagesForModel.some(img => img.url === up.url)) {
+                    imagesForModel.push({
+                        name: up.name,
+                        mimeType: up.mimetype || "image/jpeg",
+                        url: up.url
+                    });
+                }
+            }
+        }
+        const hasImageInRequest = imagesForModel.length > 0;
 
-        let result = "";
+        let targetProvider = req.body.provider || fullUser?.selectedModel?.provider || "gemini";
+        let targetModelId = req.body.modelId || fullUser?.selectedModel?.modelId || "gemini-3.6-flash";
+        const keyId = req.body.keyId;
 
         // Check if user has a custom key for this provider
         let customKeyEntry = null;
@@ -184,6 +252,111 @@ export async function sendMessage(req, res) {
                 (k.provider === targetProvider && (!req.body.keyName || k.name === req.body.keyName))
             );
         }
+
+        let activeSwitchedModel = null;
+
+        // SMART TASK ROUTING: If user uploaded an image, ensure a Vision-capable model is used
+        if (hasImageInRequest && !doesModelSupportVision(targetModelId, targetProvider)) {
+            console.log(`[SmartRouter] Upload contains image, but selected model [${targetModelId}] does not support vision. Auto-routing to Vision model...`);
+            
+            let chosenVisionKey = null;
+            let chosenVisionModelId = null;
+            let chosenVisionProvider = null;
+
+            // 1. Check if user has a custom API key for a vision model (e.g. OpenAI GPT-4o, Claude 3.5, or Gemini)
+            if (fullUser.customApiKeys && fullUser.customApiKeys.length > 0) {
+                for (const k of fullUser.customApiKeys) {
+                    if (!k.apiKey || k.isActive === false) continue;
+                    const vModel = (k.models || []).find(m => doesModelSupportVision(m.id, k.provider));
+                    if (vModel) {
+                        chosenVisionKey = k;
+                        chosenVisionModelId = vModel.id;
+                        chosenVisionProvider = k.provider;
+                        break;
+                    } else if (doesModelSupportVision(k.provider === "gemini" ? "gemini-3.6-flash" : "gpt-4o", k.provider)) {
+                        chosenVisionKey = k;
+                        chosenVisionModelId = k.provider === "gemini" ? "gemini-3.6-flash" : "gpt-4o";
+                        chosenVisionProvider = k.provider;
+                        break;
+                    }
+                }
+            }
+
+            if (chosenVisionKey) {
+                targetProvider = chosenVisionProvider;
+                targetModelId = chosenVisionModelId;
+                customKeyEntry = chosenVisionKey;
+            } else {
+                targetProvider = "gemini";
+                targetModelId = "gemini-3.6-flash";
+                customKeyEntry = null;
+            }
+
+            const newDisplayName = getModelDisplayName(targetModelId, targetProvider);
+            activeSwitchedModel = {
+                modelId: targetModelId,
+                provider: targetProvider,
+                name: newDisplayName,
+                badge: "Vision",
+                reason: `Auto-switched to ${newDisplayName} for image analysis and captioning`
+            };
+
+            if (socketId) {
+                io.to(socketId).emit("model:switched", activeSwitchedModel);
+                io.to(socketId).emit("chunk", `*(Switched to ${newDisplayName} for image analysis)*\n\n`);
+            }
+
+            // Persist model preference to user
+            await userModel.updateOne(
+                { _id: fullUser._id },
+                { $set: { selectedModel: { provider: targetProvider, modelId: targetModelId, modelName: newDisplayName } } }
+            ).catch(() => {});
+        }
+
+        // AUTO-PRIORITIZE CUSTOM MODEL: If user has connected custom API key(s) and is currently on a built-in model,
+        // automatically route prompts to their custom model and reflect this in the UI
+        const isUsingBuiltInModel = !customKeyEntry || !customKeyEntry.apiKey;
+        if (hasActiveCustomKeys && isUsingBuiltInModel && fullUser.customApiKeys && fullUser.customApiKeys.length > 0) {
+            const activeCustomKey = fullUser.customApiKeys.find(k => k.isActive !== false && k.apiKey);
+            if (activeCustomKey) {
+                let chosenCustomModel = null;
+                if (hasImageInRequest) {
+                    chosenCustomModel = (activeCustomKey.models || []).find(m => doesModelSupportVision(m.id, activeCustomKey.provider))?.id;
+                    if (!chosenCustomModel && doesModelSupportVision(activeCustomKey.provider === "gemini" ? "gemini-3.6-flash" : "gpt-4o", activeCustomKey.provider)) {
+                        chosenCustomModel = activeCustomKey.provider === "gemini" ? "gemini-3.6-flash" : "gpt-4o";
+                    }
+                }
+                if (!chosenCustomModel) {
+                    chosenCustomModel = activeCustomKey.models?.[0]?.id || (activeCustomKey.provider === "gemini" ? "gemini-3.6-flash" : activeCustomKey.provider === "anthropic" ? "claude-3-5-sonnet-20241022" : "gpt-4o");
+                }
+
+                targetProvider = activeCustomKey.provider;
+                targetModelId = chosenCustomModel;
+                customKeyEntry = activeCustomKey;
+
+                const newDisplayName = getModelDisplayName(targetModelId, targetProvider);
+                activeSwitchedModel = {
+                    modelId: targetModelId,
+                    provider: targetProvider,
+                    name: newDisplayName,
+                    badge: doesModelSupportVision(targetModelId, targetProvider) ? "Vision" : "Custom",
+                    isCustom: true,
+                    reason: `Auto-switched to your connected ${newDisplayName} custom model`
+                };
+
+                if (socketId) {
+                    io.to(socketId).emit("model:switched", activeSwitchedModel);
+                    io.to(socketId).emit("chunk", `*(Using your connected ${newDisplayName} custom model)*\n\n`);
+                }
+
+                await userModel.updateOne(
+                    { _id: fullUser._id },
+                    { $set: { selectedModel: { provider: targetProvider, modelId: targetModelId, modelName: newDisplayName } } }
+                ).catch(() => {});
+            }
+        }
+
+        let result = "";
 
         // Web Search evaluation (Tavily live search vs pure AI model knowledge)
         const explicitWebSearch = req.body.webSearch === 'true' || req.body.webSearch === true;
@@ -379,67 +552,172 @@ export async function sendMessage(req, res) {
             documentRagContext
         };
 
-        const isNonGeminiProvider = targetProvider !== "gemini";
-        const hasCustomKey = Boolean(customKeyEntry && customKeyEntry.apiKey);
+        // ── Multi-Model Execution & Automatic Limit Failover Cascade ──
+        // 1. Build priority queue of candidate models (selected model -> other custom keys -> system built-in models)
+        const candidates = [];
 
-        if (hasCustomKey || isNonGeminiProvider) {
-            let decryptedApiKey = "";
-            let targetBaseUrl = "";
-            if (customKeyEntry) {
-                decryptedApiKey = decryptKey(customKeyEntry.apiKey);
-                targetBaseUrl = customKeyEntry.baseUrl;
-            }
+        // Primary selected candidate
+        candidates.push({
+            provider: targetProvider,
+            modelId: targetModelId,
+            keyEntry: customKeyEntry,
+            isCustom: Boolean(customKeyEntry && customKeyEntry.apiKey)
+        });
 
-            try {
-                // Prepare message payload: inject real-time Tavily search context, media links, and feedback instruction into latest user message
-                const chatHistoryForModel = messages.map(m => ({ role: m.role, content: m.content }));
-                const extraContext = (webSearchContext ? webSearchContext : "") + 
-                    (uploadedMediaContext ? uploadedMediaContext : "") +
-                    (feedbackInstruction ? feedbackInstruction : "") + 
-                    (memoryContext ? memoryContext : "") +
-                    (documentRagContext ? `\n\n--- DOCUMENT CONTEXT ---\n${documentRagContext}` : "");
-                if (extraContext && chatHistoryForModel.length > 0) {
-                    const lastUserIndex = chatHistoryForModel.map(m => m.role).lastIndexOf("user");
-                    if (lastUserIndex !== -1) {
-                        chatHistoryForModel[lastUserIndex].content += extraContext;
+        // Other active custom keys added by the user
+        if (fullUser.customApiKeys && fullUser.customApiKeys.length > 0) {
+            for (const key of fullUser.customApiKeys) {
+                if (!key.apiKey || key.isActive === false) continue;
+                if (customKeyEntry && key._id.toString() === customKeyEntry._id.toString()) continue;
+
+                let chosenModel = null;
+                if (hasImageInRequest) {
+                    chosenModel = (key.models || []).find(m => doesModelSupportVision(m.id, key.provider))?.id;
+                    if (!chosenModel && doesModelSupportVision(key.provider === "gemini" ? "gemini-3.6-flash" : "gpt-4o", key.provider)) {
+                        chosenModel = key.provider === "gemini" ? "gemini-3.6-flash" : "gpt-4o";
                     }
+                } else {
+                    chosenModel = key.models?.[0]?.id || (key.provider === "gemini" ? "gemini-3.6-flash" : key.provider === "mistral" ? "open-mistral-nemo" : "gpt-4o");
                 }
 
-                // Execute using universal stream engine
-                result = await executeModelChatStream({
-                    provider: targetProvider,
-                    modelId: targetModelId,
-                    apiKey: decryptedApiKey,
-                    baseUrl: targetBaseUrl,
-                    messages: chatHistoryForModel,
-                    customInstructions,
-                    thinkingLevel,
-                    memorySummary,
-                    memoryFacts,
-                    documentRagContext,
-                    onChunk: (chunk) => {
+                if (chosenModel) {
+                    candidates.push({
+                        provider: key.provider,
+                        modelId: chosenModel,
+                        keyEntry: key,
+                        isCustom: true
+                    });
+                }
+            }
+        }
+
+        // Built-in system models as final high-availability fallbacks
+        const systemFallbacks = hasImageInRequest
+            ? [{ provider: "gemini", modelId: "gemini-3.6-flash", isCustom: false }]
+            : [
+                { provider: "gemini", modelId: "gemini-3.6-flash", isCustom: false },
+                { provider: "groq", modelId: "llama-3.3-70b-versatile", isCustom: false },
+                { provider: "mistral", modelId: "open-mistral-nemo", isCustom: false }
+            ];
+
+        for (const sys of systemFallbacks) {
+            if (!candidates.some(c => c.provider === sys.provider && c.modelId === sys.modelId)) {
+                candidates.push({ ...sys, keyEntry: null });
+            }
+        }
+
+        // Prepare message payload: inject real-time Tavily search context, media links, and feedback instruction
+        const chatHistoryForModel = messages.map(m => ({ role: m.role, content: m.content }));
+        const extraContext = (webSearchContext ? webSearchContext : "") + 
+            (uploadedMediaContext ? uploadedMediaContext : "") +
+            (feedbackInstruction ? feedbackInstruction : "") + 
+            (memoryContext ? memoryContext : "") +
+            (documentRagContext ? `\n\n--- DOCUMENT CONTEXT ---\n${documentRagContext}` : "");
+        if (extraContext && chatHistoryForModel.length > 0) {
+            const lastUserIndex = chatHistoryForModel.map(m => m.role).lastIndexOf("user");
+            if (lastUserIndex !== -1) {
+                chatHistoryForModel[lastUserIndex].content += extraContext;
+            }
+        }
+
+        let executedSuccessfully = false;
+        let lastExecutionError = null;
+
+        for (let idx = 0; idx < candidates.length; idx++) {
+            const candidate = candidates[idx];
+            const candidateDisplayName = getModelDisplayName(candidate.modelId, candidate.provider);
+
+            try {
+                let decryptedApiKey = "";
+                let targetBaseUrl = "";
+                if (candidate.keyEntry && candidate.keyEntry.apiKey) {
+                    decryptedApiKey = decryptKey(candidate.keyEntry.apiKey);
+                    targetBaseUrl = candidate.keyEntry.baseUrl;
+                }
+
+                // If candidate is default built-in Gemini without custom key, execute standard Gemini pipeline
+                if (candidate.provider === "gemini" && !decryptedApiKey) {
+                    result = await generateResponse(messages, (chunk) => {
                         if (socketId) {
                             io.to(socketId).emit("chunk", chunk);
                         }
-                    }
-                });
-            } catch (modelErr) {
-                console.warn(`⚠️ Custom/Provider [${targetProvider} - ${targetModelId}] execution failed:`, modelErr.message);
-                const isOverload = /overload|429|503|quota|resource.*exhaust|high traffic|rate limit|capacity/i.test(modelErr.message);
-                const switchNotice = isOverload
-                    ? `\n\n*(Notice: ${targetProvider} is experiencing high traffic right now. Seamlessly switching to Gemini search...)*\n\n`
-                    : `\n\n*(Notice: ${targetProvider} model returned: "${modelErr.message}". Defaulting to Gemini search)*\n\n`;
-                if (socketId) {
-                    io.to(socketId).emit("chunk", switchNotice);
+                    }, userContextWithSearch);
+                } else {
+                    result = await executeModelChatStream({
+                        provider: candidate.provider,
+                        modelId: candidate.modelId,
+                        apiKey: decryptedApiKey,
+                        baseUrl: targetBaseUrl,
+                        messages: chatHistoryForModel,
+                        images: imagesForModel,
+                        customInstructions,
+                        thinkingLevel,
+                        memorySummary,
+                        memoryFacts,
+                        documentRagContext,
+                        onChunk: (chunk) => {
+                            if (socketId) {
+                                io.to(socketId).emit("chunk", chunk);
+                            }
+                        }
+                    });
                 }
-                result = await generateResponse(messages, (chunk) => {
-                    if (socketId) {
-                        io.to(socketId).emit("chunk", chunk);
+
+                if (result && result.trim()) {
+                    executedSuccessfully = true;
+
+                    // If failover chose a different model than the original target, inform client and persist in DB
+                    if (candidate.modelId !== targetModelId || candidate.provider !== targetProvider) {
+                        activeSwitchedModel = {
+                            modelId: candidate.modelId,
+                            provider: candidate.provider,
+                            name: candidateDisplayName,
+                            badge: doesModelSupportVision(candidate.modelId, candidate.provider) ? "Vision" : "Fast",
+                            reason: `Switched to ${candidateDisplayName} because previous model hit quota or rate limit`
+                        };
+
+                        if (socketId) {
+                            io.to(socketId).emit("model:switched", activeSwitchedModel);
+                        }
+
+                        await userModel.updateOne(
+                            { _id: fullUser._id },
+                            { $set: { selectedModel: { provider: candidate.provider, modelId: candidate.modelId, modelName: candidateDisplayName } } }
+                        ).catch(() => {});
                     }
-                }, userContextWithSearch);
+
+                    break; // Model successfully generated output!
+                }
+            } catch (err) {
+                lastExecutionError = err;
+                console.warn(`⚠️ Candidate [${candidate.provider} - ${candidate.modelId}] failed:`, err.message);
+
+                // If another candidate is available, notify client of failover and switch
+                if (idx < candidates.length - 1) {
+                    const nextCandidate = candidates[idx + 1];
+                    const nextDisplayName = getModelDisplayName(nextCandidate.modelId, nextCandidate.provider);
+                    const isLimit = /429|quota|rate.*limit|insufficient|balance|credit|capacity|overload|exhaust/i.test(err.message || "");
+                    
+                    const switchNotice = isLimit
+                        ? `\n\n*(Notice: ${candidateDisplayName} quota/rate limit reached. Seamlessly switching to ${nextDisplayName}...)*\n\n`
+                        : `\n\n*(Notice: ${candidateDisplayName} encountered high traffic. Seamlessly switching to ${nextDisplayName}...)*\n\n`;
+
+                    if (socketId) {
+                        io.to(socketId).emit("chunk", switchNotice);
+                        io.to(socketId).emit("model:switched", {
+                            modelId: nextCandidate.modelId,
+                            provider: nextCandidate.provider,
+                            name: nextDisplayName,
+                            reason: `${candidateDisplayName} limit reached. Switched to ${nextDisplayName}`
+                        });
+                    }
+                }
             }
-        } else {
-            // Default Gemini pipeline with internet search and LangChain tools
+        }
+
+        // Final safety net if all candidates encountered issues
+        if (!executedSuccessfully) {
+            console.warn("⚠️ All candidates failed. Invoking primary Gemini fallback pipeline...");
             result = await generateResponse(messages, (chunk) => {
                 if (socketId) {
                     io.to(socketId).emit("chunk", chunk);
@@ -451,14 +729,15 @@ export async function sendMessage(req, res) {
             chat: chatId || chat._id,
             content: result,
             role: "ai"
-        })
+        });
 
         res.status(201).json({
             title: title,
             chat: chat || await chatModel.findById(chatId),
             userMessage,
-            aiMessage
-        })
+            aiMessage,
+            switchedModel: activeSwitchedModel
+        });
 
         // Fire-and-forget: Generate embeddings for both messages and learn user facts into memory
         if (!isIncognito) {

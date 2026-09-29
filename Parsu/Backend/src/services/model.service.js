@@ -11,25 +11,28 @@ export const DEFAULT_MODELS = [
     description: "Google's ultra-fast multimodal flagship model",
     isBuiltIn: true,
     isDefault: true,
-    category: "general"
+    category: "general",
+    supportsVision: true
   },
   {
     id: "gemini-flash-latest",
     name: "Gemini Flash Latest",
     provider: "gemini",
-    badge: "High Speed",
+    badge: "High Speed · Vision",
     description: "Ultra-fast generation with long context window",
     isBuiltIn: true,
-    category: "fast"
+    category: "fast",
+    supportsVision: true
   },
   {
     id: "gemini-pro-latest",
     name: "Gemini Pro Latest",
     provider: "gemini",
-    badge: "Reasoning",
+    badge: "Reasoning · Vision",
     description: "Complex reasoning, coding & analysis",
     isBuiltIn: true,
-    category: "reasoning"
+    category: "reasoning",
+    supportsVision: true
   },
   {
     id: "open-mistral-nemo",
@@ -38,7 +41,8 @@ export const DEFAULT_MODELS = [
     badge: "128k Context",
     description: "Mistral's powerful 12B reasoning model (free tier supported)",
     isBuiltIn: true,
-    category: "fast"
+    category: "fast",
+    supportsVision: false
   },
   {
     id: "codestral-latest",
@@ -47,7 +51,8 @@ export const DEFAULT_MODELS = [
     badge: "Coding",
     description: "Mistral's code generation & software reasoning specialist",
     isBuiltIn: true,
-    category: "reasoning"
+    category: "reasoning",
+    supportsVision: false
   },
   {
     id: "llama-3.3-70b-versatile",
@@ -56,7 +61,8 @@ export const DEFAULT_MODELS = [
     badge: "Blazing Fast",
     description: "Meta Llama 3.3 running on ultra-fast Groq LPU",
     isBuiltIn: true,
-    category: "fast"
+    category: "fast",
+    supportsVision: false
   },
   {
     id: "deepseek-chat",
@@ -65,7 +71,8 @@ export const DEFAULT_MODELS = [
     badge: "Code & Chat",
     description: "State-of-the-art general purpose chat and coding",
     isBuiltIn: true,
-    category: "general"
+    category: "general",
+    supportsVision: false
   },
   {
     id: "deepseek-reasoner",
@@ -74,9 +81,59 @@ export const DEFAULT_MODELS = [
     badge: "Chain of Thought",
     description: "Deep reasoning model with internal thought process",
     isBuiltIn: true,
-    category: "reasoning"
+    category: "reasoning",
+    supportsVision: false
   }
 ];
+
+/**
+ * Check if a model supports multimodal vision (images)
+ */
+export function doesModelSupportVision(modelId, provider) {
+  if (!modelId) return false;
+  const m = (modelId || "").toLowerCase();
+  const p = (provider || "").toLowerCase();
+
+  // Check DEFAULT_MODELS first
+  const known = DEFAULT_MODELS.find(dm => dm.id === modelId);
+  if (known && typeof known.supportsVision === "boolean") {
+    return known.supportsVision;
+  }
+
+  // Google Gemini models natively support vision
+  if (p === "gemini" || m.includes("gemini")) return true;
+
+  // Anthropic Claude 3 and 3.5 / 3.7 support vision
+  if (p === "anthropic" || m.includes("claude-3") || m.includes("claude-3-5") || m.includes("claude-3-7")) return true;
+
+  // OpenAI Vision models & open-weights multimodal models
+  if (
+    m.includes("gpt-4o") ||
+    m.includes("gpt-4-turbo") ||
+    m.includes("vision") ||
+    m.includes("-vl") ||
+    m.includes("pixtral") ||
+    m.includes("llava") ||
+    m.includes("qwen-vl")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Get friendly display name for model
+ */
+export function getModelDisplayName(modelId, provider) {
+  const builtIn = DEFAULT_MODELS.find(m => m.id === modelId);
+  if (builtIn) return builtIn.name;
+  if (!modelId) return "AI Model";
+  return modelId
+    .split(/[-_]/)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
 
 export const PROVIDER_CONFIGS = {
   gemini: {
@@ -323,6 +380,7 @@ export async function executeModelChatStream({
   apiKey = "",
   baseUrl = "",
   messages = [],
+  images = [],
   customInstructions = "",
   thinkingLevel = "low",
   memorySummary = "",
@@ -382,10 +440,28 @@ CRITICAL CITATION & LINK RULES:
 
     // Format chat contents
     const contents = [];
-    for (const msg of messages) {
+    for (let i = 0; i < messages.length; i++) {
+      const msg = messages[i];
+      const isLastUser = (i === messages.length - 1 || i === messages.map(m => m.role).lastIndexOf("user")) && msg.role !== "assistant";
+      const parts = [{ text: msg.content || "" }];
+
+      // Attach multimodal images to the latest user message
+      if (isLastUser && images && images.length > 0) {
+        for (const img of images) {
+          if (img.base64 && img.mimeType) {
+            parts.push({
+              inlineData: {
+                mimeType: img.mimeType,
+                data: img.base64
+              }
+            });
+          }
+        }
+      }
+
       contents.push({
         role: msg.role === "assistant" ? "model" : "user",
-        parts: [{ text: msg.content || "" }]
+        parts
       });
     }
 
@@ -425,10 +501,34 @@ CRITICAL CITATION & LINK RULES:
     const key = apiKey || process.env.ANTHROPIC_API_KEY;
     if (!key) throw new Error("Missing Anthropic API Key");
 
-    const claudeMessages = messages.map(m => ({
-      role: m.role === "assistant" ? "assistant" : "user",
-      content: m.content || ""
-    }));
+    const claudeMessages = messages.map((m, idx) => {
+      const isLastUser = (idx === messages.length - 1 || idx === messages.map(x => x.role).lastIndexOf("user")) && m.role !== "assistant";
+      if (isLastUser && images && images.length > 0) {
+        const parts = [];
+        for (const img of images) {
+          if (img.base64 && img.mimeType) {
+            parts.push({
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: img.mimeType,
+                data: img.base64
+              }
+            });
+          }
+        }
+        parts.push({ type: "text", text: m.content || "Analyze this image." });
+        return {
+          role: "user",
+          content: parts
+        };
+      }
+
+      return {
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: m.content || ""
+      };
+    });
 
     const response = await axios({
       method: "post",
@@ -504,10 +604,34 @@ CRITICAL CITATION & LINK RULES:
 
   const formattedMessages = [
     { role: "system", content: systemPrompt },
-    ...messages.map(m => ({
-      role: m.role === "assistant" ? "assistant" : "user",
-      content: m.content || ""
-    }))
+    ...messages.map((m, idx) => {
+      const isLastUser = (idx === messages.length - 1 || idx === messages.map(x => x.role).lastIndexOf("user")) && m.role !== "assistant";
+      if (isLastUser && images && images.length > 0) {
+        const parts = [{ type: "text", text: m.content || "Analyze this image." }];
+        for (const img of images) {
+          if (img.base64 && img.mimeType) {
+            parts.push({
+              type: "image_url",
+              image_url: { url: `data:${img.mimeType};base64,${img.base64}` }
+            });
+          } else if (img.url) {
+            parts.push({
+              type: "image_url",
+              image_url: { url: img.url }
+            });
+          }
+        }
+        return {
+          role: "user",
+          content: parts
+        };
+      }
+
+      return {
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: m.content || ""
+      };
+    })
   ];
 
   const headers = {

@@ -13,7 +13,8 @@ import {
     RiLoader4Line,
     RiFileList3Line,
     RiShareForwardLine,
-    RiInfinityLine
+    RiInfinityLine,
+    RiKey2Line
 } from '@remixicon/react';
 import SettingsPageLayout from './SettingsPageLayout';
 import { fetchSubscriptionStatus, createRazorpayOrder, verifyPaymentSignature } from '../../service/subscription.api';
@@ -155,19 +156,25 @@ export default function SubscriptionSettingsPage() {
         }
     };
 
+    const hasCustomKeys = Boolean(quotas?.hasCustomKey) || Boolean(user?.customApiKeys && user.customApiKeys.some(k => k.isActive !== false && k.apiKey)) || Boolean(user?.geminiApiKey);
+    const isUnlimitedQueries = isUltra || hasCustomKeys || quotas.queriesLimit === -1;
+    const effectiveQueriesLimit = isUnlimitedQueries ? -1 : (quotas.queriesLimit || 50);
+    const effectiveDocLimit = isUltra ? -1 : (isPro ? (hasCustomKeys ? 15 : 10) : (hasCustomKeys ? 5 : 2));
+    const effectiveSocialLimit = isUltra ? -1 : (isPro ? 50 : (hasCustomKeys ? 20 : 10));
+
     const getQueryPercentage = () => {
-        if (quotas.queriesLimit === -1) return 100;
-        return Math.min(100, Math.round((quotas.queriesToday / quotas.queriesLimit) * 100));
+        if (isUnlimitedQueries) return 100;
+        return Math.min(100, Math.round(((quotas.queriesToday || 0) / effectiveQueriesLimit) * 100));
     };
 
     const getDocPercentage = () => {
-        if (quotas.documentUploadsLimit === -1) return 100;
-        return Math.min(100, Math.round((quotas.documentUploadsToday / quotas.documentUploadsLimit) * 100));
+        if (effectiveDocLimit === -1) return 100;
+        return Math.min(100, Math.round(((quotas.documentUploadsToday || 0) / effectiveDocLimit) * 100));
     };
 
     const getSocialPercentage = () => {
-        if (quotas.socialPostsLimit === -1) return 100;
-        return Math.min(100, Math.round((quotas.socialPostsThisMonth / quotas.socialPostsLimit) * 100));
+        if (effectiveSocialLimit === -1) return 100;
+        return Math.min(100, Math.round(((quotas.socialPostsThisMonth || 0) / effectiveSocialLimit) * 100));
     };
 
     return (
@@ -251,6 +258,69 @@ export default function SubscriptionSettingsPage() {
                     </div>
                 </div>
 
+                {/* ── Custom API Key Benefit Status Banner ── */}
+                {hasCustomKeys ? (
+                    <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shrink-0">
+                                <RiKey2Line size={20} />
+                            </div>
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                        <RiCheckLine size={12} />
+                                        Custom Key Added
+                                    </span>
+                                    <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                        BYOK Boost Active
+                                    </span>
+                                </div>
+                                <p className="text-xs font-medium text-zinc-800 dark:text-zinc-200">
+                                    <strong>Unlimited</strong> AI Messages &bull; <strong>{isPro ? '15' : '5'}</strong> RAG file uploads/day &bull; <strong>{isPro ? '50' : '20'}</strong> Social media posts/day
+                                </p>
+                                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                    When you prompt the AI, requests route to your custom model with automatic multi-model failover on quota limits.
+                                </p>
+                            </div>
+                        </div>
+                        <Link
+                            to="/settings/api-keys"
+                            className="px-3.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 font-semibold text-xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                        >
+                            <span>Manage Keys</span>
+                            <RiArrowRightLine size={13} />
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-950/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 shrink-0">
+                                <RiKey2Line size={20} />
+                            </div>
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                                        Standard Quotas (No Custom Key)
+                                    </span>
+                                </div>
+                                <p className="text-xs font-medium text-zinc-800 dark:text-zinc-200">
+                                    Daily 50 messages &bull; 2 RAG file uploads/day &bull; 10 Social posts/day
+                                </p>
+                                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                    Add your custom API key to unlock <strong>Unlimited AI messages</strong>, <strong>5 RAG uploads/day</strong>, and <strong>20 social posts daily</strong>!
+                                </p>
+                            </div>
+                        </div>
+                        <Link
+                            to="/settings/api-keys"
+                            className="px-3.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-semibold text-xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                        >
+                            <span>Add Custom Key</span>
+                            <RiArrowRightLine size={13} />
+                        </Link>
+                    </div>
+                )}
+
                 {/* ── Real-Time Resource Quotas Dashboard ── */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -274,16 +344,16 @@ export default function SubscriptionSettingsPage() {
                         <div className="p-5 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                                    Daily AI Queries
+                                    Daily AI Messages
                                 </span>
                                 <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1">
-                                    {quotas.queriesLimit === -1 ? (
+                                    {isUnlimitedQueries ? (
                                         <span className="flex items-center gap-1 text-emerald-500">
                                             <RiInfinityLine size={16} />
                                             <span>Unlimited</span>
                                         </span>
                                     ) : (
-                                        `${quotas.queriesToday} / ${quotas.queriesLimit}`
+                                        `${quotas.queriesToday || 0} / ${effectiveQueriesLimit}`
                                     )}
                                 </span>
                             </div>
@@ -291,18 +361,18 @@ export default function SubscriptionSettingsPage() {
                             <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-white/10 overflow-hidden">
                                 <div
                                     className={`h-full rounded-full transition-all duration-500 ${
-                                        quotas.queriesLimit === -1
+                                        isUnlimitedQueries
                                             ? 'bg-emerald-500 w-full'
                                             : getQueryPercentage() > 80
                                             ? 'bg-red-500'
                                             : 'bg-cyan-500'
                                     }`}
-                                    style={{ width: `${quotas.queriesLimit === -1 ? 100 : getQueryPercentage()}%` }}
+                                    style={{ width: `${isUnlimitedQueries ? 100 : getQueryPercentage()}%` }}
                                 />
                             </div>
 
                             <p className="text-[10px] text-zinc-400">
-                                {quotas.queriesLimit === -1 ? 'No daily cap on inquiries' : 'Resets midnight every 24 hours'}
+                                {isUnlimitedQueries ? 'Custom key active — Unlimited messages & multi-model failover' : '50 messages per day (Add custom key for Unlimited)'}
                             </p>
                         </div>
 
@@ -313,13 +383,13 @@ export default function SubscriptionSettingsPage() {
                                     Document / RAG Uploads
                                 </span>
                                 <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1">
-                                    {quotas.documentUploadsLimit === -1 ? (
+                                    {effectiveDocLimit === -1 ? (
                                         <span className="flex items-center gap-1 text-emerald-500">
                                             <RiInfinityLine size={16} />
                                             <span>Unlimited</span>
                                         </span>
                                     ) : (
-                                        `${quotas.documentUploadsToday} / ${quotas.documentUploadsLimit}`
+                                        `${quotas.documentUploadsToday || 0} / ${effectiveDocLimit}`
                                     )}
                                 </span>
                             </div>
@@ -327,12 +397,16 @@ export default function SubscriptionSettingsPage() {
                             <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-white/10 overflow-hidden">
                                 <div
                                     className="h-full rounded-full bg-blue-500 transition-all duration-500"
-                                    style={{ width: `${quotas.documentUploadsLimit === -1 ? 100 : getDocPercentage()}%` }}
+                                    style={{ width: `${effectiveDocLimit === -1 ? 100 : getDocPercentage()}%` }}
                                 />
                             </div>
 
                             <p className="text-[10px] text-zinc-400">
-                                {quotas.documentUploadsLimit === -1 ? 'Unlimited document research' : `${quotas.documentUploadsLimit} uploads included in plan`}
+                                {effectiveDocLimit === -1
+                                    ? 'Unlimited document research'
+                                    : hasCustomKeys
+                                    ? `${effectiveDocLimit} uploads daily with custom key`
+                                    : `${effectiveDocLimit} uploads daily standard (Add custom key to get 5/day)`}
                             </p>
                         </div>
 
@@ -340,16 +414,16 @@ export default function SubscriptionSettingsPage() {
                         <div className="p-5 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                                    Social Publishing / Mo
+                                    Social Publishing / Day
                                 </span>
                                 <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1">
-                                    {quotas.socialPostsLimit === -1 ? (
+                                    {effectiveSocialLimit === -1 ? (
                                         <span className="flex items-center gap-1 text-emerald-500">
                                             <RiInfinityLine size={16} />
                                             <span>Unlimited</span>
                                         </span>
                                     ) : (
-                                        `${quotas.socialPostsThisMonth} / ${quotas.socialPostsLimit}`
+                                        `${quotas.socialPostsThisMonth || 0} / ${effectiveSocialLimit}`
                                     )}
                                 </span>
                             </div>
@@ -357,15 +431,89 @@ export default function SubscriptionSettingsPage() {
                             <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-white/10 overflow-hidden">
                                 <div
                                     className="h-full rounded-full bg-purple-500 transition-all duration-500"
-                                    style={{ width: `${quotas.socialPostsLimit === -1 ? 100 : getSocialPercentage()}%` }}
+                                    style={{ width: `${effectiveSocialLimit === -1 ? 100 : getSocialPercentage()}%` }}
                                 />
                             </div>
 
                             <p className="text-[10px] text-zinc-400">
-                                Across YouTube, X, Instagram, LinkedIn & more
+                                {effectiveSocialLimit === -1
+                                    ? 'Unlimited social publishing across platforms'
+                                    : hasCustomKeys
+                                    ? `${effectiveSocialLimit} posts daily with custom key`
+                                    : `${effectiveSocialLimit} posts daily standard (Add custom key for 20/day)`}
                             </p>
                         </div>
 
+                    </div>
+                </div>
+
+                {/* ── Quota Matrix Comparison ── */}
+                <div className="p-6 rounded-3xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 space-y-4 shadow-xs">
+                    <div>
+                        <h4 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                            <RiShieldCheckLine size={18} className="text-cyan-500" />
+                            <span>Plan & Custom Key Quota Matrix</span>
+                        </h4>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                            Detailed overview of daily allowances based on plan and custom API key status.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+                        {/* Free - Default */}
+                        <div className={`p-4 rounded-2xl border ${!hasCustomKeys && isFree ? 'border-cyan-500/50 bg-cyan-500/5 ring-1 ring-cyan-500/30' : 'border-zinc-200/80 dark:border-white/10 bg-zinc-50 dark:bg-white/[0.02]'} space-y-2`}>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-zinc-900 dark:text-white">Free (Default)</span>
+                                {!hasCustomKeys && isFree && <span className="text-[10px] font-extrabold text-cyan-500">Current</span>}
+                            </div>
+                            <ul className="text-xs space-y-1.5 text-zinc-600 dark:text-zinc-400">
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 50 messages / day</li>
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 2 RAG files / day</li>
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 10 social posts / day</li>
+                            </ul>
+                        </div>
+
+                        {/* Free - Custom Key */}
+                        <div className={`p-4 rounded-2xl border ${hasCustomKeys && isFree ? 'border-emerald-500/50 bg-emerald-500/5 ring-1 ring-emerald-500/30' : 'border-zinc-200/80 dark:border-white/10 bg-zinc-50 dark:bg-white/[0.02]'} space-y-2`}>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                    <RiKey2Line size={13} />
+                                    Free + Custom Key
+                                </span>
+                                {hasCustomKeys && isFree && <span className="text-[10px] font-extrabold text-emerald-500">Current</span>}
+                            </div>
+                            <ul className="text-xs space-y-1.5 text-zinc-600 dark:text-zinc-400">
+                                <li className="flex items-center gap-1.5 font-semibold text-emerald-600 dark:text-emerald-400"><RiCheckLine size={14} className="shrink-0" /> Unlimited messages</li>
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 5 RAG files / day</li>
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 20 social posts / day</li>
+                            </ul>
+                        </div>
+
+                        {/* Pro Plan */}
+                        <div className={`p-4 rounded-2xl border ${isPro ? 'border-cyan-500/50 bg-cyan-500/5 ring-1 ring-cyan-500/30' : 'border-zinc-200/80 dark:border-white/10 bg-zinc-50 dark:bg-white/[0.02]'} space-y-2`}>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-zinc-900 dark:text-white">Pro Plan</span>
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500">Coming Soon</span>
+                            </div>
+                            <ul className="text-xs space-y-1.5 text-zinc-600 dark:text-zinc-400">
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 50 msgs / day (or Unlimited w/ key)</li>
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 10 RAG files (15 w/ key)</li>
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 50 social posts / day</li>
+                            </ul>
+                        </div>
+
+                        {/* Ultra Plan */}
+                        <div className={`p-4 rounded-2xl border ${isUltra ? 'border-amber-500/50 bg-amber-500/5 ring-1 ring-amber-500/30' : 'border-zinc-200/80 dark:border-white/10 bg-zinc-50 dark:bg-white/[0.02]'} space-y-2`}>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-amber-500">Ultra Plan</span>
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500">Coming Soon</span>
+                            </div>
+                            <ul className="text-xs space-y-1.5 text-zinc-600 dark:text-zinc-400">
+                                <li className="flex items-center gap-1.5 font-semibold text-amber-500"><RiInfinityLine size={14} className="shrink-0" /> Unlimited messages</li>
+                                <li className="flex items-center gap-1.5 font-semibold text-amber-500"><RiInfinityLine size={14} className="shrink-0" /> Unlimited RAG files</li>
+                                <li className="flex items-center gap-1.5 font-semibold text-amber-500"><RiInfinityLine size={14} className="shrink-0" /> Unlimited social posts</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 

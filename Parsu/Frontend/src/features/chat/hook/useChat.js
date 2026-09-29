@@ -73,6 +73,11 @@ export const useChat = () => {
             const resolvedThinking = thinkingLevel || modelOptions?.thinkingLevel || 'low';
             const response = await sendMessage(message, chatId, file, socket?.id, modelOptions, webSearch, memory, isIncognito, resolvedThinking);
             
+            // If the model was auto-switched on the server (vision routing or quota failover), dispatch UI update
+            if (response.switchedModel && typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("model_auto_switched", { detail: response.switchedModel }));
+            }
+
             // If a new chat was created, update current active chat ID and refresh list (skip sidebar sync if incognito)
             if (response.chat) {
                 dispatch(setCurrentChatId(response.chat._id));

@@ -278,7 +278,7 @@ export async function verifyPayment(req, res) {
 export async function getSubscriptionStatus(req, res) {
     try {
         const userId = req.user?.id;
-        const user = await userModel.findById(userId).select("subscription usageQuotas username email role");
+        const user = await userModel.findById(userId).select("subscription usageQuotas username email role customApiKeys geminiApiKey");
 
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
@@ -292,13 +292,39 @@ export async function getSubscriptionStatus(req, res) {
             endDate: null
         };
 
-        const quotas = user.usageQuotas || {
-            queriesToday: 0,
-            queriesLimit: 50,
-            documentUploadsToday: 0,
-            documentUploadsLimit: 2,
-            socialPostsThisMonth: 0,
-            socialPostsLimit: 10
+        const hasCustomKey = Boolean(user.customApiKeys && user.customApiKeys.some(k => k.isActive !== false && k.apiKey)) || Boolean(user.geminiApiKey);
+        const plan = subscription.plan || "free";
+        const isUltra = plan === "ultra" || plan === "enterprise" || user.role === "admin";
+        const isPro = plan === "pro";
+
+        let queriesLimit = 50;
+        let documentUploadsLimit = 2;
+        let socialPostsLimit = 10;
+
+        if (isUltra) {
+            queriesLimit = -1; // Unlimited
+            documentUploadsLimit = -1; // Unlimited
+            socialPostsLimit = -1; // Unlimited
+        } else if (isPro) {
+            queriesLimit = hasCustomKey ? -1 : 50; // 50 without custom key, unlimited with custom key
+            documentUploadsLimit = hasCustomKey ? 15 : 10; // 10 without custom key, 15 with custom key
+            socialPostsLimit = 50; // 50 daily posts for Pro
+        } else {
+            // Free
+            queriesLimit = hasCustomKey ? -1 : 50; // 50 without custom key, unlimited with custom key
+            documentUploadsLimit = hasCustomKey ? 5 : 2; // 2 without custom key, 5 with custom key
+            socialPostsLimit = hasCustomKey ? 20 : 10; // 10 without custom key, 20 with custom key
+        }
+
+        const rawQuotas = user.usageQuotas || {};
+        const quotas = {
+            queriesToday: rawQuotas.queriesToday || 0,
+            queriesLimit,
+            documentUploadsToday: rawQuotas.documentUploadsToday || 0,
+            documentUploadsLimit,
+            socialPostsThisMonth: rawQuotas.socialPostsThisMonth || 0,
+            socialPostsLimit,
+            hasCustomKey
         };
 
         return res.status(200).json({

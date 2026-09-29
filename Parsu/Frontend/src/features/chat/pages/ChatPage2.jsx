@@ -57,6 +57,7 @@ const ChatPage2 = () => {
     const messagesPage = useSelector(state => state.chat.messagesPage);
     const isLoadingMore = useSelector(state => state.chat.isLoadingMore);
     const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
+    const user = useSelector(state => state.auth?.user);
     const dispatch = useDispatch();
     const [latestMessageId, setLatestMessageId] = useState(null);
     const [showScrollButton, setShowScrollButton] = useState(false);
@@ -78,6 +79,25 @@ const ChatPage2 = () => {
         const handler = (e) => setIncognito(Boolean(e.detail));
         window.addEventListener('parsu_incognito_change', handler);
         return () => window.removeEventListener('parsu_incognito_change', handler);
+    }, []);
+
+    // Sync active model state when auto-switched by server
+    useEffect(() => {
+        const handleAutoSwitch = (e) => {
+            if (e.detail?.modelId) {
+                setSelectedModel({
+                    id: e.detail.modelId,
+                    modelId: e.detail.modelId,
+                    name: e.detail.name || e.detail.modelName || e.detail.modelId,
+                    modelName: e.detail.name || e.detail.modelName || e.detail.modelId,
+                    provider: e.detail.provider || 'gemini',
+                    badge: e.detail.badge || 'Fast',
+                    isCustom: Boolean(e.detail.isCustom)
+                });
+            }
+        };
+        window.addEventListener('model_auto_switched', handleAutoSwitch);
+        return () => window.removeEventListener('model_auto_switched', handleAutoSwitch);
     }, []);
 
     // Share link button state
@@ -294,6 +314,27 @@ const ChatPage2 = () => {
             }
         }
 
+        // Optimistically auto-switch to custom model if user added custom key and is currently on built-in model
+        let effectiveSendModel = selectedModel;
+        const activeCustomKey = user?.customApiKeys?.find(k => k.isActive !== false && k.apiKey);
+        if (activeCustomKey && !selectedModel?.isCustom) {
+            const customModelId = activeCustomKey.models?.[0]?.id || (activeCustomKey.provider === "gemini" ? "gemini-3.6-flash" : activeCustomKey.provider === "anthropic" ? "claude-3-5-sonnet-20241022" : "gpt-4o");
+            const customModelName = activeCustomKey.models?.[0]?.name || `${activeCustomKey.provider?.toUpperCase()} (${customModelId})`;
+            const optimisticCustomModel = {
+                id: customModelId,
+                modelId: customModelId,
+                name: customModelName,
+                modelName: customModelName,
+                provider: activeCustomKey.provider,
+                badge: "Custom Key",
+                isCustom: true,
+                keyId: activeCustomKey._id
+            };
+            setSelectedModel(optimisticCustomModel);
+            effectiveSendModel = optimisticCustomModel;
+            window.dispatchEvent(new CustomEvent('model_auto_switched', { detail: optimisticCustomModel }));
+        }
+
         // If AI is currently generating response, add message to queue!
         if (isGenerating) {
             const queueItem = {
@@ -303,7 +344,7 @@ const ChatPage2 = () => {
                 text: currentInput,
                 files: [...files],
                 fileObjects: filesToSend,
-                model: selectedModel,
+                model: effectiveSendModel,
                 webSearch: webSearch
             };
             setMessageQueue(prev => [...prev, queueItem]);
@@ -318,7 +359,7 @@ const ChatPage2 = () => {
         setFiles([]);
 
         try {
-            const response = await handleSendMessage(currentInput, id, filesToSend, selectedModel, webSearch, memoryEnabled, incognito, thinkingLevel);
+            const response = await handleSendMessage(currentInput, id, filesToSend, effectiveSendModel, webSearch, memoryEnabled, incognito, thinkingLevel);
             if (response && response.aiMessage) {
                 setLatestMessageId(response.aiMessage._id);
                 setTimeout(scrollToBottom, 100);

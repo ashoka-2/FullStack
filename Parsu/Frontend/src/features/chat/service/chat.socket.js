@@ -33,6 +33,14 @@ export const initializeSocketConnection = () => {
         // ConnectionMonitor handles the network/offline UI state
     });
 
+    // Handle real-time automatic model failover / vision switching
+    socket.on("model:switched", (data) => {
+        console.log("[Socket.IO] Active AI model switched by backend:", data);
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("model_auto_switched", { detail: data }));
+        }
+    });
+
     // Reconnect socket to new backend URL if an HTTP failover occurred
     if (typeof window !== "undefined") {
         window.addEventListener("backend_server_switched", (e) => {

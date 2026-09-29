@@ -108,6 +108,25 @@ const ChatArea = () => {
     textareaRef.current.style.height = `${nextH}px`;
   }, [input]);
 
+  // Sync active model state when auto-switched by server (vision or quota failover)
+  useEffect(() => {
+    const handleAutoSwitch = (e) => {
+      if (e.detail?.modelId) {
+        setSelectedModel({
+          id: e.detail.modelId,
+          modelId: e.detail.modelId,
+          name: e.detail.name || e.detail.modelName || e.detail.modelId,
+          modelName: e.detail.name || e.detail.modelName || e.detail.modelId,
+          provider: e.detail.provider || 'gemini',
+          badge: e.detail.badge || 'Fast',
+          isCustom: Boolean(e.detail.isCustom)
+        });
+      }
+    };
+    window.addEventListener('model_auto_switched', handleAutoSwitch);
+    return () => window.removeEventListener('model_auto_switched', handleAutoSwitch);
+  }, []);
+
   // Speech Recognition (Voice to Text) state & Live Caption
   const [isListening, setIsListening] = useState(false);
   const [liveCaption, setLiveCaption] = useState('');
@@ -399,8 +418,29 @@ const ChatArea = () => {
         }
       }));
       
+      // Optimistically auto-switch to custom model if user added custom key and is currently on built-in model
+      let effectiveSendModel = selectedModel;
+      const activeCustomKey = user?.customApiKeys?.find(k => k.isActive !== false && k.apiKey);
+      if (activeCustomKey && !selectedModel?.isCustom) {
+        const customModelId = activeCustomKey.models?.[0]?.id || (activeCustomKey.provider === "gemini" ? "gemini-3.6-flash" : activeCustomKey.provider === "anthropic" ? "claude-3-5-sonnet-20241022" : "gpt-4o");
+        const customModelName = activeCustomKey.models?.[0]?.name || `${activeCustomKey.provider?.toUpperCase()} (${customModelId})`;
+        const optimisticCustomModel = {
+          id: customModelId,
+          modelId: customModelId,
+          name: customModelName,
+          modelName: customModelName,
+          provider: activeCustomKey.provider,
+          badge: "Custom Key",
+          isCustom: true,
+          keyId: activeCustomKey._id
+        };
+        setSelectedModel(optimisticCustomModel);
+        effectiveSendModel = optimisticCustomModel;
+        window.dispatchEvent(new CustomEvent('model_auto_switched', { detail: optimisticCustomModel }));
+      }
+
       // Asynchronously handle message sending with selected model, webSearch, cross-chat memory, and thinking level (plus incognito)
-      const sendPromise = handleSendMessage(messageToSend, null, filesToSend, selectedModel, webSearch, memoryEnabled, incognito, thinkingLevel);
+      const sendPromise = handleSendMessage(messageToSend, null, filesToSend, effectiveSendModel, webSearch, memoryEnabled, incognito, thinkingLevel);
       sendPromise.then(response => {
         // Silently update URL once real chat ID is received
         if (response && response.chat) {
