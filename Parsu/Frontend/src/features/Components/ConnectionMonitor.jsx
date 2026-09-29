@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/axios';
+import customAxios, { getActiveBackendUrl } from '../../utils/axios';
 import OfflineBlobPlayground from './OfflineBlobPlayground';
 import { useDispatch } from 'react-redux';
 import { addToast } from '../../utils/toast.slice';
@@ -42,9 +41,8 @@ export default function ConnectionMonitor({ children }) {
 
         setIsChecking(true);
         try {
-            // Ping health endpoint with cache-busting timestamp
-            const healthUrl = `${API_BASE_URL}/api/health?_t=${Date.now()}`;
-            const res = await axios.get(healthUrl, { timeout: 4000 });
+            // Ping health endpoint with cache-busting timestamp using customAxios
+            const res = await customAxios.get(`/api/health?_t=${Date.now()}`, { timeout: 5000 });
             
             if (res.status === 200) {
                 if (isServerDown || isOffline) {

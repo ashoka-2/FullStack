@@ -4,20 +4,20 @@ import { isMaintenanceModeActive } from "./maintenance";
 export const AUTH_TOKEN_KEY = "parsu_auth_token";
 
 // Server pool configuration: Primary and Secondary Render instances
-const PRIMARY_URL = (import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_HOST_URL || "https://parsuai.onrender.com").trim().replace(/\/+$/, "");
-const SECONDARY_URL = (import.meta.env.VITE_BACKEND_URL_BACKUP || "https://parsuai-1y3u.onrender.com").trim().replace(/\/+$/, "");
+const PRIMARY_URL = (import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_HOST_URL || "https://parsuai-1y3u.onrender.com").trim().replace(/\/+$/, "");
+const SECONDARY_URL = (import.meta.env.VITE_BACKEND_URL_BACKUP || "https://parsuai.onrender.com").trim().replace(/\/+$/, "");
 
+// Track dead servers so we don't bounce back and forth
+const failedServers = new Set();
 export const SERVER_POOL = [PRIMARY_URL, SECONDARY_URL].filter(Boolean);
 
-// In dev mode: relative URL goes through Vite proxy (http://localhost:3000)
-// In production: dynamically resolve working server
-let activeServerIndex = 0;
+let currentServer = PRIMARY_URL;
 
 export function getActiveBackendUrl() {
   if (import.meta.env.DEV) {
     return import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
   }
-  return SERVER_POOL[activeServerIndex] || PRIMARY_URL;
+  return currentServer;
 }
 
 export const API_BASE_URL = import.meta.env.DEV ? "" : getActiveBackendUrl();
@@ -25,7 +25,7 @@ export const BACKEND_URL = getActiveBackendUrl();
 
 const customAxios = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 12000, // 12 seconds before failing over to backup server
+  timeout: 10000,
   withCredentials: true,
 });
 
@@ -54,22 +54,27 @@ export function attachAuthHeader(instance) {
 attachAuthHeader(customAxios);
 attachAuthHeader(axios);
 
-// Helper function to switch active backend server
-export function switchActiveServer() {
-  if (SERVER_POOL.length > 1) {
-    activeServerIndex = (activeServerIndex + 1) % SERVER_POOL.length;
-    const newTarget = SERVER_POOL[activeServerIndex];
-    if (!import.meta.env.DEV) {
-      customAxios.defaults.baseURL = newTarget;
-      axios.defaults.baseURL = newTarget;
-    }
-    console.warn(`[Failover] Switched active backend server to: ${newTarget}`);
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("backend_server_switched", { detail: { serverUrl: newTarget } }));
-    }
-    return newTarget;
+// Helper function to switch active backend server permanently
+export function switchActiveServer(failedUrl) {
+  if (failedUrl) {
+    failedServers.add(failedUrl);
   }
-  return SERVER_POOL[0];
+  
+  // Find a server that hasn't failed yet, or fallback to the other
+  const candidate = SERVER_POOL.find(s => !failedServers.has(s)) || SERVER_POOL.find(s => s !== currentServer) || SERVER_POOL[0];
+  
+  if (candidate && candidate !== currentServer) {
+    currentServer = candidate;
+    if (!import.meta.env.DEV) {
+      customAxios.defaults.baseURL = currentServer;
+      axios.defaults.baseURL = currentServer;
+    }
+    console.warn(`[Failover] Active backend server permanently switched to: ${currentServer}`);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("backend_server_switched", { detail: { serverUrl: currentServer } }));
+    }
+  }
+  return currentServer;
 }
 
 // Intercept network failures and server down/limit responses to trigger failover
@@ -78,22 +83,25 @@ customAxios.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Detect server down, network drop, timeout, or 502/503/504 (e.g. Render suspended or cold start timeout)
+    // Detect server down, network drop, timeout, or 502/503/504 / CORS failure (preflight rejected when Render suspended)
     const isServerError =
       !error.response ||
       error.code === "ECONNABORTED" ||
       error.code === "ERR_NETWORK" ||
       [502, 503, 504].includes(error.response?.status);
 
-    // If server failure happened in production and we haven't already retried this request on backup
     if (isServerError && !originalRequest._retriedWithBackup && SERVER_POOL.length > 1) {
       originalRequest._retriedWithBackup = true;
-      const nextServer = switchActiveServer();
+      const prevServer = currentServer;
+      const nextServer = switchActiveServer(prevServer);
 
-      // Update base URL for retry
+      // Re-target URL on the healthy server
       originalRequest.baseURL = nextServer;
+      if (originalRequest.url && originalRequest.url.startsWith('http')) {
+        originalRequest.url = originalRequest.url.replace(prevServer, nextServer);
+      }
 
-      console.warn(`[Failover] Primary backend unresponsive or suspended. Retrying request on: ${nextServer}`);
+      console.warn(`[Failover] Primary backend unresponsive or suspended (${prevServer}). Retrying on: ${nextServer}`);
       return customAxios(originalRequest);
     }
 
