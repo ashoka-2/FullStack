@@ -10,7 +10,7 @@ const socialConnectionSchema = new mongoose.Schema({
     platform: {
         type: String,
         required: true,
-        enum: ["instagram", "facebook", "pinterest", "twitter", "tiktok", "linkedin", "youtube", "google", "gmail"],
+        enum: ["instagram", "facebook", "pinterest", "twitter", "tiktok", "linkedin", "youtube", "google", "gmail", "google_calendar", "google_drive", "calendar", "drive"],
         lowercase: true
     },
     // Platform-specific user ID

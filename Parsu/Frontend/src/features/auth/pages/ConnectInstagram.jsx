@@ -15,7 +15,7 @@ import {
     RiSettings4Line,
     RiFacebookCircleLine
 } from '@remixicon/react';
-import axios from 'axios';
+import customAxios from '../../../utils/axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { setUser } from '../auth.slice';
 
@@ -32,7 +32,7 @@ const ConnectInstagram = () => {
         setLoading(true);
         setStatus(null);
         try {
-            const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'}/api/auth/connect-instagram`, formData, { withCredentials: true });
+            const res = await customAxios.post('/api/auth/connect-instagram', formData);
             
             setStatus('success');
             setMessage(res.data.message);

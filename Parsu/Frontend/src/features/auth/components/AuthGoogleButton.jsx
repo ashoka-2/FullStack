@@ -1,5 +1,5 @@
 import React from 'react';
-import { BACKEND_URL } from '../../../utils/axios.js';
+import { getActiveBackendUrl } from '../../../utils/axios.js';
 
 export default function AuthGoogleButton({
   mode,
@@ -7,7 +7,7 @@ export default function AuthGoogleButton({
   onMouseEnterGoogle,
   onMouseLeaveGoogle
 }) {
-  const googleOAuthUrl = `${BACKEND_URL}/api/auth/google`;
+  const googleOAuthUrl = `${getActiveBackendUrl()}/api/auth/google`;
 
   return (
     <>

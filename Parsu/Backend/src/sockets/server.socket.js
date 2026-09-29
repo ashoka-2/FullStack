@@ -9,8 +9,11 @@ export function initSocket(httpServer) {
         cors: {
             origin: [
                 "https://parsuai.vercel.app",
+                "https://perplexity-cohort.vercel.app",
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
+                "https://parsuai.onrender.com",
+                "https://parsuai-1y3u.onrender.com",
                 process.env.FRONTEND_URL
             ].filter(Boolean),
             credentials: true

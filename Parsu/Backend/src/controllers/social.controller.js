@@ -94,6 +94,42 @@ const PLATFORMS = {
             return { id: ch?.id || "", username: ch?.snippet?.title || "", picture: ch?.snippet?.thumbnails?.default?.url || "" };
         }
     },
+    gmail: {
+        name: "Gmail",
+        authUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+        tokenUrl: "https://oauth2.googleapis.com/token",
+        scopes: "openid profile email https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose",
+        getProfile: async (accessToken) => {
+            const res = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            return { id: res.data.id, username: res.data.email || res.data.name, picture: res.data.picture || "" };
+        }
+    },
+    google_calendar: {
+        name: "Google Calendar",
+        authUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+        tokenUrl: "https://oauth2.googleapis.com/token",
+        scopes: "openid profile email https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly",
+        getProfile: async (accessToken) => {
+            const res = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            return { id: res.data.id, username: res.data.email || res.data.name, picture: res.data.picture || "" };
+        }
+    },
+    google_drive: {
+        name: "Google Drive",
+        authUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+        tokenUrl: "https://oauth2.googleapis.com/token",
+        scopes: "openid profile email https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly",
+        getProfile: async (accessToken) => {
+            const res = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            return { id: res.data.id, username: res.data.email || res.data.name, picture: res.data.picture || "" };
+        }
+    },
     google: {
         name: "Google Workspace",
         authUrl: "https://accounts.google.com/o/oauth2/v2/auth",
@@ -109,8 +145,9 @@ const PLATFORMS = {
 };
 
 // Map platform → env var keys
-function getClientCredentials(platform) {
-    const backendUrl = (process.env.BACKEND_URL || (process.env.NODE_ENV === 'production' ? "https://parsuai.onrender.com" : "http://localhost:3000")).replace(/\/+$/, "");
+function getClientCredentials(platform, req) {
+    const hostFromReq = req ? `${req.protocol}://${req.get('host')}` : null;
+    const backendUrl = (process.env.BACKEND_URL || hostFromReq || (process.env.NODE_ENV === 'production' ? "https://parsuai-1y3u.onrender.com" : "http://localhost:3000")).replace(/\/+$/, "");
     const map = {
         instagram: { 
             clientId: process.env.META_APP_ID, 
@@ -146,6 +183,21 @@ function getClientCredentials(platform) {
             clientId: process.env.YOUTUBE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID, 
             clientSecret: process.env.YOUTUBE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET, 
             redirectUri: process.env.YOUTUBE_REDIRECT_URI || `${backendUrl}/api/social/callback/youtube` 
+        },
+        gmail: { 
+            clientId: process.env.GOOGLE_CLIENT_ID, 
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET, 
+            redirectUri: process.env.GMAIL_REDIRECT_URI || process.env.GOOGLE_WORKSPACE_REDIRECT_URI || `${backendUrl}/api/social/callback/gmail` 
+        },
+        google_calendar: { 
+            clientId: process.env.GOOGLE_CLIENT_ID, 
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET, 
+            redirectUri: process.env.GOOGLE_CALENDAR_REDIRECT_URI || process.env.GOOGLE_WORKSPACE_REDIRECT_URI || `${backendUrl}/api/social/callback/google_calendar` 
+        },
+        google_drive: { 
+            clientId: process.env.GOOGLE_CLIENT_ID, 
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET, 
+            redirectUri: process.env.GOOGLE_DRIVE_REDIRECT_URI || process.env.GOOGLE_WORKSPACE_REDIRECT_URI || `${backendUrl}/api/social/callback/google_drive` 
         },
         google: { 
             clientId: process.env.GOOGLE_CLIENT_ID, 
@@ -192,7 +244,7 @@ export async function startOAuthFlow(req, res) {
         const config = PLATFORMS[platform];
         if (!config) return res.status(400).json({ success: false, message: `Unsupported platform: ${platform}` });
 
-        const creds = getClientCredentials(platform);
+        const creds = getClientCredentials(platform, req);
         if (!creds.clientId) return res.status(400).json({ success: false, message: `${config.name} is not configured. Missing API keys in .env` });
 
         // Build OAuth state (JWT-like: userId + platform + timestamp)
@@ -257,7 +309,7 @@ export async function handleOAuthCallback(req, res) {
         }
 
         const config = PLATFORMS[platform];
-        const creds = getClientCredentials(platform);
+        const creds = getClientCredentials(platform, req);
 
         if (!config || !creds.clientId) {
             return res.redirect(`${frontendUrl}/social-connections?error=unsupported`);

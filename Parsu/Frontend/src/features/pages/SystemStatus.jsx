@@ -14,7 +14,7 @@ import {
     RiRobotLine
 } from '@remixicon/react';
 import InfoPageLayout from './InfoPageLayout';
-import axios from 'axios';
+import customAxios from '../../utils/axios';
 import { useDispatch } from 'react-redux';
 import { addToast } from '../../utils/toast.slice';
 
@@ -74,8 +74,7 @@ export default function SystemStatus() {
         if (!subscribeEmail) return;
         setLoading(true);
         try {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || (import.meta.env.PROD ? 'https://parsuai.onrender.com' : 'http://localhost:3000');
-            await axios.post(`${backendUrl}/api/newsletter`, { email: subscribeEmail });
+            await customAxios.post('/api/newsletter', { email: subscribeEmail });
             setSubscribed(true);
             dispatch(addToast({ type: 'success', message: 'Subscribed to Parsu AI live status alerts!' }));
         } catch (err) {
