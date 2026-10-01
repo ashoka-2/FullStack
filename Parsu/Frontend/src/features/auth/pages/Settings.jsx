@@ -295,12 +295,7 @@ const Settings = () => {
                 message="Are you sure you want to end your session? You will be returned to the sign-in screen."
             />
 
-            {isSidebarOpen && (
-                <div
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
-                />
-            )}
+
         </div>
     );
 };

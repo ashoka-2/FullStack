@@ -576,12 +576,7 @@ const ChatPage2 = () => {
                     onOpenVoiceMode={() => setIsVoiceModeOpen(true)}
                 />
 
-                {isSidebarOpen && (
-                    <div
-                        onClick={() => setIsSidebarOpen(false)}
-                        className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
-                    />
-                )}
+
 
                 {/* Parsu Voice Agent — Jarvis mode */}
                 <VoiceMode

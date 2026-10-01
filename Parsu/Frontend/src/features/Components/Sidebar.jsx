@@ -60,93 +60,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const overlayRef = useRef(null);
   const isFirstMount = useRef(true);
 
-  // Reset GSAP inline transform styles when switching to desktop breakpoint
+  // GSAP Smooth stagger reveal of inner items when mobile drawer opens
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        if (drawerRef.current) gsap.set(drawerRef.current, { clearProps: 'all' });
-        if (overlayRef.current) gsap.set(overlayRef.current, { clearProps: 'all', display: 'none' });
-      } else {
-        if (!isOpen && drawerRef.current) {
-          gsap.set(drawerRef.current, { xPercent: -100 });
-        }
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isOpen]);
-
-  // GSAP Smooth mobile drawer slide-in / slide-out animation with physics easing
-  useEffect(() => {
-    if (window.innerWidth >= 1024) {
-      if (drawerRef.current) gsap.set(drawerRef.current, { clearProps: 'all' });
-      if (overlayRef.current) gsap.set(overlayRef.current, { clearProps: 'all', display: 'none' });
-      return;
-    }
-
-    if (isFirstMount.current) {
-      isFirstMount.current = false;
-      if (!isOpen) {
-        if (drawerRef.current) gsap.set(drawerRef.current, { xPercent: -100 });
-        if (overlayRef.current) gsap.set(overlayRef.current, { display: 'none', opacity: 0 });
-        return;
-      }
-    }
-
-    if (isOpen) {
-      // Overlay Smooth Fade In
-      if (overlayRef.current) {
-        gsap.killTweensOf(overlayRef.current);
+    if (window.innerWidth < 1024 && isOpen && drawerRef.current) {
+      const items = drawerRef.current.querySelectorAll('.drawer-stagger-item');
+      if (items.length > 0) {
+        gsap.killTweensOf(items);
         gsap.fromTo(
-          overlayRef.current,
-          { opacity: 0, display: 'block' },
-          { opacity: 1, duration: 0.35, ease: 'power2.out' }
+          items,
+          { opacity: 0, x: -14 },
+          { opacity: 1, x: 0, duration: 0.32, stagger: 0.025, ease: 'power2.out', delay: 0.05 }
         );
-      }
-
-      // Drawer Smooth Slide In with cubic bezier feel
-      if (drawerRef.current) {
-        gsap.killTweensOf(drawerRef.current);
-        gsap.fromTo(
-          drawerRef.current,
-          { xPercent: -100 },
-          { xPercent: 0, duration: 0.42, ease: 'power3.out' }
-        );
-
-        // Stagger inner items for an ultra-slick, fluid motion
-        const items = drawerRef.current.querySelectorAll('.drawer-stagger-item');
-        if (items.length > 0) {
-          gsap.killTweensOf(items);
-          gsap.fromTo(
-            items,
-            { opacity: 0, x: -14 },
-            { opacity: 1, x: 0, duration: 0.3, stagger: 0.025, ease: 'power2.out', delay: 0.06 }
-          );
-        }
-      }
-    } else {
-      // Drawer Slide Out
-      if (drawerRef.current) {
-        gsap.killTweensOf(drawerRef.current);
-        gsap.to(drawerRef.current, {
-          xPercent: -100,
-          duration: 0.3,
-          ease: 'power3.inOut'
-        });
-      }
-
-      // Overlay Smooth Fade Out
-      if (overlayRef.current) {
-        gsap.killTweensOf(overlayRef.current);
-        gsap.to(overlayRef.current, {
-          opacity: 0,
-          duration: 0.25,
-          ease: 'power2.in',
-          onComplete: () => {
-            if (overlayRef.current) gsap.set(overlayRef.current, { display: 'none' });
-          }
-        });
       }
     }
   }, [isOpen]);
@@ -317,8 +241,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       <aside
         ref={drawerRef}
         data-lenis-prevent="true"
-        className={`fixed top-0 left-0 z-[9990] h-[100dvh] flex flex-col bg-white dark:bg-[#0B0B0B] text-zinc-600 dark:text-zinc-400 transition-[width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shrink-0 border-r border-zinc-200/80 dark:border-white/[0.08] shadow-2xl lg:shadow-none
-          -translate-x-full lg:translate-x-0
+        className={`fixed top-0 left-0 z-[9990] h-[100dvh] flex flex-col bg-white dark:bg-[#0B0B0B] text-zinc-600 dark:text-zinc-400 shrink-0 border-r border-zinc-200/80 dark:border-white/[0.08] shadow-2xl lg:shadow-none
+          transition-[transform,width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
+          ${isOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none lg:pointer-events-auto'}
+          lg:translate-x-0
           ${isSidebarCollapsed ? 'w-[280px] xs:w-[290px] p-3 sm:p-3.5 lg:w-16 lg:px-2 lg:py-3' : 'w-[280px] xs:w-[290px] lg:w-56 p-3 sm:p-3.5'}`}
       >
         {/* Sidebar Header: Brand Mark, Name & Controls */}
@@ -695,12 +621,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         message="This chat session and its messages will be permanently deleted."
       />
 
-      {/* Mobile Drawer Overlay with GSAP Animation */}
+      {/* Mobile Drawer Overlay with Smooth Fade Transition */}
       <div
         ref={overlayRef}
         onClick={() => setIsOpen(false)}
-        className="lg:hidden fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[9985]"
-        style={{ display: 'none', opacity: 0 }}
+        className={`lg:hidden fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[9985] transition-opacity duration-300 ease-in-out ${
+          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
         aria-label="Close navigation backdrop"
       />
 

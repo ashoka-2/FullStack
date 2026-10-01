@@ -152,8 +152,13 @@ const Library = () => {
             return chatDate >= threshold;
         });
 
-        // Sort
+        // Sort: Pinned chats first, then by selected date order
         filtered.sort((a, b) => {
+            const isPinnedA = Boolean(a.isPinned);
+            const isPinnedB = Boolean(b.isPinned);
+            if (isPinnedA !== isPinnedB) {
+                return isPinnedA ? -1 : 1;
+            }
             const dateA = new Date(a.createdAt);
             const dateB = new Date(b.createdAt);
             return sortDirection === 'newest' ? dateB - dateA : dateA - dateB;
@@ -161,7 +166,10 @@ const Library = () => {
 
         return filtered.map(chat => ({
             id: chat._id,
+            _id: chat._id,
             title: chat.title || 'Untitled Chat',
+            isPinned: Boolean(chat.isPinned),
+            createdAt: chat.createdAt,
             date: new Date(chat.createdAt).toLocaleDateString(),
             desc: chat.messages?.[0]?.content || 'Chat session'
         }));
@@ -360,9 +368,7 @@ const Library = () => {
                 </div>{/* end scrollable content */}
             </div>{/* end inner column */}
 
-            {isSidebarOpen && (
-                <div onClick={() => setIsSidebarOpen(false)} className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]" />
-            )}
+
 
             <ConfirmationModal 
                 isOpen={deleteModalOpen}

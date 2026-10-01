@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import {
+  RiMenuLine,
   RiShareLine,
   RiCheckLine,
   RiSpyLine,
@@ -60,9 +61,20 @@ export default function ChatNavbar({
   return (
     <header className="h-14 bg-white/80 dark:bg-[#0B0B0B]/80 backdrop-blur-md shrink-0 z-30 border-b border-zinc-200/80 dark:border-white/[0.07] px-3.5 sm:px-6 flex items-center justify-between transition-colors select-none">
       
-      {/* ── Left Section: Brand Pill & Back Link ── */}
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      {/* ── Left Section: Mobile Menu Icon / Desktop Brand Pill & Back Link ── */}
+      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
         
+        {/* On mobile: Menu button to open sidebar drawer */}
+        <button
+          type="button"
+          onClick={onOpenSidebar}
+          className="lg:hidden p-2 -ml-1 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.08] active:scale-95 transition-all cursor-pointer shrink-0"
+          title="Open menu"
+          aria-label="Open menu"
+        >
+          <RiMenuLine size={20} />
+        </button>
+
         {backLink && (
           <Link
             to={backLink}
@@ -74,17 +86,10 @@ export default function ChatNavbar({
           </Link>
         )}
 
-        {/* ChatGPT-style Brand Pill */}
+        {/* On desktop: ChatGPT-style Brand Pill */}
         <Link
           to={user ? "/ai" : "/"}
-          onClick={(e) => {
-            // On mobile viewports (<1024px), if onOpenSidebar is passed, clicking the logo acts as an easy drawer toggle
-            if (window.innerWidth < 1024 && typeof onOpenSidebar === 'function') {
-              e.preventDefault();
-              onOpenSidebar();
-            }
-          }}
-          className="flex items-center gap-1.5 px-2 py-1 rounded-xl text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer group shrink-0"
+          className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-xl text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer group shrink-0"
           title="Parsu AI"
         >
           <ParsuLogo size={20} className="text-zinc-900 dark:text-white group-hover:scale-105 transition-transform shrink-0" />
