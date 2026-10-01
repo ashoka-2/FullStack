@@ -10,6 +10,7 @@ import {
   RiArrowLeftLine
 } from '@remixicon/react';
 import ParsuLogo from '../../Components/ParsuLogo';
+import { CircleButton, PillGroup, PillBadge } from '../../Components/PillButton';
 import { addToast } from '../../../utils/toast.slice';
 
 /**
@@ -64,51 +65,46 @@ export default function ChatNavbar({
       {/* ── Left Section: Mobile Menu Icon / Desktop Brand Pill & Back Link ── */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         
-        {/* On mobile: If both menu and back button exist, show both in a single pill container */}
+        {/* On mobile: If both menu and back button exist, show both in a unified PillGroup */}
         {backLink ? (
-          <div className="lg:hidden flex items-center p-0.5 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] shadow-xs shrink-0">
-            <button
-              type="button"
+          <PillGroup className="lg:hidden">
+            <CircleButton
               onClick={onOpenSidebar}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-white/[0.14] active:scale-95 transition-all duration-200 cursor-pointer shrink-0"
               title="Open menu"
-              aria-label="Open menu"
+              ariaLabel="Open menu"
             >
               <RiMenuLine size={17} />
-            </button>
-            <div className="w-[1px] h-3.5 bg-zinc-300/80 dark:bg-white/15 mx-0.5" />
-            <Link
+            </CircleButton>
+            <CircleButton
               to={backLink}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-white/[0.14] active:scale-95 transition-all duration-200 cursor-pointer shrink-0"
               title={backText ? `Back to ${backText}` : 'Back'}
-              aria-label={backText ? `Back to ${backText}` : 'Back'}
+              ariaLabel={backText ? `Back to ${backText}` : 'Back'}
             >
               <RiArrowLeftLine size={17} />
-            </Link>
-          </div>
+            </CircleButton>
+          </PillGroup>
         ) : (
-          /* On mobile: Standalone circular menu button styled like input field plus button */
-          <button
-            type="button"
+          /* On mobile: Standalone circular menu button */
+          <CircleButton
             onClick={onOpenSidebar}
-            className="lg:hidden w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] hover:bg-zinc-200 dark:hover:bg-white/[0.12] text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all duration-200 shadow-xs active:scale-95 cursor-pointer shrink-0"
+            className="lg:hidden"
             title="Open menu"
-            aria-label="Open menu"
+            ariaLabel="Open menu"
           >
             <RiMenuLine size={18} className="shrink-0" />
-          </button>
+          </CircleButton>
         )}
 
         {/* On desktop: Back button if present */}
         {backLink && (
-          <Link
+          <PillBadge
             to={backLink}
-            className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] hover:bg-zinc-200 dark:hover:bg-white/[0.12] text-zinc-700 dark:text-zinc-200 text-xs font-medium transition-all shadow-xs cursor-pointer group shrink-0"
+            className="hidden lg:inline-flex"
             title={backText ? `Back to ${backText}` : 'Back'}
           >
             <RiArrowLeftLine size={15} className="group-hover:-translate-x-0.5 transition-transform" />
             {backText && <span>{backText}</span>}
-          </Link>
+          </PillBadge>
         )}
 
         {/* On desktop: Parsu AI Brand Pill */}
@@ -128,19 +124,19 @@ export default function ChatNavbar({
       {/* ── Center Section: Conversation Title or Temporary Chat Pill ── */}
       <div className="flex-1 flex items-center justify-center px-2 min-w-0">
         {incognito ? (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-300 text-xs font-semibold shadow-xs">
+          <PillBadge variant="purple" title="Temporary Chat">
             <RiSpyLine size={14} className="shrink-0" />
             <span className="truncate">Temporary Chat</span>
-          </div>
+          </PillBadge>
         ) : title ? (
-          <div className="inline-flex items-center gap-1.5 max-w-[85vw] sm:max-w-[420px] px-3.5 py-1 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] text-zinc-700 dark:text-zinc-200 shadow-xs">
-            <h1 
-              className="text-xs sm:text-[13px] font-medium text-zinc-800 dark:text-zinc-200 truncate tracking-tight text-center"
-              title={typeof title === 'string' ? title : ''}
-            >
+          <PillBadge
+            className="max-w-[85vw] sm:max-w-[420px]"
+            title={typeof title === 'string' ? title : ''}
+          >
+            <h1 className="text-xs sm:text-[13px] font-medium text-zinc-800 dark:text-zinc-200 truncate tracking-tight text-center">
               {title}
             </h1>
-          </div>
+          </PillBadge>
         ) : null}
       </div>
 

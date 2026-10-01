@@ -22,6 +22,7 @@ import AttachmentPreviewStrip from './AttachmentPreviewStrip';
 import MessageQueueTray from './MessageQueueTray';
 import AddToChatSheet from './AddToChatSheet';
 import VoiceMode from './VoiceMode';
+import { CircleButton } from '../../Components/PillButton';
 import { triggerBlobInteraction, triggerBlobTyping } from '../../../utils/blobReactions';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
@@ -346,15 +347,13 @@ const FollowUpInput = ({
                         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 overflow-x-auto no-scrollbar py-0.5">
                             {/* Apple-style Circular Attach Button (+ icon only) */}
                             <div className="relative shrink-0">
-                                <button 
-                                    type="button"
+                                <CircleButton
                                     onClick={() => setIsUploadMenuOpen(true)}
-                                    className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] hover:bg-zinc-200 dark:hover:bg-white/[0.12] text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all duration-200 shadow-xs active:scale-95 cursor-pointer shrink-0"
                                     title="Add to chat (Photos, Videos, Files, Memory)"
-                                    aria-label="Add to chat"
+                                    ariaLabel="Add to chat"
                                 >
                                     <RiAddLine size={18} className="shrink-0" />
-                                </button>
+                                </CircleButton>
                                 
                                 {/* Premium 'Add to chat' Mobile Bottom Sheet & Desktop Modal */}
                                 <AddToChatSheet
@@ -591,15 +590,13 @@ const FollowUpInput = ({
                             {/* Left Side Actions */}
                             <div className="flex items-center gap-2 min-w-0 overflow-x-auto no-scrollbar py-0.5">
                                 {/* Attach Button */}
-                                <button
-                                    type="button"
+                                <CircleButton
                                     onClick={() => setIsUploadMenuOpen(true)}
-                                    className="w-8.5 h-8.5 rounded-full border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] text-zinc-200 flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer shrink-0"
                                     title="Add to chat (Photos, Videos, Files, Memory)"
-                                    aria-label="Add to chat"
+                                    ariaLabel="Add to chat"
                                 >
                                     <RiAddLine size={18} className="shrink-0" />
-                                </button>
+                                </CircleButton>
 
                                 {/* Web Search Toggle */}
                                 <button
