@@ -59,61 +59,88 @@ export default function ChatNavbar({
   };
 
   return (
-    <header className="h-14 bg-white/80 dark:bg-[#0B0B0B]/80 backdrop-blur-md shrink-0 z-30 border-b border-zinc-200/80 dark:border-white/[0.07] px-3.5 sm:px-6 flex items-center justify-between transition-colors select-none">
+    <header className="h-14 bg-transparent shrink-0 z-30 border-b border-zinc-200/50 dark:border-white/[0.06] px-3.5 sm:px-6 flex items-center justify-between transition-colors select-none">
       
       {/* ── Left Section: Mobile Menu Icon / Desktop Brand Pill & Back Link ── */}
-      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         
-        {/* On mobile: Menu button to open sidebar drawer */}
-        <button
-          type="button"
-          onClick={onOpenSidebar}
-          className="lg:hidden p-2 -ml-1 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.08] active:scale-95 transition-all cursor-pointer shrink-0"
-          title="Open menu"
-          aria-label="Open menu"
-        >
-          <RiMenuLine size={20} />
-        </button>
+        {/* On mobile: If both menu and back button exist, show both in a single pill container */}
+        {backLink ? (
+          <div className="lg:hidden flex items-center p-0.5 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] shadow-xs shrink-0">
+            <button
+              type="button"
+              onClick={onOpenSidebar}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-white/[0.14] active:scale-95 transition-all duration-200 cursor-pointer shrink-0"
+              title="Open menu"
+              aria-label="Open menu"
+            >
+              <RiMenuLine size={17} />
+            </button>
+            <div className="w-[1px] h-3.5 bg-zinc-300/80 dark:bg-white/15 mx-0.5" />
+            <Link
+              to={backLink}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-white/[0.14] active:scale-95 transition-all duration-200 cursor-pointer shrink-0"
+              title={backText ? `Back to ${backText}` : 'Back'}
+              aria-label={backText ? `Back to ${backText}` : 'Back'}
+            >
+              <RiArrowLeftLine size={17} />
+            </Link>
+          </div>
+        ) : (
+          /* On mobile: Standalone circular menu button styled like input field plus button */
+          <button
+            type="button"
+            onClick={onOpenSidebar}
+            className="lg:hidden w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] hover:bg-zinc-200 dark:hover:bg-white/[0.12] text-zinc-700 dark:text-zinc-200 flex items-center justify-center transition-all duration-200 shadow-xs active:scale-95 cursor-pointer shrink-0"
+            title="Open menu"
+            aria-label="Open menu"
+          >
+            <RiMenuLine size={18} className="shrink-0" />
+          </button>
+        )}
 
+        {/* On desktop: Back button if present */}
         {backLink && (
           <Link
             to={backLink}
-            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-[var(--accent-cyan)] transition-colors shrink-0 py-1 px-1.5 -ml-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/[0.06] group"
+            className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] hover:bg-zinc-200 dark:hover:bg-white/[0.12] text-zinc-700 dark:text-zinc-200 text-xs font-medium transition-all shadow-xs cursor-pointer group shrink-0"
             title={backText ? `Back to ${backText}` : 'Back'}
           >
-            <RiArrowLeftLine size={16} className="group-hover:-translate-x-0.5 transition-transform" />
-            {backText && <span className="font-medium text-[11px] sm:text-xs hidden xs:inline">{backText}</span>}
+            <RiArrowLeftLine size={15} className="group-hover:-translate-x-0.5 transition-transform" />
+            {backText && <span>{backText}</span>}
           </Link>
         )}
 
-        {/* On desktop: ChatGPT-style Brand Pill */}
+        {/* On desktop: Parsu AI Brand Pill */}
         <Link
           to={user ? "/ai" : "/"}
-          className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-xl text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer group shrink-0"
+          className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-zinc-300/80 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 bg-zinc-100/80 dark:bg-white/[0.05] hover:bg-zinc-200/70 dark:hover:bg-white/[0.08] text-zinc-900 dark:text-zinc-100 transition-all cursor-pointer group shrink-0"
           title="Parsu AI"
         >
-          <ParsuLogo size={20} className="text-zinc-900 dark:text-white group-hover:scale-105 transition-transform shrink-0" />
-          <span className="font-bold text-sm tracking-tight text-zinc-900 dark:text-white">Parsu</span>
-          <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-[var(--accent-cyan)] text-zinc-950 shadow-2xs">
+          <ParsuLogo size={18} className="text-zinc-900 dark:text-white group-hover:scale-105 transition-transform shrink-0" />
+          <span className="font-bold text-xs tracking-tight text-zinc-900 dark:text-white">Parsu</span>
+          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[var(--accent-cyan)] text-zinc-950 shadow-2xs">
             AI
           </span>
         </Link>
       </div>
 
       {/* ── Center Section: Conversation Title or Temporary Chat Pill ── */}
-      <div className="flex-1 flex items-center justify-center px-2 min-w-0 max-w-[480px]">
+      <div className="flex-1 flex items-center justify-center px-2 min-w-0">
         {incognito ? (
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-semibold animate-in fade-in">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-300 text-xs font-semibold shadow-xs">
             <RiSpyLine size={14} className="shrink-0" />
             <span className="truncate">Temporary Chat</span>
           </div>
         ) : title ? (
-          <h1 
-            className="text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate max-w-full text-center tracking-tight"
-            title={typeof title === 'string' ? title : ''}
-          >
-            {title}
-          </h1>
+          <div className="inline-flex items-center gap-1.5 max-w-[85vw] sm:max-w-[420px] px-3.5 py-1 rounded-full border border-zinc-300 dark:border-white/15 bg-zinc-100/90 dark:bg-white/[0.06] text-zinc-700 dark:text-zinc-200 shadow-xs">
+            <h1 
+              className="text-xs sm:text-[13px] font-medium text-zinc-800 dark:text-zinc-200 truncate tracking-tight text-center"
+              title={typeof title === 'string' ? title : ''}
+            >
+              {title}
+            </h1>
+          </div>
         ) : null}
       </div>
 
