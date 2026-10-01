@@ -34,6 +34,7 @@ import { RiLoginCircleLine, RiSparkling2Line } from '@remixicon/react';
 import { triggerBlobSidebarNav, triggerBlobChatSelect, triggerBlobChatDeleteHover, triggerBlobChatDeleted } from '../../utils/blobReactions';
 import { renameChat, togglePinChat } from '../auth/service/settings.api';
 import { addToast } from '../../utils/toast.slice';
+import GlobalSearchModal from '../chat/components/GlobalSearchModal';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const user = useSelector(state => state.auth.user);
@@ -54,6 +55,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   // Local pin overrides for optimistic UI
   const [pinnedIds, setPinnedIds] = useState({});
   const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const drawerRef = useRef(null);
   const overlayRef = useRef(null);
   const isFirstMount = useRef(true);
@@ -200,7 +202,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   }, [user]);
 
   const menuItems = [
-    { icon: ParsuLogo, label: 'Search', path: '/ai', active: location.pathname === '/' || location.pathname === '/ai', isProtected: false },
+    { icon: RiSearchLine, label: 'Search', action: 'search', isProtected: false },
     { icon: RiHistoryLine, label: 'Chats', path: '/library', active: location.pathname === '/library', isProtected: true },
     { icon: RiApps2Line, label: 'Social Hub', path: '/social-connections', active: location.pathname === '/social-connections', isProtected: true },
     { icon: RiSettings4Line, label: 'Settings', path: '/settings', active: location.pathname.startsWith('/settings'), isProtected: true },
@@ -213,9 +215,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     }
   };
 
-  // Keyboard shortcut to toggle sidebar collapse (Ctrl+\ or Ctrl+B)
+  // Keyboard shortcut to toggle sidebar collapse (Ctrl+\ or Ctrl+B) or open search (Ctrl+K or Cmd+K)
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(prev => !prev);
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && (e.key === '\\' || e.key.toLowerCase() === 'b')) {
         if (['INPUT', 'TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable) return;
         e.preventDefault();
@@ -333,16 +340,19 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             </div>
           </Link>
 
-          {/* Desktop Toggle Button when collapsed (centered in the 64px rail) */}
+          {/* Desktop Toggle Button when collapsed: show Parsu logo by default, reveal sidebar open icon on hover */}
           {isSidebarCollapsed && (
             <button
               type="button"
               onClick={() => dispatch(toggleSidebarCollapse())}
-              className="hidden lg:flex w-9 h-9 rounded-xl items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.08] transition-all cursor-pointer"
+              className="hidden lg:flex relative w-10 h-10 rounded-xl items-center justify-center hover:bg-zinc-100 dark:hover:bg-white/[0.08] transition-all cursor-pointer group"
               title="Expand sidebar"
               aria-label="Expand sidebar"
             >
-              <RiSideBarLine size={19} />
+              {/* Collapsed default state: Parsu logo */}
+              <ParsuLogo size={22} className="text-zinc-900 dark:text-white group-hover:opacity-0 transition-opacity duration-150 absolute" />
+              {/* On hover: Sidebar open icon */}
+              <RiSideBarLine size={19} className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-zinc-900 dark:text-white" />
             </button>
           )}
 
@@ -374,22 +384,40 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {/* Navigation */}
         <nav className="space-y-1 mb-3 drawer-stagger-item">
           {menuItems.map((item, idx) => (
-            <Link
-              key={idx}
-              to={item.path}
-              title={item.label}
-              onMouseEnter={() => triggerBlobSidebarNav(item.label)}
-              onClick={(e) => {
-                triggerBlobSidebarNav(item.label);
-                handleNavClick(e, item);
-                closeMobileSidebar();
-              }}
-              className={`w-full flex items-center ${isSidebarCollapsed ? 'px-3 lg:px-0 lg:justify-center' : 'px-3 justify-start'} py-2 rounded-xl transition-all duration-200 group cursor-pointer text-sm font-medium
-                ${item.active ? 'bg-zinc-100 dark:bg-[#1F1F1F] text-zinc-900 dark:text-white border border-zinc-200/90 dark:border-white/[0.08] shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-[#171717] hover:text-zinc-900 dark:hover:text-white'}`}
-            >
-              <item.icon size={19} className={`shrink-0 ${item.active ? 'text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'}`} />
-              <span className={`${isSidebarCollapsed ? 'block lg:hidden' : 'block'} ml-3 truncate`}>{item.label}</span>
-            </Link>
+            item.action === 'search' ? (
+              <button
+                key={idx}
+                type="button"
+                title={item.label}
+                onMouseEnter={() => triggerBlobSidebarNav(item.label)}
+                onClick={() => {
+                  triggerBlobSidebarNav(item.label);
+                  closeMobileSidebar();
+                  setIsSearchOpen(true);
+                }}
+                className={`w-full flex items-center ${isSidebarCollapsed ? 'px-3 lg:px-0 lg:justify-center' : 'px-3 justify-start'} py-2 rounded-xl transition-all duration-200 group cursor-pointer text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-[#171717] hover:text-zinc-900 dark:hover:text-white`}
+              >
+                <item.icon size={19} className="shrink-0 text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white" />
+                <span className={`${isSidebarCollapsed ? 'block lg:hidden' : 'block'} ml-3 truncate`}>{item.label}</span>
+              </button>
+            ) : (
+              <Link
+                key={idx}
+                to={item.path}
+                title={item.label}
+                onMouseEnter={() => triggerBlobSidebarNav(item.label)}
+                onClick={(e) => {
+                  triggerBlobSidebarNav(item.label);
+                  handleNavClick(e, item);
+                  closeMobileSidebar();
+                }}
+                className={`w-full flex items-center ${isSidebarCollapsed ? 'px-3 lg:px-0 lg:justify-center' : 'px-3 justify-start'} py-2 rounded-xl transition-all duration-200 group cursor-pointer text-sm font-medium
+                  ${item.active ? 'bg-zinc-100 dark:bg-[#1F1F1F] text-zinc-900 dark:text-white border border-zinc-200/90 dark:border-white/[0.08] shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-[#171717] hover:text-zinc-900 dark:hover:text-white'}`}
+              >
+                <item.icon size={19} className={`shrink-0 ${item.active ? 'text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'}`} />
+                <span className={`${isSidebarCollapsed ? 'block lg:hidden' : 'block'} ml-3 truncate`}>{item.label}</span>
+              </Link>
+            )
           ))}
         </nav>
 
@@ -675,6 +703,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         style={{ display: 'none', opacity: 0 }}
         aria-label="Close navigation backdrop"
       />
+
+      {/* Global Search Modal */}
+      <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 };

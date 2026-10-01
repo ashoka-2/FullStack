@@ -1,39 +1,35 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  RiSideBarLine,
-  RiEditBoxLine,
   RiShareLine,
   RiCheckLine,
-  RiVoiceprintLine,
   RiSpyLine,
-  RiSparkling2Line
+  RiSparkling2Line,
+  RiArrowLeftLine
 } from '@remixicon/react';
 import ParsuLogo from '../../Components/ParsuLogo';
-import { toggleSidebarCollapse } from '../chat.slice';
 import { addToast } from '../../../utils/toast.slice';
 
 /**
  * Main AI Chatbot Navbar — styled faithfully to ChatGPT's header design.
  * Features:
- * - Left: Mobile drawer toggle / Desktop sidebar collapse toggle + Instant New Chat button + Parsu AI brand
+ * - Left: Clean Parsu AI brand pill (+ optional back navigation)
  * - Center: Conversation title (truncated) or Temporary Chat pill
- * - Right: ChatGPT-style Share pill button + Jarvis Voice Agent mode + Guest Auth buttons
+ * - Right: Custom action slot + ChatGPT-style Share pill + Guest Auth / Profile
  */
 export default function ChatNavbar({
   onOpenSidebar,
   title,
   chatId,
   onShare,
-  onOpenVoice,
-  showVoiceButton = true,
-  showShareButton = true
+  showShareButton = true,
+  backLink,
+  backText,
+  rightSlot
 }) {
   const { user } = useSelector(state => state.auth);
-  const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const [isCopied, setIsCopied] = useState(false);
   const [incognito] = useState(() => localStorage.getItem('parsu_incognito') === '1');
@@ -61,55 +57,35 @@ export default function ChatNavbar({
     }
   };
 
-  const handleNewChat = () => {
-    navigate('/ai');
-  };
-
   return (
-    <header className="h-14 bg-white/80 dark:bg-[#0B0B0B]/80 backdrop-blur-md shrink-0 z-30 border-b border-zinc-200/80 dark:border-white/[0.07] px-3 sm:px-5 flex items-center justify-between transition-colors select-none">
+    <header className="h-14 bg-white/80 dark:bg-[#0B0B0B]/80 backdrop-blur-md shrink-0 z-30 border-b border-zinc-200/80 dark:border-white/[0.07] px-3.5 sm:px-6 flex items-center justify-between transition-colors select-none">
       
-      {/* ── Left Section: Sidebar Toggle + New Chat + Brand ── */}
-      <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+      {/* ── Left Section: Brand Pill & Back Link ── */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         
-        {/* Mobile Sidebar Toggle Button */}
-        <button
-          type="button"
-          onClick={onOpenSidebar}
-          className="lg:hidden p-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.08] active:scale-95 transition-all cursor-pointer shrink-0"
-          title="Open sidebar"
-          aria-label="Open sidebar"
-        >
-          <RiSideBarLine size={19} />
-        </button>
-
-        {/* Desktop Sidebar Toggle when rail is collapsed */}
-        {isSidebarCollapsed && (
-          <button
-            type="button"
-            onClick={() => dispatch(toggleSidebarCollapse())}
-            className="hidden lg:flex p-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.08] active:scale-95 transition-all cursor-pointer shrink-0"
-            title="Open sidebar"
-            aria-label="Open sidebar"
+        {backLink && (
+          <Link
+            to={backLink}
+            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-[var(--accent-cyan)] transition-colors shrink-0 py-1 px-1.5 -ml-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/[0.06] group"
+            title={backText ? `Back to ${backText}` : 'Back'}
           >
-            <RiSideBarLine size={19} />
-          </button>
+            <RiArrowLeftLine size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+            {backText && <span className="font-medium text-[11px] sm:text-xs hidden xs:inline">{backText}</span>}
+          </Link>
         )}
-
-        {/* New Chat Button (ChatGPT-style icon) */}
-        <button
-          type="button"
-          onClick={handleNewChat}
-          className="p-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.08] active:scale-95 transition-all cursor-pointer shrink-0"
-          title="New chat"
-          aria-label="New chat"
-        >
-          <RiEditBoxLine size={18} />
-        </button>
 
         {/* ChatGPT-style Brand Pill */}
         <Link
           to={user ? "/ai" : "/"}
+          onClick={(e) => {
+            // On mobile viewports (<1024px), if onOpenSidebar is passed, clicking the logo acts as an easy drawer toggle
+            if (window.innerWidth < 1024 && typeof onOpenSidebar === 'function') {
+              e.preventDefault();
+              onOpenSidebar();
+            }
+          }}
           className="flex items-center gap-1.5 px-2 py-1 rounded-xl text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer group shrink-0"
+          title="Parsu AI"
         >
           <ParsuLogo size={20} className="text-zinc-900 dark:text-white group-hover:scale-105 transition-transform shrink-0" />
           <span className="font-bold text-sm tracking-tight text-zinc-900 dark:text-white">Parsu</span>
@@ -128,17 +104,20 @@ export default function ChatNavbar({
           </div>
         ) : title ? (
           <h1 
-            className="text-xs sm:text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate max-w-full text-center tracking-tight"
-            title={title}
+            className="text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate max-w-full text-center tracking-tight"
+            title={typeof title === 'string' ? title : ''}
           >
             {title}
           </h1>
         ) : null}
       </div>
 
-      {/* ── Right Section: Share Button + Voice Mode + Auth ── */}
+      {/* ── Right Section: Custom Slot + Share Button + Guest Auth ── */}
       <div className="flex items-center gap-2 shrink-0">
         
+        {/* Optional Right Action Slot (e.g. Create Post or Status pills) */}
+        {rightSlot}
+
         {/* Share Button (ChatGPT-style pill) */}
         {showShareButton && (
           <button
@@ -154,19 +133,6 @@ export default function ChatNavbar({
           >
             {isCopied ? <RiCheckLine size={14} className="shrink-0 text-emerald-500" /> : <RiShareLine size={14} className="shrink-0 text-zinc-500 dark:text-zinc-400" />}
             <span className="hidden xs:inline">{isCopied ? 'Copied!' : 'Share'}</span>
-          </button>
-        )}
-
-        {/* Voice Agent Button (Jarvis mode) */}
-        {showVoiceButton && onOpenVoice && (
-          <button
-            type="button"
-            onClick={onOpenVoice}
-            className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[var(--accent-cyan)] hover:brightness-110 active:scale-95 text-zinc-950 flex items-center justify-center transition-all cursor-pointer shadow-md shadow-[var(--accent-cyan)]/25 shrink-0"
-            title="Start voice mode — Jarvis agent"
-            aria-label="Voice mode"
-          >
-            <RiVoiceprintLine size={16} />
           </button>
         )}
 

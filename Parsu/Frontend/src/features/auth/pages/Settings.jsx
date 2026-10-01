@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { useSelector } from 'react-redux';
 import Sidebar from '../../Components/Sidebar';
 import Footer from '../../Components/Footer';
+import ChatNavbar from '../../chat/components/ChatNavbar';
 import {
     RiMenuLine,
     RiUserLine,
@@ -182,24 +183,12 @@ const Settings = () => {
             {/* Main column — dynamic padding based on sidebar collapse */}
             <div className={`flex-1 flex flex-col min-h-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
 
-                {/* ChatGPT-style Header — shrink-0: naturally pinned */}
-                <header className="shrink-0 z-30 border-b border-zinc-200/80 dark:border-white/[0.08] bg-white/90 dark:bg-[#0B0B0B]/90 backdrop-blur-md px-3.5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        {/* Mobile sidebar toggle button */}
-                        <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-1.5 -ml-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer rounded-lg active:scale-95"
-                            aria-label="Open navigation"
-                        >
-                            <RiMenuLine size={20} />
-                        </button>
-
-                        <div className="flex items-center gap-2">
-                            <RiSettingsLine size={17} className="text-[var(--accent-cyan)] shrink-0" />
-                            <h1 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">Settings</h1>
-                        </div>
-                    </div>
-                </header>
+                {/* ChatGPT-style Header */}
+                <ChatNavbar
+                    onOpenSidebar={() => setIsSidebarOpen(true)}
+                    title="Settings"
+                    showShareButton={false}
+                />
 
                 {/* Scrollable content — data-lenis-prevent stops Lenis from intercepting */}
                 <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">

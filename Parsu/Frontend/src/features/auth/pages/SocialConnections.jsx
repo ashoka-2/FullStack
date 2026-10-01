@@ -9,21 +9,20 @@ import {
     RiYoutubeLine,
     RiShieldLine,
     RiSparklingLine,
-    RiInformationLine,
     RiApps2Line,
-    RiMenuLine,
     RiLoader4Line,
     RiSendPlaneFill,
-    RiSideBarLine
+    RiCheckLine,
+    RiFileCopyLine
 } from '@remixicon/react';
 import { useDispatch, useSelector } from 'react-redux';
-import { toggleSidebarCollapse } from '../../chat/chat.slice';
 import { getConnectedAccounts, disconnectAccount, getOAuthUrl } from '../service/social.api';
 import { useSearchParams } from 'react-router';
 import gsap from 'gsap';
 import { triggerBlobSocialConnected } from '../../../utils/blobReactions';
 import Footer from '../../Components/Footer';
 import Sidebar from '../../Components/Sidebar';
+import ChatNavbar from '../../chat/components/ChatNavbar';
 import SocialPlatformCard from '../components/SocialPlatformCard';
 import ManualConnectModal from '../components/ManualConnectModal';
 import CreatePostModal from '../components/CreatePostModal';
@@ -135,6 +134,7 @@ const SocialConnections = () => {
     const [manualModal, setManualModal] = useState(null);
     const [createPostOpen, setCreatePostOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [copiedPrompt, setCopiedPrompt] = useState(null);
     const [searchParams, setSearchParams] = useSearchParams();
     const containerRef = useRef(null);
     const dispatch = useDispatch();
@@ -166,7 +166,7 @@ const SocialConnections = () => {
         try {
             const data = await getConnectedAccounts();
             if (data.success) {
-                setAccounts(data.accounts);
+                setAccounts(data.accounts || []);
             }
         } catch (error) {
             console.error('Failed to fetch accounts:', error);
@@ -179,9 +179,9 @@ const SocialConnections = () => {
         if (!loading && containerRef.current) {
             gsap.from(containerRef.current.children, {
                 opacity: 0,
-                y: 30,
-                duration: 0.6,
-                stagger: 0.08,
+                y: 25,
+                duration: 0.5,
+                stagger: 0.06,
                 ease: 'power3.out'
             });
         }
@@ -222,6 +222,14 @@ const SocialConnections = () => {
         }
     };
 
+    const copyPrompt = (text) => {
+        navigator.clipboard?.writeText(text).then(() => {
+            setCopiedPrompt(text);
+            dispatch(addToast({ type: 'success', message: 'Copied prompt to clipboard!' }));
+            setTimeout(() => setCopiedPrompt(null), 2000);
+        });
+    };
+
     const isConnected = (platformId) => accounts.find(a => a.platform === platformId);
     const connectedCount = accounts.length;
 
@@ -238,139 +246,144 @@ const SocialConnections = () => {
             {/* Quick Switch Sidebar */}
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            {/* Main Content Column — dynamic padding based on sidebar collapse */}
+            {/* Main Content Column */}
             <div className={`flex-1 flex flex-col min-h-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
-                {/* Header — shrink-0: naturally pinned, column never scrolls */}
-                <header className="shrink-0 z-30 bg-white/90 dark:bg-[#0B0B0B]/90 backdrop-blur-xl border-b border-zinc-200/80 dark:border-white/[0.08] px-3.5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                        <button
-                            type="button"
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-1.5 sm:p-2 -ml-1 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer rounded-xl hover:bg-zinc-100 dark:hover:bg-white/[0.06] active:scale-95"
-                            title="Open Sidebar"
-                        >
-                            <RiMenuLine size={20} />
-                        </button>
-
-                        <h1 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
-                            Social Hub
-                        </h1>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 sm:gap-3">
-                        {connectedCount > 0 && (
-                            <button
-                                type="button"
-                                onClick={() => setCreatePostOpen(true)}
-                                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black font-bold text-xs shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-                            >
-                                <RiSendPlaneFill size={13} />
-                                <span className="hidden xs:inline">Create Post</span>
-                            </button>
-                        )}
-                        <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-white/80 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-white/10 text-[10px] sm:text-xs font-bold shadow-xs">
-                            <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${connectedCount > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-500'}`} />
-                            <span>{connectedCount} <span className="hidden sm:inline">of {PLATFORMS.length}</span> Connected</span>
-                        </div>
-                    </div>
-                </header>
-
-                {/* Scrollable Content — only this area scrolls */}
-                <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
-                <main className="max-w-5xl w-full mx-auto px-3.5 sm:px-8 md:px-12 py-5 sm:py-10">
-                    <div ref={containerRef}>
-                        {/* Hero Section */}
-                        <div className="mb-8 sm:mb-12">
-                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
-                                <div className="flex items-start sm:items-center gap-3.5 sm:gap-5">
-                                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[24px] bg-gradient-to-tr from-[var(--color-clear-hanada)] to-[var(--accent-cyan)] flex items-center justify-center text-white shadow-[0_8px_30px_rgba(32,184,205,0.3)] shrink-0 mt-0.5 sm:mt-0">
-                                        <RiApps2Line size={24} className="sm:hidden" />
-                                        <RiApps2Line size={34} className="hidden sm:block" />
-                                    </div>
-                                    <div>
-                                        <h1 className="text-2xl sm:text-4xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
-                                            Social <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-clear-hanada)] to-[var(--accent-cyan)]">Command Center</span>
-                                        </h1>
-                                        <p className="text-zinc-500 dark:text-zinc-400 font-medium text-xs sm:text-base mt-1">
-                                            Connect your accounts once. Publish everywhere with AI.
-                                        </p>
-                                    </div>
-                                </div>
-
+                
+                {/* Main AI Chatbot Navbar (ChatGPT-style header) */}
+                <ChatNavbar
+                    onOpenSidebar={() => setIsSidebarOpen(true)}
+                    title="Social Hub"
+                    showShareButton={false}
+                    rightSlot={
+                        <div className="flex items-center gap-2">
+                            {connectedCount > 0 && (
                                 <button
                                     type="button"
                                     onClick={() => setCreatePostOpen(true)}
-                                    className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[var(--accent-cyan)] to-[var(--color-light-blue)] hover:from-[var(--accent-cyan-hover)] hover:to-[var(--color-blue)] text-white font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shrink-0"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 font-bold text-xs shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                                 >
-                                    <RiSendPlaneFill size={16} />
-                                    <span>Create & Publish Post</span>
+                                    <RiSendPlaneFill size={13} />
+                                    <span className="hidden xs:inline">Create Post</span>
                                 </button>
-                            </div>
-
-                            {/* Security banner */}
-                            <div className="mt-6 flex items-center gap-3 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl px-5 py-3">
-                                <RiShieldLine className="text-emerald-500 shrink-0" size={18} />
-                                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                                    Encrypted OAuth 2.0 connection. Your passwords are never stored. You can revoke access anytime.
-                                </p>
+                            )}
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200/80 dark:border-white/10 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+                                <span className={`w-2 h-2 rounded-full ${connectedCount > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'}`} />
+                                <span>{connectedCount} / {PLATFORMS.length} Active</span>
                             </div>
                         </div>
+                    }
+                />
 
-                        {/* Platform Cards Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {PLATFORMS.map((platform) => (
-                                <SocialPlatformCard
-                                    key={platform.id}
-                                    platform={platform}
-                                    connection={isConnected(platform.id)}
-                                    isLoading={actionLoading === platform.id}
-                                    onConnect={handleConnect}
-                                    onDisconnect={handleDisconnect}
-                                />
-                            ))}
-                        </div>
+                {/* Scrollable Content */}
+                <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
+                    <main className="max-w-5xl w-full mx-auto px-4 sm:px-8 md:px-12 py-6 sm:py-10">
+                        <div ref={containerRef}>
+                            
+                            {/* Apple-style Hero Section */}
+                            <div className="mb-8 sm:mb-12">
+                                <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 sm:gap-6">
+                                    <div>
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/25 text-[var(--accent-cyan)] text-[10px] font-extrabold uppercase tracking-widest mb-3">
+                                            <RiApps2Line size={12} />
+                                            <span>Multi-Channel Automation</span>
+                                        </div>
+                                        <h1 className="text-2xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight leading-tight">
+                                            Social Command Center
+                                        </h1>
+                                        <p className="text-zinc-500 dark:text-zinc-400 font-medium text-xs sm:text-base mt-1.5 max-w-xl">
+                                            Connect your accounts once. Chat with Parsu AI to draft, optimize, and publish high-converting content across all networks.
+                                        </p>
+                                    </div>
 
-                        {/* AI Assistant Hint Card */}
-                        <div className="mt-12 bg-white dark:bg-zinc-900/40 backdrop-blur-xl rounded-[32px] border border-zinc-200 dark:border-white/8 p-8 shadow-sm">
-                            <div className="flex items-start gap-5">
-                                <div className="w-12 h-12 rounded-2xl bg-[var(--color-clear-hanada)]/10 flex items-center justify-center text-[var(--color-clear-hanada)] shrink-0">
-                                    <RiSparklingLine size={24} />
+                                    {connectedCount > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setCreatePostOpen(true)}
+                                            className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-bold text-xs sm:text-sm hover:opacity-90 hover:scale-[1.01] active:scale-[0.98] transition-all cursor-pointer shadow-md shrink-0"
+                                        >
+                                            <RiSendPlaneFill size={15} />
+                                            <span>Create & Publish Post</span>
+                                        </button>
+                                    )}
                                 </div>
-                                <div>
-                                    <h3 className="text-lg font-black text-zinc-800 dark:text-zinc-200 mb-2">AI-Powered Publishing</h3>
-                                    <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-4">
-                                        Once connected, go back to any chat and tell the AI assistant what to do. Upload an image, and ask it to:
+
+                                {/* Security Banner */}
+                                <div className="mt-6 flex items-center gap-3 bg-zinc-100/80 dark:bg-white/[0.03] border border-zinc-200/80 dark:border-white/[0.07] rounded-2xl px-4 py-3">
+                                    <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                                        <RiShieldLine size={16} />
+                                    </div>
+                                    <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
+                                        Encrypted OAuth 2.0 direct authorization. Account tokens are never shared, and access can be revoked anytime.
                                     </p>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        {[
-                                            '"Post this to Instagram with a viral caption"',
-                                            '"Upload this video to YouTube"',
-                                            '"Pin this image to my Pinterest board"',
-                                            '"Share this on LinkedIn professionally"',
-                                            '"Generate a caption for this photo"',
-                                            '"Improve my caption with trending hashtags"'
-                                        ].map((cmd, i) => (
-                                            <div key={i} className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 font-mono bg-zinc-50 dark:bg-zinc-800/40 px-3 py-2 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                                                <span className="text-[var(--color-clear-hanada)]">→</span>
-                                                <span>{cmd}</span>
-                                            </div>
-                                        ))}
+                                </div>
+                            </div>
+
+                            {/* Platform Cards Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                                {PLATFORMS.map((platform) => (
+                                    <SocialPlatformCard
+                                        key={platform.id}
+                                        platform={platform}
+                                        connection={isConnected(platform.id)}
+                                        isLoading={actionLoading === platform.id}
+                                        onConnect={handleConnect}
+                                        onDisconnect={handleDisconnect}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Apple Intelligence Feature Card */}
+                            <div className="mt-12 bg-white/70 dark:bg-[#121212]/70 backdrop-blur-2xl rounded-3xl border border-zinc-200/80 dark:border-white/[0.08] p-6 sm:p-8 shadow-sm">
+                                <div className="flex items-start gap-4 sm:gap-5">
+                                    <div className="w-11 h-11 rounded-2xl bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] flex items-center justify-center shrink-0">
+                                        <RiSparklingLine size={22} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white mb-1.5 tracking-tight">
+                                            Chat-Driven Social Automation
+                                        </h3>
+                                        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-4">
+                                            Once connected, simply ask Parsu in any conversation to compose, schedule, or post directly. Tap any prompt to copy:
+                                        </p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            {[
+                                                'Post this to Instagram with viral hashtags',
+                                                'Upload this short video to YouTube Shorts',
+                                                'Pin this infographic to my Pinterest design board',
+                                                'Share this milestone on LinkedIn with key insights',
+                                                'Generate 3 caption variants for this product photo',
+                                                'Schedule an announcement tweet for tomorrow 9 AM'
+                                            ].map((cmd, i) => (
+                                                <button
+                                                    key={i}
+                                                    type="button"
+                                                    onClick={() => copyPrompt(cmd)}
+                                                    className="flex items-center justify-between gap-2 text-xs text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-white/[0.03] hover:bg-zinc-100 dark:hover:bg-white/[0.07] px-3.5 py-2.5 rounded-xl border border-zinc-200/60 dark:border-white/[0.06] text-left transition-all cursor-pointer group"
+                                                >
+                                                    <span className="truncate">"{cmd}"</span>
+                                                    {copiedPrompt === cmd ? (
+                                                        <RiCheckLine size={14} className="text-emerald-500 shrink-0" />
+                                                    ) : (
+                                                        <RiFileCopyLine size={14} className="text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-white shrink-0 transition-colors" />
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </main>
-                <Footer />
-                </div>{/* end scrollable */}
+                    </main>
+                    <Footer />
+                </div>
             </div>
 
-            {/* Universal Multi-Channel Create Post Modal (TryPost Style) */}
+            {/* Universal Multi-Channel Create Post Modal */}
             {createPostOpen && (
                 <CreatePostModal
                     connectedAccounts={accounts}
                     onClose={() => setCreatePostOpen(false)}
-                    onSuccess={(res) => {
+                    onSuccess={() => {
                         dispatch(addToast({ type: 'success', message: 'Published successfully across selected channels!' }));
                         setCreatePostOpen(false);
                     }}
@@ -387,14 +400,6 @@ const SocialConnections = () => {
                         setManualModal(null);
                         dispatch(addToast({ type: 'success', message: `${manualModal.name} connected manually!` }));
                     }}
-                />
-            )}
-
-            {/* Mobile Backdrop */}
-            {isSidebarOpen && (
-                <div
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
                 />
             )}
         </div>
