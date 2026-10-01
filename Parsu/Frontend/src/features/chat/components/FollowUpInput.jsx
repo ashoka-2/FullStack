@@ -231,6 +231,13 @@ const FollowUpInput = ({
                 return;
             }
             e.preventDefault();
+            if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                dispatch(addToast({
+                    type: 'warning',
+                    message: 'No internet connection. Please check your network.'
+                }));
+                return;
+            }
             onSubmit(e);
         }
     };
@@ -450,9 +457,23 @@ const FollowUpInput = ({
                                 /* SEND */
                                 <button
                                     type="button"
-                                    onClick={onSubmit}
-                                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-lg"
-                                    title={isResponding ? 'Queue this message' : 'Send message (Enter)'}
+                                    disabled={typeof navigator !== 'undefined' && !navigator.onLine}
+                                    onClick={(e) => {
+                                        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                                            dispatch(addToast({
+                                                type: 'warning',
+                                                message: 'No internet connection. Please check your network.'
+                                            }));
+                                            return;
+                                        }
+                                        onSubmit(e);
+                                    }}
+                                    className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black transition-all shadow-lg ${
+                                        typeof navigator !== 'undefined' && !navigator.onLine
+                                            ? 'opacity-40 cursor-not-allowed hover:scale-100'
+                                            : 'hover:scale-105 active:scale-95 cursor-pointer'
+                                    }`}
+                                    title={typeof navigator !== 'undefined' && !navigator.onLine ? 'You are offline. Reconnect to send messages.' : (isResponding ? 'Queue this message' : 'Send message (Enter)')}
                                     aria-label={isResponding ? 'Queue message' : 'Send'}
                                 >
                                     <RiArrowUpLine size={18} />
@@ -648,9 +669,24 @@ const FollowUpInput = ({
                                     /* SEND / QUEUE */
                                     <button
                                         type="button"
-                                        onClick={(e) => { setIsFullScreenEditor(false); onSubmit(e); }}
-                                        className="px-4 py-2 h-9 flex items-center justify-center rounded-full bg-white text-black hover:bg-zinc-200 shadow-lg hover:scale-105 active:scale-95 cursor-pointer transition-all gap-1.5 text-xs font-bold"
-                                        title={isResponding ? 'Queue this message' : 'Send message'}
+                                        disabled={typeof navigator !== 'undefined' && !navigator.onLine}
+                                        onClick={(e) => { 
+                                            if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                                                dispatch(addToast({
+                                                    type: 'warning',
+                                                    message: 'No internet connection. Please check your network.'
+                                                }));
+                                                return;
+                                            }
+                                            setIsFullScreenEditor(false); 
+                                            onSubmit(e); 
+                                        }}
+                                        className={`px-4 py-2 h-9 flex items-center justify-center rounded-full bg-white text-black shadow-lg transition-all gap-1.5 text-xs font-bold ${
+                                            typeof navigator !== 'undefined' && !navigator.onLine
+                                                ? 'opacity-40 cursor-not-allowed hover:bg-white hover:scale-100'
+                                                : 'hover:bg-zinc-200 hover:scale-105 active:scale-95 cursor-pointer'
+                                        }`}
+                                        title={typeof navigator !== 'undefined' && !navigator.onLine ? 'You are offline. Reconnect to send messages.' : (isResponding ? 'Queue this message' : 'Send message')}
                                     >
                                         {isResponding ? (
                                             <><RiPlayListAddLine size={15} /><span>Queue</span></>

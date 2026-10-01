@@ -26,6 +26,7 @@ import ConfirmationModal from '../../Components/ConfirmationModal';
 import { triggerBlobLibrarySearch, triggerBlobChatDeleted } from '../../../utils/blobReactions';
 import { uploadDocument, searchDocuments } from '../service/chat.api';
 import Footer from '../../Components/Footer';
+import { CircleButton, PillGroup, PillBadge } from '../../Components/PillButton';
 
 // ─── Date filter helpers ──────────────────────────────────────────────────────
 const DATE_FILTERS = [
@@ -243,51 +244,64 @@ const Library = () => {
 
                         {/* Upload PDF for RAG */}
                         <input ref={docInputRef} type="file" accept=".pdf,.txt,.md" className="hidden" onChange={handleDocUpload} />
-                        <button
+                        <CircleButton
                             onClick={() => docInputRef.current?.click()}
                             disabled={isUploading}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-zinc-200/90 dark:border-white/5 bg-white dark:bg-[var(--bg-primary)] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-all disabled:opacity-50 shrink-0 shadow-2xs cursor-pointer"
-                            title="Upload a document for semantic search"
+                            title="Upload document for semantic search"
+                            ariaLabel="Upload document"
                         >
                             {isUploading ? (
-                                <div className="w-4 h-4 border-2 border-[var(--color-clear-hanada)]/30 border-t-[#60A6AF] rounded-full animate-spin" />
+                                <div className="w-3.5 h-3.5 border-2 border-[var(--color-clear-hanada)]/30 border-t-[#60A6AF] rounded-full animate-spin" />
                             ) : (
                                 <RiUploadCloud2Line size={16} />
                             )}
-                            <span className="hidden sm:inline">{isUploading ? 'Uploading...' : 'Upload'}</span>
-                        </button>
+                        </CircleButton>
 
-                        <div className="flex items-center p-1 bg-white/80 dark:bg-[var(--bg-primary)] border border-zinc-200/90 dark:border-white/5 rounded-xl shrink-0 shadow-2xs">
-                            <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-zinc-100 dark:bg-zinc-800 text-[var(--color-clear-hanada)] font-bold shadow-2xs' : 'text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-300'}`}><RiLayoutGridLine size={18} /></button>
-                            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-zinc-100 dark:bg-zinc-800 text-[var(--color-clear-hanada)] font-bold shadow-2xs' : 'text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-300'}`}><RiListCheck2 size={18} /></button>
-                        </div>
+                        {/* View Mode Toggle PillGroup */}
+                        <PillGroup>
+                            <CircleButton
+                                size="sm"
+                                onClick={() => setViewMode('grid')}
+                                className={viewMode === 'grid' ? 'bg-zinc-200 dark:bg-white/[0.18] text-[var(--accent-cyan)] font-bold' : ''}
+                                title="Grid view"
+                                ariaLabel="Grid view"
+                            >
+                                <RiLayoutGridLine size={15} />
+                            </CircleButton>
+                            <CircleButton
+                                size="sm"
+                                onClick={() => setViewMode('list')}
+                                className={viewMode === 'list' ? 'bg-zinc-200 dark:bg-white/[0.18] text-[var(--accent-cyan)] font-bold' : ''}
+                                title="List view"
+                                ariaLabel="List view"
+                            >
+                                <RiListCheck2 size={15} />
+                            </CircleButton>
+                        </PillGroup>
                     </div>
 
                     {/* ─── Date Filter Pills & Sort Toggle ─────────────────────────────── */}
                     <div className="flex items-center gap-2 mt-4 mb-6 flex-wrap">
                         <RiCalendarLine size={16} className="text-zinc-400 shrink-0" />
                         {DATE_FILTERS.map(f => (
-                            <button
+                            <PillBadge
                                 key={f.value}
                                 onClick={() => setDateFilter(f.value)}
-                                className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all border ${
-                                    dateFilter === f.value
-                                        ? 'bg-[var(--color-clear-hanada)]/10 border-[var(--color-clear-hanada)]/30 text-[var(--color-clear-hanada)]'
-                                        : 'border-zinc-200 dark:border-white/5 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:border-zinc-300 dark:hover:border-white/10'
-                                }`}
+                                variant={dateFilter === f.value ? 'accent' : 'default'}
+                                className="cursor-pointer text-[11px] font-semibold"
                             >
                                 {f.label}
-                            </button>
+                            </PillBadge>
                         ))}
                         <div className="ml-auto">
-                            <button
+                            <PillBadge
                                 onClick={() => setSortDirection(d => d === 'newest' ? 'oldest' : 'newest')}
-                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 border border-zinc-200 dark:border-white/5 hover:border-zinc-300 dark:hover:border-white/10 transition-all"
+                                className="cursor-pointer text-[11px] font-semibold"
                                 title={sortDirection === 'newest' ? 'Showing newest first' : 'Showing oldest first'}
                             >
-                                {sortDirection === 'newest' ? <RiSortDesc size={14} /> : <RiSortAsc size={14} />}
-                                {sortDirection === 'newest' ? 'Newest' : 'Oldest'}
-                            </button>
+                                {sortDirection === 'newest' ? <RiSortDesc size={13} /> : <RiSortAsc size={13} />}
+                                <span>{sortDirection === 'newest' ? 'Newest' : 'Oldest'}</span>
+                            </PillBadge>
                         </div>
                     </div>
 

@@ -7,7 +7,8 @@ import {
   RiCheckLine,
   RiSpyLine,
   RiSparkling2Line,
-  RiArrowLeftLine
+  RiArrowLeftLine,
+  RiAddLine
 } from '@remixicon/react';
 import ParsuLogo from '../../Components/ParsuLogo';
 import { CircleButton, PillGroup, PillBadge } from '../../Components/PillButton';
@@ -18,7 +19,7 @@ import { addToast } from '../../../utils/toast.slice';
  * Features:
  * - Left: Clean Parsu AI brand pill (+ optional back navigation)
  * - Center: Conversation title (truncated) or Temporary Chat pill
- * - Right: Custom action slot + ChatGPT-style Share pill + Guest Auth / Profile
+ * - Right: Custom action slot + ChatGPT-style Share pill + Guest Auth / Profile + Mobile New Chat
  */
 export default function ChatNavbar({
   onOpenSidebar,
@@ -95,16 +96,16 @@ export default function ChatNavbar({
           </CircleButton>
         )}
 
-        {/* On desktop: Back button if present */}
+        {/* On desktop: Back button if present (clean circular icon button, no redundant text) */}
         {backLink && (
-          <PillBadge
+          <CircleButton
             to={backLink}
-            className="hidden lg:inline-flex"
+            className="hidden lg:flex"
             title={backText ? `Back to ${backText}` : 'Back'}
+            ariaLabel={backText ? `Back to ${backText}` : 'Back'}
           >
-            <RiArrowLeftLine size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-            {backText && <span>{backText}</span>}
-          </PillBadge>
+            <RiArrowLeftLine size={17} />
+          </CircleButton>
         )}
 
         {/* On desktop: Parsu AI Brand Pill */}
@@ -140,28 +141,27 @@ export default function ChatNavbar({
         ) : null}
       </div>
 
-      {/* ── Right Section: Custom Slot + Share Button + Guest Auth ── */}
-      <div className="flex items-center gap-2 shrink-0">
+      {/* ── Right Section: Custom Slot + Share Button + Guest Auth + Mobile New Chat ── */}
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         
         {/* Optional Right Action Slot (e.g. Create Post or Status pills) */}
         {rightSlot}
 
-        {/* Share Button (ChatGPT-style pill) */}
+        {/* Share Button (PillBadge) */}
         {showShareButton && (
-          <button
-            type="button"
+          <PillBadge
             onClick={handleShareClick}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer border ${
-              isCopied
-                ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
-                : 'bg-zinc-100 hover:bg-zinc-200/80 dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-zinc-800 dark:text-zinc-200 border-zinc-200/80 dark:border-white/10'
-            }`}
+            variant={isCopied ? 'emerald' : 'default'}
+            className="cursor-pointer font-semibold py-1.5 px-3"
             title="Share chat link"
-            aria-label="Share chat"
           >
-            {isCopied ? <RiCheckLine size={14} className="shrink-0 text-emerald-500" /> : <RiShareLine size={14} className="shrink-0 text-zinc-500 dark:text-zinc-400" />}
+            {isCopied ? (
+              <RiCheckLine size={14} className="shrink-0 text-emerald-500" />
+            ) : (
+              <RiShareLine size={14} className="shrink-0 text-zinc-500 dark:text-zinc-400" />
+            )}
             <span className="hidden xs:inline">{isCopied ? 'Copied!' : 'Share'}</span>
-          </button>
+          </PillBadge>
         )}
 
         {/* Guest Auth Buttons if logged out */}
@@ -182,6 +182,16 @@ export default function ChatNavbar({
             </Link>
           </div>
         )}
+
+        {/* On mobile: New Chat button at the far right end */}
+        <CircleButton
+          to="/ai"
+          className="lg:hidden"
+          title="New Chat"
+          ariaLabel="New Chat"
+        >
+          <RiAddLine size={18} className="shrink-0" />
+        </CircleButton>
       </div>
 
     </header>

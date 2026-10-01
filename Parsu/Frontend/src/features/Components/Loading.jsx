@@ -11,7 +11,7 @@ import ParsuLogo from './ParsuLogo';
  * - Real-time system telemetry status indicators
  * - Buttery smooth GSAP exit transition
  */
-const Loading = ({ onFinished, authReady = true }) => {
+const Loading = ({ onFinished, authReady = true, isServerDown = false }) => {
   const containerRef = useRef(null);
   const cardRef = useRef(null);
   const logoWrapperRef = useRef(null);
@@ -96,9 +96,9 @@ const Loading = ({ onFinished, authReady = true }) => {
     return () => ctx.revert();
   }, []);
 
-  // 6. Monitor Exit Trigger (when count reaches 100 and auth is ready)
+  // 6. Monitor Exit Trigger (when count reaches 100, auth is ready, and server is ON)
   useEffect(() => {
-    if (!counterDone || !authReady || exitStartedRef.current) return;
+    if (!counterDone || !authReady || isServerDown || exitStartedRef.current) return;
     exitStartedRef.current = true;
 
     let ctx = gsap.context(() => {
@@ -131,7 +131,7 @@ const Loading = ({ onFinished, authReady = true }) => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [counterDone, authReady, onFinished]);
+  }, [counterDone, authReady, isServerDown, onFinished]);
 
   return (
     <div
@@ -187,10 +187,18 @@ const Loading = ({ onFinished, authReady = true }) => {
         {/* Status Telemetry */}
         <div className="w-full flex items-center justify-between text-[11px] font-mono text-zinc-500 pt-3 border-t border-white/[0.06]">
           <span ref={statusTextRef} className="text-zinc-300 font-medium tracking-wide">
-            INITIALIZING RUNTIME...
+            {isServerDown ? 'WAITING FOR SERVER...' : 'INITIALIZING RUNTIME...'}
           </span>
           <span className="text-[10px] tracking-wider text-zinc-600">v2.0</span>
         </div>
+
+        {/* Extra message ONLY when server is not ON upon entering */}
+        {isServerDown && (
+          <div className="mt-4 flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono animate-pulse w-full">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
+            <span className="truncate">Please wait while server starts...</span>
+          </div>
+        )}
       </div>
     </div>
   );

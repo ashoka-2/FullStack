@@ -21,6 +21,7 @@ import InfoPageLayout from './InfoPageLayout';
 import { createRazorpayOrder, verifyPaymentSignature } from '../auth/service/subscription.api';
 import { setUser } from '../auth/auth.slice';
 import { addToast } from '../../utils/toast.slice';
+import { CircleButton, PillBadge, PillGroup } from '../Components/PillButton';
 
 export default function Pricing() {
     const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
@@ -269,7 +270,7 @@ export default function Pricing() {
                 {/* ── Currency & Location Indicator + Monthly/Yearly Toggle ── */}
                 <div className="flex flex-col items-center gap-6">
                     {/* Location detection pill */}
-                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/[0.08] text-xs text-zinc-600 dark:text-zinc-300">
+                    <PillBadge variant="default" className="text-xs">
                         {isIndia ? (
                             <>
                                 <span className="text-sm">🇮🇳</span>
@@ -290,7 +291,7 @@ export default function Pricing() {
                         >
                             Switch to {currency === 'INR' ? 'USD ($)' : 'INR (₹)'}
                         </button>
-                    </div>
+                    </PillBadge>
 
                     {/* Monthly / Yearly Switcher */}
                     <div className="inline-flex items-center p-1 rounded-full bg-zinc-200/70 dark:bg-white/[0.04] border border-zinc-300 dark:border-white/[0.08] shadow-inner">
@@ -347,13 +348,12 @@ export default function Pricing() {
                                 {/* Top Badge */}
                                 {tier.badge && (
                                     <div className="absolute top-4 right-4 z-20">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                                            tier.popular
-                                                ? 'bg-[var(--accent-cyan)] text-zinc-950 shadow-sm'
-                                                : 'bg-zinc-100 dark:bg-white/10 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/10'
-                                        }`}>
+                                        <PillBadge
+                                            variant={tier.popular ? 'accent' : 'default'}
+                                            className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5"
+                                        >
                                             {tier.badge}
-                                        </span>
+                                        </PillBadge>
                                     </div>
                                 )}
 

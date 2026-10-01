@@ -30,6 +30,7 @@ import {
   toggleAdminUserBlock
 } from '../service/admin.api';
 import DeleteButton from '../../Components/rare-ui/DeleteButton';
+import { CircleButton, PillBadge, PillGroup } from '../../Components/PillButton';
 
 export default function AdminUsersPage() {
   const currentUser = useSelector((state) => state.auth.user);
@@ -338,10 +339,10 @@ export default function AdminUsersPage() {
     if (plan === 'ultra' || plan === 'enterprise') {
       return (
         <div className="flex flex-col gap-0.5 items-start">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 border border-zinc-800 dark:border-white/20 shadow-sm">
+          <PillBadge variant="amber" className="text-[10px] uppercase font-bold">
             <RiVipCrownLine size={12} className="text-amber-400" />
-            Ultra Plan
-          </span>
+            <span>Ultra Plan</span>
+          </PillBadge>
           <span className="text-[10px] text-zinc-500 dark:text-zinc-400 capitalize">
             {status} • {sub?.billingCycle || 'monthly'}
           </span>
@@ -352,10 +353,10 @@ export default function AdminUsersPage() {
     if (plan === 'pro' || plan === 'starter') {
       return (
         <div className="flex flex-col gap-0.5 items-start">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-zinc-100 dark:bg-white/[0.08] text-zinc-900 dark:text-zinc-200 border border-zinc-200 dark:border-white/10">
+          <PillBadge variant="accent" className="text-[10px] uppercase font-bold">
             <RiSparkling2Line size={12} />
-            Pro Plan
-          </span>
+            <span>Pro Plan</span>
+          </PillBadge>
           <span className="text-[10px] text-zinc-500 dark:text-zinc-400 capitalize">
             {status} • {sub?.billingCycle || 'monthly'}
           </span>
@@ -365,9 +366,9 @@ export default function AdminUsersPage() {
 
     return (
       <div className="flex flex-col gap-0.5 items-start">
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium uppercase bg-zinc-100 dark:bg-white/5 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-white/10">
+        <PillBadge variant="default" className="text-[10px] uppercase font-medium">
           Free Starter
-        </span>
+        </PillBadge>
         <span className="text-[10px] text-zinc-400 dark:text-zinc-500">Standard</span>
       </div>
     );
@@ -387,14 +388,13 @@ export default function AdminUsersPage() {
           </p>
         </div>
 
-        <button
-          type="button"
+        <CircleButton
           onClick={() => fetchUsers(1, false)}
-          className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/10 transition-all active:scale-[0.98] cursor-pointer"
+          title="Refresh user directory"
+          ariaLabel="Refresh"
         >
-          <RiRefreshLine size={14} className={isLoading ? 'animate-spin' : ''} />
-          <span>Refresh</span>
-        </button>
+          <RiRefreshLine size={15} className={isLoading ? 'animate-spin' : ''} />
+        </CircleButton>
       </div>
 
       {/* Notification Toast */}

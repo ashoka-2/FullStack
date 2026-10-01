@@ -26,6 +26,7 @@ import ParsuLogo from '../../Components/ParsuLogo';
 import FloatingBlobMascot from '../../Components/FloatingBlobMascot';
 import { ToastContainer } from '../../Components/Toast';
 import { useAuth } from '../../auth/hook/useAuth';
+import { CircleButton, PillBadge } from '../../Components/PillButton';
 
 const ADMIN_NAV_LINKS = [
   { href: '/admin/dashboard',          label: 'Dashboard',         icon: RiDashboard3Line },
@@ -117,13 +118,13 @@ export default function AdminLayout() {
       {/* ── Mobile Top Bar ── */}
       <div className="lg:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white/90 dark:bg-[#0c0d12]/90 backdrop-blur-2xl border-b border-zinc-200 dark:border-white/[0.08] transition-colors">
         <div className="flex items-center gap-2.5">
-          <button
+          <CircleButton
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-xl bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.08] text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
-            aria-label="Toggle Menu"
+            title="Toggle Menu"
+            ariaLabel="Toggle Menu"
           >
             {mobileMenuOpen ? <RiCloseLine size={18} /> : <RiMenuLine size={18} />}
-          </button>
+          </CircleButton>
           <div className="flex items-center gap-2">
             <ParsuLogo size={22} className="text-zinc-900 dark:text-white" />
             <span className="font-semibold text-xs tracking-tight text-zinc-900 dark:text-white">Parsu Console</span>
@@ -131,18 +132,17 @@ export default function AdminLayout() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <CircleButton
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.08] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer transition-colors"
             title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-            aria-label="Toggle Theme"
+            ariaLabel="Toggle Theme"
           >
-            {theme === 'light' ? <RiMoonLine size={15} /> : <RiSunLine size={15} className="text-zinc-200" />}
-          </button>
-          <Link to="/ai" className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-white/[0.08] text-[11px] font-semibold transition-all">
-            <RiArrowLeftLine size={12} />Exit
-          </Link>
+            {theme === 'light' ? <RiMoonLine size={16} /> : <RiSunLine size={16} className="text-zinc-200" />}
+          </CircleButton>
+          <PillBadge to="/ai" title="Exit to AI App" className="gap-1 py-1 px-2.5 text-[11px] font-semibold">
+            <RiArrowLeftLine size={13} />
+            <span>Exit</span>
+          </PillBadge>
         </div>
       </div>
 
@@ -269,24 +269,35 @@ export default function AdminLayout() {
         {/* Desktop Header */}
         <header className="hidden lg:flex items-center justify-between px-8 py-3.5 bg-white/80 dark:bg-[#0c0d12]/80 backdrop-blur-2xl border-b border-zinc-200/80 dark:border-white/[0.08] sticky top-0 z-20 transition-colors">
           <div className="flex items-center gap-2.5">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">All Systems Operational</span>
+            <PillBadge variant="emerald" className="gap-2 py-1 px-3">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">All Systems Operational</span>
+            </PillBadge>
           </div>
 
           <div className="flex items-center gap-2.5">
             {/* Desktop Theme Switcher */}
-            <button
-              type="button"
+            <PillBadge
               onClick={toggleTheme}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer bg-zinc-100 hover:bg-zinc-200/80 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border-zinc-200/80 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white active:scale-[0.98]"
+              className="cursor-pointer gap-1.5 py-1.5 px-3 text-xs font-medium active:scale-[0.98]"
               title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             >
               {theme === 'light' ? <RiMoonLine size={13} /> : <RiSunLine size={13} className="text-zinc-200" />}
               <span>{theme === 'light' ? 'Dark' : 'Light'}</span>
-            </button>
+            </PillBadge>
+
+            {/* Exit to Main AI Chat */}
+            <PillBadge
+              to="/ai"
+              className="cursor-pointer gap-1.5 py-1.5 px-3 text-xs font-semibold"
+              title="Exit to AI App"
+            >
+              <RiArrowLeftLine size={13} />
+              <span>Exit to AI</span>
+            </PillBadge>
           </div>
         </header>
 

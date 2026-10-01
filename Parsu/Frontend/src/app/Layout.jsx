@@ -26,6 +26,19 @@ const Layout = () => {
     const [loaderFinished, setLoaderFinished] = useState(hasLoadedThisSession);
     // Track if we've received the first auth data
     const [authWaitDone, setAuthWaitDone] = useState(hasLoadedThisSession);
+    // Track if backend server is unreachable
+    const [isServerDown, setIsServerDown] = useState(false);
+
+    // Listen for server connection status broadcast from ConnectionMonitor
+    useEffect(() => {
+        const handleStatus = (e) => {
+            if (e.detail) {
+                setIsServerDown(Boolean(e.detail.isServerDown));
+            }
+        };
+        window.addEventListener('connection_status_change', handleStatus);
+        return () => window.removeEventListener('connection_status_change', handleStatus);
+    }, []);
 
     // Invalidate stale user session if restored from browser back-forward cache (bfcache)
     useEffect(() => {
@@ -139,7 +152,11 @@ const Layout = () => {
                 <div className={`bg-[var(--bg-primary)] text-zinc-900 dark:text-zinc-100 transition-colors duration-300 min-h-screen relative ${isOverlayActive ? 'h-[100dvh] overflow-hidden' : ''}`}>
                     {/* Animated initial loading curtain (only on first session entry) */}
                     {isOverlayActive && (
-                        <Loading onFinished={handleLoaderFinished} authReady={authWaitDone} />
+                        <Loading 
+                            onFinished={handleLoaderFinished} 
+                            authReady={authWaitDone} 
+                            isServerDown={isServerDown} 
+                        />
                     )}
 
                     {/* Main app content with background data prefetching */}

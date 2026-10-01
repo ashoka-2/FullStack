@@ -370,6 +370,15 @@ const ChatArea = () => {
   const onSubmit = async (e, text = null) => {
     if (e) e.preventDefault();
 
+    // If network gone, user cannot send a message
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      dispatch(addToast({
+        type: 'warning',
+        message: 'No internet connection. Please check your network.'
+      }));
+      return;
+    }
+
     // Guest protection: Redirect unauthenticated users to auth immediately
     if (!user) {
       navigate('/auth');
@@ -500,6 +509,14 @@ const ChatArea = () => {
         return;
       }
       e.preventDefault(); // Prevent default line skip
+
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        dispatch(addToast({
+          type: 'warning',
+          message: 'No internet connection. Please check your network.'
+        }));
+        return;
+      }
 
       if (!user) {
         navigate('/auth');
@@ -877,7 +894,15 @@ const ChatArea = () => {
                   </button>
                 ) : (
                   <button
+                    disabled={typeof navigator !== 'undefined' && !navigator.onLine}
                     onClick={(e) => {
+                      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                        dispatch(addToast({
+                          type: 'warning',
+                          message: 'No internet connection. Please check your network.'
+                        }));
+                        return;
+                      }
                       if (!user) {
                         setBlobMood('surprised');
                         navigate('/auth');
@@ -896,8 +921,12 @@ const ChatArea = () => {
                         setBlobMood(input.trim() ? 'curious' : 'neutral');
                       }
                     }}
-                    className="w-8.5 h-8.5 flex items-center justify-center rounded-full transition-all cursor-pointer bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 hover:scale-105 active:scale-95"
-                    title="Send message"
+                    className={`w-8.5 h-8.5 flex items-center justify-center rounded-full transition-all bg-[var(--accent-cyan)] text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 ${
+                      typeof navigator !== 'undefined' && !navigator.onLine
+                        ? 'opacity-40 cursor-not-allowed hover:scale-100'
+                        : 'hover:bg-[var(--accent-cyan-hover)] hover:scale-105 active:scale-95 cursor-pointer'
+                    }`}
+                    title={typeof navigator !== 'undefined' && !navigator.onLine ? "You are offline. Reconnect to send messages." : "Send message"}
                   >
                     <RiArrowUpLine size={19} className="stroke-[2.5]" />
                   </button>

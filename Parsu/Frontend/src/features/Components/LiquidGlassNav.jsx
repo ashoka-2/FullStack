@@ -22,6 +22,7 @@ import {
 import gsap from 'gsap';
 import ParsuLogo from './ParsuLogo';
 import MagneticButton from './MagneticButton';
+import { CircleButton, PillBadge, PillGroup } from './PillButton';
 
 /**
  * LiquidGlassNav — Fixed Top Zero-Background Navbar for Landing Page
@@ -232,30 +233,30 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
           {/* 3. Right Action Controls */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Theme Toggle Button — HIDDEN ON MOBILE (visible ONLY on md+) */}
-            <button
-              type="button"
+            <CircleButton
               onClick={toggleTheme}
-              className="hidden md:flex w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full items-center justify-center border active:scale-95 transition-all duration-150 cursor-pointer shadow-xs bg-zinc-100/90 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 border-zinc-200/90 dark:border-white/15 text-zinc-800 dark:text-white"
+              className="hidden md:flex"
               title="Toggle Light / Dark mode"
-              aria-label="Toggle Theme"
+              ariaLabel="Toggle Theme"
             >
               {theme === 'light' ? (
                 <RiMoonLine size={15} className="transition-transform duration-300 rotate-0 hover:-rotate-12 text-zinc-800 dark:text-white" />
               ) : (
                 <RiSunLine size={15} className="transition-transform duration-300 rotate-0 hover:rotate-45 text-amber-300" />
               )}
-            </button>
+            </CircleButton>
 
             {/* Desktop Auth Button */}
             {user ? (
-              <Link
+              <PillBadge
                 to="/settings"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all drop-shadow-xs text-zinc-800 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100/80 dark:hover:bg-white/10 border-zinc-200/90 dark:border-white/15 bg-white/60 dark:bg-white/5"
+                variant="default"
+                className="hidden sm:inline-flex"
                 title={`Logged in as ${user.name || user.username || 'User'}`}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="max-w-[110px] truncate">{user.name || user.username || 'Account'}</span>
-              </Link>
+              </PillBadge>
             ) : (
               <Link
                 to="/auth?mode=login"
@@ -278,14 +279,13 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             </Link>
 
             {/* Mobile Hamburger Button */}
-            <button
-              type="button"
+            <CircleButton
               onClick={() => setIsMobileOpen(true)}
-              className="md:hidden w-8.5 h-8.5 rounded-xl flex items-center justify-center border transition-colors cursor-pointer text-zinc-800 dark:text-white bg-zinc-100/90 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 border-zinc-200/90 dark:border-white/15"
-              aria-label="Open Navigation Menu"
+              className="md:hidden"
+              ariaLabel="Open Navigation Menu"
             >
-              <RiMenuLine size={20} />
-            </button>
+              <RiMenuLine size={18} />
+            </CircleButton>
           </div>
         </div>
       </header>
@@ -315,14 +315,13 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
           </Link>
 
           {/* Close Button with circular hover effect */}
-          <button
-            type="button"
+          <CircleButton
+            size="lg"
             onClick={() => setIsMobileOpen(false)}
-            className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 border border-zinc-200 dark:border-white/15 flex items-center justify-center text-zinc-800 dark:text-white active:scale-90 transition-all cursor-pointer shadow-lg"
-            aria-label="Close Menu"
+            ariaLabel="Close Menu"
           >
-            <RiCloseLine size={22} />
-          </button>
+            <RiCloseLine size={20} />
+          </CircleButton>
         </div>
 
         {/* Navigation Links — Staggered and Numbered */}

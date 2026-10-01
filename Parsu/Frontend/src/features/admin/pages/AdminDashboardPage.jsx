@@ -35,8 +35,8 @@ import { Link } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import { getAdminOverview, getAdminUsers } from '../service/admin.api';
 import customAxios from '../../../utils/axios';
-import { addToast } from '../../../utils/toast.slice';
 import DeleteButton from '../../Components/rare-ui/DeleteButton';
+import { CircleButton, PillBadge } from '../../Components/PillButton';
 
 export default function AdminDashboardPage() {
   const dispatch = useDispatch();
@@ -280,13 +280,13 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <button
+          <CircleButton
             onClick={loadData}
-            className="w-8 h-8 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer active:scale-95"
             title="Refresh metrics"
+            ariaLabel="Refresh metrics"
           >
-            <RiRefreshLine size={15} className={isLoading ? 'animate-spin' : ''} />
-          </button>
+            <RiRefreshLine size={16} className={isLoading ? 'animate-spin' : ''} />
+          </CircleButton>
 
           <select
             value={timeFilter}
@@ -322,9 +322,9 @@ export default function AdminDashboardPage() {
         <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-xs backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Total Users</span>
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+            <PillBadge variant="emerald" className="px-2 py-0.5 text-[10px]">
               <RiUser3Line size={12} /> Live
-            </span>
+            </PillBadge>
           </div>
           <div className="mt-3">
             <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{totalUsersCount}</span>
@@ -336,9 +336,9 @@ export default function AdminDashboardPage() {
         <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-xs backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">AI Queries & Chats</span>
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200/80 dark:border-white/[0.08] px-1.5 py-0.5 rounded-full">
+            <PillBadge variant="default" className="px-2 py-0.5 text-[10px]">
               <RiChat3Line size={12} /> Realtime
-            </span>
+            </PillBadge>
           </div>
           <div className="mt-3">
             <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{totalChatsCount}</span>
@@ -350,9 +350,9 @@ export default function AdminDashboardPage() {
         <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-xs backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Paid Subscribers</span>
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+            <PillBadge variant="emerald" className="px-2 py-0.5 text-[10px]">
               <RiMoneyDollarCircleLine size={12} /> {gatewayMode.toUpperCase()}
-            </span>
+            </PillBadge>
           </div>
           <div className="mt-3">
             <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{totalSubscribersCount}</span>
@@ -364,9 +364,9 @@ export default function AdminDashboardPage() {
         <div className="admin-stat-card p-5 rounded-2xl bg-white dark:bg-[#11131a]/90 border border-zinc-200 dark:border-white/[0.08] shadow-xs backdrop-blur-xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Inbound Inquiries</span>
-            <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+            <PillBadge variant="amber" className="px-2 py-0.5 text-[10px]">
               <RiArrowUpLine size={12} /> {overview?.metrics?.newContacts ?? 0} new
-            </span>
+            </PillBadge>
           </div>
           <div className="mt-3">
             <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{overview?.metrics?.totalContacts ?? 0}</span>

@@ -19,11 +19,11 @@ export default function ShapeOverlaysTransition() {
     const paths = [path1Ref.current, path2Ref.current, path3Ref.current].filter(Boolean);
     if (!paths.length) return;
 
-    const numPoints = 10;
+    const numPoints = 8;
     const numPaths = paths.length;
-    const delayPointsMax = 0.1;
-    const delayPerPath = 0.07;
-    const duration = 0.38;
+    const delayPointsMax = 0.02;
+    const delayPerPath = 0.015;
+    const duration = 0.14;
 
     let tl = null;
 
@@ -74,7 +74,7 @@ export default function ShapeOverlaysTransition() {
 
       // Phase 1: Waves pour down from top (0 -> 100)
       tl = gsap.timeline({
-        defaults: { ease: 'power2.inOut', duration },
+        defaults: { ease: 'power2.out', duration },
         onUpdate: () => render(false),
         onComplete: () => {
           // Screen is completely covered! Perform route navigation
@@ -92,9 +92,9 @@ export default function ShapeOverlaysTransition() {
           render(true);
 
           // Phase 2: Waves continue downward and peel off bottom (0 -> 100)
-          gsap.delayedCall(0.04, () => {
+          gsap.delayedCall(0.01, () => {
             const tlOut = gsap.timeline({
-              defaults: { ease: 'power2.inOut', duration: duration * 0.95 },
+              defaults: { ease: 'power2.inOut', duration: duration * 0.9 },
               onUpdate: () => render(true),
               onComplete: () => {
                 setIsVisible(false);

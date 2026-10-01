@@ -291,6 +291,16 @@ const ChatPage2 = () => {
 
     const handleSendFollowUp = async (e, textOverride = null) => {
         if (e) e.preventDefault();
+
+        // If network gone, user cannot send a message
+        if (!navigator.onLine) {
+            dispatch(addToast({
+                type: 'warning',
+                message: 'No internet connection. Please check your network.'
+            }));
+            return null;
+        }
+
         const fileObjects = files.map(f => f.fileObject).filter(Boolean);
         const filesToSend = fileObjects.length > 1 ? fileObjects : (fileObjects[0] || null);
         const currentInput = textOverride !== null ? textOverride : input;
@@ -513,7 +523,7 @@ const ChatPage2 = () => {
                             </div>
                         )}
 
-                        {loading && messages.length === 0 ? (
+                        {((loading || error || (typeof navigator !== 'undefined' && !navigator.onLine)) && messages.length === 0) ? (
                             <MessagesSkeleton />
                         ) : (
                             <>

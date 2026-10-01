@@ -30,6 +30,7 @@ import HeroGradientBackground from '../Components/HeroGradientBackground';
 import HeroWorkspacePreview from '../Components/HeroWorkspacePreview';
 import MagneticButton from '../Components/MagneticButton';
 import LiquidGlassNav from '../Components/LiquidGlassNav';
+import { CircleButton, PillBadge, PillGroup } from '../Components/PillButton';
 import useSEO from '../../utils/useSEO';
 
 const LandingPage = () => {
@@ -195,11 +196,11 @@ const LandingPage = () => {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           
           {/* Trust Pill / Rare UI Badge */}
-          <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-white/70 dark:bg-white/[0.05] border border-[var(--accent-cyan)]/30 backdrop-blur-md text-[var(--accent-cyan)] text-xs font-display font-semibold mb-6 shadow-sm shadow-cyan-500/10 hover:border-[var(--accent-cyan)]/60 transition-colors animate-fade-in max-w-full">
+          <PillBadge variant="accent" className="mb-6 shadow-sm shadow-cyan-500/10">
             <RiSparkling2Line size={14} className="text-[var(--accent-cyan)] animate-spin-slow shrink-0" />
             <span className="tracking-wide text-[10px] sm:text-xs">Autonomous AI Search & Universal Social Studio</span>
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-cyan)] animate-ping ml-1 shrink-0" />
-          </div>
+          </PillBadge>
 
           {/* Main Title with Outfit Display Font */}
           <h1 className="font-display text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-[5.25rem] font-extrabold tracking-[-0.035em] text-zinc-900 dark:text-white leading-[1.1] sm:leading-[1.06] mb-5 sm:mb-6 px-1">
@@ -274,10 +275,10 @@ const LandingPage = () => {
       {/* ── App Features & Capabilities Grid ───────────────────────────────── */}
       <section id="features" className="scroll-mt-24 py-20 sm:py-28 px-4 sm:px-6 max-w-6xl mx-auto border-t border-zinc-200/80 dark:border-white/5 relative z-10">
         <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-20">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] text-xs font-semibold mb-3">
+          <PillBadge variant="accent" className="mb-3">
             <RiCpuLine size={14} />
             <span>Core Capabilities</span>
-          </div>
+          </PillBadge>
           <h2 className="text-3xl sm:text-5xl font-black text-zinc-900 dark:text-white tracking-tight mb-4">
             Engineered for Precision & Production
           </h2>
@@ -299,9 +300,9 @@ const LandingPage = () => {
                     <div className={`w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center ${feat.iconColor} group-hover:scale-105 transition-transform shadow-xs`}>
                       <Icon size={24} />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-500 border border-zinc-200 dark:border-white/5">
+                    <PillBadge variant="default" className="text-[10px] font-bold uppercase tracking-wider py-0.5">
                       {feat.tag}
-                    </span>
+                    </PillBadge>
                   </div>
                   <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2.5">
                     {feat.title}
@@ -322,10 +323,10 @@ const LandingPage = () => {
         <div className="max-w-4xl mx-auto">
           
           <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] text-xs font-semibold mb-3">
+            <PillBadge variant="accent" className="mb-3">
               <RiShieldCheckLine size={14} />
               <span>Security & Integrity</span>
-            </div>
+            </PillBadge>
             <h2 className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tight mb-3">
               Privacy First. Zero compromises.
             </h2>
