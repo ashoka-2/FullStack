@@ -20,6 +20,7 @@ import {
 import { getAdminMediaAssets, deleteAdminMediaAsset } from '../service/admin.api';
 import DeleteButton from '../../Components/rare-ui/DeleteButton';
 import { showToast } from '../../Components/Toast';
+import ThemedSkeleton from '../../Components/SkeletonLoader';
 
 /**
  * Bulletproof Media Card Preview
@@ -343,7 +344,11 @@ export default function AdminMediaVaultPage() {
             >
               <div>
                 <p className={`text-[11px] font-semibold ${isSelected ? 'text-zinc-300 dark:text-zinc-700' : 'text-zinc-500 dark:text-zinc-400'}`}>{item.label}</p>
-                <p className="text-xl font-black mt-1 font-mono">{item.count || 0}</p>
+                {loading ? (
+                  <ThemedSkeleton width={45} height={24} className="mt-1" />
+                ) : (
+                  <p className="text-xl font-black mt-1 font-mono">{item.count || 0}</p>
+                )}
               </div>
               <div className={`p-2.5 rounded-xl ${isSelected ? 'bg-white/10 dark:bg-black/10' : 'bg-zinc-100 dark:bg-white/[0.06]'}`}>
                 <Icon size={18} className={isSelected ? 'text-white dark:text-zinc-950' : 'text-zinc-700 dark:text-zinc-200'} />
@@ -372,9 +377,28 @@ export default function AdminMediaVaultPage() {
 
       {/* ── Content View ── */}
       {loading ? (
-        <div className="py-20 text-center rounded-3xl bg-white dark:bg-[#11131a]/85 border border-zinc-200 dark:border-white/[0.08]">
-          <RiRefreshLine size={28} className="animate-spin mx-auto text-zinc-500 dark:text-zinc-400 mb-2" />
-          <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Scanning media storage and chats...</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="rounded-2xl bg-white dark:bg-[#11131a]/85 border border-zinc-200 dark:border-white/[0.08] overflow-hidden flex flex-col justify-between"
+            >
+              <ThemedSkeleton height={140} borderRadius="0" />
+              <div className="p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <ThemedSkeleton width="60%" height={14} />
+                  <ThemedSkeleton width={40} height={12} />
+                </div>
+                <div className="flex items-center justify-between pt-1.5 border-t border-zinc-200/80 dark:border-white/[0.06]">
+                  <div className="flex items-center gap-1.5">
+                    <ThemedSkeleton circle width={16} height={16} />
+                    <ThemedSkeleton width={70} height={12} />
+                  </div>
+                  <ThemedSkeleton width={50} height={12} />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : assets.length === 0 ? (
         <div className="py-20 text-center px-4 rounded-3xl bg-white dark:bg-[#11131a]/85 border border-zinc-200 dark:border-white/[0.08]">

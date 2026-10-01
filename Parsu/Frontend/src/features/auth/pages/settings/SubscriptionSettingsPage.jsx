@@ -20,6 +20,7 @@ import SettingsPageLayout from './SettingsPageLayout';
 import { fetchSubscriptionStatus, createRazorpayOrder, verifyPaymentSignature } from '../../service/subscription.api';
 import { setUser } from '../../auth.slice';
 import { addToast } from '../../../../utils/toast.slice';
+import ThemedSkeleton from '../../../Components/SkeletonLoader';
 
 export default function SubscriptionSettingsPage() {
     const { user } = useSelector(state => state.auth);
@@ -196,15 +197,19 @@ export default function SubscriptionSettingsPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
-                                <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-                                    isUltra
-                                        ? 'bg-gradient-to-r from-amber-500/20 to-cyan-500/20 text-cyan-300 border-cyan-500/30'
-                                        : isPro
-                                        ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                                        : 'bg-zinc-100 dark:bg-white/10 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-white/10'
-                                }`}>
-                                    {subscription?.plan?.toUpperCase()} PLAN
-                                </span>
+                                {loading ? (
+                                    <ThemedSkeleton width={80} height={18} borderRadius="9999px" />
+                                ) : (
+                                    <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+                                        isUltra
+                                            ? 'bg-gradient-to-r from-amber-500/20 to-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                                            : isPro
+                                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                            : 'bg-zinc-100 dark:bg-white/10 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-white/10'
+                                    }`}>
+                                        {subscription?.plan?.toUpperCase()} PLAN
+                                    </span>
+                                )}
                                 <span className="text-[11px] font-semibold text-emerald-500 flex items-center gap-1">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                     Active
@@ -347,7 +352,9 @@ export default function SubscriptionSettingsPage() {
                                     Daily AI Messages
                                 </span>
                                 <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1">
-                                    {isUnlimitedQueries ? (
+                                    {loading ? (
+                                        <ThemedSkeleton width={50} height={14} />
+                                    ) : isUnlimitedQueries ? (
                                         <span className="flex items-center gap-1 text-emerald-500">
                                             <RiInfinityLine size={16} />
                                             <span>Unlimited</span>
@@ -383,7 +390,9 @@ export default function SubscriptionSettingsPage() {
                                     Document / RAG Uploads
                                 </span>
                                 <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1">
-                                    {effectiveDocLimit === -1 ? (
+                                    {loading ? (
+                                        <ThemedSkeleton width={50} height={14} />
+                                    ) : effectiveDocLimit === -1 ? (
                                         <span className="flex items-center gap-1 text-emerald-500">
                                             <RiInfinityLine size={16} />
                                             <span>Unlimited</span>
@@ -417,7 +426,9 @@ export default function SubscriptionSettingsPage() {
                                     Social Publishing / Day
                                 </span>
                                 <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1">
-                                    {effectiveSocialLimit === -1 ? (
+                                    {loading ? (
+                                        <ThemedSkeleton width={50} height={14} />
+                                    ) : effectiveSocialLimit === -1 ? (
                                         <span className="flex items-center gap-1 text-emerald-500">
                                             <RiInfinityLine size={16} />
                                             <span>Unlimited</span>

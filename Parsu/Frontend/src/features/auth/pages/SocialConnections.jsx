@@ -26,6 +26,7 @@ import ChatNavbar from '../../chat/components/ChatNavbar';
 import SocialPlatformCard from '../components/SocialPlatformCard';
 import ManualConnectModal from '../components/ManualConnectModal';
 import CreatePostModal from '../components/CreatePostModal';
+import ThemedSkeleton from '../../Components/SkeletonLoader';
 import { addToast } from '../../../utils/toast.slice';
 
 // Platform configuration with colors, icons, and info
@@ -233,14 +234,6 @@ const SocialConnections = () => {
     const isConnected = (platformId) => accounts.find(a => a.platform === platformId);
     const connectedCount = accounts.length;
 
-    if (loading) {
-        return (
-            <div className="h-[100dvh] bg-[var(--bg-primary)] flex items-center justify-center">
-                <RiLoader4Line className="animate-spin w-8 h-8 text-[var(--accent-cyan)]" />
-            </div>
-        );
-    }
-
     return (
         <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30">
             {/* Quick Switch Sidebar */}
@@ -267,8 +260,14 @@ const SocialConnections = () => {
                                 </button>
                             )}
                             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200/80 dark:border-white/10 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
-                                <span className={`w-2 h-2 rounded-full ${connectedCount > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'}`} />
-                                <span>{connectedCount} / {PLATFORMS.length} Active</span>
+                                {loading ? (
+                                    <ThemedSkeleton width={75} height={14} borderRadius="0.5rem" />
+                                ) : (
+                                    <>
+                                        <span className={`w-2 h-2 rounded-full ${connectedCount > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'}`} />
+                                        <span>{connectedCount} / {PLATFORMS.length} Active</span>
+                                    </>
+                                )}
                             </div>
                         </div>
                     }
@@ -320,16 +319,41 @@ const SocialConnections = () => {
 
                             {/* Platform Cards Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-                                {PLATFORMS.map((platform) => (
-                                    <SocialPlatformCard
-                                        key={platform.id}
-                                        platform={platform}
-                                        connection={isConnected(platform.id)}
-                                        isLoading={actionLoading === platform.id}
-                                        onConnect={handleConnect}
-                                        onDisconnect={handleDisconnect}
-                                    />
-                                ))}
+                                {loading ? (
+                                    Array.from({ length: 6 }).map((_, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            className="p-5 sm:p-6 rounded-3xl border border-zinc-200/80 dark:border-white/[0.08] bg-white/70 dark:bg-[#121212]/70 flex flex-col justify-between h-[210px] space-y-4"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <ThemedSkeleton circle width={42} height={42} />
+                                                    <div className="space-y-1.5">
+                                                        <ThemedSkeleton width={90} height={16} />
+                                                        <ThemedSkeleton width={60} height={12} />
+                                                    </div>
+                                                </div>
+                                                <ThemedSkeleton width={55} height={22} borderRadius="9999px" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <ThemedSkeleton width="95%" height={12} />
+                                                <ThemedSkeleton width="75%" height={12} />
+                                            </div>
+                                            <ThemedSkeleton height={36} borderRadius="0.75rem" />
+                                        </div>
+                                    ))
+                                ) : (
+                                    PLATFORMS.map((platform) => (
+                                        <SocialPlatformCard
+                                            key={platform.id}
+                                            platform={platform}
+                                            connection={isConnected(platform.id)}
+                                            isLoading={actionLoading === platform.id}
+                                            onConnect={handleConnect}
+                                            onDisconnect={handleDisconnect}
+                                        />
+                                    ))
+                                )}
                             </div>
 
                             {/* Apple Intelligence Feature Card */}

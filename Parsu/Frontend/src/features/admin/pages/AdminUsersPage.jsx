@@ -31,6 +31,7 @@ import {
 } from '../service/admin.api';
 import DeleteButton from '../../Components/rare-ui/DeleteButton';
 import { CircleButton, PillBadge, PillGroup } from '../../Components/PillButton';
+import ThemedSkeleton from '../../Components/SkeletonLoader';
 
 export default function AdminUsersPage() {
   const currentUser = useSelector((state) => state.auth.user);
@@ -468,12 +469,38 @@ export default function AdminUsersPage() {
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-white/[0.04] text-xs">
               {isLoading && users.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-zinc-500 dark:text-zinc-400">
-                    <RiLoader4Line size={24} className="animate-spin mx-auto mb-2 text-zinc-600 dark:text-zinc-400" />
-                    Loading user records...
-                  </td>
-                </tr>
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <tr key={idx} className="admin-user-row">
+                    <td className="py-3.5 px-5">
+                      <div className="flex items-center gap-3">
+                        <ThemedSkeleton circle width={32} height={32} />
+                        <div className="space-y-1.5">
+                          <ThemedSkeleton width={110} height={14} />
+                          <ThemedSkeleton width={150} height={11} />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <ThemedSkeleton width={60} height={20} borderRadius="9999px" />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <ThemedSkeleton width={75} height={20} borderRadius="9999px" />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <ThemedSkeleton width={50} height={20} borderRadius="9999px" />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <ThemedSkeleton width={70} height={14} />
+                    </td>
+                    <td className="py-3.5 px-5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <ThemedSkeleton width={28} height={28} borderRadius="0.5rem" />
+                        <ThemedSkeleton width={28} height={28} borderRadius="0.5rem" />
+                        <ThemedSkeleton width={28} height={28} borderRadius="0.5rem" />
+                      </div>
+                    </td>
+                  </tr>
+                ))
               ) : users.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-zinc-500 dark:text-zinc-400">

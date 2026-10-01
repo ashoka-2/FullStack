@@ -432,15 +432,8 @@ const ChatArea = () => {
       // Clear previous stored messages
       dispatch(setMessages([]));
       
-      // Dispatch Blake Bowen organic SVG liquid page transition
-      window.dispatchEvent(new CustomEvent('trigger_liquid_transition', {
-        detail: {
-          onNavigate: () => {
-            // Optimistic Routing: Navigate when screen is enveloped by the organic wave
-            navigate('/chat/new');
-          }
-        }
-      }));
+      // Navigate immediately to new chat without transition delay
+      navigate('/chat/new');
       
       // Optimistically auto-switch to custom model if user added custom key and is currently on built-in model
       let effectiveSendModel = selectedModel;

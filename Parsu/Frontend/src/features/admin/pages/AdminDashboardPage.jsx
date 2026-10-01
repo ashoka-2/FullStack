@@ -37,6 +37,7 @@ import { getAdminOverview, getAdminUsers } from '../service/admin.api';
 import customAxios from '../../../utils/axios';
 import DeleteButton from '../../Components/rare-ui/DeleteButton';
 import { CircleButton, PillBadge } from '../../Components/PillButton';
+import ThemedSkeleton from '../../Components/SkeletonLoader';
 
 export default function AdminDashboardPage() {
   const dispatch = useDispatch();
@@ -327,8 +328,17 @@ export default function AdminDashboardPage() {
             </PillBadge>
           </div>
           <div className="mt-3">
-            <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{totalUsersCount}</span>
-            <p className="text-[11px] text-zinc-500 mt-1 font-mono">{verifiedUsersCount} verified accounts registered</p>
+            {isLoading ? (
+              <>
+                <ThemedSkeleton width={90} height={32} />
+                <ThemedSkeleton width={140} height={13} className="mt-1" />
+              </>
+            ) : (
+              <>
+                <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{totalUsersCount}</span>
+                <p className="text-[11px] text-zinc-500 mt-1 font-mono">{verifiedUsersCount} verified accounts registered</p>
+              </>
+            )}
           </div>
         </div>
 
@@ -341,8 +351,17 @@ export default function AdminDashboardPage() {
             </PillBadge>
           </div>
           <div className="mt-3">
-            <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{totalChatsCount}</span>
-            <p className="text-[11px] text-zinc-500 mt-1 font-mono">{totalMessagesCount} neural messages processed</p>
+            {isLoading ? (
+              <>
+                <ThemedSkeleton width={90} height={32} />
+                <ThemedSkeleton width={140} height={13} className="mt-1" />
+              </>
+            ) : (
+              <>
+                <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{totalChatsCount}</span>
+                <p className="text-[11px] text-zinc-500 mt-1 font-mono">{totalMessagesCount} neural messages processed</p>
+              </>
+            )}
           </div>
         </div>
 
@@ -355,8 +374,17 @@ export default function AdminDashboardPage() {
             </PillBadge>
           </div>
           <div className="mt-3">
-            <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{totalSubscribersCount}</span>
-            <p className="text-[11px] text-zinc-500 mt-1 font-mono">₹{estimatedRevenue.toLocaleString()} lifetime license value</p>
+            {isLoading ? (
+              <>
+                <ThemedSkeleton width={90} height={32} />
+                <ThemedSkeleton width={140} height={13} className="mt-1" />
+              </>
+            ) : (
+              <>
+                <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{totalSubscribersCount}</span>
+                <p className="text-[11px] text-zinc-500 mt-1 font-mono">₹{estimatedRevenue.toLocaleString()} lifetime license value</p>
+              </>
+            )}
           </div>
         </div>
 
@@ -369,8 +397,17 @@ export default function AdminDashboardPage() {
             </PillBadge>
           </div>
           <div className="mt-3">
-            <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{overview?.metrics?.totalContacts ?? 0}</span>
-            <p className="text-[11px] text-zinc-500 mt-1 font-mono">Contact & enterprise inquiries</p>
+            {isLoading ? (
+              <>
+                <ThemedSkeleton width={90} height={32} />
+                <ThemedSkeleton width={140} height={13} className="mt-1" />
+              </>
+            ) : (
+              <>
+                <span className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{overview?.metrics?.totalContacts ?? 0}</span>
+                <p className="text-[11px] text-zinc-500 mt-1 font-mono">Contact & enterprise inquiries</p>
+              </>
+            )}
           </div>
         </div>
 
@@ -746,7 +783,30 @@ export default function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-white/5 text-zinc-700 dark:text-zinc-300">
-              {filteredUsers.length === 0 ? (
+              {isLoading && usersList.length === 0 ? (
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <tr key={idx}>
+                    {visibleColumns.id && <td className="py-3.5 px-4"><ThemedSkeleton width={70} height={14} /></td>}
+                    {visibleColumns.member && (
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-2.5">
+                          <ThemedSkeleton circle width={28} height={28} />
+                          <div className="space-y-1">
+                            <ThemedSkeleton width={100} height={13} />
+                            <ThemedSkeleton width={130} height={11} />
+                          </div>
+                        </div>
+                      </td>
+                    )}
+                    {visibleColumns.role && <td className="py-3.5 px-4"><ThemedSkeleton width={50} height={20} borderRadius="9999px" /></td>}
+                    {visibleColumns.authProvider && <td className="py-3.5 px-4"><ThemedSkeleton width={60} height={20} borderRadius="9999px" /></td>}
+                    {visibleColumns.plan && <td className="py-3.5 px-4"><ThemedSkeleton width={55} height={20} borderRadius="9999px" /></td>}
+                    {visibleColumns.status && <td className="py-3.5 px-4"><ThemedSkeleton width={50} height={20} borderRadius="9999px" /></td>}
+                    {visibleColumns.joined && <td className="py-3.5 px-4"><ThemedSkeleton width={70} height={14} /></td>}
+                    {visibleColumns.actions && <td className="py-3.5 px-4 text-right"><ThemedSkeleton width={28} height={28} borderRadius="0.5rem" className="ml-auto" /></td>}
+                  </tr>
+                ))
+              ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-8 text-center text-zinc-500 dark:text-zinc-400 font-medium">
                     No users matching criteria "{searchQuery}"
