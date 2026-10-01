@@ -328,6 +328,9 @@ export async function updateUserSubscription(req, res) {
 
         if (plan) {
             targetUser.subscription.plan = plan;
+            if (!targetUser.usageQuotas) {
+                targetUser.usageQuotas = {};
+            }
             if (plan === 'ultra') {
                 targetUser.usageQuotas.queriesLimit = -1;
                 targetUser.usageQuotas.documentUploadsLimit = -1;
@@ -354,7 +357,11 @@ export async function updateUserSubscription(req, res) {
         return res.status(200).json({
             success: true,
             message: `Updated subscription for ${targetUser.username} to ${targetUser.subscription.plan.toUpperCase()} (${targetUser.subscription.status})`,
-            subscription: targetUser.subscription
+            subscription: targetUser.subscription,
+            data: {
+                subscription: targetUser.subscription,
+                user: targetUser
+            }
         });
     } catch (err) {
         return res.status(500).json({
@@ -431,7 +438,10 @@ export async function toggleUserBlock(req, res) {
         return res.status(200).json({
             success: true,
             message: `User ${targetUser.username} is now ${targetUser.isBlocked ? 'BLOCKED' : 'ACTIVE'}.`,
-            isBlocked: targetUser.isBlocked
+            isBlocked: targetUser.isBlocked,
+            data: {
+                isBlocked: targetUser.isBlocked
+            }
         });
     } catch (err) {
         return res.status(500).json({

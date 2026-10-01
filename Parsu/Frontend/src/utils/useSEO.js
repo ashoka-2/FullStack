@@ -1,70 +1,49 @@
 import { useEffect } from 'react';
 
-/**
- * useSEO — Dynamic per-page SEO meta tag hook
- *
- * Usage:
- *   useSEO({
- *     title: 'Page Title',
- *     description: 'Page description for search engines',
- *     ogImage: 'https://parsu.app/og-image.png', // optional
- *     noIndex: false, // set true for private/auth pages
- *   });
- */
-const APP_NAME = 'Parsu';
+const APP_NAME = 'Parsu AI';
 const BASE_URL = 'https://parsuai.vercel.app';
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
-const DEFAULT_DESCRIPTION = 'Parsu — AI-powered assistant for instant answers, deep research, creative writing, code generation, and social media publishing.';
+const DEFAULT_DESCRIPTION = 'Parsu AI is a chat workspace for live web research, writing, and publishing to your social accounts, powered by Gemini, Claude, GPT-4 and DeepSeek.';
 
-const setMeta = (selector, attr, value) => {
-    let el = document.querySelector(selector);
-    if (!el) {
-        el = document.createElement('meta');
-        const [, attrName, attrValue] = selector.match(/\[([^=]+)="([^"]+)"\]/);
-        el.setAttribute(attrName, attrValue);
-        document.head.appendChild(el);
-    }
-    el.setAttribute(attr, value);
+const setMeta = (key, value, content) => {
+  let el = document.head.querySelector(`meta[${key}="${value}"]`);
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute(key, value);
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', content);
 };
 
-const useSEO = ({
-    title,
-    description = DEFAULT_DESCRIPTION,
-    ogImage = DEFAULT_OG_IMAGE,
-    noIndex = false,
-    canonical,
-} = {}) => {
-    useEffect(() => {
-        const fullTitle = title ? `${title} | ${APP_NAME}` : `${APP_NAME} — AI-Powered Answers, Research & Creativity`;
-        const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : BASE_URL;
+/** Per-page SEO: title, description, canonical, robots, Open Graph, Twitter card. */
+const useSEO = ({ title, description = DEFAULT_DESCRIPTION, ogImage = DEFAULT_OG_IMAGE, noIndex = false, canonical } = {}) => {
+  useEffect(() => {
+    const fullTitle = !title ? `${APP_NAME} | AI Research, Writing & Social Publishing` : title.includes(APP_NAME) ? title : `${title} | ${APP_NAME}`;
+    const url = canonical ? `${BASE_URL}${canonical}` : BASE_URL;
 
-        // Document title
-        document.title = fullTitle;
+    document.title = fullTitle;
+    setMeta('name', 'description', description);
+    setMeta('name', 'robots', noIndex ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large');
 
-        // Primary meta
-        setMeta('[name="description"]', 'content', description);
-        setMeta('[name="robots"]', 'content', noIndex ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large');
+    let link = document.head.querySelector('link[rel="canonical"]');
+    if (!link) {
+      link = document.createElement('link');
+      link.setAttribute('rel', 'canonical');
+      document.head.appendChild(link);
+    }
+    link.setAttribute('href', url);
 
-        // Canonical
-        let canonicalEl = document.querySelector('link[rel="canonical"]');
-        if (!canonicalEl) {
-            canonicalEl = document.createElement('link');
-            canonicalEl.setAttribute('rel', 'canonical');
-            document.head.appendChild(canonicalEl);
-        }
-        canonicalEl.setAttribute('href', canonicalUrl);
-
-        // Open Graph
-        setMeta('[property="og:title"]', 'content', fullTitle);
-        setMeta('[property="og:description"]', 'content', description);
-        setMeta('[property="og:url"]', 'content', canonicalUrl);
-        setMeta('[property="og:image"]', 'content', ogImage);
-
-        // Twitter
-        setMeta('[name="twitter:title"]', 'content', fullTitle);
-        setMeta('[name="twitter:description"]', 'content', description);
-        setMeta('[name="twitter:image"]', 'content', ogImage);
-    }, [title, description, ogImage, noIndex, canonical]);
+    setMeta('property', 'og:type', 'website');
+    setMeta('property', 'og:site_name', APP_NAME);
+    setMeta('property', 'og:title', fullTitle);
+    setMeta('property', 'og:description', description);
+    setMeta('property', 'og:url', url);
+    setMeta('property', 'og:image', ogImage);
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', fullTitle);
+    setMeta('name', 'twitter:description', description);
+    setMeta('name', 'twitter:image', ogImage);
+  }, [title, description, ogImage, noIndex, canonical]);
 };
 
 export default useSEO;

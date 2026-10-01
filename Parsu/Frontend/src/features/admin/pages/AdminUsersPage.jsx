@@ -213,15 +213,18 @@ export default function AdminUsersPage() {
     setActionUserId(user._id);
     try {
       const res = await toggleAdminUserBlock(user._id);
-      if (res.success) {
+      if (res && res.success) {
+        const nextBlocked = res.isBlocked !== undefined 
+          ? res.isBlocked 
+          : (res.data?.isBlocked !== undefined ? res.data.isBlocked : nextState);
         setUsers((prev) =>
           prev.map((u) =>
-            u._id === user._id ? { ...u, isBlocked: res.data.isBlocked } : u
+            u._id === user._id ? { ...u, isBlocked: nextBlocked } : u
           )
         );
         setNotification({
           type: 'success',
-          message: `User ${user.username} is now ${res.data.isBlocked ? 'Blocked' : 'Active'}.`
+          message: `User ${user.username} is now ${nextBlocked ? 'Blocked' : 'Active'}.`
         });
         setTimeout(() => setNotification(null), 4000);
       }
@@ -238,6 +241,7 @@ export default function AdminUsersPage() {
 
   // Open Subscription Modal
   const openSubscriptionModal = (user) => {
+    if (!user) return;
     setEditingUser(user);
     setSubForm({
       plan: user.subscription?.plan || 'free',
@@ -254,17 +258,22 @@ export default function AdminUsersPage() {
     setIsSavingSub(true);
     try {
       const res = await updateUserSubscription(editingUser._id, subForm);
-      if (res.success) {
+      if (res && (res.success || res.subscription || res.data?.subscription)) {
+        const updatedSubscription = res.subscription || res.data?.subscription || {
+          plan: subForm.plan,
+          status: subForm.status,
+          billingCycle: subForm.billingCycle
+        };
         setUsers((prev) =>
           prev.map((u) =>
             u._id === editingUser._id
-              ? { ...u, subscription: res.data.subscription }
+              ? { ...u, subscription: updatedSubscription }
               : u
           )
         );
         setNotification({
           type: 'success',
-          message: `Subscription plan for ${editingUser.username} updated to ${subForm.plan.toUpperCase()}.`
+          message: `Subscription plan for ${editingUser.username} updated to ${(subForm.plan || 'free').toUpperCase()}.`
         });
         setEditingUser(null);
         setTimeout(() => setNotification(null), 4000);

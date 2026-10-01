@@ -269,8 +269,8 @@ export async function startOAuthFlow(req, res) {
             authUrl = `${config.authUrl}?client_id=${creds.clientId}&redirect_uri=${encodeURIComponent(creds.redirectUri)}&response_type=code&scope=${encodeURIComponent(config.scopes)}&state=${state}`;
         }
 
-        // For YouTube, add access_type for refresh token
-        if (platform === "youtube") {
+        // For Google/YouTube services, add access_type for refresh token
+        if (["youtube", "google", "gmail", "google_calendar", "google_drive"].includes(platform)) {
             authUrl += "&access_type=offline&prompt=consent";
         }
 
