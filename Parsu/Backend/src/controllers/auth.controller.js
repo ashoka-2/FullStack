@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import userModel from "../models/user.model.js";
 import chatModel from "../models/chat.model.js";
 import SocialConnection from "../models/social.model.js";
@@ -378,23 +379,39 @@ export async function loginUser(req, res) {
 }
 
 
-export async function getMe(req,res){
+export async function getMe(req, res) {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(200).json({
+        success: false,
+        user: null,
+        message: "Database connecting",
+      });
+    }
+
     const userId = req.user.id;
     const user = await userModel.findById(userId);
 
-    if(!user){
-        return res.status(400).json({
-            success: false,
-            message: "User not found",
-            err: "user not found",
-        })
+    if (!user) {
+      return res.status(200).json({
+        success: false,
+        user: null,
+        message: "User not found or session expired",
+      });
     }
 
-    res.status(200).json({
-        success: true,
-        user
+    return res.status(200).json({
+      success: true,
+      user,
     });
-
+  } catch (error) {
+    console.warn("⚠️ [Auth] Note in getMe:", error?.message || error);
+    return res.status(200).json({
+      success: false,
+      user: null,
+      message: "Session retrieval error",
+    });
+  }
 }
 
 export async function logoutUser(req, res) {

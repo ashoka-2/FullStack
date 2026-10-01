@@ -90,7 +90,7 @@ customAxios.interceptors.response.use(
       error.code === "ERR_NETWORK" ||
       [502, 503, 504].includes(error.response?.status);
 
-    if (isServerError && !originalRequest._retriedWithBackup && SERVER_POOL.length > 1) {
+    if (isServerError && !originalRequest._retriedWithBackup && SERVER_POOL.length > 1 && !import.meta.env.DEV) {
       originalRequest._retriedWithBackup = true;
       const prevServer = currentServer;
       const nextServer = switchActiveServer(prevServer);

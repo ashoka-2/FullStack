@@ -75,9 +75,10 @@ app.get(["/health", "/api/health"], (req, res) => {
 
     const isDbHealthy = dbStatus === 1;
 
-    res.status(isDbHealthy ? 200 : 503).json({
+    res.status(200).json({
         status: isDbHealthy ? "healthy" : "degraded",
-        message: isDbHealthy ? "All systems operational" : "Database connection issues",
+        server: "online",
+        message: isDbHealthy ? "All systems operational" : "Server online, database connecting",
         timestamp: new Date().toISOString(),
         uptime: `${process.uptime().toFixed(2)}s`,
         database: {

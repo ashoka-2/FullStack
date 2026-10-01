@@ -45,20 +45,41 @@ export default function ConnectionMonitor({ children }) {
         }
     }, []);
 
-    // Check health of backend server
-    const checkServerHealth = useCallback(async () => {
-        if (!navigator.onLine) {
-            setIsOffline(true);
-            broadcastStatus(true, isServerDown);
+    const isCheckingRef = useRef(false);
+    const lastCheckTimeRef = useRef(0);
+    const isServerDownRef = useRef(isServerDown);
+    const isOfflineRef = useRef(isOffline);
+
+    useEffect(() => {
+        isServerDownRef.current = isServerDown;
+    }, [isServerDown]);
+
+    useEffect(() => {
+        isOfflineRef.current = isOffline;
+    }, [isOffline]);
+
+    // Check health of backend server (throttled to avoid rapid request storm)
+    const checkServerHealth = useCallback(async (force = false) => {
+        const now = Date.now();
+        if (!force && (isCheckingRef.current || now - lastCheckTimeRef.current < 4000)) {
             return false;
         }
 
+        if (!navigator.onLine) {
+            setIsOffline(true);
+            broadcastStatus(true, isServerDownRef.current);
+            return false;
+        }
+
+        isCheckingRef.current = true;
+        lastCheckTimeRef.current = now;
         setIsChecking(true);
+
         try {
-            const res = await customAxios.get(`/api/health?_t=${Date.now()}`, { timeout: 6000 });
+            const res = await customAxios.get(`/api/health?_t=${now}`, { timeout: 5000 });
             
             if (res.status === 200) {
-                if (isServerDown || isOffline) {
+                if (isServerDownRef.current || isOfflineRef.current) {
                     setIsServerDown(false);
                     setIsOffline(false);
                     broadcastStatus(false, false);
@@ -74,13 +95,13 @@ export default function ConnectionMonitor({ children }) {
             } else {
                 setIsServerDown(true);
                 wasDisconnectedRef.current = true;
-                broadcastStatus(isOffline, true);
+                broadcastStatus(isOfflineRef.current, true);
                 return false;
             }
         } catch (err) {
             if (!navigator.onLine) {
                 setIsOffline(true);
-                broadcastStatus(true, isServerDown);
+                broadcastStatus(true, isServerDownRef.current);
             } else {
                 setIsServerDown(true);
                 broadcastStatus(false, true);
@@ -88,51 +109,46 @@ export default function ConnectionMonitor({ children }) {
             wasDisconnectedRef.current = true;
             return false;
         } finally {
+            isCheckingRef.current = false;
             setIsChecking(false);
         }
-    }, [isServerDown, isOffline, dispatch, broadcastStatus]);
+    }, [dispatch, broadcastStatus]);
 
-    // Setup network event listeners & health check polling
+    // Setup network event listeners & health check polling (without dependency loops)
     useEffect(() => {
-        // Initial health check on mount to ensure server is reachable
-        checkServerHealth();
+        checkServerHealth(true);
 
         const handleOnline = () => {
             setIsOffline(false);
-            checkServerHealth();
+            checkServerHealth(true);
         };
 
         const handleOffline = () => {
             setIsOffline(true);
             wasDisconnectedRef.current = true;
-            broadcastStatus(true, isServerDown);
+            broadcastStatus(true, isServerDownRef.current);
         };
 
         const handleAxiosNetworkError = () => {
-            if (!isServerDown && !isOffline) {
-                checkServerHealth();
-            }
+            checkServerHealth();
         };
 
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
         window.addEventListener('app_network_error', handleAxiosNetworkError);
 
-        // Periodically verify server health every 30s when disconnected
-        let interval = null;
-        if (isOffline || isServerDown) {
-            interval = setInterval(() => {
-                checkServerHealth();
-            }, 10000);
-        }
+        // Periodic health check every 15 seconds
+        const interval = setInterval(() => {
+            checkServerHealth();
+        }, 15000);
 
         return () => {
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
             window.removeEventListener('app_network_error', handleAxiosNetworkError);
-            if (interval) clearInterval(interval);
+            clearInterval(interval);
         };
-    }, [checkServerHealth, isServerDown, isOffline, broadcastStatus]);
+    }, [checkServerHealth, broadcastStatus]);
 
     return (
         <ConnectionContext.Provider value={{ isOffline, isServerDown, isChecking, checkServerHealth }}>
