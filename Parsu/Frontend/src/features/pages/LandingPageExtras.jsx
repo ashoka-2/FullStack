@@ -130,15 +130,6 @@ export const BlobBackground = () => {
         ))}
       </div>
 
-      {/* Grain texture */}
-      <div
-        className="absolute inset-0 opacity-50 dark:opacity-35 mix-blend-overlay"
-        style={{
-          backgroundImage: `url(${GRAIN_PATTERN_DATA})`,
-          backgroundSize: '160px 160px',
-        }}
-      />
-
       {/* Fade to page bg */}
       <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-b from-transparent to-[var(--bg-primary)]" />
     </div>

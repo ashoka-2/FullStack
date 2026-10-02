@@ -31,7 +31,7 @@ const HeroGradientBackground = () => {
       <div className="absolute top-[15%] right-[-5%] w-[45vw] max-w-[700px] h-[450px] rounded-full bg-gradient-to-bl from-[var(--color-deep-teal)]/40 via-[var(--color-deep-hanada)]/30 to-[var(--accent-cyan)]/20 blur-[120px] animate-pulse duration-[10000ms]" />
 
       {/* Visual backdrop: SVG poster + video (responsive) */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1400px] md:w-[2048px] h-[900px] md:h-[1190px] max-w-none">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1400px] md:w-[2048px] h-[900px] md:h-[1190px] max-w-none overflow-hidden">
         {/* SVG poster — always rendered immediately, smoothly fades when video is buffered */}
         <img
           src={poolsideSvg}
@@ -58,14 +58,18 @@ const HeroGradientBackground = () => {
         </video>
         {/* Color wash overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--accent-cyan)]/20 via-[var(--color-clear-hanada)]/25 to-[var(--color-deep-hanada)]/60 mix-blend-color dark:mix-blend-overlay pointer-events-none" />
+
+        {/* Grain texture — strictly ONLY inside the video layer */}
+        <div
+          className="absolute inset-0 opacity-40 dark:opacity-30 mix-blend-overlay pointer-events-none z-[1]"
+          style={{ backgroundImage: `url(${GRAIN_PATTERN_DATA})`, backgroundRepeat: 'repeat', backgroundSize: '160px 160px' }}
+        />
+
+        {/* Soft edge radial vignette so the video blends seamlessly into the surrounding page */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,var(--bg-primary)_95%)] pointer-events-none z-[2]" />
       </div>
 
-      {/* Grain texture */}
-      <div
-        className="absolute inset-0 opacity-45 dark:opacity-35 mix-blend-overlay z-[1]"
-        style={{ backgroundImage: `url(${GRAIN_PATTERN_DATA})`, backgroundRepeat: 'repeat', backgroundSize: '160px 160px' }}
-      />
-      {/* Fade to page bg */}
+      {/* Fade to page bg at bottom */}
       <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-b from-transparent to-[var(--bg-primary)] z-[2]" />
     </div>
   );

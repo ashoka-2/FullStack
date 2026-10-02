@@ -298,7 +298,7 @@ const LandingPage = () => {
             </div>
           </div>
 
-          <div className="hero-trust flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[11px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <div className="hero-trust flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[11px] sm:text-xs font-medium text-zinc-900 dark:text-zinc-100">
             {['Free tier included', 'No credit card', 'Sign in with Google'].map((t) => (
               <span key={t} className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500" />{t}</span>
             ))}
