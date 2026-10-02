@@ -10,6 +10,7 @@ import { useDispatch } from 'react-redux';
 import { addToast } from '../../../../utils/toast.slice';
 import gsap from 'gsap';
 import { getWebSearchSetting, setWebSearchSetting } from '../../../../utils/aiSettingsSync';
+import PrimaryButton from '../../../Components/PrimaryButton';
 
 const SectionLabel = ({ children }) => (
     <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-600 mb-3 px-0.5">{children}</p>
@@ -204,17 +205,17 @@ const GeneralSettingsPage = () => {
                     </div>
 
                     {/* ── Save ──────────────────────────────────────────── */}
-                    <button
+                    <PrimaryButton
                         onClick={handleSave}
                         disabled={saving}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl
-                            bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)]
-                            text-white font-semibold text-sm
-                            active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
+                        loading={saving}
+                        icon={RiCheckLine}
+                        iconPosition="left"
+                        fullWidth
+                        size="md"
                     >
-                        {saving ? <RiLoader4Line size={16} className="animate-spin" /> : <RiCheckLine size={16} />}
                         {saving ? 'Saving…' : 'Save Changes'}
-                    </button>
+                    </PrimaryButton>
                 </div>
             )}
         </SettingsPageLayout>

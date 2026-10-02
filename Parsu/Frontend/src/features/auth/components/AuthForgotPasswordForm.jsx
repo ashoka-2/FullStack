@@ -10,6 +10,7 @@ import {
   RiArrowLeftLine,
   RiShieldCheckLine
 } from '@remixicon/react';
+import PrimaryButton from '../../Components/PrimaryButton';
 
 export default function AuthForgotPasswordForm({
   forgotStep,
@@ -115,25 +116,20 @@ export default function AuthForgotPasswordForm({
             </div>
           </div>
 
-          <button
+          <PrimaryButton
             type="submit"
             disabled={forgotLoading}
+            loading={forgotLoading}
+            fullWidth
+            size="md"
+            icon={RiArrowRightLine}
+            iconPosition="right"
+            className="mt-1"
             onMouseEnter={() => !forgotLoading && setBlobMood('happy')}
             onMouseLeave={() => !forgotLoading && setBlobMood('curious')}
-            className="w-full h-11 mt-1 bg-[var(--accent-cyan)] hover:bg-[#1bb0c4] active:scale-[0.98] text-zinc-950 font-bold rounded-xl transition-all duration-150 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
           >
-            {forgotLoading ? (
-              <>
-                <RiLoader4Line className="animate-spin w-4 h-4" />
-                <span>Sending Code...</span>
-              </>
-            ) : (
-              <>
-                <span>Send Verification Code</span>
-                <RiArrowRightLine size={16} />
-              </>
-            )}
-          </button>
+            {forgotLoading ? 'Sending Code...' : 'Send Verification Code'}
+          </PrimaryButton>
 
           <button
             type="button"
@@ -193,25 +189,20 @@ export default function AuthForgotPasswordForm({
             </div>
           </div>
 
-          <button
+          <PrimaryButton
             type="submit"
             disabled={forgotLoading || otp.trim().length !== 6}
+            loading={forgotLoading}
+            fullWidth
+            size="md"
+            icon={RiShieldCheckLine}
+            iconPosition="right"
+            className="mt-1"
             onMouseEnter={() => !forgotLoading && setBlobMood('happy')}
             onMouseLeave={() => !forgotLoading && setBlobMood('curious')}
-            className="w-full h-11 mt-1 bg-[var(--accent-cyan)] hover:bg-[#1bb0c4] active:scale-[0.98] text-zinc-950 font-bold rounded-xl transition-all duration-150 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
           >
-            {forgotLoading ? (
-              <>
-                <RiLoader4Line className="animate-spin w-4 h-4" />
-                <span>Validating OTP...</span>
-              </>
-            ) : (
-              <>
-                <span>Validate & Continue</span>
-                <RiShieldCheckLine size={16} />
-              </>
-            )}
-          </button>
+            {forgotLoading ? 'Validating OTP...' : 'Validate & Continue'}
+          </PrimaryButton>
 
           <div className="flex items-center justify-between pt-1">
             <button
@@ -293,25 +284,20 @@ export default function AuthForgotPasswordForm({
             </div>
           </div>
 
-          <button
+          <PrimaryButton
             type="submit"
             disabled={forgotLoading}
+            loading={forgotLoading}
+            fullWidth
+            size="md"
+            icon={RiShieldCheckLine}
+            iconPosition="right"
+            className="mt-1"
             onMouseEnter={() => !forgotLoading && setBlobMood('happy')}
             onMouseLeave={() => !forgotLoading && setBlobMood('curious')}
-            className="w-full h-11 mt-1 bg-[var(--accent-cyan)] hover:bg-[#1bb0c4] active:scale-[0.98] text-zinc-950 font-bold rounded-xl transition-all duration-150 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
           >
-            {forgotLoading ? (
-              <>
-                <RiLoader4Line className="animate-spin w-4 h-4" />
-                <span>Saving Password...</span>
-              </>
-            ) : (
-              <>
-                <span>Save & Sign In</span>
-                <RiShieldCheckLine size={16} />
-              </>
-            )}
-          </button>
+            {forgotLoading ? 'Saving Password...' : 'Save & Sign In'}
+          </PrimaryButton>
 
           <button
             type="button"

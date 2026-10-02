@@ -3,6 +3,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { RiCheckLine, RiBellLine, RiNotificationOffLine, RiChat3Line } from '@remixicon/react';
+import PrimaryButton from '../../Components/PrimaryButton';
 
 export default function DeviceSyncBanner({ userEmail, onlineCount }) {
     const [notifStatus, setNotifStatus] = useState('default'); // 'default' | 'granted' | 'denied'
@@ -50,14 +51,17 @@ export default function DeviceSyncBanner({ userEmail, onlineCount }) {
                 <div className="flex items-center gap-2 shrink-0 flex-wrap">
                     {/* Notification permission button */}
                     {notifStatus === 'default' && (
-                        <button
+                        <PrimaryButton
                             onClick={requestNotifications}
                             disabled={requesting}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--accent-cyan)]/15 border border-[var(--accent-cyan)]/30 text-[var(--accent-cyan)] text-xs font-semibold hover:bg-[var(--accent-cyan)]/25 transition-all cursor-pointer whitespace-nowrap"
+                            loading={requesting}
+                            size="xs"
+                            icon={RiBellLine}
+                            iconPosition="left"
+                            className="whitespace-nowrap"
                         >
-                            <RiBellLine size={13} />
-                            {requesting ? 'Requesting…' : 'Enable Notifications'}
-                        </button>
+                            Enable Notifications
+                        </PrimaryButton>
                     )}
                     {notifStatus === 'granted' && (
                         <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">

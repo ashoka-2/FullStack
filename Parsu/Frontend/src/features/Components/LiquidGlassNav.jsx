@@ -23,6 +23,7 @@ import gsap from 'gsap';
 import ParsuLogo from './ParsuLogo';
 import MagneticButton from './MagneticButton';
 import { CircleButton, PillBadge, PillGroup } from './PillButton';
+import PrimaryButton from './PrimaryButton';
 
 /**
  * LiquidGlassNav — Fixed Top Zero-Background Navbar for Landing Page
@@ -266,17 +267,16 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
               </Link>
             )}
 
-            {/* Launch AI Magnetic Button */}
-            <Link to="/ai" className="shrink-0">
-              <MagneticButton
-                size="sm"
-                variant="cyan"
-                className="shadow-sm shadow-cyan-500/25 px-2.5 sm:px-3 py-1.5"
-              >
-                <span className="font-bold tracking-tight text-xs sm:text-sm">Launch AI</span>
-                <RiArrowRightLine size={13} className="ml-1" />
-              </MagneticButton>
-            </Link>
+            {/* Launch AI Button */}
+            <PrimaryButton
+              to="/ai"
+              size="sm"
+              icon={RiArrowRightLine}
+              iconPosition="right"
+              className="shrink-0"
+            >
+              Launch AI
+            </PrimaryButton>
 
             {/* Mobile Hamburger Button */}
             <CircleButton
@@ -441,19 +441,17 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
             )}
 
             {/* Launch AI CTA */}
-            <Link
+            <PrimaryButton
               to="/ai"
               onClick={() => setIsMobileOpen(false)}
+              size="sm"
+              fullWidth
+              icon={RiSparkling2Line}
+              iconPosition="left"
               className="flex-1"
             >
-              <button
-                type="button"
-                className="w-full flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-xs font-black text-black bg-gradient-to-r from-[var(--accent-cyan)] to-[var(--color-sky-haze)] shadow-lg shadow-cyan-500/30 active:scale-95 transition-all cursor-pointer"
-              >
-                <RiSparkling2Line size={15} />
-                <span>Launch AI</span>
-              </button>
-            </Link>
+              Launch AI
+            </PrimaryButton>
           </div>
         </div>
       </div>

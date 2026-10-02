@@ -30,6 +30,7 @@ import { useAuth } from '../auth/hook/useAuth';
 import { toggleSidebarCollapse } from '../chat/chat.slice';
 import { SidebarSkeleton } from '../chat/components/Skeletons';
 import ConfirmationModal from './ConfirmationModal';
+import PrimaryButton from './PrimaryButton';
 import { RiLoginCircleLine, RiSparkling2Line } from '@remixicon/react';
 import { triggerBlobSidebarNav, triggerBlobChatSelect, triggerBlobChatDeleteHover, triggerBlobChatDeleted } from '../../utils/blobReactions';
 import { renameChat, togglePinChat } from '../auth/service/settings.api';
@@ -401,13 +402,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             {!user ? (
               <div className="p-3 mx-1 my-2 rounded-xl bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200/90 dark:border-white/[0.08] text-center shadow-2xs">
                 <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mb-2 leading-relaxed">Sign in to save and access your past chats.</p>
-                <Link 
+                <PrimaryButton 
                   to="/auth" 
                   onClick={closeMobileSidebar}
-                  className="inline-flex items-center justify-center gap-1 w-full py-1.5 px-3 rounded-lg bg-[var(--accent-cyan)] text-zinc-950 font-bold text-xs hover:bg-[var(--accent-cyan-hover)] transition-all cursor-pointer"
+                  size="xs"
+                  fullWidth
                 >
-                  <span>Sign In</span>
-                </Link>
+                  Sign In
+                </PrimaryButton>
               </div>
             ) : loading && chats.length === 0 ? (
               <SidebarSkeleton />
@@ -595,14 +597,16 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             </div>
           ) : (
             <div className={`${isSidebarCollapsed ? 'px-1 lg:p-0 lg:flex lg:justify-center' : 'px-1'} pb-1`}>
-              <Link
+              <PrimaryButton
                 to="/auth"
                 title="Log In / Sign Up"
-                className={`${isSidebarCollapsed ? 'w-full py-2 px-3 lg:w-10 lg:h-10 lg:p-0' : 'w-full py-2 px-3'} flex items-center justify-center gap-2 rounded-xl bg-[var(--accent-cyan)] text-zinc-950 font-bold text-xs hover:bg-[var(--accent-cyan-hover)] transition-all cursor-pointer`}
+                size="sm"
+                fullWidth={!isSidebarCollapsed}
+                icon={RiLoginCircleLine}
+                iconPosition="left"
               >
-                <RiLoginCircleLine size={16} />
                 <span className={isSidebarCollapsed ? 'block lg:hidden' : 'block'}>Sign In</span>
-              </Link>
+              </PrimaryButton>
             </div>
           )}
         </div>

@@ -7,6 +7,7 @@ import Toast from '../../Components/Toast';
 import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
 import { API_BASE_URL, BACKEND_URL, getActiveBackendUrl, AUTH_TOKEN_KEY } from '../../../utils/axios.js';
 import ParsuLogo from '../../Components/ParsuLogo';
+import PrimaryButton from '../../Components/PrimaryButton';
 import '../../Components/blob.css';
 
 // Subcomponents
@@ -797,17 +798,19 @@ const Auth = ({ initialMode }) => {
                   </div>
 
                   <div className="pt-2 space-y-3">
-                    <button
+                    <PrimaryButton
                       type="button"
                       onClick={() => {
                         setIsRegistered(false);
                         handleSwitchMode('login');
                       }}
-                      className="w-full h-11 bg-[var(--accent-cyan)] hover:bg-[#1bb0c4] active:scale-[0.98] text-zinc-950 font-bold rounded-xl transition-all duration-150 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20"
+                      fullWidth
+                      size="md"
+                      icon={RiArrowRightLine}
+                      iconPosition="right"
                     >
-                      <span>Proceed to Sign In</span>
-                      <RiArrowRightLine size={16} />
-                    </button>
+                      Proceed to Sign In
+                    </PrimaryButton>
 
                     <div className="text-center pt-1">
                       <button

@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { RiFlashlightLine, RiLoader4Line, RiPlayLine, RiClipboardLine } from '@remixicon/react';
 import DeviceItemizedActionBadge from './DeviceItemizedActionBadge';
+import PrimaryButton from '../../Components/PrimaryButton';
 
 const ACTIONS = [
     { value: 'get_stats',          label: 'System Telemetry & Stats',       tier: 'read-only' },
@@ -76,17 +77,17 @@ export default function DeviceAutomationPanel({
                     )}
                 </div>
 
-                <button
+                <PrimaryButton
                     onClick={() => onExecute(action)}
                     disabled={executing || !hasTarget}
-                    className="px-5 py-2.5 rounded-xl bg-[var(--accent-cyan)] text-black font-semibold text-xs hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
+                    loading={executing}
+                    icon={RiPlayLine}
+                    iconPosition="left"
+                    size="sm"
                     title={!hasTarget ? 'Select a device first' : undefined}
                 >
-                    {executing
-                        ? <><RiLoader4Line size={14} className="animate-spin" /> Dispatching...</>
-                        : <><RiPlayLine size={14} /> Run Command</>
-                    }
-                </button>
+                    {executing ? 'Dispatching...' : 'Run Command'}
+                </PrimaryButton>
             </div>
 
             {!hasTarget && (

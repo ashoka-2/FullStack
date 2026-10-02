@@ -1,44 +1,161 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
+import { Link } from 'react-router';
 import { RiLoader4Line } from '@remixicon/react';
 
 /**
  * PrimaryButton
- * Standard reusable primary button for the entire application.
- * Accepts onClick, type, loading, disabled, custom icons, and size.
+ * Premium Frame-btn styled component button with radial cyan gradient,
+ * liquid glass inner reflections, outer glow rim, and multi-layered drop shadows.
+ *
+ * Can be used anywhere across the app as a standard <button>, <a>, or <Link>.
+ * Fully responsive and supports custom width, height, size, icons, and text.
  */
-export default function PrimaryButton({
+const PrimaryButton = forwardRef(function PrimaryButton(
+  {
     children,
     onClick,
+    to,
+    href,
+    as: ComponentProp,
     type = 'button',
     disabled = false,
     loading = false,
     icon: Icon = null,
     iconColor = null,
+    iconPosition = 'right',
     className = '',
+    innerClassName = '',
+    style = {},
     size = 'md',
+    variant = 'cyan', // 'cyan' (Frame-btn) | 'dark'
+    outerFrame = true, // Whether to show the outer translucent rim ring like Frame-btn
+    fullWidth = false,
     ...props
-}) {
-    const sizeClasses = {
-        sm: 'px-3.5 py-2 text-xs',
-        md: 'px-5 py-2.5 text-sm',
-        lg: 'px-6 py-3 text-sm sm:text-base',
-        full: 'w-full py-3.5 px-4 text-sm'
-    }[size] || 'px-5 py-2.5 text-sm';
+  },
+  ref
+) {
+  const isLink = Boolean(to);
+  const isAnchor = Boolean(href) && !to;
+  const Component = ComponentProp || (isLink ? Link : isAnchor ? 'a' : 'button');
 
+  const isFull = fullWidth || size === 'full' || className.includes('w-full');
+
+  const sizeClasses = {
+    xs: 'px-3 py-1.5 text-[11px] gap-1.5',
+    sm: 'px-4 py-2 text-xs gap-2',
+    md: 'px-6 py-2.5 text-sm gap-2',
+    lg: 'px-7 py-3.5 text-sm sm:text-base gap-2.5',
+    xl: 'px-8 sm:px-10 py-4 text-base gap-3',
+    hero: 'px-8 sm:px-11 py-3.5 sm:py-4 text-sm sm:text-base tracking-wider uppercase font-black gap-2.5',
+    full: 'w-full py-3.5 px-6 text-sm gap-2',
+  }[size] || 'px-6 py-2.5 text-sm gap-2';
+
+  // Base inner pill styling mimicking Frame-btn radial gradient + specular inner highlights + multi-drop shadows
+  const variantClasses = {
+    cyan: `
+      relative overflow-hidden text-white font-display
+      bg-[radial-gradient(130%_130%_at_50%_35%,#2cd4ea_0%,#20b8cd_48%,#00bed8_100%)]
+      border border-cyan-300/40
+      shadow-[0_8px_24px_-4px_rgba(32,184,205,0.36),0_18px_44px_-8px_rgba(32,184,205,0.24),0_2px_4px_rgba(0,0,0,0.06),inset_0_1px_1.5px_0_rgba(255,255,255,0.65),inset_0_-2px_6px_0_rgba(0,70,85,0.25)]
+      hover:shadow-[0_12px_32px_-4px_rgba(32,184,205,0.48),0_24px_56px_-8px_rgba(32,184,205,0.32),inset_0_1px_2px_0_rgba(255,255,255,0.85)]
+      hover:brightness-[1.03]
+    `,
+    dark: `
+      relative overflow-hidden text-white font-display
+      bg-zinc-950 dark:bg-white text-white dark:text-zinc-950
+      border border-zinc-800 dark:border-zinc-200
+      hover:bg-zinc-800 dark:hover:bg-zinc-100
+      shadow-md
+    `,
+  }[variant] || '';
+
+  const buttonInner = (
+    <span
+      className={`
+        relative z-10 inline-flex items-center justify-center font-bold select-none
+        rounded-full transition-all duration-300
+        active:scale-[0.97]
+        ${isFull ? 'w-full' : ''}
+        ${variantClasses}
+        ${sizeClasses}
+        ${disabled || loading ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}
+        ${innerClassName}
+      `}
+    >
+      {/* Specular glass reflection bar along top inner curve */}
+      {variant === 'cyan' && (
+        <span
+          className="pointer-events-none absolute inset-x-3 top-0 h-[35%] rounded-t-full bg-gradient-to-b from-white/35 to-transparent opacity-80"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Loading spinner */}
+      {loading ? (
+        <RiLoader4Line className="animate-spin shrink-0" size={size === 'hero' || size === 'xl' ? 20 : 17} />
+      ) : Icon && iconPosition === 'left' ? (
+        <Icon
+          size={size === 'hero' || size === 'xl' ? 20 : 17}
+          className="shrink-0 transition-transform duration-300 group-hover:-translate-x-0.5"
+          style={iconColor ? { color: iconColor } : undefined}
+        />
+      ) : null}
+
+      {/* Text label */}
+      {children && <span className="relative z-10 leading-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.15)]">{children}</span>}
+
+      {/* Trailing Icon (default for action buttons & hero CTA) */}
+      {!loading && Icon && iconPosition === 'right' && (
+        <Icon
+          size={size === 'hero' || size === 'xl' ? 20 : 17}
+          className="shrink-0 transition-transform duration-300 group-hover:translate-x-1"
+          style={iconColor ? { color: iconColor } : undefined}
+        />
+      )}
+    </span>
+  );
+
+  // Outer frame wrapper (like the 6px translucent #20B8CD/0.08 ring in Frame-btn.svg)
+  const wrappedButton = outerFrame && variant === 'cyan' ? (
+    <span className={`inline-flex ${isFull ? 'w-full' : ''} p-[3px] sm:p-[4px] rounded-full bg-[var(--accent-cyan)]/10 dark:bg-[var(--accent-cyan)]/15 border border-[var(--accent-cyan)]/25 backdrop-blur-[2px] transition-all duration-300 group-hover:bg-[var(--accent-cyan)]/20 group-hover:border-[var(--accent-cyan)]/40 shadow-xs`}>
+      {buttonInner}
+    </span>
+  ) : (
+    buttonInner
+  );
+
+  // Outer container component classes
+  const rootClasses = `group relative ${isFull ? 'w-full flex' : 'inline-flex'} items-center justify-center p-0 bg-transparent border-0 outline-hidden focus-visible:ring-4 focus-visible:ring-cyan-400/40 rounded-full transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] ${className}`;
+
+  if (!isLink && !isAnchor) {
     return (
-        <button
-            type={type}
-            onClick={onClick}
-            disabled={disabled || loading}
-            className={`flex items-center justify-center gap-2 font-bold rounded-xl transition-all duration-200 cursor-pointer shadow-xs active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 ${sizeClasses} ${className}`}
-            {...props}
-        >
-            {loading ? (
-                <RiLoader4Line className="animate-spin shrink-0" size={18} />
-            ) : Icon ? (
-                <Icon size={18} className="shrink-0 transition-transform group-hover:scale-110" style={iconColor ? { color: iconColor } : undefined} />
-            ) : null}
-            {children && <span>{children}</span>}
-        </button>
+      <Component
+        ref={ref}
+        type={type}
+        onClick={onClick}
+        disabled={disabled || loading}
+        className={rootClasses}
+        style={style}
+        {...props}
+      >
+        {wrappedButton}
+      </Component>
     );
-}
+  }
+
+  return (
+    <Component
+      ref={ref}
+      to={to}
+      href={href}
+      onClick={onClick}
+      className={rootClasses}
+      style={style}
+      {...props}
+    >
+      {wrappedButton}
+    </Component>
+  );
+});
+
+export default PrimaryButton;

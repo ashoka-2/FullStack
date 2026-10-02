@@ -7,6 +7,7 @@ import {
     RiComputerLine,
     RiSmartphoneLine
 } from '@remixicon/react';
+import PrimaryButton from '../../Components/PrimaryButton';
 
 export default function DeviceConfirmActionModal({
     isOpen,
@@ -105,18 +106,27 @@ export default function DeviceConfirmActionModal({
                     >
                         Deny / Cancel
                     </button>
-                    <button
-                        onClick={() => onConfirm(auditId, rememberSession)}
-                        disabled={loading}
-                        className={`px-4 py-2 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all shadow-md active:scale-95 ${
-                            isDestructive
-                                ? 'bg-rose-600 hover:bg-rose-500 text-white'
-                                : 'bg-[var(--accent-cyan)] hover:brightness-110 text-black'
-                        }`}
-                    >
-                        <RiCheckLine size={16} />
-                        {loading ? 'Authorizing...' : 'Authorize Execution'}
-                    </button>
+                    {!isDestructive ? (
+                        <PrimaryButton
+                            onClick={() => onConfirm(auditId, rememberSession)}
+                            disabled={loading}
+                            loading={loading}
+                            icon={RiCheckLine}
+                            iconPosition="left"
+                            size="sm"
+                        >
+                            {loading ? 'Authorizing...' : 'Authorize Execution'}
+                        </PrimaryButton>
+                    ) : (
+                        <button
+                            onClick={() => onConfirm(auditId, rememberSession)}
+                            disabled={loading}
+                            className="px-4 py-2 text-xs font-semibold rounded-full flex items-center gap-1.5 transition-all shadow-md active:scale-95 bg-rose-600 hover:bg-rose-500 text-white cursor-pointer"
+                        >
+                            <RiCheckLine size={16} />
+                            {loading ? 'Authorizing...' : 'Authorize Execution'}
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

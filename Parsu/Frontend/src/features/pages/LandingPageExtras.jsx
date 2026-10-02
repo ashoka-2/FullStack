@@ -9,6 +9,7 @@ import {
   RiArrowRightLine, RiCheckLine,
 } from '@remixicon/react';
 import { GRAIN_PATTERN_DATA } from '../../assets/grainData';
+import PrimaryButton from '../Components/PrimaryButton';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -728,23 +729,23 @@ export const FinalCtaCard = ({ user }) => {
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           {user ? (
-            <Link
+            <PrimaryButton
               to="/ai"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 sm:px-11 py-4 sm:py-4.5 rounded-2xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black font-extrabold text-sm sm:text-base shadow-xl shadow-cyan-500/30 transition-all hover:scale-[1.04] active:scale-[0.97] cursor-pointer group"
+              size="lg"
+              icon={RiArrowRightLine}
+              iconPosition="right"
             >
-              <RiSparkling2Line size={18} className="group-hover:rotate-12 transition-transform" />
-              <span>Launch PARSU AI Workspace</span>
-              <RiArrowRightLine size={18} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
+              Launch PARSU AI Workspace
+            </PrimaryButton>
           ) : (
-            <Link
+            <PrimaryButton
               to="/auth?mode=register"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 sm:px-11 py-4 sm:py-4.5 rounded-2xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-black font-extrabold text-sm sm:text-base shadow-xl shadow-cyan-500/30 transition-all hover:scale-[1.04] active:scale-[0.97] cursor-pointer group"
+              size="lg"
+              icon={RiArrowRightLine}
+              iconPosition="right"
             >
-              <RiSparkling2Line size={18} className="group-hover:rotate-12 transition-transform" />
-              <span>Get Started Free with PARSU AI</span>
-              <RiArrowRightLine size={18} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
+              Get Started Free with PARSU AI
+            </PrimaryButton>
           )}
         </div>
 

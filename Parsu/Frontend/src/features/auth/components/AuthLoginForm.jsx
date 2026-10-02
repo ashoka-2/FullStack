@@ -8,6 +8,7 @@ import {
   RiAlertLine,
   RiRefreshLine
 } from '@remixicon/react';
+import PrimaryButton from '../../Components/PrimaryButton';
 
 export default function AuthLoginForm({
   email,
@@ -132,22 +133,18 @@ export default function AuthLoginForm({
         </div>
 
         {/* Submit Sign In Button */}
-        <button
+        <PrimaryButton
           type="submit"
           disabled={loading}
+          loading={loading}
+          fullWidth
+          size="md"
+          className="mt-2"
           onMouseEnter={() => !loading && setBlobMood('happy')}
           onMouseLeave={() => !loading && setBlobMood(activeField ? (activeField.includes('password') && isPasswordSleeping ? 'password' : 'curious') : 'curious')}
-          className="w-full h-11 mt-2 bg-[var(--accent-cyan)] hover:bg-[#1bb0c4] active:scale-[0.98] text-zinc-950 font-bold rounded-xl transition-all duration-150 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
         >
-          {loading ? (
-            <>
-              <RiLoader4Line className="animate-spin w-4 h-4" />
-              <span>Signing in...</span>
-            </>
-          ) : (
-            <span>Sign In to Parsu</span>
-          )}
-        </button>
+          {loading ? 'Signing in...' : 'Sign In to Parsu'}
+        </PrimaryButton>
       </form>
     </>
   );

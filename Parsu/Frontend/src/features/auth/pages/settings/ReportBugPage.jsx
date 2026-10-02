@@ -9,6 +9,7 @@ import { submitBugReport, getUserBugReports } from '../../service/settings.api';
 import { useDispatch } from 'react-redux';
 import { addToast } from '../../../../utils/toast.slice';
 import gsap from 'gsap';
+import PrimaryButton from '../../../Components/PrimaryButton';
 
 const CATEGORIES = [
     { value: 'ui', label: '🎨 UI / Visual' },
@@ -311,17 +312,17 @@ const ReportBugPage = () => {
                         </div>
 
                         {/* ── Submit button ── */}
-                        <button
+                        <PrimaryButton
                             type="submit"
                             disabled={submitting}
-                            className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl
-                                bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)]
-                                text-white font-semibold text-sm
-                                active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer shadow-md"
+                            loading={submitting}
+                            icon={RiSendPlaneLine}
+                            iconPosition="left"
+                            fullWidth
+                            size="md"
                         >
-                            {submitting ? <RiLoader4Line size={16} className="animate-spin" /> : <RiSendPlaneLine size={16} />}
                             {submitting ? 'Submitting…' : 'Submit Bug Report'}
-                        </button>
+                        </PrimaryButton>
                     </form>
                 )
             )}
@@ -355,12 +356,12 @@ const ReportBugPage = () => {
                             <p className="text-xs text-zinc-500 max-w-xs mx-auto mt-1 mb-4">
                                 You haven't reported any issues. If you notice a bug, let us know!
                             </p>
-                            <button
+                            <PrimaryButton
                                 onClick={() => setActiveTab('submit')}
-                                className="px-4 py-2 rounded-xl text-xs font-bold bg-[var(--accent-cyan)] text-white hover:bg-[var(--accent-cyan-hover)] transition-all cursor-pointer"
+                                size="sm"
                             >
                                 Report a Bug
-                            </button>
+                            </PrimaryButton>
                         </div>
                     ) : (
                         <div className="space-y-4">

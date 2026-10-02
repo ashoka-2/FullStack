@@ -17,6 +17,7 @@ import InfoPageLayout from './InfoPageLayout';
 import customAxios from '../../utils/axios';
 import { useDispatch } from 'react-redux';
 import { addToast } from '../../utils/toast.slice';
+import PrimaryButton from '../Components/PrimaryButton';
 
 const SERVICES = [
     {
@@ -243,13 +244,14 @@ export default function SystemStatus() {
                                 required
                                 className="px-3.5 py-2 rounded-xl bg-white dark:bg-black/40 border border-zinc-200 dark:border-white/10 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-cyan-500 w-full sm:w-56"
                             />
-                            <button
+                            <PrimaryButton
                                 type="submit"
                                 disabled={loading}
-                                className="shrink-0 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-md disabled:opacity-50"
+                                loading={loading}
+                                size="sm"
                             >
-                                {loading ? <RiLoader4Line size={14} className="animate-spin" /> : <span>Subscribe</span>}
-                            </button>
+                                Subscribe
+                            </PrimaryButton>
                         </form>
                     )}
                 </div>

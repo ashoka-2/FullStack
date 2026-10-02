@@ -18,6 +18,7 @@ import {
 import gsap from 'gsap';
 import InfoPageLayout from './InfoPageLayout';
 import ParsuLogo from '../Components/ParsuLogo';
+import PrimaryButton from '../Components/PrimaryButton';
 
 export default function About() {
   const cardsRef = useRef([]);
@@ -167,13 +168,14 @@ export default function About() {
             Join users around the world researching, creating, and publishing with Parsu AI.
           </p>
           <div className="flex items-center justify-center gap-3">
-            <Link
+            <PrimaryButton
               to="/auth?mode=register"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--accent-cyan)] text-zinc-950 font-bold text-xs hover:bg-[#1bb0c4] active:scale-[0.98] transition-all shadow-lg shadow-cyan-500/20"
+              size="md"
+              icon={RiArrowRightLine}
+              iconPosition="right"
             >
-              <span>Get Started Free</span>
-              <RiArrowRightLine size={15} />
-            </Link>
+              Get Started Free
+            </PrimaryButton>
             <Link
               to="/contact"
               className="inline-flex items-center gap-1.5 px-5 py-3 rounded-xl bg-zinc-100 dark:bg-white/[0.04] hover:bg-zinc-200/80 dark:hover:bg-white/[0.08] border border-zinc-200 dark:border-white/[0.08] text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-all"

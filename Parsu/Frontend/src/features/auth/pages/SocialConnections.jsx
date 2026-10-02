@@ -23,6 +23,7 @@ import { triggerBlobSocialConnected } from '../../../utils/blobReactions';
 import Footer from '../../Components/Footer';
 import Sidebar from '../../Components/Sidebar';
 import ChatNavbar from '../../chat/components/ChatNavbar';
+import PrimaryButton from '../../Components/PrimaryButton';
 import SocialPlatformCard from '../components/SocialPlatformCard';
 import ManualConnectModal from '../components/ManualConnectModal';
 import CreatePostModal from '../components/CreatePostModal';
@@ -286,14 +287,15 @@ const SocialConnections = () => {
                     rightSlot={
                         <div className="flex items-center gap-2">
                             {connectedCount > 0 && (
-                                <button
+                                <PrimaryButton
                                     type="button"
                                     onClick={() => setCreatePostOpen(true)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 font-bold text-xs shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                                    size="xs"
+                                    icon={RiSendPlaneFill}
+                                    iconPosition="left"
                                 >
-                                    <RiSendPlaneFill size={13} />
                                     <span className="hidden xs:inline">Create Post</span>
-                                </button>
+                                </PrimaryButton>
                             )}
                             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200/80 dark:border-white/10 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
                                 {loading ? (

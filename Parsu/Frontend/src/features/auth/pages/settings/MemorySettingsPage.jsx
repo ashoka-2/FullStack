@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import { addToast } from '../../../../utils/toast.slice';
 import gsap from 'gsap';
 import { getMemorySetting, setMemorySetting } from '../../../../utils/aiSettingsSync';
+import PrimaryButton from '../../../Components/PrimaryButton';
 
 // ─── Section Header ──────────────────────────────────────────────────────────
 const SectionLabel = ({ children }) => (
@@ -390,17 +391,17 @@ const MemorySettingsPage = () => {
 
                     {/* ── Actions ───────────────────────────────────────── */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                        <button
+                        <PrimaryButton
                             onClick={handleSave}
                             disabled={saving}
-                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl
-                                bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)]
-                                text-white font-semibold text-sm
-                                active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
+                            loading={saving}
+                            icon={RiCheckLine}
+                            iconPosition="left"
+                            className="flex-1"
+                            size="md"
                         >
-                            {saving ? <RiLoader4Line size={16} className="animate-spin" /> : <RiCheckLine size={16} />}
                             {saving ? 'Saving…' : 'Save Changes'}
-                        </button>
+                        </PrimaryButton>
                         {(memorySummary || memoryFacts.length > 0) && (
                             <button
                                 onClick={handleClearMemory}

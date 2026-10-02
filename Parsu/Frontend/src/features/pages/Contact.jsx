@@ -22,6 +22,7 @@ import InfoPageLayout from './InfoPageLayout';
 import { useDispatch } from 'react-redux';
 import { addToast } from '../../utils/toast.slice';
 import customAxios from '../../utils/axios';
+import PrimaryButton from '../Components/PrimaryButton';
 
 export default function Contact() {
   const dispatch = useDispatch();
@@ -184,23 +185,17 @@ export default function Contact() {
                 />
               </div>
 
-              <button
+              <PrimaryButton
                 type="submit"
                 disabled={submitting}
-                className="w-full h-11 bg-[var(--accent-cyan)] hover:bg-[#1bb0c4] active:scale-[0.98] text-zinc-950 font-bold rounded-xl transition-all text-xs cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 disabled:opacity-60"
+                loading={submitting}
+                icon={RiSendPlane2Line}
+                iconPosition="left"
+                fullWidth
+                size="md"
               >
-                {submitting ? (
-                  <>
-                    <RiLoader4Line size={16} className="animate-spin" />
-                    <span>Transmitting...</span>
-                  </>
-                ) : (
-                  <>
-                    <RiSendPlane2Line size={16} />
-                    <span>Send Message</span>
-                  </>
-                )}
-              </button>
+                {submitting ? 'Transmitting...' : 'Send Message'}
+              </PrimaryButton>
             </form>
           )}
         </div>

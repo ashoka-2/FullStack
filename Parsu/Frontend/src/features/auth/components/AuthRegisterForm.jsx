@@ -7,6 +7,7 @@ import {
   RiEyeOffLine,
   RiLoader4Line
 } from '@remixicon/react';
+import PrimaryButton from '../../Components/PrimaryButton';
 
 export default function AuthRegisterForm({
   username,
@@ -167,22 +168,18 @@ export default function AuthRegisterForm({
       </div>
 
       {/* Submit Register Button */}
-      <button
+      <PrimaryButton
         type="submit"
         disabled={loading}
+        loading={loading}
+        fullWidth
+        size="md"
+        className="mt-2"
         onMouseEnter={() => !loading && setBlobMood('happy')}
         onMouseLeave={() => !loading && setBlobMood(activeField ? (activeField.includes('password') ? 'password' : 'curious') : 'neutral')}
-        className={`w-full h-11 mt-2 bg-[var(--accent-cyan)] hover:bg-[#1bb0c4] active:scale-[0.98] text-zinc-950 font-bold rounded-xl transition-all duration-150 text-sm cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 ${loading ? 'opacity-70 pointer-events-none' : ''}`}
       >
-        {loading ? (
-          <>
-            <RiLoader4Line className="animate-spin w-4 h-4" />
-            <span>Creating account...</span>
-          </>
-        ) : (
-          <span>Create Free Account</span>
-        )}
-      </button>
+        {loading ? 'Creating account...' : 'Create Free Account'}
+      </PrimaryButton>
     </form>
   );
 }

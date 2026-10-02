@@ -18,6 +18,7 @@ import {
 import customAxios from '../../../utils/axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { setUser } from '../auth.slice';
+import PrimaryButton from '../../Components/PrimaryButton';
 
 const ConnectInstagram = () => {
     const user = useSelector(state => state.auth.user);
@@ -150,17 +151,17 @@ const ConnectInstagram = () => {
                                     </div>
                                 )}
 
-                                <button
+                                <PrimaryButton
                                     type="submit"
                                     disabled={loading}
-                                    className="group w-full bg-zinc-900 dark:bg-gradient-to-r dark:from-[var(--accent-cyan)] dark:to-[#1a9eb0] text-zinc-100 dark:text-zinc-950 font-black py-5 rounded-[20px] hover:shadow-[0_8px_30px_rgb(32,184,205,0.4)] disabled:opacity-50 transition-all active:scale-[0.97] flex items-center justify-center gap-3 relative overflow-hidden"
+                                    loading={loading}
+                                    fullWidth
+                                    size="lg"
+                                    icon={RiArrowRightLine}
+                                    iconPosition="right"
                                 >
-                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                    {loading ? <RiLoader4Line className="animate-spin" size={24} /> : <RiArrowRightLine className="group-hover:translate-x-1 transition-transform" size={24} />}
-                                    <span className="relative z-10 text-lg">
-                                        {user?.instagram?.isConnected ? 'Save New Credentials' : 'Connect My Profile'}
-                                    </span>
-                                </button>
+                                    {user?.instagram?.isConnected ? 'Save New Credentials' : 'Connect My Profile'}
+                                </PrimaryButton>
                             </form>
                         </div>
 

@@ -9,6 +9,7 @@ import {
   RiLockPasswordLine,
   RiLoader4Line
 } from '@remixicon/react';
+import PrimaryButton from '../../Components/PrimaryButton';
 
 const PasswordChangeForm = ({ onSuccess }) => {
   const dispatch = useDispatch();
@@ -153,23 +154,17 @@ const PasswordChangeForm = ({ onSuccess }) => {
           <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
             Password must contain at least 6 characters, one uppercase letter, and one number.
           </p>
-          <button
+          <PrimaryButton
             type="submit"
             disabled={passwordLoading}
-            className="px-6 py-2.5 bg-gradient-to-r from-[var(--accent-cyan)] to-[#0ea5e9] hover:from-[#199eb0] hover:to-[#0284c7] text-white font-bold rounded-xl text-sm transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-cyan-500/10 disabled:opacity-60 shrink-0"
+            loading={passwordLoading}
+            icon={RiLockPasswordLine}
+            iconPosition="left"
+            size="md"
+            className="shrink-0"
           >
-            {passwordLoading ? (
-              <>
-                <RiLoader4Line size={16} className="animate-spin" />
-                <span>Updating...</span>
-              </>
-            ) : (
-              <>
-                <RiLockPasswordLine size={16} />
-                <span>Update Password</span>
-              </>
-            )}
-          </button>
+            {passwordLoading ? 'Updating...' : 'Update Password'}
+          </PrimaryButton>
         </div>
       </form>
     </div>

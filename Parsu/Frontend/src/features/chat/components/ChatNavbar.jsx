@@ -12,6 +12,7 @@ import {
 } from '@remixicon/react';
 import ParsuLogo from '../../Components/ParsuLogo';
 import { CircleButton, PillGroup, PillBadge } from '../../Components/PillButton';
+import PrimaryButton from '../../Components/PrimaryButton';
 import { addToast } from '../../../utils/toast.slice';
 
 /**
@@ -173,13 +174,14 @@ export default function ChatNavbar({
             >
               Log in
             </Link>
-            <Link
+            <PrimaryButton
               to="/auth?mode=register"
-              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[var(--accent-cyan)] text-zinc-950 hover:bg-[var(--accent-cyan-hover)] transition-all shadow-xs cursor-pointer flex items-center gap-1"
+              size="xs"
+              icon={RiSparkling2Line}
+              iconPosition="right"
             >
-              <span>Sign up</span>
-              <RiSparkling2Line size={13} />
-            </Link>
+              Sign up
+            </PrimaryButton>
           </div>
         )}
 

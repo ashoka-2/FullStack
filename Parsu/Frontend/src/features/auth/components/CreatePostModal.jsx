@@ -20,6 +20,7 @@ import {
   RiExternalLinkLine
 } from '@remixicon/react';
 import { publishMedia, generateCaption, uploadSocialMediaFiles } from '../service/social.api';
+import PrimaryButton from '../../Components/PrimaryButton';
 
 const PLATFORM_ICONS = {
   instagram: RiInstagramLine,
@@ -462,23 +463,19 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
               Cancel
             </button>
 
-            <button
+            <PrimaryButton
               type="submit"
               disabled={isPublishing || connectedAccounts.length === 0}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[var(--accent-cyan)] to-[#0ea5e9] hover:from-[#1da9bc] hover:to-[#0284c7] text-white font-bold text-xs shadow-lg shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+              loading={isPublishing}
+              icon={RiSendPlaneFill}
+              iconPosition="left"
+              size="md"
             >
-              {isPublishing ? (
-                <>
-                  <RiLoader4Line size={16} className="animate-spin" />
-                  <span>Publishing Across Channels...</span>
-                </>
-              ) : (
-                <>
-                  <RiSendPlaneFill size={16} />
-                  <span>Publish to {selectedPlatforms.length} Channel{selectedPlatforms.length !== 1 ? 's' : ''}</span>
-                </>
-              )}
-            </button>
+              {isPublishing
+                ? 'Publishing Across Channels...'
+                : `Publish to ${selectedPlatforms.length} Channel${selectedPlatforms.length !== 1 ? 's' : ''}`
+              }
+            </PrimaryButton>
           </div>
         </form>
       </div>

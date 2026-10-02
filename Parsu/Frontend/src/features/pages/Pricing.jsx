@@ -22,6 +22,7 @@ import { createRazorpayOrder, verifyPaymentSignature } from '../auth/service/sub
 import { setUser } from '../auth/auth.slice';
 import { addToast } from '../../utils/toast.slice';
 import { CircleButton, PillBadge, PillGroup } from '../Components/PillButton';
+import PrimaryButton from '../Components/PrimaryButton';
 
 export default function Pricing() {
     const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
@@ -418,36 +419,30 @@ export default function Pricing() {
                                                 <span>Coming Soon</span>
                                             </button>
                                         ) : tier.isFree ? (
-                                            <Link
+                                            <PrimaryButton
                                                 to="/ai"
-                                                className="w-full py-3.5 px-4 rounded-2xl text-xs font-bold bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-[0.98]"
+                                                variant="dark"
+                                                size="md"
+                                                fullWidth
+                                                icon={RiArrowRightLine}
+                                                iconPosition="right"
                                             >
-                                                <span>Get Started Free</span>
-                                                <RiArrowRightLine size={15} />
-                                            </Link>
+                                                Get Started Free
+                                            </PrimaryButton>
                                         ) : (
-                                            <button
+                                            <PrimaryButton
                                                 type="button"
                                                 onClick={() => handleSelectPlan(tier)}
                                                 disabled={loadingTier === tier.id}
-                                                className={`w-full py-3.5 px-4 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${
-                                                    tier.popular
-                                                        ? 'bg-[var(--accent-cyan)] text-zinc-950 hover:bg-[var(--accent-cyan-hover)] shadow-lg shadow-cyan-500/20'
-                                                        : 'bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white/10 dark:hover:bg-white/20 dark:text-white border border-transparent dark:border-white/10'
-                                                }`}
+                                                loading={loadingTier === tier.id}
+                                                variant={tier.popular ? 'cyan' : 'dark'}
+                                                size="md"
+                                                fullWidth
+                                                icon={RiArrowRightLine}
+                                                iconPosition="right"
                                             >
-                                                {loadingTier === tier.id ? (
-                                                    <>
-                                                        <RiLoader4Line size={15} className="animate-spin" />
-                                                        <span>Connecting Gateway...</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <span>Subscribe to {tier.name}</span>
-                                                        <RiArrowRightLine size={15} />
-                                                    </>
-                                                )}
-                                            </button>
+                                                {loadingTier === tier.id ? 'Connecting Gateway...' : `Subscribe to ${tier.name}`}
+                                            </PrimaryButton>
                                         )}
                                     </div>
                                 </div>

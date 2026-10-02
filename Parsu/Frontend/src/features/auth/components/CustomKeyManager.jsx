@@ -23,6 +23,7 @@ import {
   deleteCustomApiKey,
   setSelectedModel
 } from "../../chat/service/model.api";
+import PrimaryButton from "../../Components/PrimaryButton";
 
 const PRESET_PROVIDERS = [
   { id: "gemini", name: "Google Gemini", placeholder: "AIzaSy...", docs: "https://aistudio.google.com/app/apikey" },
@@ -381,23 +382,16 @@ export default function CustomKeyManager({ onNotify }) {
               )}
             </button>
 
-            <button
+            <PrimaryButton
               type="submit"
               disabled={loading || !apiKey.trim()}
-              className="w-full sm:w-auto px-5 py-2.5 sm:py-2 bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 flex items-center justify-center gap-1.5"
+              loading={loading}
+              icon={RiCheckLine}
+              iconPosition="left"
+              size="sm"
             >
-              {loading ? (
-                <>
-                  <RiLoader4Line size={14} className="animate-spin" />
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <RiCheckLine size={14} />
-                  <span>Save & Unlock Models</span>
-                </>
-              )}
-            </button>
+              {loading ? 'Saving...' : 'Save & Unlock Models'}
+            </PrimaryButton>
           </div>
         </form>
       )}
