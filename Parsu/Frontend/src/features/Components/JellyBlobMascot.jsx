@@ -1025,8 +1025,31 @@ export function JellyBlobMascot({
   stillBody = false,
   celebrate = 0,
   closedEyes = false,
+  color: colorProp,
 }) {
   const reduce = useReducedMotionPreference();
+  const [activeColor, setActiveColor] = useState(() => {
+    if (colorProp) return colorProp;
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem('blob_mascot_color') || 'cyan';
+    }
+    return 'cyan';
+  });
+
+  useEffect(() => {
+    if (colorProp) {
+      setActiveColor(colorProp);
+      return;
+    }
+    const handleSettingsChange = (e) => {
+      if (e.detail?.color !== undefined) {
+        setActiveColor(e.detail.color);
+      }
+    };
+    window.addEventListener('blob_settings_change', handleSettingsChange);
+    return () => window.removeEventListener('blob_settings_change', handleSettingsChange);
+  }, [colorProp]);
+
   const [awake, setAwake] = useState(false);
   const [stir, setStir] = useState(0);
   const sleepPokes = useRef(0);
@@ -1283,7 +1306,8 @@ export function JellyBlobMascot({
   return (
     <MotionConfig reducedMotion={reduce ? "always" : "never"}>
       <svg
-        className={className}
+        className={`blob-mascot-svg blob-color-${activeColor} ${className || ""}`}
+        data-blob-color={activeColor}
         viewBox="0 0 900 720"
         role="img"
         aria-label={`Jelly blob mascot, ${mood}`}

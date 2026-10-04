@@ -356,7 +356,7 @@
     /* ══════════════════════════════════════════════════════════════════
        2. PRIMARY BRAND & CORE ACCENT COLORS (Dark Mode Glows)
        ══════════════════════════════════════════════════════════════════ */
-    --accent-cyan: #e83ed7;
+    --accent-cyan: #169db4;
     --accent-cyan-hover: color-mix(in srgb, var(--accent-cyan) 85%, black);
     --accent-cyan-light: color-mix(in srgb, var(--accent-cyan) 65%, white);
     --accent-cyan-dark: color-mix(in srgb, var(--accent-cyan) 75%, black);

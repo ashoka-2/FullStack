@@ -1,5 +1,7 @@
-/* Jelly-blob mascot palette - Project Cyan / Blue Theme */
-:root {
+/* Jelly-blob mascot palette - Multi-color theme system */
+
+/* 1. Default & Blue Cyan Theme */
+:root, [data-blob-color="cyan"], .blob-color-cyan {
   --jelly-body-top: #bbf2f8;
   --jelly-body-mid: #4ecde0;
   --jelly-body-deep: #199eb0;
@@ -29,9 +31,287 @@
   --jelly-shadow-light: #1f6b76;
 }
 
-:root[data-theme='light'], .light {
+:root[data-theme='light'] [data-blob-color="cyan"],
+.light [data-blob-color="cyan"],
+:root[data-theme='light'] .blob-color-cyan,
+.light .blob-color-cyan,
+:root[data-theme='light'],
+.light {
   --jelly-shadow: #98c6cd;
   --jelly-shadow-light: #bde1e6;
+}
+
+/* 2. Green / Emerald Theme */
+[data-blob-color="green"], .blob-color-green {
+  --jelly-body-top: #bbf7d0;
+  --jelly-body-mid: #34d399;
+  --jelly-body-deep: #059669;
+  --jelly-body-rim: #86efac;
+
+  --jelly-outline: #065f46;
+  --jelly-outline-light: #10b981;
+
+  --jelly-arm-light: #bbf7d0;
+  --jelly-arm-mid: #34d399;
+  --jelly-arm-deep: #047857;
+
+  --jelly-cheek-light: #dcfce7;
+  --jelly-cheek: #6ee7b7;
+  --jelly-cheek-deep: #10b981;
+
+  --jelly-eye-light: #064e3b;
+  --jelly-eye: #022c22;
+  --jelly-eye-deep: #011c15;
+  --jelly-face-ink: #022c22;
+  --jelly-face-soft: #064e3b;
+
+  --jelly-belly-glow: #a7f3d0;
+  --jelly-eye-sparkle: #34d399;
+
+  --jelly-shadow: #064e3b;
+  --jelly-shadow-light: #047857;
+}
+
+:root[data-theme='light'] [data-blob-color="green"],
+.light [data-blob-color="green"],
+:root[data-theme='light'] .blob-color-green,
+.light .blob-color-green {
+  --jelly-shadow: #86efac;
+  --jelly-shadow-light: #bbf7d0;
+}
+
+/* 3. Yellow / Sunny Amber Theme */
+[data-blob-color="yellow"], .blob-color-yellow {
+  --jelly-body-top: #fef08a;
+  --jelly-body-mid: #fbbf24;
+  --jelly-body-deep: #d97706;
+  --jelly-body-rim: #fde047;
+
+  --jelly-outline: #92400e;
+  --jelly-outline-light: #f59e0b;
+
+  --jelly-arm-light: #fef9c3;
+  --jelly-arm-mid: #facc15;
+  --jelly-arm-deep: #b45309;
+
+  --jelly-cheek-light: #fef3c7;
+  --jelly-cheek: #fde68a;
+  --jelly-cheek-deep: #f59e0b;
+
+  --jelly-eye-light: #451a03;
+  --jelly-eye: #260e02;
+  --jelly-eye-deep: #180801;
+  --jelly-face-ink: #260e02;
+  --jelly-face-soft: #451a03;
+
+  --jelly-belly-glow: #fef08a;
+  --jelly-eye-sparkle: #fde047;
+
+  --jelly-shadow: #78350f;
+  --jelly-shadow-light: #92400e;
+}
+
+:root[data-theme='light'] [data-blob-color="yellow"],
+.light [data-blob-color="yellow"],
+:root[data-theme='light'] .blob-color-yellow,
+.light .blob-color-yellow {
+  --jelly-shadow: #fde68a;
+  --jelly-shadow-light: #fef3c7;
+}
+
+/* 4. Purple / Royal Violet Theme */
+[data-blob-color="purple"], .blob-color-purple {
+  --jelly-body-top: #e9d5ff;
+  --jelly-body-mid: #a855f7;
+  --jelly-body-deep: #7e22ce;
+  --jelly-body-rim: #c084fc;
+
+  --jelly-outline: #581c87;
+  --jelly-outline-light: #9333ea;
+
+  --jelly-arm-light: #f3e8ff;
+  --jelly-arm-mid: #a855f7;
+  --jelly-arm-deep: #6b21a8;
+
+  --jelly-cheek-light: #fae8ff;
+  --jelly-cheek: #d8b4fe;
+  --jelly-cheek-deep: #9333ea;
+
+  --jelly-eye-light: #3b0764;
+  --jelly-eye: #1e0538;
+  --jelly-eye-deep: #120224;
+  --jelly-face-ink: #1e0538;
+  --jelly-face-soft: #3b0764;
+
+  --jelly-belly-glow: #f3e8ff;
+  --jelly-eye-sparkle: #c084fc;
+
+  --jelly-shadow: #3b0764;
+  --jelly-shadow-light: #581c87;
+}
+
+:root[data-theme='light'] [data-blob-color="purple"],
+.light [data-blob-color="purple"],
+:root[data-theme='light'] .blob-color-purple,
+.light .blob-color-purple {
+  --jelly-shadow: #d8b4fe;
+  --jelly-shadow-light: #f3e8ff;
+}
+
+/* 5. Red / Crimson Theme */
+[data-blob-color="red"], .blob-color-red {
+  --jelly-body-top: #fecaca;
+  --jelly-body-mid: #f87171;
+  --jelly-body-deep: #dc2626;
+  --jelly-body-rim: #fca5a5;
+
+  --jelly-outline: #991b1b;
+  --jelly-outline-light: #ef4444;
+
+  --jelly-arm-light: #fee2e2;
+  --jelly-arm-mid: #f87171;
+  --jelly-arm-deep: #b91c1c;
+
+  --jelly-cheek-light: #ffe4e6;
+  --jelly-cheek: #fda4af;
+  --jelly-cheek-deep: #e11d48;
+
+  --jelly-eye-light: #4c0519;
+  --jelly-eye: #25020c;
+  --jelly-eye-deep: #160107;
+  --jelly-face-ink: #25020c;
+  --jelly-face-soft: #4c0519;
+
+  --jelly-belly-glow: #fecdd3;
+  --jelly-eye-sparkle: #f87171;
+
+  --jelly-shadow: #7f1d1d;
+  --jelly-shadow-light: #991b1b;
+}
+
+:root[data-theme='light'] [data-blob-color="red"],
+.light [data-blob-color="red"],
+:root[data-theme='light'] .blob-color-red,
+.light .blob-color-red {
+  --jelly-shadow: #fca5a5;
+  --jelly-shadow-light: #fecaca;
+}
+
+/* 6. Light Green / Lime Theme */
+[data-blob-color="light-green"], .blob-color-light-green {
+  --jelly-body-top: #d9f99d;
+  --jelly-body-mid: #a3e635;
+  --jelly-body-deep: #65a30d;
+  --jelly-body-rim: #bef264;
+
+  --jelly-outline: #3f6212;
+  --jelly-outline-light: #84cc16;
+
+  --jelly-arm-light: #ecfccb;
+  --jelly-arm-mid: #a3e635;
+  --jelly-arm-deep: #4d7c0f;
+
+  --jelly-cheek-light: #f7fee7;
+  --jelly-cheek: #bef264;
+  --jelly-cheek-deep: #84cc16;
+
+  --jelly-eye-light: #1a2e05;
+  --jelly-eye: #0d1702;
+  --jelly-eye-deep: #070d01;
+  --jelly-face-ink: #0d1702;
+  --jelly-face-soft: #1a2e05;
+
+  --jelly-belly-glow: #d9f99d;
+  --jelly-eye-sparkle: #a3e635;
+
+  --jelly-shadow: #365314;
+  --jelly-shadow-light: #3f6212;
+}
+
+:root[data-theme='light'] [data-blob-color="light-green"],
+.light [data-blob-color="light-green"],
+:root[data-theme='light'] .blob-color-light-green,
+.light .blob-color-light-green {
+  --jelly-shadow: #bef264;
+  --jelly-shadow-light: #d9f99d;
+}
+
+/* 7. Orange / Tangerine Theme */
+[data-blob-color="orange"], .blob-color-orange {
+  --jelly-body-top: #fed7aa;
+  --jelly-body-mid: #fb923c;
+  --jelly-body-deep: #ea580c;
+  --jelly-body-rim: #fdba74;
+
+  --jelly-outline: #9a3412;
+  --jelly-outline-light: #f97316;
+
+  --jelly-arm-light: #ffedd5;
+  --jelly-arm-mid: #fb923c;
+  --jelly-arm-deep: #c2410c;
+
+  --jelly-cheek-light: #fff7ed;
+  --jelly-cheek: #fdba74;
+  --jelly-cheek-deep: #ea580c;
+
+  --jelly-eye-light: #431407;
+  --jelly-eye: #230802;
+  --jelly-eye-deep: #140401;
+  --jelly-face-ink: #230802;
+  --jelly-face-soft: #431407;
+
+  --jelly-belly-glow: #fed7aa;
+  --jelly-eye-sparkle: #fb923c;
+
+  --jelly-shadow: #7c2d12;
+  --jelly-shadow-light: #9a3412;
+}
+
+:root[data-theme='light'] [data-blob-color="orange"],
+.light [data-blob-color="orange"],
+:root[data-theme='light'] .blob-color-orange,
+.light .blob-color-orange {
+  --jelly-shadow: #fdba74;
+  --jelly-shadow-light: #fed7aa;
+}
+
+/* 8. Pink / Rose Theme */
+[data-blob-color="pink"], .blob-color-pink {
+  --jelly-body-top: #fbcfe8;
+  --jelly-body-mid: #f472b6;
+  --jelly-body-deep: #db2777;
+  --jelly-body-rim: #f9a8d4;
+
+  --jelly-outline: #9d174d;
+  --jelly-outline-light: #ec4899;
+
+  --jelly-arm-light: #fdf2f8;
+  --jelly-arm-mid: #f472b6;
+  --jelly-arm-deep: #be185d;
+
+  --jelly-cheek-light: #fff1f2;
+  --jelly-cheek: #f9a8d4;
+  --jelly-cheek-deep: #db2777;
+
+  --jelly-eye-light: #500724;
+  --jelly-eye: #2c0313;
+  --jelly-eye-deep: #1a010b;
+  --jelly-face-ink: #2c0313;
+  --jelly-face-soft: #500724;
+
+  --jelly-belly-glow: #fce7f3;
+  --jelly-eye-sparkle: #f472b6;
+
+  --jelly-shadow: #831843;
+  --jelly-shadow-light: #9d174d;
+}
+
+:root[data-theme='light'] [data-blob-color="pink"],
+.light [data-blob-color="pink"],
+:root[data-theme='light'] .blob-color-pink,
+.light .blob-color-pink {
+  --jelly-shadow: #f9a8d4;
+  --jelly-shadow-light: #fbcfe8;
 }
 
 .blob-bubble {

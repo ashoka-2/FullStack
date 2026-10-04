@@ -21,6 +21,11 @@ const FloatingBlobMascot = () => {
     return saved ? Math.max(48, Math.min(300, parseInt(saved, 10))) : 110;
   });
 
+  // Mascot Color Palette from localStorage (default: cyan)
+  const [blobColor, setBlobColor] = useState(() => {
+    return localStorage.getItem('blob_mascot_color') || 'cyan';
+  });
+
   // Mood and speech states
   const [mood, setMood] = useState('curious');
   const [gaze, setGaze] = useState({ x: 0, y: 0 });
@@ -45,6 +50,9 @@ const FloatingBlobMascot = () => {
       }
       if (e.detail?.size !== undefined) {
         setSize(e.detail.size);
+      }
+      if (e.detail?.color !== undefined) {
+        setBlobColor(e.detail.color);
       }
     };
 
@@ -370,6 +378,7 @@ const FloatingBlobMascot = () => {
           eyeStyle="v1"
           gaze={gaze}
           celebrate={celebrate}
+          color={blobColor}
           className="w-full h-full drop-shadow-xl"
         />
       </div>
