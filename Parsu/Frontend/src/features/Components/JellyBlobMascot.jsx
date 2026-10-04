@@ -1026,6 +1026,7 @@ export function JellyBlobMascot({
   celebrate = 0,
   closedEyes = false,
   color: colorProp,
+  flame: flameProp,
 }) {
   const reduce = useReducedMotionPreference();
   const [activeColor, setActiveColor] = useState(() => {
@@ -1036,19 +1037,38 @@ export function JellyBlobMascot({
     return 'cyan';
   });
 
+  const [hasFlame, setHasFlame] = useState(() => {
+    if (flameProp !== undefined) return flameProp;
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem('blob_mascot_flame');
+      if (saved !== null) return saved === 'true';
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (flameProp !== undefined) {
+      setHasFlame(flameProp);
+    }
+  }, [flameProp]);
+
   useEffect(() => {
     if (colorProp) {
       setActiveColor(colorProp);
-      return;
     }
     const handleSettingsChange = (e) => {
       if (e.detail?.color !== undefined) {
         setActiveColor(e.detail.color);
       }
+      if (e.detail?.flame !== undefined) {
+        setHasFlame(e.detail.flame);
+      }
     };
     window.addEventListener('blob_settings_change', handleSettingsChange);
     return () => window.removeEventListener('blob_settings_change', handleSettingsChange);
   }, [colorProp]);
+
+  const showFlame = flameProp !== undefined ? flameProp : (hasFlame || activeColor === 'fire');
 
   const [awake, setAwake] = useState(false);
   const [stir, setStir] = useState(0);
@@ -1540,6 +1560,199 @@ export function JellyBlobMascot({
                     <ellipse id="right-side-faint-gloss" cx="648" cy="470" rx="17" ry="56" fill="#ffffff" opacity="0.09" transform="rotate(8 648 470)" filter={`url(#${softBlur})`} />
                   </motion.g>
                 </g>
+
+                {/* Animated Head Flame Crest (Fire Mascot Effect) */}
+                {showFlame && (
+                  <motion.g
+                    id="head-flame-crest"
+                    pointerEvents="none"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 220, damping: 18 }}
+                  >
+                    {/* Flame Warm Aura Glow (Broad horizontal heat haze across head) */}
+                    <ellipse
+                      cx="450"
+                      cy="154"
+                      rx="145"
+                      ry="54"
+                      fill="var(--jelly-flame-glow, rgba(249, 115, 22, 0.55))"
+                      filter={`url(#${softBlur})`}
+                      opacity={0.92}
+                    />
+
+                    {/* --- FAR LEFT FLAME WING --- */}
+                    <g className="blob-flame-far-left">
+                      <path
+                        d="M375 92 C350 118 335 142 352 170 C364 178 396 178 402 168 C400 145 385 116 375 92 Z"
+                        fill="var(--jelly-flame-outer, #f97316)"
+                        opacity="0.85"
+                      />
+                      <path
+                        d="M348 136 C332 150 328 162 342 176 C334 166 336 154 348 144 Z"
+                        fill="var(--jelly-flame-outer, #f97316)"
+                        opacity="0.78"
+                      />
+                      <path
+                        d="M375 112 C362 130 354 146 364 168 C370 174 388 174 394 166 C390 148 382 130 375 112 Z"
+                        fill="var(--jelly-flame-mid, #fbbf24)"
+                        opacity="0.92"
+                      />
+                      <ellipse
+                        cx="375"
+                        cy="156"
+                        rx="8.5"
+                        ry="12"
+                        fill="var(--jelly-flame-core, #fef08a)"
+                        opacity="0.88"
+                      />
+                    </g>
+
+                    {/* --- INNER LEFT FLAME CREST --- */}
+                    <g className="blob-flame-left">
+                      {/* Left outer flame */}
+                      <path
+                        d="M410 70 C388 98 375 125 392 165 C404 174 436 174 442 162 C440 135 425 98 410 70 Z"
+                        fill="var(--jelly-flame-outer, #f97316)"
+                        opacity="0.92"
+                      />
+                      {/* Left outward flare */}
+                      <path
+                        d="M386 116 C368 130 364 146 378 166 C370 156 372 142 386 128 Z"
+                        fill="var(--jelly-flame-outer, #f97316)"
+                        opacity="0.86"
+                      />
+                      {/* Left mid flame */}
+                      <path
+                        d="M410 94 C396 116 388 136 398 162 C406 170 428 170 432 160 C428 136 420 114 410 94 Z"
+                        fill="var(--jelly-flame-mid, #fbbf24)"
+                        opacity="0.95"
+                      />
+                      {/* Left core spark */}
+                      <ellipse
+                        cx="412"
+                        cy="148"
+                        rx="11"
+                        ry="16"
+                        fill="var(--jelly-flame-core, #fef08a)"
+                        opacity="0.94"
+                      />
+                    </g>
+
+                    {/* --- INNER RIGHT FLAME CREST --- */}
+                    <g className="blob-flame-right">
+                      {/* Right outer flame */}
+                      <path
+                        d="M490 70 C512 98 525 125 508 165 C496 174 464 174 458 162 C460 135 475 98 490 70 Z"
+                        fill="var(--jelly-flame-outer, #f97316)"
+                        opacity="0.92"
+                      />
+                      {/* Right outward flare */}
+                      <path
+                        d="M514 116 C532 130 536 146 522 166 C530 156 528 142 514 128 Z"
+                        fill="var(--jelly-flame-outer, #f97316)"
+                        opacity="0.86"
+                      />
+                      {/* Right mid flame */}
+                      <path
+                        d="M490 94 C504 116 512 136 502 162 C494 170 472 170 468 160 C472 136 480 114 490 94 Z"
+                        fill="var(--jelly-flame-mid, #fbbf24)"
+                        opacity="0.95"
+                      />
+                      {/* Right core spark */}
+                      <ellipse
+                        cx="488"
+                        cy="148"
+                        rx="11"
+                        ry="16"
+                        fill="var(--jelly-flame-core, #fef08a)"
+                        opacity="0.94"
+                      />
+                    </g>
+
+                    {/* --- FAR RIGHT FLAME WING --- */}
+                    <g className="blob-flame-far-right">
+                      <path
+                        d="M525 92 C550 118 565 142 548 170 C536 178 504 178 498 168 C500 145 515 116 525 92 Z"
+                        fill="var(--jelly-flame-outer, #f97316)"
+                        opacity="0.85"
+                      />
+                      <path
+                        d="M552 136 C568 150 572 162 558 176 C566 166 564 154 552 144 Z"
+                        fill="var(--jelly-flame-outer, #f97316)"
+                        opacity="0.78"
+                      />
+                      <path
+                        d="M525 112 C538 130 546 146 536 168 C530 174 512 174 506 166 C510 148 518 130 525 112 Z"
+                        fill="var(--jelly-flame-mid, #fbbf24)"
+                        opacity="0.92"
+                      />
+                      <ellipse
+                        cx="525"
+                        cy="156"
+                        rx="8.5"
+                        ry="12"
+                        fill="var(--jelly-flame-core, #fef08a)"
+                        opacity="0.88"
+                      />
+                    </g>
+
+                    {/* --- CENTER MAIN FLAME TORCH --- */}
+                    <g className="blob-flame-outer">
+                      <path
+                        d="M450 38 C424 82 395 125 412 165 C424 178 476 178 488 165 C505 125 476 82 450 38 Z"
+                        fill="var(--jelly-flame-outer, #f97316)"
+                        opacity="0.96"
+                      />
+                      <path
+                        d="M428 108 C410 122 400 142 414 162 C405 152 408 135 422 120 Z"
+                        fill="var(--jelly-flame-outer, #f97316)"
+                        opacity="0.9"
+                      />
+                      <path
+                        d="M472 103 C490 118 500 138 486 160 C494 148 492 132 478 116 Z"
+                        fill="var(--jelly-flame-outer, #f97316)"
+                        opacity="0.9"
+                      />
+                    </g>
+
+                    {/* Center Mid Bright Flame Core */}
+                    <g className="blob-flame-inner">
+                      <path
+                        d="M450 68 C434 98 418 126 428 160 C436 170 464 170 472 160 C482 126 466 98 450 68 Z"
+                        fill="var(--jelly-flame-mid, #fbbf24)"
+                        opacity="0.97"
+                      />
+                    </g>
+
+                    {/* Center Inner Core Intense Glow */}
+                    <ellipse
+                      cx="450"
+                      cy="146"
+                      rx="19"
+                      ry="26"
+                      fill="var(--jelly-flame-core, #fef08a)"
+                      opacity="0.97"
+                    />
+                    <circle
+                      cx="450"
+                      cy="142"
+                      r="9.5"
+                      fill="#ffffff"
+                      opacity="0.94"
+                    />
+
+                    {/* Animated Embers Floating Across Far-Left, Inner-Left, Center, Inner-Right, and Far-Right */}
+                    <circle cx="442" cy="115" r="3.2" fill="var(--jelly-flame-core, #fef08a)" className="blob-ember-1" />
+                    <circle cx="458" cy="98" r="2.6" fill="var(--jelly-flame-mid, #fbbf24)" className="blob-ember-2" />
+                    <circle cx="448" cy="80" r="2.2" fill="#ffffff" className="blob-ember-3" />
+                    <circle cx="396" cy="110" r="2.8" fill="var(--jelly-flame-mid, #fbbf24)" className="blob-ember-4" />
+                    <circle cx="504" cy="110" r="2.8" fill="var(--jelly-flame-mid, #fbbf24)" className="blob-ember-5" />
+                    <circle cx="360" cy="125" r="2.5" fill="var(--jelly-flame-core, #fef08a)" className="blob-ember-6" />
+                    <circle cx="540" cy="125" r="2.5" fill="var(--jelly-flame-core, #fef08a)" className="blob-ember-7" />
+                  </motion.g>
+                )}
               </motion.g>
 
               <motion.g id="face" initial={false} animate={moodLabel} variants={poseVariants(FACE_TRANSFORMS, !!reduce)} style={centerMotionStyle}>

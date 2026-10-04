@@ -26,6 +26,12 @@ const FloatingBlobMascot = () => {
     return localStorage.getItem('blob_mascot_color') || 'cyan';
   });
 
+  // Mascot Flame Effect from localStorage (default: false or true if color is fire)
+  const [hasFlame, setHasFlame] = useState(() => {
+    const saved = localStorage.getItem('blob_mascot_flame');
+    return saved !== null ? saved === 'true' : false;
+  });
+
   // Mood and speech states
   const [mood, setMood] = useState('curious');
   const [gaze, setGaze] = useState({ x: 0, y: 0 });
@@ -53,6 +59,9 @@ const FloatingBlobMascot = () => {
       }
       if (e.detail?.color !== undefined) {
         setBlobColor(e.detail.color);
+      }
+      if (e.detail?.flame !== undefined) {
+        setHasFlame(e.detail.flame);
       }
     };
 
@@ -379,6 +388,7 @@ const FloatingBlobMascot = () => {
           gaze={gaze}
           celebrate={celebrate}
           color={blobColor}
+          flame={hasFlame}
           className="w-full h-full drop-shadow-xl"
         />
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
-import { RiSparkling2Line, RiCheckLine, RiPaletteLine } from '@remixicon/react';
+import { RiSparkling2Line, RiCheckLine, RiPaletteLine, RiFireLine } from '@remixicon/react';
 
 const BLOB_COLORS = [
   {
@@ -59,6 +59,41 @@ const BLOB_COLORS = [
     badgeBg: '#f472b6',
     description: 'Bubblegum Pink',
   },
+  {
+    id: 'dark-blue',
+    name: 'Dark Blue',
+    gradient: 'from-[#bfdbfe] via-[#2563eb] to-[#1e3a8a]',
+    badgeBg: '#2563eb',
+    description: 'Sapphire Midnight',
+  },
+  {
+    id: 'teal',
+    name: 'Ocean Teal',
+    gradient: 'from-[#99f6e4] via-[#14b8a6] to-[#0f766e]',
+    badgeBg: '#14b8a6',
+    description: 'Deep Aquamarine',
+  },
+  {
+    id: 'coral',
+    name: 'Coral',
+    gradient: 'from-[#fed7aa] via-[#fb7185] to-[#e11d48]',
+    badgeBg: '#fb7185',
+    description: 'Sunset Peach',
+  },
+  {
+    id: 'indigo',
+    name: 'Indigo',
+    gradient: 'from-[#c7d2fe] via-[#6366f1] to-[#3730a3]',
+    badgeBg: '#6366f1',
+    description: 'Cosmic Violet',
+  },
+  {
+    id: 'fire',
+    name: 'Fire 🔥',
+    gradient: 'from-[#fef08a] via-[#f97316] to-[#dc2626]',
+    badgeBg: '#ea580c',
+    description: 'Solar Phoenix',
+  },
 ];
 
 const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, celebrateCount = 0 }) => {
@@ -76,6 +111,11 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
     return localStorage.getItem('blob_mascot_color') || 'cyan';
   });
 
+  const [hasFlame, setHasFlame] = useState(() => {
+    const saved = localStorage.getItem('blob_mascot_flame');
+    return saved !== null ? saved === 'true' : false;
+  });
+
   // Listen for real-time changes from floating blob on screen
   useEffect(() => {
     const handleSettingsChange = (e) => {
@@ -87,6 +127,9 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
       }
       if (e.detail?.color !== undefined) {
         setBlobColor(e.detail.color);
+      }
+      if (e.detail?.flame !== undefined) {
+        setHasFlame(e.detail.flame);
       }
     };
     window.addEventListener('blob_settings_change', handleSettingsChange);
@@ -113,8 +156,24 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
   const handleColorChange = (newColor) => {
     setBlobColor(newColor);
     localStorage.setItem('blob_mascot_color', newColor);
+    if (newColor === 'fire' && !hasFlame) {
+      setHasFlame(true);
+      localStorage.setItem('blob_mascot_flame', 'true');
+      window.dispatchEvent(new CustomEvent('blob_settings_change', {
+        detail: { color: newColor, flame: true }
+      }));
+      return;
+    }
     window.dispatchEvent(new CustomEvent('blob_settings_change', {
       detail: { color: newColor }
+    }));
+  };
+
+  const handleToggleFlame = (val) => {
+    setHasFlame(val);
+    localStorage.setItem('blob_mascot_flame', val.toString());
+    window.dispatchEvent(new CustomEvent('blob_settings_change', {
+      detail: { flame: val }
     }));
   };
 
@@ -127,7 +186,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
           </div>
           <div>
             <h2 className="text-base font-bold text-zinc-900 dark:text-white">Floating Mascot Companion</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Configure the interactive mascot, customize its size and color, and preview moods</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Configure the interactive mascot, customize its size, colors, and fire flame effect</p>
           </div>
         </div>
 
@@ -156,7 +215,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
       {/* Mascot Live Preview & Controls */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         {/* Live Interactive Preview Box */}
-        <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-white/5 min-h-[260px] relative overflow-hidden sticky top-6">
+        <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-white/5 min-h-[270px] relative overflow-hidden sticky top-6">
           <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider absolute top-3 left-4">
             Live Preview ({blobSize}px)
           </div>
@@ -176,6 +235,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
               eyeStyle="v1"
               celebrate={celebrateCount}
               color={blobColor}
+              flame={hasFlame}
               onOverpoke={() => {
                 setPreviewMood('angry');
                 setTimeout(() => setPreviewMood('neutral'), 2000);
@@ -185,12 +245,43 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
           </div>
 
           <p className="text-[11px] text-zinc-400 mt-2 text-center">
-            Mood: <strong className="text-[var(--accent-cyan)] capitalize">{previewMood}</strong> • Color: <strong className="text-[var(--accent-cyan)] capitalize">{BLOB_COLORS.find(c => c.id === blobColor)?.name || blobColor}</strong>
+            Mood: <strong className="text-[var(--accent-cyan)] capitalize">{previewMood}</strong> • Color: <strong className="text-[var(--accent-cyan)] capitalize">{BLOB_COLORS.find(c => c.id === blobColor)?.name || blobColor}</strong>{hasFlame && <span className="ml-1 text-orange-500 font-semibold">• Fire Head 🔥</span>}
           </p>
         </div>
 
         {/* Controls Column */}
         <div className="space-y-6">
+          {/* Fiery Head Flame Effect Card */}
+          <div className="flex items-center justify-between p-3.5 rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent dark:border-amber-400/20">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-orange-500/15 text-orange-500 flex items-center justify-center font-bold">
+                <RiFireLine size={20} className={hasFlame ? "animate-pulse text-orange-500" : "text-zinc-400"} />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  Fiery Head Flame
+                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold">Fire Effect</span>
+                </span>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Animated dancing flame with floating ember sparks on head</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleToggleFlame(!hasFlame)}
+              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
+                hasFlame ? 'bg-orange-500' : 'bg-zinc-300 dark:bg-zinc-700'
+              }`}
+              title={hasFlame ? "Disable fire effect" : "Enable fire effect"}
+            >
+              <div
+                className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                  hasFlame ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
           {/* Mascot Color Palette Selector */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
@@ -203,7 +294,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
               </span>
             </div>
 
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
               {BLOB_COLORS.map((item) => {
                 const isSelected = blobColor === item.id;
                 return (
@@ -216,7 +307,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
                         ? 'border-[var(--accent-cyan)] bg-[var(--accent-cyan)]/10 ring-2 ring-[var(--accent-cyan)]/30 shadow-xs'
                         : 'border-zinc-200 dark:border-white/10 bg-zinc-50/60 dark:bg-white/[0.02] hover:border-zinc-300 dark:hover:border-white/20'
                     }`}
-                    title={item.name}
+                    title={`${item.name} - ${item.description}`}
                   >
                     {/* Color circular gradient swatch with distinct shades */}
                     <div 
@@ -291,7 +382,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
             </span>
             <ul className="text-[11px] text-zinc-500 dark:text-zinc-400 list-disc list-inside space-y-0.5">
               <li><strong>Drag Anywhere</strong>: Drag and drop the blob anywhere on your screen.</li>
-              <li><strong>Color & Size</strong>: Change blob color and size right from this page.</li>
+              <li><strong>Color & Fire Effect</strong>: Pick any of the 13 color themes and toggle the Fiery Head Flame.</li>
               <li><strong>Rapid Poking (4x clicks)</strong>: Makes the blob angry! 😡</li>
               <li><strong>Double Tap</strong>: Sends love with animated hearts! 💖</li>
             </ul>

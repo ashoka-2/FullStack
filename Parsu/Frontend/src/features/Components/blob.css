@@ -27,6 +27,11 @@
   --jelly-belly-glow: #b2f2fa;
   --jelly-eye-sparkle: #3be2f6;
 
+  --jelly-flame-outer: #0284c7;
+  --jelly-flame-mid: #38bdf8;
+  --jelly-flame-core: #e0f2fe;
+  --jelly-flame-glow: rgba(56, 189, 248, 0.5);
+
   --jelly-shadow: #114c54;
   --jelly-shadow-light: #1f6b76;
 }
@@ -68,6 +73,11 @@
   --jelly-belly-glow: #a7f3d0;
   --jelly-eye-sparkle: #34d399;
 
+  --jelly-flame-outer: #047857;
+  --jelly-flame-mid: #10b981;
+  --jelly-flame-core: #d1fae5;
+  --jelly-flame-glow: rgba(16, 185, 129, 0.55);
+
   --jelly-shadow: #064e3b;
   --jelly-shadow-light: #047857;
 }
@@ -106,6 +116,11 @@
 
   --jelly-belly-glow: #fef08a;
   --jelly-eye-sparkle: #fde047;
+
+  --jelly-flame-outer: #d97706;
+  --jelly-flame-mid: #f59e0b;
+  --jelly-flame-core: #fef3c7;
+  --jelly-flame-glow: rgba(245, 158, 11, 0.55);
 
   --jelly-shadow: #78350f;
   --jelly-shadow-light: #92400e;
@@ -146,6 +161,11 @@
   --jelly-belly-glow: #f3e8ff;
   --jelly-eye-sparkle: #c084fc;
 
+  --jelly-flame-outer: #7e22ce;
+  --jelly-flame-mid: #a855f7;
+  --jelly-flame-core: #f3e8ff;
+  --jelly-flame-glow: rgba(168, 85, 247, 0.55);
+
   --jelly-shadow: #3b0764;
   --jelly-shadow-light: #581c87;
 }
@@ -184,6 +204,11 @@
 
   --jelly-belly-glow: #fecdd3;
   --jelly-eye-sparkle: #f87171;
+
+  --jelly-flame-outer: #be123c;
+  --jelly-flame-mid: #f43f5e;
+  --jelly-flame-core: #ffe4e6;
+  --jelly-flame-glow: rgba(244, 63, 94, 0.55);
 
   --jelly-shadow: #7f1d1d;
   --jelly-shadow-light: #991b1b;
@@ -224,6 +249,11 @@
   --jelly-belly-glow: #d9f99d;
   --jelly-eye-sparkle: #a3e635;
 
+  --jelly-flame-outer: #65a30d;
+  --jelly-flame-mid: #84cc16;
+  --jelly-flame-core: #ecfccb;
+  --jelly-flame-glow: rgba(132, 204, 22, 0.55);
+
   --jelly-shadow: #365314;
   --jelly-shadow-light: #3f6212;
 }
@@ -262,6 +292,11 @@
 
   --jelly-belly-glow: #fed7aa;
   --jelly-eye-sparkle: #fb923c;
+
+  --jelly-flame-outer: #c2410c;
+  --jelly-flame-mid: #f97316;
+  --jelly-flame-core: #ffedd5;
+  --jelly-flame-glow: rgba(249, 115, 22, 0.55);
 
   --jelly-shadow: #7c2d12;
   --jelly-shadow-light: #9a3412;
@@ -302,6 +337,11 @@
   --jelly-belly-glow: #fce7f3;
   --jelly-eye-sparkle: #f472b6;
 
+  --jelly-flame-outer: #be185d;
+  --jelly-flame-mid: #ec4899;
+  --jelly-flame-core: #fce7f3;
+  --jelly-flame-glow: rgba(236, 72, 153, 0.55);
+
   --jelly-shadow: #831843;
   --jelly-shadow-light: #9d174d;
 }
@@ -312,6 +352,394 @@
 .light .blob-color-pink {
   --jelly-shadow: #f9a8d4;
   --jelly-shadow-light: #fbcfe8;
+}
+
+/* 9. Dark Blue / Royal Sapphire Theme */
+[data-blob-color="dark-blue"], .blob-color-dark-blue {
+  --jelly-body-top: #bfdbfe;
+  --jelly-body-mid: #2563eb;
+  --jelly-body-deep: #1e3a8a;
+  --jelly-body-rim: #60a5fa;
+
+  --jelly-outline: #172554;
+  --jelly-outline-light: #3b82f6;
+
+  --jelly-arm-light: #dbeafe;
+  --jelly-arm-mid: #2563eb;
+  --jelly-arm-deep: #1d4ed8;
+
+  --jelly-cheek-light: #eff6ff;
+  --jelly-cheek: #60a5fa;
+  --jelly-cheek-deep: #2563eb;
+
+  --jelly-eye-light: #0f172a;
+  --jelly-eye: #020617;
+  --jelly-eye-deep: #000000;
+  --jelly-face-ink: #020617;
+  --jelly-face-soft: #0f172a;
+
+  --jelly-belly-glow: #bfdbfe;
+  --jelly-eye-sparkle: #60a5fa;
+
+  --jelly-flame-outer: #1d4ed8;
+  --jelly-flame-mid: #60a5fa;
+  --jelly-flame-core: #eff6ff;
+  --jelly-flame-glow: rgba(96, 165, 250, 0.55);
+
+  --jelly-shadow: #0f172a;
+  --jelly-shadow-light: #1e293b;
+}
+
+:root[data-theme='light'] [data-blob-color="dark-blue"],
+.light [data-blob-color="dark-blue"],
+:root[data-theme='light'] .blob-color-dark-blue,
+.light .blob-color-dark-blue {
+  --jelly-shadow: #93c5fd;
+  --jelly-shadow-light: #bfdbfe;
+}
+
+/* 10. Teal / Ocean Aquamarine Theme */
+[data-blob-color="teal"], .blob-color-teal {
+  --jelly-body-top: #99f6e4;
+  --jelly-body-mid: #14b8a6;
+  --jelly-body-deep: #0f766e;
+  --jelly-body-rim: #5eead4;
+
+  --jelly-outline: #115e59;
+  --jelly-outline-light: #2dd4bf;
+
+  --jelly-arm-light: #ccfbf1;
+  --jelly-arm-mid: #14b8a6;
+  --jelly-arm-deep: #0d9488;
+
+  --jelly-cheek-light: #f0fdfa;
+  --jelly-cheek: #2dd4bf;
+  --jelly-cheek-deep: #0d9488;
+
+  --jelly-eye-light: #042f2e;
+  --jelly-eye: #021a19;
+  --jelly-eye-deep: #010d0d;
+  --jelly-face-ink: #021a19;
+  --jelly-face-soft: #042f2e;
+
+  --jelly-belly-glow: #99f6e4;
+  --jelly-eye-sparkle: #5eead4;
+
+  --jelly-flame-outer: #0f766e;
+  --jelly-flame-mid: #2dd4bf;
+  --jelly-flame-core: #ccfbf1;
+  --jelly-flame-glow: rgba(45, 212, 191, 0.5);
+
+  --jelly-shadow: #042f2e;
+  --jelly-shadow-light: #115e59;
+}
+
+:root[data-theme='light'] [data-blob-color="teal"],
+.light [data-blob-color="teal"],
+:root[data-theme='light'] .blob-color-teal,
+.light .blob-color-teal {
+  --jelly-shadow: #99f6e4;
+  --jelly-shadow-light: #ccfbf1;
+}
+
+/* 11. Coral / Sunset Peach Theme */
+[data-blob-color="coral"], .blob-color-coral {
+  --jelly-body-top: #fed7aa;
+  --jelly-body-mid: #fb7185;
+  --jelly-body-deep: #e11d48;
+  --jelly-body-rim: #fda4af;
+
+  --jelly-outline: #9f1239;
+  --jelly-outline-light: #f43f5e;
+
+  --jelly-arm-light: #ffe4e6;
+  --jelly-arm-mid: #fb7185;
+  --jelly-arm-deep: #be123c;
+
+  --jelly-cheek-light: #fff1f2;
+  --jelly-cheek: #fda4af;
+  --jelly-cheek-deep: #f43f5e;
+
+  --jelly-eye-light: #4c0519;
+  --jelly-eye: #27020d;
+  --jelly-eye-deep: #140106;
+  --jelly-face-ink: #27020d;
+  --jelly-face-soft: #4c0519;
+
+  --jelly-belly-glow: #fed7aa;
+  --jelly-eye-sparkle: #fda4af;
+
+  --jelly-flame-outer: #be123c;
+  --jelly-flame-mid: #fda4af;
+  --jelly-flame-core: #fff1f2;
+  --jelly-flame-glow: rgba(253, 164, 175, 0.5);
+
+  --jelly-shadow: #4c0519;
+  --jelly-shadow-light: #881337;
+}
+
+:root[data-theme='light'] [data-blob-color="coral"],
+.light [data-blob-color="coral"],
+:root[data-theme='light'] .blob-color-coral,
+.light .blob-color-coral {
+  --jelly-shadow: #fecdd3;
+  --jelly-shadow-light: #ffe4e6;
+}
+
+/* 12. Indigo / Cosmic Ultraviolet Theme */
+[data-blob-color="indigo"], .blob-color-indigo {
+  --jelly-body-top: #c7d2fe;
+  --jelly-body-mid: #6366f1;
+  --jelly-body-deep: #3730a3;
+  --jelly-body-rim: #818cf8;
+
+  --jelly-outline: #312e81;
+  --jelly-outline-light: #4f46e5;
+
+  --jelly-arm-light: #e0e7ff;
+  --jelly-arm-mid: #6366f1;
+  --jelly-arm-deep: #4338ca;
+
+  --jelly-cheek-light: #eef2ff;
+  --jelly-cheek: #a5b4fc;
+  --jelly-cheek-deep: #6366f1;
+
+  --jelly-eye-light: #1e1b4b;
+  --jelly-eye: #0f0e26;
+  --jelly-eye-deep: #070614;
+  --jelly-face-ink: #0f0e26;
+  --jelly-face-soft: #1e1b4b;
+
+  --jelly-belly-glow: #c7d2fe;
+  --jelly-eye-sparkle: #818cf8;
+
+  --jelly-flame-outer: #3730a3;
+  --jelly-flame-mid: #818cf8;
+  --jelly-flame-core: #e0e7ff;
+  --jelly-flame-glow: rgba(129, 140, 248, 0.5);
+
+  --jelly-shadow: #1e1b4b;
+  --jelly-shadow-light: #312e81;
+}
+
+:root[data-theme='light'] [data-blob-color="indigo"],
+.light [data-blob-color="indigo"],
+:root[data-theme='light'] .blob-color-indigo,
+.light .blob-color-indigo {
+  --jelly-shadow: #c7d2fe;
+  --jelly-shadow-light: #e0e7ff;
+}
+
+/* 13. Fire / Solar Magma Phoenix Theme */
+[data-blob-color="fire"], .blob-color-fire {
+  --jelly-body-top: #fef08a;
+  --jelly-body-mid: #f97316;
+  --jelly-body-deep: #dc2626;
+  --jelly-body-rim: #fbbf24;
+
+  --jelly-outline: #991b1b;
+  --jelly-outline-light: #ea580c;
+
+  --jelly-arm-light: #fed7aa;
+  --jelly-arm-mid: #f97316;
+  --jelly-arm-deep: #c2410c;
+
+  --jelly-cheek-light: #fef3c7;
+  --jelly-cheek: #fde047;
+  --jelly-cheek-deep: #f59e0b;
+
+  --jelly-eye-light: #450a0a;
+  --jelly-eye: #260505;
+  --jelly-eye-deep: #120202;
+  --jelly-face-ink: #260505;
+  --jelly-face-soft: #450a0a;
+
+  --jelly-belly-glow: #fef08a;
+  --jelly-eye-sparkle: #fde047;
+
+  --jelly-flame-outer: #b91c1c;
+  --jelly-flame-mid: #f97316;
+  --jelly-flame-core: #fef08a;
+  --jelly-flame-glow: rgba(249, 115, 22, 0.65);
+
+  --jelly-shadow: #450a0a;
+  --jelly-shadow-light: #7f1d1d;
+}
+
+:root[data-theme='light'] [data-blob-color="fire"],
+.light [data-blob-color="fire"],
+:root[data-theme='light'] .blob-color-fire,
+.light .blob-color-fire {
+  --jelly-shadow: #fecaca;
+  --jelly-shadow-light: #ffedd5;
+}
+
+/* Flame Mascot Head Animation */
+@keyframes blobFlameFlicker {
+  0%, 100% {
+    transform: scale(1) rotate(0deg) skewX(0deg);
+  }
+  20% {
+    transform: scale(1.06, 0.94) rotate(-2.5deg) skewX(-2deg);
+  }
+  45% {
+    transform: scale(0.95, 1.07) rotate(2deg) skewX(1.8deg);
+  }
+  70% {
+    transform: scale(1.04, 0.97) rotate(-1.5deg) skewX(-1deg);
+  }
+  85% {
+    transform: scale(0.98, 1.03) rotate(1deg) skewX(0.8deg);
+  }
+}
+
+@keyframes blobFlameInnerFlicker {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.1, 0.92) rotate(-3deg);
+    opacity: 1;
+  }
+}
+
+@keyframes blobEmberFloat {
+  0% {
+    transform: translateY(0) scale(0.4);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  75% {
+    opacity: 0.6;
+    transform: translateY(-42px) translateX(var(--ember-drift, 6px)) scale(1);
+  }
+  100% {
+    transform: translateY(-68px) translateX(var(--ember-drift-end, -8px)) scale(0.1);
+    opacity: 0;
+  }
+}
+
+@keyframes blobFlameFlickerLeft {
+  0%, 100% {
+    transform: scale(1) rotate(0deg) skewX(0deg);
+  }
+  30% {
+    transform: scale(1.08, 0.92) rotate(-5deg) skewX(-3deg);
+  }
+  65% {
+    transform: scale(0.92, 1.08) rotate(3deg) skewX(2deg);
+  }
+}
+
+@keyframes blobFlameFlickerRight {
+  0%, 100% {
+    transform: scale(1) rotate(0deg) skewX(0deg);
+  }
+  25% {
+    transform: scale(0.92, 1.07) rotate(-3deg) skewX(-2deg);
+  }
+  70% {
+    transform: scale(1.08, 0.93) rotate(5deg) skewX(3.5deg);
+  }
+}
+
+@keyframes blobFlameFlickerFarLeft {
+  0%, 100% {
+    transform: scale(1) rotate(0deg) skewX(0deg);
+  }
+  35% {
+    transform: scale(1.12, 0.88) rotate(-7deg) skewX(-4.5deg);
+  }
+  70% {
+    transform: scale(0.9, 1.1) rotate(3deg) skewX(2deg);
+  }
+}
+
+@keyframes blobFlameFlickerFarRight {
+  0%, 100% {
+    transform: scale(1) rotate(0deg) skewX(0deg);
+  }
+  30% {
+    transform: scale(0.9, 1.1) rotate(-3deg) skewX(-2deg);
+  }
+  75% {
+    transform: scale(1.12, 0.88) rotate(7deg) skewX(4.5deg);
+  }
+}
+
+.blob-flame-outer {
+  transform-origin: 450px 155px;
+  animation: blobFlameFlicker 1.8s ease-in-out infinite;
+}
+
+.blob-flame-inner {
+  transform-origin: 450px 155px;
+  animation: blobFlameInnerFlicker 1.3s ease-in-out infinite;
+}
+
+.blob-flame-left {
+  transform-origin: 416px 158px;
+  animation: blobFlameFlickerLeft 1.6s ease-in-out infinite 0.15s;
+}
+
+.blob-flame-right {
+  transform-origin: 484px 158px;
+  animation: blobFlameFlickerRight 1.7s ease-in-out infinite 0.35s;
+}
+
+.blob-flame-far-left {
+  transform-origin: 375px 165px;
+  animation: blobFlameFlickerFarLeft 1.45s ease-in-out infinite 0.1s;
+}
+
+.blob-flame-far-right {
+  transform-origin: 525px 165px;
+  animation: blobFlameFlickerFarRight 1.5s ease-in-out infinite 0.25s;
+}
+
+.blob-ember-1 {
+  --ember-drift: 8px;
+  --ember-drift-end: -6px;
+  animation: blobEmberFloat 1.9s ease-out infinite;
+}
+
+.blob-ember-2 {
+  --ember-drift: -9px;
+  --ember-drift-end: 8px;
+  animation: blobEmberFloat 2.3s ease-out infinite 0.6s;
+}
+
+.blob-ember-3 {
+  --ember-drift: 5px;
+  --ember-drift-end: -10px;
+  animation: blobEmberFloat 2.1s ease-out infinite 1.1s;
+}
+
+.blob-ember-4 {
+  --ember-drift: -14px;
+  --ember-drift-end: -22px;
+  animation: blobEmberFloat 2.4s ease-out infinite 0.4s;
+}
+
+.blob-ember-5 {
+  --ember-drift: 14px;
+  --ember-drift-end: 24px;
+  animation: blobEmberFloat 2.2s ease-out infinite 0.8s;
+}
+
+.blob-ember-6 {
+  --ember-drift: -24px;
+  --ember-drift-end: -38px;
+  animation: blobEmberFloat 2.1s ease-out infinite 0.2s;
+}
+
+.blob-ember-7 {
+  --ember-drift: 24px;
+  --ember-drift-end: 38px;
+  animation: blobEmberFloat 2.25s ease-out infinite 0.65s;
 }
 
 .blob-bubble {
