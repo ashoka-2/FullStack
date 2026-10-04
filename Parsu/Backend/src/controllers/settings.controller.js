@@ -47,7 +47,7 @@ export async function updateUserSettings(req, res) {
         const user = await userModel.findByIdAndUpdate(
             req.user.id,
             { $set: updateFields },
-            { new: true, select: "memory preferences" }
+            { returnDocument: 'after', select: "memory preferences" }
         );
 
         res.json({ success: true, message: "Settings updated", memory: user.memory, preferences: user.preferences });
@@ -296,7 +296,7 @@ export async function updateBugReportStatus(req, res) {
         const report = await bugReportModel.findByIdAndUpdate(
             id,
             { $set: updateFields },
-            { new: true }
+            { returnDocument: 'after' }
         ).populate("user", "username email profilePic");
 
         if (!report) return res.status(404).json({ success: false, message: "Report not found" });

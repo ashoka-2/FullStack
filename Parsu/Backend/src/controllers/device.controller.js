@@ -147,7 +147,7 @@ export async function renameDevice(req, res) {
         const device = await deviceModel.findOneAndUpdate(
             { _id: deviceId, user: req.user.id },
             { name: name.trim() },
-            { new: true }
+            { returnDocument: 'after' }
         );
         if (!device) return res.status(404).json({ success: false, message: "Device not found" });
         res.json({ success: true, message: "Device renamed", device: safeDevice(device) });
@@ -164,7 +164,7 @@ export async function setDefaultDevice(req, res) {
         const device = await deviceModel.findOneAndUpdate(
             { _id: deviceId, user: req.user.id },
             { isDefault: true },
-            { new: true }
+            { returnDocument: 'after' }
         );
         if (!device) return res.status(404).json({ success: false, message: "Device not found" });
         res.json({ success: true, message: `"${device.name}" set as default device`, device: safeDevice(device) });

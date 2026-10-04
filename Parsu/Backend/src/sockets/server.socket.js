@@ -132,7 +132,7 @@ export function initSocket(httpServer) {
                 const update = { status: "online", lastSeen: new Date() };
                 if (data?.systemMetrics) update.systemMetrics = data.systemMetrics;
 
-                const device = await Device.findByIdAndUpdate(connectedDeviceId, update, { new: true });
+                const device = await Device.findByIdAndUpdate(connectedDeviceId, update, { returnDocument: 'after' });
                 if (device && connectedUserId) {
                     io.to(`user:${connectedUserId}`).emit("device:telemetry", {
                         deviceId: connectedDeviceId,

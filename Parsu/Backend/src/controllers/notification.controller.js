@@ -40,7 +40,7 @@ export async function subscribePush(req, res) {
         await PushSubscription.findOneAndUpdate(
             { user: req.user.id, endpoint: subscription.endpoint },
             { user: req.user.id, subscription, endpoint: subscription.endpoint, updatedAt: new Date() },
-            { upsert: true, new: true, setDefaultsOnInsert: true }
+            { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
         );
 
         res.json({ success: true, message: 'Push subscription registered' });

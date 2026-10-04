@@ -951,7 +951,7 @@ export async function rateMessageFeedback(req, res) {
         const message = await messageModel.findByIdAndUpdate(
             messageId,
             { feedback },
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         if (!message) {

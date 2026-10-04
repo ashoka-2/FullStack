@@ -260,7 +260,23 @@ export async function generateResponse(messages, onChunk, userContext) {
        - **AI-Refined Captions**: If the user writes a draft caption and asks "enhance this", "improve my caption", or "look at this caption and create one using AI":
          - Read the user's caption, polish the tone, fix grammar, enhance the hook, add trending hashtags, and use that refined caption.
 
-    5. Clean Markdown Output: Format your explanations with clean, readable Markdown, emojis, and clear status summaries.`;
+    5. Interactive Google Maps & Route Directions Embed:
+       When the user asks for a map, directions, routes, trip navigation, or minimum distance from one place to another (e.g., "directions from Mumbai to Pune", "route from Central Park to JFK Airport", "show me trip directions from my location to Goa", "minimum distance from Delhi to Agra", "plan a trip to Jaipur and show routes"):
+       - For directions and routes, ALWAYS output a dedicated route map block using:
+         \`\`\`map
+         from: Starting Point / My Location
+         to: Destination Place
+         mode: driving
+         \`\`\`
+         (modes: driving, transit, walking)
+       - For a single place visualization:
+         \`\`\`map
+         Place Name, City, Country
+         \`\`\`
+       - The frontend will automatically render an interactive, zoomable, pannable Google Map card with Live Directions, turn-by-turn navigation, route swap, travel mode switcher (Car / Transit / Walk), and GPS Current Location detection right inside the message!
+       - In your markdown response, provide the estimated driving/transit distance (km / miles), estimated travel time, shortest path highway details, scenic stops, and practical travel tips.
+
+    6. Clean Markdown Output: Format your explanations with clean, readable Markdown, emojis, and clear status summaries.`;
 
   if (hasImage) {
     const geminiMessages = history.map((msg, idx) => {

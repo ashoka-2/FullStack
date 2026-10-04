@@ -346,7 +346,7 @@ export async function handleOAuthCallback(req, res) {
                 isConnected: true,
                 meta: tokenData.meta || {}
             },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }
         );
 
         res.redirect(`${frontendUrl}/social-connections?connected=${platform}`);
@@ -399,7 +399,7 @@ export async function connectManual(req, res) {
                 accessToken,
                 isConnected: true
             },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }
         );
 
         res.status(200).json({ success: true, message: `${platform} connected manually` });

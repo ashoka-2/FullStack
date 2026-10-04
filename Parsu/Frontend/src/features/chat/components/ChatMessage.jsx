@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   RiFileCopyLine, 
   RiRefreshLine, 
@@ -27,7 +27,8 @@ import {
   RiArrowDownSLine,
   RiArrowUpSLine,
   RiAlertLine,
-  RiGlobalLine
+  RiGlobalLine,
+  RiCompass3Line
 } from '@remixicon/react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -37,6 +38,7 @@ import { publishMedia, generateCaption } from '../../auth/service/social.api';
 import { sendFeedback } from '../service/chat.api';
 import { useDispatch } from 'react-redux';
 import { addToast } from '../../../utils/toast.slice';
+import { EmbeddedMapCard } from './EmbeddedMapCard';
 
 const CodeBlock = React.memo(({ code, language, ...props }) => {
     const [copied, setCopied] = useState(false);
@@ -468,6 +470,76 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
 
     const contentToRender = isTyping ? displayedContent : msg.content;
 
+    // Check if content already contains a markdown map block or inline map code
+    const hasMapCodeBlock = typeof contentToRender === 'string' && (
+        /```(?:map|maps|googlemap)/i.test(contentToRender) ||
+        /`\s*(?:map|route|directions?)\s+[^`]+`/i.test(contentToRender)
+    );
+
+    // Auto-detect map location from directives, google maps URLs, or "Map of [Location]"
+    const detectedMapLocation = React.useMemo(() => {
+        if (hasMapCodeBlock || typeof contentToRender !== 'string' || isUser) return null;
+
+        // 1. Directives: :::map{location="Central Park"} or :::map Central Park:::
+        const directiveMatch = contentToRender.match(/:::map\s*\{?\s*(?:location=)?["']?([^"'}]+)["']?\s*\}?:::/i) ||
+                               contentToRender.match(/:::map\s*\{?\s*location=["']([^"']+)["']\s*\}?/i);
+        if (directiveMatch && directiveMatch[1]) return directiveMatch[1].trim();
+
+        // 2. Google Maps Directions URLs in text or markdown links
+        const dirUrlMatch = contentToRender.match(/https?:\/\/(?:www\.)?(?:google\.[a-z.]+\/maps\/dir|maps\.google\.[a-z.]+\/maps)\?[^\s\)]*(?:origin=([^&]+)&destination=([^&\s\)]+)|saddr=([^&]+)&daddr=([^&\s\)]+))/i);
+        if (dirUrlMatch) {
+            try {
+                const orig = decodeURIComponent((dirUrlMatch[1] || dirUrlMatch[3]).replace(/\+/g, ' '));
+                const dest = decodeURIComponent((dirUrlMatch[2] || dirUrlMatch[4]).replace(/\+/g, ' '));
+                return `from: ${orig}\nto: ${dest}`;
+            } catch {
+                // ignore
+            }
+        }
+
+        // 3. Google Maps Search / Place URLs
+        const gmapsMatch = contentToRender.match(/https?:\/\/(?:www\.)?(?:google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)\/(?:search\/|\?)[^\s\)]*q=([^&\s\)]+)/i);
+        if (gmapsMatch && gmapsMatch[1]) {
+            try {
+                return decodeURIComponent(gmapsMatch[1].replace(/\+/g, ' '));
+            } catch {
+                return gmapsMatch[1];
+            }
+        }
+
+        // 4. Text Route & Directions Patterns: "Directions from X to Y" / "Route from X to Y" / "Trip from X to Y" / "Map from X to Y"
+        const routeTextMatch = contentToRender.match(/(?:map|directions?|route|trip|travel|minimum distance|shortest distance)\s+(?:from\s+)?([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)\s+(?:to|->|→)\s+([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)(?:\.|\n|:|,|$)/i);
+        if (routeTextMatch && routeTextMatch[1] && routeTextMatch[2] && routeTextMatch[1].trim().length < 80 && routeTextMatch[2].trim().length < 80) {
+            return `from: ${routeTextMatch[1].trim()}\nto: ${routeTextMatch[2].trim()}`;
+        }
+
+        // 5. "Directions from your/my location to [Place]"
+        const fromLocMatch = contentToRender.match(/(?:directions?|route|trip)\s+from\s+(?:your|my)\s+(?:current\s+)?location\s+to\s+([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)(?:\.|\n|:|,|$)/i);
+        if (fromLocMatch && fromLocMatch[1] && fromLocMatch[1].trim().length < 60) {
+            return `from: My Location\nto: ${fromLocMatch[1].trim()}`;
+        }
+
+        // 6. Markdown explicit map links: [Map: Tokyo](...)
+        const mdMapMatch = contentToRender.match(/\[(?:Google\s+)?Map(?:\s+of)?:\s*([^\]]+)\]\([^\)]+\)/i);
+        if (mdMapMatch && mdMapMatch[1]) {
+            return mdMapMatch[1].trim();
+        }
+
+        // 7. Standalone "map [Place]" line
+        const standaloneMapMatch = contentToRender.match(/(?:^|\n)\s*map\s+([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)(?:\.|\n|:|$)/i);
+        if (standaloneMapMatch && standaloneMapMatch[1] && standaloneMapMatch[1].trim().length < 80) {
+            return standaloneMapMatch[1].trim();
+        }
+
+        // 8. Fallback: "Here is the map of [Place]" or "Interactive map of [Place]"
+        const mapOfMatch = contentToRender.match(/(?:here is (?:the|an?)\s+(?:interactive\s+)?map of|interactive map of|map of)\s+([A-Z][a-zA-Z0-9\s,.-]+?)(?:\.|\n|:|$)/i);
+        if (mapOfMatch && mapOfMatch[1] && mapOfMatch[1].trim().length < 60) {
+            return mapOfMatch[1].trim();
+        }
+
+        return null;
+    }, [contentToRender, hasMapCodeBlock, isUser]);
+
     // Successful posted platforms from DB or recent action
     const existingPosts = msg.socialPosts || [];
 
@@ -852,7 +924,27 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                         code({node, inline, className, children, ...props}) {
                                             const match = /language-(\w+)/.exec(className || '');
                                             const codeString = String(children).replace(/\n$/, '');
+                                            const trimmedCode = codeString.trim();
                                             
+                                            // Embedded Interactive Google Map:
+                                            // 1) Explicit ```map ... ``` codeblock
+                                            // 2) Inline code tag or block starting with `map `, `route `, `from: ...`
+                                            // 3) Code containing "origin to destination"
+                                            const isExplicitMap = match?.[1] && /^(map|maps|googlemap|googlemaps|route|directions)$/i.test(match[1]);
+                                            const isMapDirective = /^(?:map|maps|googlemap|googlemaps|route|directions?)\s+/i.test(trimmedCode) ||
+                                                                   /^(?:from|origin):\s*.+/i.test(trimmedCode) ||
+                                                                   (/^[A-Za-z0-9\s,.-]+?\s+(?:to|->|→)\s+[A-Za-z0-9\s,.-]+$/i.test(trimmedCode) && trimmedCode.length > 5 && trimmedCode.length < 150);
+
+                                            if (isExplicitMap || isMapDirective) {
+                                                return (
+                                                    <div className="my-3 not-prose">
+                                                        <EmbeddedMapCard 
+                                                            location={trimmedCode} 
+                                                        />
+                                                    </div>
+                                                );
+                                            }
+
                                             return !inline && match ? (
                                                 <CodeBlock 
                                                     code={codeString} 
@@ -864,6 +956,21 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                     {children}
                                                 </code>
                                             )
+                                        },
+                                        a: ({href, children, ...props}) => {
+                                            const isGoogleMaps = href && /(google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)/i.test(href);
+                                            return (
+                                                <a 
+                                                    href={href} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer" 
+                                                    className={`underline decoration-[var(--accent-cyan)] decoration-1 underline-offset-2 hover:text-[var(--accent-cyan)] font-medium transition-colors ${isGoogleMaps ? 'inline-flex items-center gap-1 text-[var(--accent-cyan)] font-bold' : 'text-zinc-900 dark:text-zinc-100'}`}
+                                                    {...props}
+                                                >
+                                                    {children}
+                                                    {isGoogleMaps && <RiCompass3Line size={13} className="shrink-0" />}
+                                                </a>
+                                            );
                                         },
                                         p: ({children}) => <p className="text-zinc-800 dark:text-zinc-300 leading-relaxed mb-6 last:mb-0">{children}</p>,
                                         ul: ({children}) => <ul className="list-disc pl-5 space-y-3 mb-6 last:mb-0">{children}</ul>,
@@ -893,6 +1000,13 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                     {contentToRender}
                                 </ReactMarkdown>
                             </div>
+
+                            {/* Auto-detected Interactive Map Card (if message mentions a map or maps link not in a codeblock) */}
+                            {detectedMapLocation && (
+                                <div className="mt-1">
+                                    <EmbeddedMapCard location={detectedMapLocation} />
+                                </div>
+                            )}
 
                             {/* Web Sources â€” only shown when the backend returned real citations */}
                             {msg.sources?.length > 0 && (

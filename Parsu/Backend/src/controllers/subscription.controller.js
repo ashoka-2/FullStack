@@ -251,7 +251,7 @@ export async function verifyPayment(req, res) {
                     "usageQuotas.socialPostsLimit": socialPostsLimit
                 }
             },
-            { new: true }
+            { returnDocument: 'after' }
         ).select("-password");
 
         return res.status(200).json({
