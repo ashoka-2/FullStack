@@ -549,7 +549,7 @@ const ChatArea = () => {
   };
 
   return (
-    <main data-lenis-prevent className="flex-1 w-full flex flex-col items-center bg-[var(--bg-primary)] relative overflow-x-hidden overflow-y-auto custom-scrollbar"
+    <main data-lenis-prevent className="flex-1 w-full flex flex-col items-center bg-[var(--bg-primary)] relative overflow-x-hidden overflow-y-auto custom-scrollbar pt-14 sm:pt-16"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -564,7 +564,7 @@ const ChatArea = () => {
         </div>
       )}
 
-      <div className="w-full max-w-fluid flex flex-col items-center relative z-10 px-4 md:px-0 pt-6 sm:pt-10 md:pt-12">
+      <div className="w-full max-w-fluid flex flex-col items-center px-4 md:px-0 pt-2 sm:pt-4 md:pt-6">
         
         {/* Brand header */}
         <div className="flex items-center gap-2.5 mb-4 opacity-90 hover:opacity-100 transition-opacity">
@@ -631,7 +631,7 @@ const ChatArea = () => {
         </div>
 
         {/* Search Input Box — always fixed at bottom, sidebar-aware on desktop */}
-        <div className={`fixed bottom-0 right-0 z-50 p-2.5 pb-5 sm:p-4 sm:pb-8 bg-gradient-to-t from-[#f4f5f7] dark:from-[#050505] via-[#f4f5f7]/95 dark:via-[#050505]/95 to-transparent backdrop-blur-[2px] transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'left-0 lg:left-16' : 'left-0 lg:left-56'}`}>
+        <div className={`fixed bottom-0 right-0 z-[60] p-2.5 pb-5 sm:p-4 sm:pb-8 bg-gradient-to-t from-[#f4f5f7] dark:from-[#050505] via-[#f4f5f7]/95 dark:via-[#050505]/95 to-transparent backdrop-blur-[2px] transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'left-0 lg:left-16' : 'left-0 lg:left-56'}`}>
           <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[var(--bg-surface)] border ${isDragging ? 'border-[var(--color-clear-hanada)]' : 'border-zinc-200/90 dark:border-[#2d2e2e]'} focus-within:border-[var(--color-clear-hanada)]/60 dark:focus-within:border-[var(--color-clear-hanada)]/60 focus-within:ring-2 focus-within:ring-[#60A6AF]/20 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-5 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
 
             {/* Rich Attachment Preview Strip */}

@@ -42,14 +42,16 @@ const Dashboard = () => {
 
             <div className={`flex-1 flex flex-col h-[100dvh] overflow-hidden relative ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
 
-                {/* ChatGPT-style Header */}
-                <ChatNavbar
-                    onOpenSidebar={() => setIsSidebarOpen(true)}
-                    showShareButton={false}
-                />
+                {/* ChatGPT-style Floating Glass Header */}
+                <div className="absolute top-0 left-0 right-0 z-30 pointer-events-auto">
+                    <ChatNavbar
+                        onOpenSidebar={() => setIsSidebarOpen(true)}
+                        showShareButton={false}
+                    />
+                </div>
 
-                {/* Constrain container height so ChatArea manages its own custom scrollbar */}
-                <div className="flex-1 overflow-hidden flex flex-col">
+                {/* Constrain container height so ChatArea manages its own custom scrollbar and flows behind navbar */}
+                <div className="flex-1 overflow-hidden flex flex-col h-full">
                     <ChatArea />
                 </div>
             </div>

@@ -62,7 +62,7 @@ export default function ChatNavbar({
   };
 
   return (
-    <header className="h-14 bg-transparent shrink-0 z-30 border-b border-zinc-200/50 dark:border-white/[0.06] px-3.5 sm:px-6 flex items-center justify-between transition-colors select-none">
+    <header className="h-14 w-full shrink-0 z-30 px-3.5 sm:px-6 flex items-center justify-between select-none bg-gradient-to-b from-white from-40% via-white/60 to-transparent dark:from-black dark:from-40% dark:via-black/60 dark:to-transparent backdrop-blur-xl">
       
       {/* ── Left Section: Mobile Menu Icon / Desktop Brand Pill & Back Link ── */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -109,7 +109,7 @@ export default function ChatNavbar({
           </CircleButton>
         )}
 
-        {/* On desktop: Parsu AI Brand Pill */}
+        {/* On desktop: Parsu AI Brand Pill
         <Link
           to={user ? "/ai" : "/"}
           className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-zinc-300/80 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/20 bg-zinc-100/80 dark:bg-white/[0.05] hover:bg-zinc-200/70 dark:hover:bg-white/[0.08] text-zinc-900 dark:text-zinc-100 transition-all cursor-pointer group shrink-0"
@@ -120,7 +120,7 @@ export default function ChatNavbar({
           <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[var(--accent-cyan)] text-zinc-950 shadow-2xs">
             AI
           </span>
-        </Link>
+        </Link> */}
       </div>
 
       {/* ── Center Section: Conversation Title or Temporary Chat Pill ── */}
@@ -195,7 +195,6 @@ export default function ChatNavbar({
           <RiAddLine size={18} className="shrink-0" />
         </CircleButton>
       </div>
-
     </header>
   );
 }

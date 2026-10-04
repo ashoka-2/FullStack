@@ -166,7 +166,7 @@ export default function Footer() {
   return (
     <footer
       ref={footerRef}
-      className="relative z-20 w-full border-t border-zinc-200/80 dark:border-white/[0.08] bg-zinc-50/80 dark:bg-[#07080c]/90 backdrop-blur-2xl text-zinc-600 dark:text-zinc-400 mt-auto transition-colors duration-300"
+      className="relative z-10 w-full border-t border-zinc-200/80 dark:border-white/[0.08] bg-zinc-50/80 dark:bg-[#07080c]/90 backdrop-blur-2xl text-zinc-600 dark:text-zinc-400 mt-auto transition-colors duration-300"
     >
       {/* Razor-thin top cyan ambient highlight rim */}
       <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-3/4 max-w-4xl h-px bg-gradient-to-r from-transparent via-[var(--accent-cyan)]/50 to-transparent" />
