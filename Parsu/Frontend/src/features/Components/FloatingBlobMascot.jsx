@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { JellyBlobMascot } from './JellyBlobMascot';
+import { RiEyeLine, RiEyeOffLine, RiSettings3Line } from '@remixicon/react';
 
 const FloatingBlobMascot = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Hidden ONLY on standalone Auth login/register pages
   const isAuthPage = location.pathname.startsWith('/auth') || location.pathname === '/login' || location.pathname === '/register';
@@ -31,6 +33,15 @@ const FloatingBlobMascot = () => {
     const saved = localStorage.getItem('blob_mascot_flame');
     return saved !== null ? saved === 'true' : false;
   });
+
+  // Eye Tracking / Cursor Follow state from localStorage (default: true)
+  const [eyeTracking, setEyeTracking] = useState(() => {
+    const saved = localStorage.getItem('blob_mascot_eye_track');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  // Right-click context menu state
+  const [showContextMenu, setShowContextMenu] = useState(false);
 
   // Mood and speech states
   const [mood, setMood] = useState('curious');
@@ -63,11 +74,38 @@ const FloatingBlobMascot = () => {
       if (e.detail?.flame !== undefined) {
         setHasFlame(e.detail.flame);
       }
+      if (e.detail?.eyeTrack !== undefined) {
+        setEyeTracking(e.detail.eyeTrack);
+      }
     };
 
     window.addEventListener('blob_settings_change', handleSettingsChange);
     return () => window.removeEventListener('blob_settings_change', handleSettingsChange);
   }, []);
+
+  const handleToggleEyeTracking = (value) => {
+    setEyeTracking(value);
+    localStorage.setItem('blob_mascot_eye_track', value.toString());
+    window.dispatchEvent(new CustomEvent('blob_settings_change', {
+      detail: { eyeTrack: value }
+    }));
+    showSpeech(value ? 'Tracking your cursor! 👀' : 'Eye tracking off 😌', 2000);
+  };
+
+  // Close context menu on outside click or Escape
+  useEffect(() => {
+    if (!showContextMenu) return;
+    const handleOutside = () => setShowContextMenu(false);
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setShowContextMenu(false);
+    };
+    window.addEventListener('click', handleOutside);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('click', handleOutside);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showContextMenu]);
 
   const showSpeech = (text, duration = 2400) => {
     setSpeechText(text);
@@ -79,24 +117,47 @@ const FloatingBlobMascot = () => {
     }
   };
 
-  // Continuous pointer gaze tracking: Blob looks directly towards user's cursor
+  // Continuous 360-degree pointer gaze tracking wherever the mascot is placed
   useEffect(() => {
     if (!isVisible || isAuthPage) return;
-    let frameId;
+    if (!eyeTracking) {
+      setGaze({ x: 0, y: 0 });
+      return;
+    }
 
+    let frameId;
     const handlePointerMove = (e) => {
       if (isInteractingRef.current) return;
       cancelAnimationFrame(frameId);
       frameId = requestAnimationFrame(() => {
         if (!blobContainerRef.current) return;
         const rect = blobContainerRef.current.getBoundingClientRect();
+        // Exact live center coordinates of the blob anywhere on the viewport
         const blobCenterX = rect.left + rect.width / 2;
         const blobCenterY = rect.top + rect.height / 2;
-        const dx = (e.clientX - blobCenterX) / window.innerWidth;
-        const dy = (e.clientY - blobCenterY) / window.innerHeight;
+
+        const deltaX = e.clientX - blobCenterX;
+        const deltaY = e.clientY - blobCenterY;
+        const dist = Math.hypot(deltaX, deltaY);
+
+        if (dist < 6) {
+          setGaze({ x: 0, y: 0 });
+          return;
+        }
+
+        // Smooth deflection with distance saturation:
+        // As cursor moves away, gaze deflection increases up to ~280px away
+        const saturationDistance = 280;
+        const intensity = Math.min(1, dist / saturationDistance);
+
+        // Unit direction vector
+        const dirX = deltaX / dist;
+        const dirY = deltaY / dist;
+
+        // JellyBlobMascot tanh scaling works with max targets: X up to 28, Y up to 20
         setGaze({
-          x: Math.max(-12, Math.min(12, dx * 28)),
-          y: Math.max(-8, Math.min(8, dy * 18))
+          x: dirX * intensity * 28,
+          y: dirY * intensity * 20
         });
       });
     };
@@ -106,7 +167,7 @@ const FloatingBlobMascot = () => {
       window.removeEventListener('pointermove', handlePointerMove);
       cancelAnimationFrame(frameId);
     };
-  }, [isVisible, isAuthPage]);
+  }, [isVisible, isAuthPage, eyeTracking]);
 
   // Context-aware intelligent speech bubble greetings on page navigation
   useEffect(() => {
@@ -376,11 +437,76 @@ const FloatingBlobMascot = () => {
         )}
       </AnimatePresence>
 
+      {/* Right-click Floating Context Menu */}
+      <AnimatePresence>
+        {showContextMenu && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.88, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.88, y: 10 }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
+            className="absolute bottom-full mb-3 right-0 min-w-[200px] p-1.5 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-zinc-200/90 dark:border-white/10 shadow-2xl z-50 text-xs font-medium space-y-1 select-none"
+            onClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            {/* Header */}
+            <div className="px-3 py-1.5 border-b border-zinc-100 dark:border-white/5 flex items-center justify-between text-[11px] font-bold text-zinc-400">
+              <span className="uppercase tracking-wider">Mascot</span>
+              <span className="text-[10px] lowercase font-mono text-[var(--accent-cyan)] font-normal">{size}px</span>
+            </div>
+
+            {/* Option 1: Eye Track Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                const next = !eyeTracking;
+                handleToggleEyeTracking(next);
+                setShowContextMenu(false);
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors hover:bg-zinc-100 dark:hover:bg-white/[0.08] text-zinc-800 dark:text-zinc-200 cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                {eyeTracking ? (
+                  <RiEyeLine size={16} className="text-[var(--accent-cyan)]" />
+                ) : (
+                  <RiEyeOffLine size={16} className="text-zinc-400" />
+                )}
+                <span className="font-semibold">Eye Tracking</span>
+              </div>
+              <div className={`w-8 h-4.5 rounded-full p-0.5 transition-colors flex items-center ${eyeTracking ? 'bg-[var(--accent-cyan)]' : 'bg-zinc-300 dark:bg-zinc-700'}`}>
+                <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-xs transform transition-transform ${eyeTracking ? 'translate-x-3.5' : 'translate-x-0'}`} />
+              </div>
+            </button>
+
+            {/* Option 2: Settings */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowContextMenu(false);
+                navigate('/settings/mascot');
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors hover:bg-zinc-100 dark:hover:bg-white/[0.08] text-zinc-800 dark:text-zinc-200 cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <RiSettings3Line size={16} className="text-zinc-500" />
+                <span className="font-semibold">Mascot Settings</span>
+              </div>
+              <span className="text-[11px] text-zinc-400 font-mono">→</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Mascot Container */}
       <div
         className="w-full h-full relative group cursor-pointer flex items-center justify-center transition-transform hover:scale-105 active:scale-95 duration-200"
         onClick={handleBlobClick}
         onDoubleClick={handleDoubleClick}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowContextMenu(prev => !prev);
+        }}
       >
         <JellyBlobMascot
           mood={mood}

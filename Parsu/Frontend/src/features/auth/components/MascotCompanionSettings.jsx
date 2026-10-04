@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
-import { RiSparkling2Line, RiCheckLine, RiPaletteLine, RiFireLine } from '@remixicon/react';
+import { RiSparkling2Line, RiCheckLine, RiPaletteLine, RiFireLine, RiEyeLine, RiEyeOffLine } from '@remixicon/react';
 
 const BLOB_COLORS = [
   {
@@ -116,6 +116,14 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
     return saved !== null ? saved === 'true' : false;
   });
 
+  const [eyeTracking, setEyeTracking] = useState(() => {
+    const saved = localStorage.getItem('blob_mascot_eye_track');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  const previewBoxRef = useRef(null);
+  const [previewGaze, setPreviewGaze] = useState({ x: 0, y: 0 });
+
   // Listen for real-time changes from floating blob on screen
   useEffect(() => {
     const handleSettingsChange = (e) => {
@@ -131,16 +139,69 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
       if (e.detail?.flame !== undefined) {
         setHasFlame(e.detail.flame);
       }
+      if (e.detail?.eyeTrack !== undefined) {
+        setEyeTracking(e.detail.eyeTrack);
+      }
     };
     window.addEventListener('blob_settings_change', handleSettingsChange);
     return () => window.removeEventListener('blob_settings_change', handleSettingsChange);
   }, []);
+
+  // Live preview cursor gaze tracking when eye tracking is enabled
+  useEffect(() => {
+    if (!eyeTracking) {
+      setPreviewGaze({ x: 0, y: 0 });
+      return;
+    }
+
+    let frameId;
+    const handleMove = (e) => {
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        if (!previewBoxRef.current) return;
+        const rect = previewBoxRef.current.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const deltaX = e.clientX - centerX;
+        const deltaY = e.clientY - centerY;
+        const dist = Math.hypot(deltaX, deltaY);
+
+        if (dist < 6) {
+          setPreviewGaze({ x: 0, y: 0 });
+          return;
+        }
+
+        const dirX = deltaX / dist;
+        const dirY = deltaY / dist;
+        const intensity = Math.min(1, dist / 220);
+
+        setPreviewGaze({
+          x: dirX * intensity * 28,
+          y: dirY * intensity * 20
+        });
+      });
+    };
+
+    window.addEventListener('pointermove', handleMove, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      cancelAnimationFrame(frameId);
+    };
+  }, [eyeTracking]);
 
   const handleToggleBlobVisibility = (value) => {
     setBlobVisible(value);
     localStorage.setItem('blob_mascot_visible', value.toString());
     window.dispatchEvent(new CustomEvent('blob_settings_change', {
       detail: { visible: value }
+    }));
+  };
+
+  const handleToggleEyeTracking = (val) => {
+    setEyeTracking(val);
+    localStorage.setItem('blob_mascot_eye_track', val.toString());
+    window.dispatchEvent(new CustomEvent('blob_settings_change', {
+      detail: { eyeTrack: val }
     }));
   };
 
@@ -186,7 +247,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
           </div>
           <div>
             <h2 className="text-base font-bold text-zinc-900 dark:text-white">Floating Mascot Companion</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Configure the interactive mascot, customize its size, colors, and fire flame effect</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Configure the interactive mascot, customize its size, colors, eye cursor tracking, and fire flame effect</p>
           </div>
         </div>
 
@@ -215,7 +276,10 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
       {/* Mascot Live Preview & Controls */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         {/* Live Interactive Preview Box */}
-        <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-white/5 min-h-[270px] relative overflow-hidden sticky top-6">
+        <div
+          ref={previewBoxRef}
+          className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-white/5 min-h-[270px] relative overflow-hidden sticky top-6"
+        >
           <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider absolute top-3 left-4">
             Live Preview ({blobSize}px)
           </div>
@@ -233,6 +297,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
             <JellyBlobMascot
               mood={previewMood}
               eyeStyle="v1"
+              gaze={eyeTracking ? previewGaze : { x: 0, y: 0 }}
               celebrate={celebrateCount}
               color={blobColor}
               flame={hasFlame}
@@ -245,12 +310,43 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
           </div>
 
           <p className="text-[11px] text-zinc-400 mt-2 text-center">
-            Mood: <strong className="text-[var(--accent-cyan)] capitalize">{previewMood}</strong> • Color: <strong className="text-[var(--accent-cyan)] capitalize">{BLOB_COLORS.find(c => c.id === blobColor)?.name || blobColor}</strong>{hasFlame && <span className="ml-1 text-orange-500 font-semibold">• Fire Head 🔥</span>}
+            Mood: <strong className="text-[var(--accent-cyan)] capitalize">{previewMood}</strong> • Color: <strong className="text-[var(--accent-cyan)] capitalize">{BLOB_COLORS.find(c => c.id === blobColor)?.name || blobColor}</strong>{hasFlame && <span className="ml-1 text-orange-500 font-semibold">• Fire Head 🔥</span>}{eyeTracking && <span className="ml-1 text-sky-500 font-semibold">• Tracking Eyes 👀</span>}
           </p>
         </div>
 
         {/* Controls Column */}
         <div className="space-y-6">
+          {/* Eye Tracking (Cursor Follow) Card */}
+          <div className="flex items-center justify-between p-3.5 rounded-2xl border border-cyan-500/25 bg-gradient-to-r from-cyan-500/10 via-sky-500/5 to-transparent dark:border-cyan-400/20">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-cyan-500/15 text-[var(--accent-cyan)] flex items-center justify-center font-bold">
+                {eyeTracking ? <RiEyeLine size={20} className="text-[var(--accent-cyan)]" /> : <RiEyeOffLine size={20} className="text-zinc-400" />}
+              </div>
+              <div>
+                <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  Eye Tracking
+                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-cyan-500/15 text-[var(--accent-cyan)] font-semibold">Cursor Follow</span>
+                </span>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Eyes track your mouse pointer across the entire screen from any angle</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleToggleEyeTracking(!eyeTracking)}
+              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
+                eyeTracking ? 'bg-[var(--accent-cyan)]' : 'bg-zinc-300 dark:bg-zinc-700'
+              }`}
+              title={eyeTracking ? "Disable cursor eye tracking" : "Enable cursor eye tracking"}
+            >
+              <div
+                className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                  eyeTracking ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
           {/* Fiery Head Flame Effect Card */}
           <div className="flex items-center justify-between p-3.5 rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent dark:border-amber-400/20">
             <div className="flex items-center gap-3">
@@ -381,10 +477,12 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
               <span>How to interact anywhere on screen:</span>
             </span>
             <ul className="text-[11px] text-zinc-500 dark:text-zinc-400 list-disc list-inside space-y-0.5">
-              <li><strong>Drag Anywhere</strong>: Drag and drop the blob anywhere on your screen.</li>
-              <li><strong>Color & Fire Effect</strong>: Pick any of the 13 color themes and toggle the Fiery Head Flame.</li>
+              <li><strong>Right Click Mascot</strong>: Quick menu with Eye Tracking toggle & direct shortcut to Mascot Settings! ⚡</li>
+              <li><strong>Eye Tracking (Cursor Follow)</strong>: Eyes track your mouse pointer across 360° wherever the mascot sits! 👀</li>
+              <li><strong>Drag Anywhere</strong>: Drag and drop the blob freely anywhere on your screen.</li>
+              <li><strong>Color & Fire Effect</strong>: Pick from 13 shades and toggle the Fiery Head Flame.</li>
               <li><strong>Rapid Poking (4x clicks)</strong>: Makes the blob angry! 😡</li>
-              <li><strong>Double Tap</strong>: Sends love with animated hearts! 💖</li>
+              <li><strong>Double Tap</strong>: Sends love with animated floating hearts! 💖</li>
             </ul>
           </div>
         </div>
