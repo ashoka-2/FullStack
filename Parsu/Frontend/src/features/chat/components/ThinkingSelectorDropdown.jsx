@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { RiFlashlightLine, RiBrainLine, RiFocus2Line, RiArrowDownSLine, RiCheckLine } from '@remixicon/react';
 
@@ -149,7 +149,7 @@ export default function ThinkingSelectorDropdown({
             width: '270px',
             zIndex: 9999
           }}
-          className="rounded-2xl p-1.5 bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-xl border border-zinc-200/80 dark:border-white/10 shadow-2xl shadow-black/30 animate-in fade-in zoom-in-95 duration-150"
+          className="rounded-2xl p-1.5 bg-white/95 dark:bg-[var(--bg-surface)]/95 backdrop-blur-xl border border-zinc-200/80 dark:border-white/10 shadow-2xl shadow-black/30 animate-in fade-in zoom-in-95 duration-150"
         >
           <div className="px-2.5 py-1.5 border-b border-zinc-100 dark:border-white/5 mb-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">

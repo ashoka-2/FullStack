@@ -1,4 +1,4 @@
-
+﻿
 import React, { useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import gsap from 'gsap';
@@ -52,7 +52,7 @@ export default function HeroWorkspacePreview({ className = '' }) {
   return (
     <div ref={root} className={`relative mx-auto max-w-4xl w-full text-left ${className}`}>
       <div aria-hidden="true" className="absolute -inset-2 rounded-[2rem] bg-gradient-to-r from-[var(--accent-cyan)]/25 via-[var(--color-clear-hanada)]/20 to-[var(--color-sky-haze)]/25 blur-2xl opacity-50 dark:opacity-40 -z-10" />
-      <div className="rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-white/10 bg-white/85 dark:bg-[#0c0e12]/85 backdrop-blur-2xl shadow-2xl shadow-black/10 dark:shadow-black/60 overflow-hidden">
+      <div className="rounded-2xl sm:rounded-3xl border border-zinc-200/80 dark:border-white/10 bg-white/85 dark:bg-[var(--bg-secondary)]/85 backdrop-blur-2xl shadow-2xl shadow-black/10 dark:shadow-black/60 overflow-hidden">
         <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-zinc-200/70 dark:border-white/10">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500/90" />

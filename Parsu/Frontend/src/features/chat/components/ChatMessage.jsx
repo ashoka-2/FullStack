@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { 
   RiFileCopyLine, 
   RiRefreshLine, 
@@ -99,7 +99,7 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
                 </SyntaxHighlighter>
 
                 {isLarge && !isExpanded && (
-                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/85 to-transparent flex items-end justify-center pb-3 pointer-events-auto">
+                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/85 to-transparent flex items-end justify-center pb-3 pointer-events-auto">
                         <button
                             type="button"
                             onClick={() => setIsExpanded(true)}
@@ -237,14 +237,14 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
         if (nextFeedback === 'like') {
             window.dispatchEvent(
                 new CustomEvent('blob_trigger_mood', {
-                    detail: { mood: 'love', speech: "Glad you liked this answer! ❤️✨", duration: 2500, revert: true }
+                    detail: { mood: 'love', speech: "Glad you liked this answer! â¤ï¸âœ¨", duration: 2500, revert: true }
                 })
             );
             dispatch(addToast({ message: "Marked as good response! AI will prioritize this quality.", type: "success" }));
         } else if (nextFeedback === 'dislike') {
             window.dispatchEvent(
                 new CustomEvent('blob_trigger_mood', {
-                    detail: { mood: 'sad', speech: "Noted! I'll improve the next response. 🥺", duration: 2500, revert: true }
+                    detail: { mood: 'sad', speech: "Noted! I'll improve the next response. ðŸ¥º", duration: 2500, revert: true }
                 })
             );
             dispatch(addToast({ message: "Marked as bad response. AI will refine its answers next time.", type: "info" }));
@@ -301,7 +301,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
         if (hasHindi) {
             // Explicitly set language tag to Hindi (India)
             utterance.lang = "hi-IN";
-            // Look for a native Hindi voice installed on the device (e.g., Google हिन्दी, Microsoft Kalpana/Swara/Hemant)
+            // Look for a native Hindi voice installed on the device (e.g., Google à¤¹à¤¿à¤¨à¥à¤¦à¥€, Microsoft Kalpana/Swara/Hemant)
             const hindiVoice = voices.find(v => 
                 v.lang === "hi-IN" || 
                 v.lang === "hi_IN" || 
@@ -332,7 +332,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
         utterance.onstart = () => {
             setIsSpeaking(true);
             window.dispatchEvent(new CustomEvent('blob_speech_state', {
-                detail: { speaking: true, text: "Speaking AI response... 🔊" }
+                detail: { speaking: true, text: "Speaking AI response... ðŸ”Š" }
             }));
         };
 
@@ -382,7 +382,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                     new CustomEvent('blob_trigger_mood', {
                         detail: { 
                             mood: 'love', 
-                            speech: 'Crafted a viral caption with hashtags for you! 🪄✨', 
+                            speech: 'Crafted a viral caption with hashtags for you! ðŸª„âœ¨', 
                             duration: 3500, 
                             revert: true 
                         }
@@ -407,7 +407,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                 new CustomEvent('blob_trigger_mood', {
                     detail: { 
                         mood: 'hmm', 
-                        speech: `Publishing to ${selectedPlatforms.map(p => p.toUpperCase()).join(', ')}... ⏳`, 
+                        speech: `Publishing to ${selectedPlatforms.map(p => p.toUpperCase()).join(', ')}... â³`, 
                         duration: 3500, 
                         revert: true 
                     }
@@ -431,7 +431,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                     new CustomEvent('blob_trigger_mood', {
                         detail: { 
                             mood: 'happy', 
-                            speech: `Live on ${names}! 🎉🚀`, 
+                            speech: `Live on ${names}! ðŸŽ‰ðŸš€`, 
                             duration: 4000, 
                             celebrate: true, 
                             revert: true 
@@ -443,7 +443,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                     new CustomEvent('blob_trigger_mood', {
                         detail: { 
                             mood: 'surprised', 
-                            speech: `Account not connected yet! Connect in Social Hub ⚡`, 
+                            speech: `Account not connected yet! Connect in Social Hub âš¡`, 
                             duration: 3500, 
                             revert: true 
                         }
@@ -502,7 +502,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                         })}
                                     </div>
                                     <div className="px-3 py-1.5 bg-zinc-900/90 text-zinc-300 text-[11px] font-semibold flex items-center justify-between border-t border-zinc-800">
-                                        <span>📁 Album ({allMediaItems.length} items)</span>
+                                        <span>ðŸ“ Album ({allMediaItems.length} items)</span>
                                         <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Ready to publish</span>
                                     </div>
                                 </div>
@@ -539,7 +539,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                     <p className="text-xs font-bold truncate text-zinc-900 dark:text-zinc-100">{single.name || "PDF Document"}</p>
                                                     <p className="text-[10px] text-zinc-500 uppercase tracking-wider flex items-center gap-1 mt-0.5">
                                                         <span>View / Download Document</span>
-                                                        <span className="text-[var(--accent-cyan)]">↗</span>
+                                                        <span className="text-[var(--accent-cyan)]">â†—</span>
                                                     </p>
                                                 </div>
                                             </a>
@@ -675,16 +675,16 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                     {publishFeedback && (
                                         <div className="mb-2 text-[11px] p-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                                             {publishFeedback.results?.successful?.map((s, i) => (
-                                                <p key={i} className="text-emerald-500 font-semibold">✓ Posted to {s.platform} (ID: {s.mediaId})</p>
+                                                <p key={i} className="text-emerald-500 font-semibold">âœ“ Posted to {s.platform} (ID: {s.mediaId})</p>
                                             ))}
                                             {publishFeedback.results?.notConnected?.map((nc, i) => (
-                                                <p key={i} className="text-amber-500 font-medium">⚠️ {nc.message}</p>
+                                                <p key={i} className="text-amber-500 font-medium">âš ï¸ {nc.message}</p>
                                             ))}
                                             {publishFeedback.results?.failed?.map((f, i) => (
-                                                <p key={i} className="text-red-500 font-medium">❌ {f.platform}: {f.error}</p>
+                                                <p key={i} className="text-red-500 font-medium">âŒ {f.platform}: {f.error}</p>
                                             ))}
                                             {publishFeedback.error && (
-                                                <p className="text-red-500 font-medium">❌ {publishFeedback.error}</p>
+                                                <p className="text-red-500 font-medium">âŒ {publishFeedback.error}</p>
                                             )}
                                         </div>
                                     )}
@@ -704,7 +704,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                         </div>
                     )}
 
-                    <div className="bg-zinc-100 dark:bg-[var(--bg-surface)] text-zinc-900 dark:text-zinc-100 px-4 md:px-5 py-2.5 md:py-3 rounded-[20px] md:rounded-[22px] text-[14px] md:text-[15px] border border-zinc-200 dark:border-white/5 shadow-sm transition-all hover:bg-zinc-200/70 dark:hover:bg-[#222] max-w-full text-left">
+                    <div className="bg-zinc-100 dark:bg-[var(--bg-surface)] text-zinc-900 dark:text-zinc-100 px-4 md:px-5 py-2.5 md:py-3 rounded-[20px] md:rounded-[22px] text-[14px] md:text-[15px] border border-zinc-200 dark:border-white/5 shadow-sm transition-all hover:bg-zinc-200/70 dark:hover:bg-[var(--bg-surface-hover)] max-w-full text-left">
                         {typeof contentToRender === 'string' && contentToRender.includes('```') ? (
                             <div className="prose prose-sm dark:prose-invert max-w-none text-zinc-900 dark:text-zinc-100">
                                 <ReactMarkdown 
@@ -761,7 +761,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                 {contentToRender}
                             </p>
                             <div className="flex items-center gap-2 pt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                <span>💡 <strong>Tip:</strong> You can select another AI model from the bottom selector to continue immediately.</span>
+                                <span>ðŸ’¡ <strong>Tip:</strong> You can select another AI model from the bottom selector to continue immediately.</span>
                             </div>
                         </div>
                     ) : (
@@ -780,11 +780,11 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                     {isToolsExpanded && (
                                         <div className="mt-2 p-3 rounded-2xl bg-zinc-50 dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 space-y-2 text-xs font-mono animate-in fade-in duration-200">
                                             <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                                                <span className="flex items-center gap-1.5">⚡ <strong className="text-zinc-900 dark:text-zinc-200">tavilySearch</strong>: <code>query: "Parsu AI updates"</code></span>
+                                                <span className="flex items-center gap-1.5">âš¡ <strong className="text-zinc-900 dark:text-zinc-200">tavilySearch</strong>: <code>query: "Parsu AI updates"</code></span>
                                                 <span className="text-emerald-500 font-bold text-[11px]">completed (142ms)</span>
                                             </div>
                                             <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                                                <span className="flex items-center gap-1.5">⚡ <strong className="text-zinc-900 dark:text-zinc-200">vectorMemoryQuery</strong>: <code>k: 5</code></span>
+                                                <span className="flex items-center gap-1.5">âš¡ <strong className="text-zinc-900 dark:text-zinc-200">vectorMemoryQuery</strong>: <code>k: 5</code></span>
                                                 <span className="text-emerald-500 font-bold text-[11px]">completed (98ms)</span>
                                             </div>
                                         </div>
@@ -813,7 +813,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                             <div className="flex items-center justify-end gap-2 pt-1">
                                                 {approvalStatus ? (
                                                     <span className={`text-xs font-bold px-3 py-1.5 rounded-lg ${approvalStatus === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
-                                                        {approvalStatus === 'approved' ? '✓ Approved' : '✗ Rejected'}
+                                                        {approvalStatus === 'approved' ? 'âœ“ Approved' : 'âœ— Rejected'}
                                                     </span>
                                                 ) : (
                                                     <>
@@ -894,7 +894,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                 </ReactMarkdown>
                             </div>
 
-                            {/* Web Sources — only shown when the backend returned real citations */}
+                            {/* Web Sources â€” only shown when the backend returned real citations */}
                             {msg.sources?.length > 0 && (
                                 <div className="mt-2">
                                     <button

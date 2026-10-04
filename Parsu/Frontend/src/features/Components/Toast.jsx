@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeToast } from '../../utils/toast.slice';
 import {
@@ -76,7 +76,7 @@ const ToastItem = ({ id, message, description, title, type = 'default', action, 
       case 'accent':
       default:
         return {
-          card: 'bg-[#171717] border-[var(--accent-cyan)]/30 text-white shadow-xl',
+          card: 'bg-[var(--bg-surface)] border-[var(--accent-cyan)]/30 text-white shadow-xl',
           indicator: 'bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] border-[var(--accent-cyan)]/20',
           title: 'text-[var(--accent-cyan)]',
           actionBtn: 'bg-[var(--accent-cyan)] text-zinc-950 hover:bg-[var(--accent-cyan-hover)] font-bold shadow-xs',

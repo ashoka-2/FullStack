@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useSyncExternalStore } from 'react';
+﻿import React, { useEffect, useRef, useSyncExternalStore } from 'react';
 import { cn } from '../../../lib/utils';
 
 const TAU = Math.PI * 2;
@@ -71,7 +71,7 @@ export const MatrixOrb = ({
   state = 'thinking',
   level,
   size = 140,
-  color = '#20b8cd', // Parsu AI primary cyan theme
+  color = 'var(--accent-cyan)', // Parsu AI primary cyan theme
   dots = 12,
   labels,
   className,

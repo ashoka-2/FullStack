@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useSelector } from 'react-redux';
 import { useLenis } from 'lenis/react';
@@ -131,7 +131,7 @@ const LandingPage = () => {
       const off = [];
       const on = (el, ev, fn) => { el.addEventListener(ev, fn); off.push(() => el.removeEventListener(ev, fn)); };
 
-      /* ── HERO intro ── */
+      /* â”€â”€ HERO intro â”€â”€ */
       gsap.timeline({ defaults: { ease: 'power4.out' } })
         .from('.hero-badge', { y: -20, opacity: 0, scale: 0.85, duration: 0.7, delay: 0.1 })
         .from('.hc', { yPercent: 120, rotateX: -70, opacity: 0, duration: 1.1, stagger: 0.022, ease: 'expo.out', transformOrigin: '50% 100%' }, '-=0.4')
@@ -179,7 +179,7 @@ const LandingPage = () => {
         on(pv, 'pointerleave', () => gsap.to(pp, { rotateX: 0, rotateY: 0, duration: 0.8, ease: 'power3.out' }));
       }
 
-      /* ── BAND + MANIFESTO ── */
+      /* â”€â”€ BAND + MANIFESTO â”€â”€ */
       gsap.to('.band-track', { xPercent: -30, ease: 'none', scrollTrigger: { trigger: '.band', start: 'top bottom', end: 'bottom top', scrub: true } });
       q('.band-word').forEach((w) => {
         on(w, 'pointerenter', () => gsap.to(w, { skewX: -10, scale: 1.05, duration: 0.3, ease: 'power2.out' }));
@@ -187,14 +187,14 @@ const LandingPage = () => {
       });
       gsap.fromTo('.mw', { opacity: 0.12 }, { opacity: 1, stagger: 0.1, ease: 'none', scrollTrigger: { trigger: '.manifesto', start: 'top 75%', end: 'bottom 50%', scrub: true } });
 
-      /* ── STATS: count up + lift ── */
+      /* â”€â”€ STATS: count up + lift â”€â”€ */
       q('.stat-num').forEach((el) => {
         const end = Number(el.dataset.end); const suf = el.dataset.suffix; const o = { v: 0 };
         el.textContent = `0${suf}`;
         ScrollTrigger.create({ trigger: el, start: 'top 92%', once: true, onEnter: () => gsap.to(o, { v: end, duration: 1.8, ease: 'power2.out', onUpdate: () => { el.textContent = `${Math.round(o.v)}${suf}`; } }) });
       });
 
-      /* ── SHOWCASE: pinned horizontal (desktop) + blob parallax per panel ── */
+      /* â”€â”€ SHOWCASE: pinned horizontal (desktop) + blob parallax per panel â”€â”€ */
       if (desktop) {
         const track = root.querySelector('.h-track');
         const dist = () => track.scrollWidth - window.innerWidth;
@@ -214,7 +214,7 @@ const LandingPage = () => {
         });
       }
 
-      /* ── Generic micro-interactions ── */
+      /* â”€â”€ Generic micro-interactions â”€â”€ */
       if (mouse) {
         q('[data-lift]').forEach((el) => {
           on(el, 'pointerenter', () => gsap.to(el, { y: -6, scale: 1.02, duration: 0.35, ease: 'power3.out' }));
@@ -265,7 +265,7 @@ const LandingPage = () => {
 
       <LiquidGlassNav theme={theme} toggleTheme={toggleTheme} />
 
-      {/* HERO — compact top spacing so the CTA is visible without scrolling */}
+      {/* HERO â€” compact top spacing so the CTA is visible without scrolling */}
       <section className="hero relative isolate overflow-hidden pt-24 sm:pt-28 lg:pt-32 pb-16 sm:pb-24 px-4 sm:px-6">
         <div className="hero-bg absolute inset-0 will-change-transform"><HeroGradientBackground /></div>
         <div className="absolute inset-0 opacity-80"><BlobBackground /></div>
@@ -354,7 +354,7 @@ const LandingPage = () => {
             {PANELS.map((p) => {
               const Icon = p.icon;
               return (
-                <article key={p.n} className="panel relative h-[420px] w-full shrink-0 overflow-hidden rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#07090d] lg:h-[68vh] lg:w-[min(62vw,760px)]">
+                <article key={p.n} className="panel relative h-[420px] w-full shrink-0 overflow-hidden rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[var(--bg-card)] lg:h-[68vh] lg:w-[min(62vw,760px)]">
                   <div aria-hidden="true" className="absolute inset-0">
                     <div data-d="1" className={`p-blob absolute -top-1/3 -right-1/4 h-[90%] w-[75%] bg-gradient-to-br ${p.a} opacity-55 blur-[70px]`} style={{ borderRadius: SHAPE }} />
                     <div data-d="1.6" className={`p-blob absolute -top-1/4 -right-[8%] h-[55%] w-[45%] bg-gradient-to-tr ${p.b} opacity-70 dark:opacity-50 blur-[40px]`} style={{ borderRadius: SHAPE }} />
@@ -442,7 +442,7 @@ const LandingPage = () => {
 
       {/* FINAL CTA */}
       <section className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 py-14 sm:py-24">
-        <div className="reveal cta-card relative overflow-hidden rounded-[2.5rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#07090d] text-center">
+        <div className="reveal cta-card relative overflow-hidden rounded-[2.5rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[var(--bg-card)] text-center">
           <div aria-hidden="true" className="absolute inset-0">
             <div className="cta-blob absolute -top-1/3 -left-1/5 h-[120%] w-[70%] bg-gradient-to-br from-[#22d3ee] via-[#38bdf8] to-[#1e3a8a] opacity-40 dark:opacity-45 blur-[80px]" style={{ borderRadius: SHAPE }} />
             <div className="cta-blob absolute -bottom-1/3 -right-1/5 h-[110%] w-[65%] bg-gradient-to-tl from-[#7dd3fc] via-[#22d3ee] to-[#0e7490] opacity-40 dark:opacity-40 blur-[80px]" style={{ borderRadius: SHAPE }} />

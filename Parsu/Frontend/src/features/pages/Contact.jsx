@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import {
   RiMailLine,
   RiSendPlane2Line,
@@ -100,7 +100,7 @@ export default function Contact() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-5xl mx-auto">
         
         {/* Left Column: Direct Inquiries Form */}
-        <div ref={formCardRef} className="lg:col-span-7 bg-white dark:bg-[#0c0d12] border border-zinc-200 dark:border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-xl">
+        <div ref={formCardRef} className="lg:col-span-7 bg-white dark:bg-[var(--bg-card)] border border-zinc-200 dark:border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-xl">
           {submitted ? (
             <div className="text-center py-12 space-y-4">
               <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-[var(--accent-cyan)] mx-auto">

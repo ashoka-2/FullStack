@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import ParsuLogo from './ParsuLogo';
 import { GRAIN_PATTERN_DATA } from '../../assets/grainData';
 
 /**
- * Loading — "Convergence"
+ * Loading â€” "Convergence"
  *
  * A galaxy of particles swirls in the dark, then funnels into the word
  * "Parsu" as loading progresses. At 100% a light sweep crosses the letters,
@@ -53,7 +53,7 @@ const Loading = ({ onFinished, authReady = true, isServerDown = false }) => {
     onFinishedRef.current = onFinished;
   }, [onFinished]);
 
-  // ── Main scene: particles, progress, counter, status ──────────────────────
+  // â”€â”€ Main scene: particles, progress, counter, status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -95,8 +95,8 @@ const Loading = ({ onFinished, authReady = true, isServerDown = false }) => {
         ease: 'power2.in',
         onComplete: () => {
           el.textContent = text;
-          el.style.color = amber ? '#fcd34d' : '';
-          if (dot) dot.style.background = amber ? '#fbbf24' : 'var(--accent-cyan)';
+          el.style.color = amber ? 'var(--color-amber)' : '';
+          if (dot) dot.style.background = amber ? 'var(--color-amber)' : 'var(--accent-cyan)';
           gsap.fromTo(el, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power3.out' });
         },
       });
@@ -360,7 +360,7 @@ const Loading = ({ onFinished, authReady = true, isServerDown = false }) => {
     };
   }, []);
 
-  // ── Server status copy ────────────────────────────────────────────────────
+  // â”€â”€ Server status copy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     downRef.current = isServerDown;
     if (!api.current.showStatus) return;
@@ -368,7 +368,7 @@ const Loading = ({ onFinished, authReady = true, isServerDown = false }) => {
     else api.current.showStatus(phaseTextRef.current, false);
   }, [isServerDown]);
 
-  // ── Exit: light sweep → burst → curtain lift ──────────────────────────────
+  // â”€â”€ Exit: light sweep â†’ burst â†’ curtain lift â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!counterDone || !authReady || isServerDown || exitStartedRef.current) return;
     exitStartedRef.current = true;
@@ -408,7 +408,7 @@ const Loading = ({ onFinished, authReady = true, isServerDown = false }) => {
       role="status"
       aria-live="polite"
       aria-label="Loading Parsu AI"
-      className="fixed inset-0 z-[99999] w-screen h-[100dvh] overflow-hidden bg-[#05070a] select-none"
+      className="fixed inset-0 z-[99999] w-screen h-[100dvh] overflow-hidden bg-[var(--bg-primary)] select-none"
       style={{ clipPath: 'inset(0% 0% 0% 0%)' }}
     >
       {/* Glow that swells as the word forms */}

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import gsap from 'gsap';
 import { RiArrowLeftLine, RiArrowRightLine, RiSparklingFill, RiMailSendLine, RiCheckboxCircleFill, RiRefreshLine } from '@remixicon/react';
@@ -142,7 +142,7 @@ export const MascotStage = ({ bubbleText, pose, mascot, onPoke }) => (
 
 export const AuthCard = ({ children }) => (
   <div className="auth-card relative w-full max-w-[440px] rounded-[28px] bg-gradient-to-b from-white/20 via-white/[0.04] to-[var(--accent-cyan)]/25 p-px shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
-    <div className="relative overflow-hidden rounded-[27px] bg-[#0a0b0f]/90 p-6 backdrop-blur-3xl sm:p-8">
+    <div className="relative overflow-hidden rounded-[27px] bg-[var(--bg-secondary)]/90 p-6 backdrop-blur-3xl sm:p-8">
       <div aria-hidden="true" className="card-glow pointer-events-none absolute left-0 top-0 h-72 w-72 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(34,211,238,.16), transparent 65%)' }} />
       <div className="relative">{children}</div>
     </div>
@@ -196,7 +196,7 @@ export const AuthFooter = () => (
   <footer className="auth-foot relative z-10 mx-auto flex w-full max-w-5xl shrink-0 flex-col items-center justify-between gap-2 py-4 text-[11px] text-zinc-500 sm:flex-row">
     <span>By continuing you agree to our <Link to="/terms" className="underline-offset-2 hover:text-zinc-200 hover:underline">Terms</Link> and <Link to="/privacy" className="underline-offset-2 hover:text-zinc-200 hover:underline">Privacy Policy</Link>.</span>
     <span className="flex items-center gap-4">
-      <span>© {new Date().getFullYear()} Parsu AI</span>
+      <span>Â© {new Date().getFullYear()} Parsu AI</span>
       <Link to="/status" className="hover:text-zinc-200">Status</Link>
     </span>
   </footer>

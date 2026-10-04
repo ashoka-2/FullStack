@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useState } from "react";
+﻿import React, { useEffect, useId, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { motion, useReducedMotion, useSpring, useTransform } from "motion/react";
 import { cn } from "../../../lib/utils";
@@ -15,8 +15,8 @@ const NECK_H = 100;
 const FADE_IN = "transition-colors duration-[400ms]";
 const FADE_OUT = "transition-colors duration-0";
 
-const BAR = "bg-[#151722] dark:bg-[#151722]";
-const BAR_TEXT = "text-[#151722] dark:text-[#151722]";
+const BAR = "bg-[var(--bg-secondary)] dark:bg-[var(--bg-secondary)]";
+const BAR_TEXT = "text-[var(--bg-secondary)] dark:text-[var(--bg-secondary)]";
 
 const SIZES = {
   xs: {
@@ -128,7 +128,7 @@ function NavLabel({
       "flex cursor-pointer items-center whitespace-nowrap font-medium select-none [&_svg]:shrink-0",
       isActive ? FADE_IN : FADE_OUT,
       SIZES[size].label,
-      !isActive && "text-[#94a3b8] hover:text-white transition-colors",
+      !isActive && "text-[var(--text-secondary)] hover:text-white transition-colors",
     ),
     style: isActive ? { color: activeLabelColor } : undefined,
     onClick: onSelect,
@@ -153,7 +153,7 @@ export function GooeyNav({
   defaultValue = 0,
   onChange,
   size = "sm",
-  activeColor = "#20b8cd",
+  activeColor = "var(--accent-cyan)",
   activeLabelColor = "#000000",
   separation,
   radius,

@@ -1,4 +1,4 @@
- import React, { useState, useRef, useEffect } from 'react';
+﻿ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   RiArrowRightLine,
@@ -415,7 +415,7 @@ const ChatArea = () => {
         });
       } else if (intent.type === 'open_url') {
         window.open(intent.url, '_blank', 'noopener,noreferrer');
-        dispatch(addToast({ type: 'info', message: `🌐 Opening ${intent.label}` }));
+        dispatch(addToast({ type: 'info', message: `ðŸŒ Opening ${intent.label}` }));
       } else if (intent.type === 'scroll') {
         if (intent.to === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });
         else if (intent.to === 'bottom') window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
@@ -617,7 +617,7 @@ const ChatArea = () => {
           {/* Rare UI MatrixOrb when AI is thinking & formulating response */}
           {loading && (
             <div className="flex flex-col items-center justify-center gap-3 py-6 my-2 bg-zinc-100/60 dark:bg-white/[0.03] border border-cyan-500/20 rounded-3xl backdrop-blur-md animate-in fade-in zoom-in duration-300">
-              <MatrixOrb size={100} state="thinking" color="#20b8cd" dots={12} />
+              <MatrixOrb size={100} state="thinking" color="var(--accent-cyan)" dots={12} />
               <div className="flex flex-col items-center gap-1">
                 <span className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200 tracking-wide">
                   Parsu AI is thinking & reasoning...
@@ -631,15 +631,15 @@ const ChatArea = () => {
         </div>
 
         {/* Search Input Box — always fixed at bottom, sidebar-aware on desktop */}
-        <div className={`fixed bottom-0 right-0 z-[60] p-2.5 pb-5 sm:p-4 sm:pb-8 bg-gradient-to-t from-[#f4f5f7] dark:from-[#050505] via-[#f4f5f7]/95 dark:via-[#050505]/95 to-transparent backdrop-blur-[2px] transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'left-0 lg:left-16' : 'left-0 lg:left-56'}`}>
-          <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[var(--bg-surface)] border ${isDragging ? 'border-[var(--color-clear-hanada)]' : 'border-zinc-200/90 dark:border-[#2d2e2e]'} focus-within:border-[var(--color-clear-hanada)]/60 dark:focus-within:border-[var(--color-clear-hanada)]/60 focus-within:ring-2 focus-within:ring-[#60A6AF]/20 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-5 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
+        <div className={`fixed bottom-0 right-0 z-[60] p-2.5 pb-5 sm:p-4 sm:pb-8 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/95 to-transparent backdrop-blur-[2px] transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'left-0 lg:left-16' : 'left-0 lg:left-56'}`}>
+          <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[var(--bg-surface)] border ${isDragging ? 'border-[var(--color-clear-hanada)]' : 'border-zinc-200/90 dark:border-[var(--border-secondary)]'} focus-within:border-[var(--color-clear-hanada)]/60 dark:focus-within:border-[var(--color-clear-hanada)]/60 focus-within:ring-2 focus-within:ring-[var(--accent-cyan)]/20 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-5 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
 
             {/* Rich Attachment Preview Strip */}
             <AttachmentPreviewStrip files={files} onRemove={removeFile} />
 
             {/* Live Voice Captioning Stream */}
             {isListening && (
-              <div className="flex items-center gap-3 px-3.5 py-2 mb-2 rounded-xl bg-zinc-900/95 dark:bg-[#18181b]/95 border border-[var(--accent-cyan)]/40 text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
+              <div className="flex items-center gap-3 px-3.5 py-2 mb-2 rounded-xl bg-zinc-900/95 dark:bg-[var(--bg-surface)]/95 border border-[var(--accent-cyan)]/40 text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
                 <div className="flex items-center gap-1 shrink-0">
                   <span className="w-1 h-3 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:0ms]" />
                   <span className="w-1 h-5 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:150ms]" />
@@ -1024,9 +1024,9 @@ const ChatArea = () => {
             {capabilities.map((cap, i) => {
                const Icon = cap.icon;
                return (
-                 <div key={i} className={`group flex flex-col gap-2 p-4 bg-white dark:bg-[#111111] border border-zinc-200/90 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/20 rounded-2xl transition-all cursor-default shadow-xs ${cap.bgHover}`}>
+                 <div key={i} className={`group flex flex-col gap-2 p-4 bg-white dark:bg-[var(--bg-card)] border border-zinc-200/90 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/20 rounded-2xl transition-all cursor-default shadow-xs ${cap.bgHover}`}>
                    <div className="flex items-center gap-3">
-                     <div className={`w-8 h-8 rounded-xl bg-zinc-100 dark:bg-[#1A1A1A] border border-zinc-200/80 dark:border-white/[0.08] flex items-center justify-center transition-colors shadow-xs ${cap.colorClass}`}>
+                     <div className={`w-8 h-8 rounded-xl bg-zinc-100 dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/[0.08] flex items-center justify-center transition-colors shadow-xs ${cap.colorClass}`}>
                         <Icon size={16} />
                      </div>
                      <span className="text-[14px] font-semibold text-zinc-900 dark:text-zinc-100">{cap.title}</span>
@@ -1045,21 +1045,21 @@ const ChatArea = () => {
       </div>
 
       {/* Full-width responsive footer - never trapped behind sidebar */}
-      <div className="w-full border-t border-zinc-200 dark:border-white/[0.08] mt-auto bg-zinc-100 dark:bg-[#0B0B0B]">
+      <div className="w-full border-t border-zinc-200 dark:border-white/[0.08] mt-auto bg-zinc-100 dark:bg-[var(--bg-primary)]">
         <Footer />
         {/* Dedicated space below footer with identical footer background color so footer is fully visible above fixed input form */}
-        <div className="w-full h-44 sm:h-52 bg-zinc-100 dark:bg-[#0B0B0B]" />
+        <div className="w-full h-44 sm:h-52 bg-zinc-100 dark:bg-[var(--bg-primary)]" />
       </div>
 
       {/* Full-Screen Prompt & Code Editor Studio via React Portal */}
       {isFullScreenEditor && typeof document !== 'undefined' && createPortal(
         <div 
           data-lenis-prevent="true"
-          className={`fixed inset-0 ${isSidebarCollapsed ? 'lg:left-16' : 'lg:left-56'} z-[9980] bg-[#0c0d10] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200 border-l border-zinc-800/80 shadow-2xl transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}
+          className={`fixed inset-0 ${isSidebarCollapsed ? 'lg:left-16' : 'lg:left-56'} z-[9980] bg-[var(--bg-primary)] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200 border-l border-zinc-800/80 shadow-2xl transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}
           onWheel={(e) => e.stopPropagation()}
         >
           {/* Studio Header */}
-          <div className="h-14 px-4 sm:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#111216] shrink-0">
+          <div className="h-14 px-4 sm:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[var(--bg-secondary)] shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 rounded-lg bg-[var(--accent-cyan)]/15 text-[var(--accent-cyan)]">
                 {isCodeContent ? <RiCodeSSlashLine size={18} /> : <RiFileTextLine size={18} />}
@@ -1107,7 +1107,7 @@ const ChatArea = () => {
           </div>
 
           {/* Textarea Area */}
-          <div className="flex-1 p-4 sm:p-6 overflow-hidden flex flex-col min-h-0 bg-[#0c0d10]">
+          <div className="flex-1 p-4 sm:p-6 overflow-hidden flex flex-col min-h-0 bg-[var(--bg-primary)]">
             <textarea
               autoFocus
               value={input}
@@ -1150,7 +1150,7 @@ const ChatArea = () => {
           )}
 
           {/* Rich Bottom Toolbar Options (Attach, Web Search, Models, Mic, Send) */}
-          <div className="border-t border-zinc-800/80 bg-[#111216] px-4 sm:px-6 py-3 shrink-0 flex flex-col gap-2.5">
+          <div className="border-t border-zinc-800/80 bg-[var(--bg-secondary)] px-4 sm:px-6 py-3 shrink-0 flex flex-col gap-2.5">
             {/* Attachments Preview Strip */}
             <AttachmentPreviewStrip files={files} onRemove={removeFile} />
 

@@ -37,17 +37,22 @@
   --color-ice-hanada: var(--color-ice-hanada, #CFDDEA);
   --color-peach-silk: var(--color-peach-silk, #F4E9DD);
 
-  /* ── Brand & Core Accent Colors ── */
+  /* ── Complete Centralized Cyan & Brand System ── */
   --color-brand-cyan: var(--accent-cyan, #20b8cd);
   --color-brand-cyan-hover: var(--accent-cyan-hover, #1da9bc);
-  --color-brand-light-blue: var(--color-light-blue, #38bdf8);
-  --color-brand-blue: var(--color-blue, #3b82f6);
-  --color-brand-purple: var(--color-purple, #8b5cf6);
-  --color-brand-violet: var(--color-violet, #a78bfa);
-  --color-brand-teal: var(--color-teal, #14b8a6);
-  --color-brand-deep-teal: var(--color-deep-teal, #081e23);
+  --color-cyan-50: var(--color-cyan-50);
+  --color-cyan-100: var(--color-cyan-100);
+  --color-cyan-200: var(--color-cyan-200);
+  --color-cyan-300: var(--color-cyan-300);
+  --color-cyan-400: var(--color-cyan-400);
+  --color-cyan-500: var(--color-cyan-500);
+  --color-cyan-600: var(--color-cyan-600);
+  --color-cyan-700: var(--color-cyan-700);
+  --color-cyan-800: var(--color-cyan-800);
+  --color-cyan-900: var(--color-cyan-900);
+  --color-cyan-950: var(--color-cyan-950);
 
-  /* ── Status & Notification Colors ── */
+  /* ── Status & Functional Palette (Mapped to Tailwind Utility Names) ── */
   --color-brand-danger: var(--color-danger, #ef4444);
   --color-brand-success: var(--color-success, #10b981);
   --color-brand-emerald: var(--color-emerald, #34d399);
@@ -55,6 +60,43 @@
   --color-brand-amber: var(--color-amber, #fbbf24);
   --color-brand-pink: var(--color-pink, #ec4899);
   --color-brand-orange: var(--color-orange, #f97316);
+
+  --color-emerald-400: var(--color-emerald-400);
+  --color-emerald-500: var(--color-emerald-500);
+  --color-emerald-600: var(--color-emerald-600);
+
+  --color-red-400: var(--color-red-400);
+  --color-red-500: var(--color-red-500);
+  --color-red-600: var(--color-red-600);
+  --color-rose-500: var(--color-rose-500);
+  --color-rose-600: var(--color-rose-600);
+
+  --color-amber-400: var(--color-amber-400);
+  --color-amber-500: var(--color-amber-500);
+  --color-amber-600: var(--color-amber-600);
+  --color-orange-500: var(--color-orange-500);
+  --color-orange-600: var(--color-orange-600);
+
+  --color-blue-400: var(--color-blue-400);
+  --color-blue-500: var(--color-blue-500);
+  --color-blue-600: var(--color-blue-600);
+  --color-brand-light-blue: var(--color-light-blue, #38bdf8);
+  --color-brand-blue: var(--color-blue, #3b82f6);
+
+  --color-purple-400: var(--color-purple-400);
+  --color-purple-500: var(--color-purple-500);
+  --color-purple-600: var(--color-purple-600);
+  --color-brand-purple: var(--color-purple, #8b5cf6);
+  --color-brand-violet: var(--color-violet, #a78bfa);
+
+  --color-teal-500: var(--color-teal-500);
+  --color-teal-600: var(--color-teal-600);
+  --color-brand-teal: var(--color-teal, #14b8a6);
+  --color-brand-deep-teal: var(--color-deep-teal, #081e23);
+
+  --color-indigo-500: var(--color-indigo-500);
+  --color-pink-500: var(--color-pink-500);
+  --color-pink-600: var(--color-pink-600);
 
   /* ── Layout & Surface Tokens ── */
   --color-bg-primary: var(--bg-primary);
@@ -75,6 +117,30 @@
 @layer utilities {
   .font-display {
     font-family: var(--font-display, "Outfit", "Plus Jakarta Sans", sans-serif);
+  }
+  .bg-gradient-primary {
+    background-image: var(--gradient-primary);
+  }
+  .bg-gradient-cyan-blue {
+    background-image: var(--gradient-cyan-blue);
+  }
+  .bg-gradient-cyan-purple {
+    background-image: var(--gradient-cyan-purple);
+  }
+  .bg-gradient-cyan-emerald {
+    background-image: var(--gradient-cyan-emerald);
+  }
+  .bg-gradient-hero-ambient {
+    background-image: var(--gradient-hero-ambient);
+  }
+  .bg-gradient-card-border {
+    background-image: var(--gradient-card-border);
+  }
+  .bg-gradient-navbar {
+    background-image: var(--gradient-navbar);
+  }
+  .bg-gradient-chat-footer {
+    background-image: var(--gradient-chat-footer);
   }
 }
 
@@ -136,105 +202,115 @@
     --peach-silk: #F4E9DD;
 
     /* ══════════════════════════════════════════════════════════════════
-       2. BRAND & CORE ACCENT COLORS
-       Used for main interactions, CTA buttons, active states & links
+       2. PRIMARY BRAND & CORE ACCENT COLORS (The Light Blue Cyan)
+       Change --accent-cyan here to transform the entire website's primary theme!
        ══════════════════════════════════════════════════════════════════ */
-    /* Brand Cyan (#20b8cd): Primary brand action color.
-       Used in: Primary CTA buttons ("Get Started", "Send Message"), active sidebar icons, input focus rings, text selection highlight, loading spinners */
     --accent-cyan: #20b8cd;
+    --accent-cyan-hover: color-mix(in srgb, var(--accent-cyan) 85%, black);
+    --accent-cyan-light: color-mix(in srgb, var(--accent-cyan) 65%, white);
+    --accent-cyan-dark: color-mix(in srgb, var(--accent-cyan) 75%, black);
+    --accent-cyan-glow: color-mix(in srgb, var(--accent-cyan) 35%, transparent);
+    --accent-cyan-subtle: color-mix(in srgb, var(--accent-cyan) 10%, transparent);
 
-    /* Brand Cyan Hover (#1da9bc): Darker cyan state.
-       Used in: Hover state on primary CTA buttons, active navigation item transitions */
-    --accent-cyan-hover: #1da9bc;
+    /* Primary Button Frame System (Dynamically derived from --accent-cyan) */
+    --btn-primary-bg: radial-gradient(130% 130% at 50% 35%, var(--accent-cyan-light) 0%, var(--accent-cyan) 48%, var(--accent-cyan-dark) 100%);
+    --btn-primary-border: color-mix(in srgb, var(--accent-cyan) 60%, white);
+    --btn-primary-shadow: 0 8px 24px -4px var(--accent-cyan-glow), 0 18px 44px -8px var(--accent-cyan-glow), 0 2px 4px rgba(0,0,0,0.06), inset 0 1px 1.5px 0 rgba(255,255,255,0.65), inset 0 -2px 6px 0 color-mix(in srgb, var(--accent-cyan) 50%, black);
+    --btn-primary-shadow-hover: 0 12px 32px -4px var(--accent-cyan-glow), 0 24px 56px -8px var(--accent-cyan-glow), inset 0 1px 2px 0 rgba(255,255,255,0.85);
 
-    /* Brand Cyan Glow: Transparent glow shadow for hero buttons and active modals */
-    --accent-cyan-glow: rgba(32, 184, 205, 0.25);
+    /* Full Cyan Scale (Resolves Tailwind cyan-* utilities to theme variables) */
+    --color-cyan-50: #ecfeff;
+    --color-cyan-100: #cffafe;
+    --color-cyan-200: #a5f3fc;
+    --color-cyan-300: #67e8f9;
+    --color-cyan-400: var(--accent-cyan-light);
+    --color-cyan-500: var(--accent-cyan);
+    --color-cyan-600: var(--accent-cyan-hover);
+    --color-cyan-700: var(--accent-cyan-dark);
+    --color-cyan-800: #155e75;
+    --color-cyan-900: #164e63;
+    --color-cyan-950: #083344;
 
-    /* Light Blue (#38bdf8): Sky accent.
-       Used in: Neural Voice & Speech studio badges, audio waveform indicators, Twitter/X icon highlights */
+    /* Light Blue & Rich Blue */
     --color-light-blue: #38bdf8;
-
-    /* Blue (#3b82f6): Standard rich blue.
-       Used in: Google sign-in buttons, info alert icons, social integration indicators (Facebook/LinkedIn) */
     --color-blue: #3b82f6;
+    --color-blue-hover: #2563eb;
+    --color-blue-400: #60a5fa;
+    --color-blue-500: #3b82f6;
+    --color-blue-600: #2563eb;
 
-    /* Purple (#8b5cf6): Creative royal purple.
-       Used in: Multi-model AI badges (Gemini/Claude tags), Omni-channel social publish badges, prompt library tags */
+    /* Creative Purple & Violet */
     --color-purple: #8b5cf6;
-
-    /* Violet (#a78bfa): Soft violet lavender.
-       Used in: Password security settings card, code syntax highlights, ambient card borders */
+    --color-purple-hover: #7c3aed;
+    --color-purple-400: #a78bfa;
+    --color-purple-500: #8b5cf6;
+    --color-purple-600: #7c3aed;
     --color-violet: #a78bfa;
 
-    /* Teal (#14b8a6): Grounding cyan-teal.
-       Used in: Real-time search citations, source URLs, verified grounding source badges */
+    /* Teal & Deep Teal */
     --color-teal: #14b8a6;
-
-    /* Deep Teal (#081e23): Deep contrasting dark teal.
-       Used in: Code editor window headers, terminal preview headers, dark container backdrops */
+    --color-teal-500: #14b8a6;
+    --color-teal-600: #0d9488;
     --color-deep-teal: #081e23;
+    --color-indigo-500: #6366f1;
 
     /* ══════════════════════════════════════════════════════════════════
-       3. STATUS, METRICS & NOTIFICATION COLORS
-       Used for alerts, quotas, destructive actions & feature tags
+       3. STATUS, METRICS & NOTIFICATION PALETTE
        ══════════════════════════════════════════════════════════════════ */
-    /* Danger / Red (#ef4444): Error alerts & destructive actions.
-       Used in: Delete chat button, remove API key, logout confirmations, error toast messages, failed API checks */
     --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-danger-subtle: rgba(239, 68, 68, 0.1);
+    --color-red-400: #f87171;
+    --color-red-500: #ef4444;
+    --color-red-600: #dc2626;
+    --color-rose-500: #ef4444;
+    --color-rose-600: #dc2626;
 
-    /* Success / Green (#10b981): Affirmative actions & confirmations.
-       Used in: Copy-to-clipboard toast, connected social account status, active subscription plan badge, save confirmations */
     --color-success: #10b981;
-
-    /* Emerald (#34d399): Vibrant green accent.
-       Used in: Mascot companion settings, online status pulse, live latency meters */
+    --color-success-hover: #059669;
     --color-emerald: #34d399;
+    --color-emerald-400: #34d399;
+    --color-emerald-500: #10b981;
+    --color-emerald-600: #059669;
 
-    /* Warning / Amber (#f59e0b): Cautionary feedback & thresholds.
-       Used in: Quota usage approaching limit, missing API key warnings, rate limit alerts */
     --color-warning: #f59e0b;
-
-    /* Warm Amber (#fbbf24): Golden highlight.
-       Used in: Vector Knowledge Graph badge, long-term memory tags, VIP tier crown icon */
+    --color-warning-hover: #d97706;
     --color-amber: #fbbf24;
+    --color-amber-400: #fbbf24;
+    --color-amber-500: #f59e0b;
+    --color-amber-600: #d97706;
 
-    /* Pink (#ec4899): Vibrant magenta/pink.
-       Used in: Multimodal Document Studio badge, image generation filters, Instagram publisher tool */
     --color-pink: #ec4899;
-
-    /* Orange (#f97316): Energetic accent.
-       Used in: Reddit connector, trending topic indicators, high-temperature prompt badges */
+    --color-pink-500: #ec4899;
+    --color-pink-600: #db2777;
     --color-orange: #f97316;
+    --color-orange-500: #f97316;
+    --color-orange-600: #ea580c;
 
     /* ══════════════════════════════════════════════════════════════════
-       4. LIGHT MODE SURFACES & CANVAS
-       Used for page layout, sidebars, cards, inputs & typography
+       4. CENTRALIZED GRADIENTS (All built with Primary Cyan)
        ══════════════════════════════════════════════════════════════════ */
-    /* Light Primary Canvas (#f4f5f7): Main app background across full screen */
+    --gradient-primary: linear-gradient(135deg, var(--color-clear-hanada) 0%, var(--accent-cyan) 100%);
+    --gradient-cyan-blue: linear-gradient(to right, var(--accent-cyan), var(--color-blue));
+    --gradient-cyan-purple: linear-gradient(to right, var(--accent-cyan), var(--color-purple));
+    --gradient-cyan-emerald: linear-gradient(to right, var(--accent-cyan), var(--color-emerald));
+    --gradient-glow-radial: radial-gradient(circle, var(--accent-cyan-glow) 0%, transparent 70%);
+    --gradient-hero-ambient: radial-gradient(ellipse at 50% -20%, var(--color-deep-hanada) 0%, var(--accent-cyan-subtle) 50%, transparent 80%);
+    --gradient-card-border: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.05) 50%, var(--accent-cyan-glow) 100%);
+    --gradient-navbar: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 100%);
+    --gradient-chat-footer: linear-gradient(to top, var(--bg-primary) 0%, rgba(244, 245, 247, 0.95) 50%, transparent 100%);
+
+    /* ══════════════════════════════════════════════════════════════════
+       5. LIGHT MODE SURFACES & CANVAS
+       ══════════════════════════════════════════════════════════════════ */
     --bg-primary: #f4f5f7;
-
-    /* Light Secondary Canvas (#ffffff): Sidebars, modals, navbar, elevated cards */
     --bg-secondary: #ffffff;
-
-    /* Light Surface (#f0f1f3): Input fields, assistant chat bubble backdrop, table headers */
     --bg-surface: #f0f1f3;
-
-    /* Light Surface Hover (#e5e7eb): Hover state for buttons, list items, dropdown options */
     --bg-surface-hover: #e5e7eb;
-
-    /* Light Primary Border (#e2e4e8): Dividers, card boundaries, navigation bottom borders */
     --border-primary: #e2e4e8;
-
-    /* Light Secondary Border (#d1d5db): Emphasized boundaries, focused input rings */
     --border-secondary: #d1d5db;
-
-    /* Light Primary Text (#18181b): Main headings, titles, active chat text, button labels */
     --text-primary: #18181b;
-
-    /* Light Secondary Text (#71717a): Subtitles, helper text, timestamps, inactive icons */
     --text-secondary: #71717a;
-
-    /* Light Muted Text (#a1a1aa): Input placeholders, disabled options, footer copyright */
     --text-muted: #a1a1aa;
   }
 
@@ -244,7 +320,6 @@
 
     /* ══════════════════════════════════════════════════════════════════
        0. CENTRALIZED ZINC SCALE & THEME VARIABLES (Dark Mode)
-       Edit these values once here to update every page site-wide!
        ══════════════════════════════════════════════════════════════════ */
     --zinc-50: #fafafa;
     --zinc-100: #f4f4f5;
@@ -279,58 +354,114 @@
     --peach-silk: #F4E9DD;
 
     /* ══════════════════════════════════════════════════════════════════
-       2. BRAND & CORE ACCENT COLORS (Dark Mode Glows)
+       2. PRIMARY BRAND & CORE ACCENT COLORS (Dark Mode Glows)
        ══════════════════════════════════════════════════════════════════ */
-    --accent-cyan: #20b8cd;
-    --accent-cyan-hover: #1da9bc;
-    --accent-cyan-glow: rgba(32, 184, 205, 0.35);
+    --accent-cyan: #e83ed7;
+    --accent-cyan-hover: color-mix(in srgb, var(--accent-cyan) 85%, black);
+    --accent-cyan-light: color-mix(in srgb, var(--accent-cyan) 65%, white);
+    --accent-cyan-dark: color-mix(in srgb, var(--accent-cyan) 75%, black);
+    --accent-cyan-glow: color-mix(in srgb, var(--accent-cyan) 40%, transparent);
+    --accent-cyan-subtle: color-mix(in srgb, var(--accent-cyan) 15%, transparent);
+
+    /* Primary Button Frame System (Dark Mode - Dynamically follows --accent-cyan) */
+    --btn-primary-bg: radial-gradient(130% 130% at 50% 35%, var(--accent-cyan-light) 0%, var(--accent-cyan) 48%, var(--accent-cyan-dark) 100%);
+    --btn-primary-border: color-mix(in srgb, var(--accent-cyan) 60%, white);
+    --btn-primary-shadow: 0 8px 24px -4px var(--accent-cyan-glow), 0 18px 44px -8px var(--accent-cyan-glow), 0 2px 4px rgba(0,0,0,0.06), inset 0 1px 1.5px 0 rgba(255,255,255,0.65), inset 0 -2px 6px 0 color-mix(in srgb, var(--accent-cyan) 50%, black);
+    --btn-primary-shadow-hover: 0 12px 32px -4px var(--accent-cyan-glow), 0 24px 56px -8px var(--accent-cyan-glow), inset 0 1px 2px 0 rgba(255,255,255,0.85);
+
+    /* Full Cyan Scale (Dark Mode) */
+    --color-cyan-50: #083344;
+    --color-cyan-100: #164e63;
+    --color-cyan-200: #155e75;
+    --color-cyan-300: #0e7490;
+    --color-cyan-400: var(--accent-cyan-light);
+    --color-cyan-500: var(--accent-cyan);
+    --color-cyan-600: var(--accent-cyan-hover);
+    --color-cyan-700: #67e8f9;
+    --color-cyan-800: #a5f3fc;
+    --color-cyan-900: #cffafe;
+    --color-cyan-950: #ecfeff;
+
+    /* Light Blue & Rich Blue */
     --color-light-blue: #38bdf8;
     --color-blue: #3b82f6;
+    --color-blue-hover: #60a5fa;
+    --color-blue-400: #60a5fa;
+    --color-blue-500: #3b82f6;
+    --color-blue-600: #2563eb;
+
+    /* Creative Purple & Violet */
     --color-purple: #8b5cf6;
+    --color-purple-hover: #a78bfa;
+    --color-purple-400: #a78bfa;
+    --color-purple-500: #8b5cf6;
+    --color-purple-600: #7c3aed;
     --color-violet: #a78bfa;
+
+    /* Teal & Deep Teal */
     --color-teal: #14b8a6;
+    --color-teal-500: #14b8a6;
+    --color-teal-600: #0d9488;
     --color-deep-teal: #081e23;
+    --color-indigo-500: #6366f1;
 
     /* ══════════════════════════════════════════════════════════════════
-       3. STATUS & NOTIFICATION COLORS (Dark Mode High Contrast)
+       3. STATUS & NOTIFICATION PALETTE (Dark Mode High Contrast)
        ══════════════════════════════════════════════════════════════════ */
     --color-danger: #ef4444;
+    --color-danger-hover: #f87171;
+    --color-danger-subtle: rgba(239, 68, 68, 0.15);
+    --color-red-400: #f87171;
+    --color-red-500: #ef4444;
+    --color-red-600: #dc2626;
+    --color-rose-500: #ef4444;
+    --color-rose-600: #dc2626;
+
     --color-success: #10b981;
+    --color-success-hover: #34d399;
     --color-emerald: #34d399;
+    --color-emerald-400: #34d399;
+    --color-emerald-500: #10b981;
+    --color-emerald-600: #059669;
+
     --color-warning: #f59e0b;
+    --color-warning-hover: #fbbf24;
     --color-amber: #fbbf24;
+    --color-amber-400: #fbbf24;
+    --color-amber-500: #f59e0b;
+    --color-amber-600: #d97706;
+
     --color-pink: #ec4899;
+    --color-pink-500: #ec4899;
+    --color-pink-600: #db2777;
     --color-orange: #f97316;
+    --color-orange-500: #f97316;
+    --color-orange-600: #ea580c;
 
     /* ══════════════════════════════════════════════════════════════════
-       4. DARK MODE SURFACES & CANVAS
-       Used for OLED dark background, sidebars, cards, inputs & typography
+       4. CENTRALIZED GRADIENTS (Dark Mode)
        ══════════════════════════════════════════════════════════════════ */
-    /* Dark Primary Canvas (#0e100f): OLED dark background canvas across all pages */
+    --gradient-primary: linear-gradient(135deg, var(--color-clear-hanada) 0%, var(--accent-cyan) 100%);
+    --gradient-cyan-blue: linear-gradient(to right, var(--accent-cyan), var(--color-blue));
+    --gradient-cyan-purple: linear-gradient(to right, var(--accent-cyan), var(--color-purple));
+    --gradient-cyan-emerald: linear-gradient(to right, var(--accent-cyan), var(--color-emerald));
+    --gradient-glow-radial: radial-gradient(circle, var(--accent-cyan-glow) 0%, transparent 70%);
+    --gradient-hero-ambient: radial-gradient(ellipse at 50% -20%, var(--color-deep-hanada) 0%, var(--accent-cyan-subtle) 50%, transparent 80%);
+    --gradient-card-border: linear-gradient(to bottom, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02) 40%, var(--accent-cyan-glow) 100%);
+    --gradient-navbar: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 50%, rgba(0, 0, 0, 0) 100%);
+    --gradient-chat-footer: linear-gradient(to top, var(--bg-primary) 0%, rgba(14, 16, 15, 0.95) 50%, transparent 100%);
+
+    /* ══════════════════════════════════════════════════════════════════
+       5. DARK MODE SURFACES & CANVAS
+       ══════════════════════════════════════════════════════════════════ */
     --bg-primary: #0e100f;
-
-    /* Dark Secondary Canvas (#161718): Dark sidebars, liquid navigation header, elevated panels */
     --bg-secondary: #161718;
-
-    /* Dark Surface (#191a1b): Chat input containers, message bubbles, settings cards, modal backdrops */
     --bg-surface: #191a1b;
-
-    /* Dark Surface Hover (#222326): Hover state on dark buttons, sidebar menu items */
     --bg-surface-hover: #222326;
-
-    /* Dark Primary Border (#262729): Subtle divider lines, card outlines, separating content cleanly */
     --border-primary: #262729;
-
-    /* Dark Secondary Border (#323438): Emphasized border on active tabs and hovered elements */
     --border-secondary: #323438;
-
-    /* Dark Primary Text (#f5f5f7): Crisp high-readability text for headings, message responses, active buttons */
     --text-primary: #f5f5f7;
-
-    /* Dark Secondary Text (#a1a1a6): Secondary descriptions, assistant status, chat history items */
     --text-secondary: #a1a1a6;
-
-    /* Dark Muted Text (#71717a): Inactive icons, placeholder text, footnote notes */
     --text-muted: #71717a;
   }
 

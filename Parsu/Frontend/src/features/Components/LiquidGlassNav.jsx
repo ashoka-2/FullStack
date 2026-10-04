@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 import { useLenis } from "lenis/react";
@@ -109,7 +109,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
       ? NAV_LINKS.find((l) => l.isHash && l.href.slice(1) === spy)?.label
       : NAV_LINKS.find((l) => !l.isHash && l.href === pathname)?.label;
 
-  /* ── Entrance ── */
+  /* â”€â”€ Entrance â”€â”€ */
   useEffect(() => {
     if (reduced()) return;
     const ctx = gsap.context(() => {
@@ -132,7 +132,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
     return () => ctx.revert();
   }, []);
 
-  /* ── Scroll: morph, hide/show, progress ── */
+  /* â”€â”€ Scroll: morph, hide/show, progress â”€â”€ */
   const setHidden = (h) => {
     if (hiddenRef.current === h) return;
     hiddenRef.current = h;
@@ -163,7 +163,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* ── Scroll spy ── */
+  /* â”€â”€ Scroll spy â”€â”€ */
   useEffect(() => {
     if (pathname !== "/") return;
     const els = NAV_LINKS.filter((l) => l.isHash)
@@ -178,7 +178,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
     return () => io.disconnect();
   }, [pathname]);
 
-  /* ── Sliding indicator ── */
+  /* â”€â”€ Sliding indicator â”€â”€ */
   const placeIndicator = (el) => {
     if (!el || !indRef.current) return;
     gsap.to(indRef.current, {
@@ -208,7 +208,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLabel]);
 
-  /* ── Theme icon swap ── */
+  /* â”€â”€ Theme icon swap â”€â”€ */
   useEffect(() => {
     if (firstTheme.current) {
       firstTheme.current = false;
@@ -222,7 +222,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
       );
   }, [theme]);
 
-  /* ── Mobile menu ── */
+  /* â”€â”€ Mobile menu â”€â”€ */
   const openMenu = () => {
     const r = burgerRef.current?.getBoundingClientRect();
     if (r)
@@ -298,7 +298,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
   }, []);
   useEffect(() => setOpen(false), [pathname]);
 
-  /* ── Navigation ── */
+  /* â”€â”€ Navigation â”€â”€ */
   const goTo = (e, link) => {
     if (!link.isHash) return setOpen(false);
     e.preventDefault();
@@ -486,7 +486,7 @@ export const LiquidGlassNav = ({ theme, toggleTheme }) => {
           clipPath: "circle(0px at 100% 0)",
           paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
         }}
-        className="fixed inset-0 z-[60] h-[100dvh] flex-col justify-between overflow-y-auto bg-white/[0.98] p-6 text-zinc-900 backdrop-blur-3xl dark:bg-[#090a0f]/[0.98] dark:text-white lg:hidden"
+        className="fixed inset-0 z-[60] h-[100dvh] flex-col justify-between overflow-y-auto bg-white/[0.98] p-6 text-zinc-900 backdrop-blur-3xl dark:bg-[var(--bg-primary)]/[0.98] dark:text-white lg:hidden"
       >
         <div
           aria-hidden="true"

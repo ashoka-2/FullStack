@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -85,7 +85,7 @@ export default function Pricing() {
     };
   }, []);
 
-  const currencySymbol = currency === 'INR' ? '₹' : '$';
+  const currencySymbol = currency === 'INR' ? 'â‚¹' : '$';
 
   // Pricing tier definitions
   const TIERS = [
@@ -149,7 +149,7 @@ export default function Pricing() {
       isFree: false,
       isComingSoon: !isPricingPublished,
       features: [
-        'Everything Unlimited — No daily caps or restrictions',
+        'Everything Unlimited â€” No daily caps or restrictions',
         'Unlimited AI messages across all frontier models',
         'Unlimited RAG document & PDF uploads',
         'Unlimited social media posts across all platforms',
@@ -203,7 +203,7 @@ export default function Pricing() {
   const FAQS = [
     {
       q: 'How does India vs International pricing work?',
-      a: 'Parsu AI automatically checks your location. Visitors in India are shown local Indian Rupee (₹) pricing with localized UPI and RuPay card support. International visitors receive standard USD ($) pricing with zero foreign transaction fees.'
+      a: 'Parsu AI automatically checks your location. Visitors in India are shown local Indian Rupee (â‚¹) pricing with localized UPI and RuPay card support. International visitors receive standard USD ($) pricing with zero foreign transaction fees.'
     },
     {
       q: 'Can I start with the Free plan?',
@@ -293,7 +293,7 @@ export default function Pricing() {
 
             if (verifyRes.success) {
               dispatch(setUser(verifyRes.user));
-              dispatch(addToast({ type: 'success', message: `🎉 Welcome to Parsu AI ${tier.name}!` }));
+              dispatch(addToast({ type: 'success', message: `ðŸŽ‰ Welcome to Parsu AI ${tier.name}!` }));
               navigate('/settings/subscription');
             } else {
               dispatch(addToast({ type: 'error', message: verifyRes.message || 'Payment verification failed.' }));
@@ -307,7 +307,7 @@ export default function Pricing() {
           email: user?.email || ''
         },
         theme: {
-          color: '#20b8cd'
+          color: 'var(--accent-cyan)'
         },
         modal: {
           ondismiss: () => {
@@ -329,7 +329,7 @@ export default function Pricing() {
     }
   };
 
-  /* ── GSAP Micro-Interactions & Scroll Animations ── */
+  /* â”€â”€ GSAP Micro-Interactions & Scroll Animations â”€â”€ */
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -488,7 +488,7 @@ export default function Pricing() {
           }
         `}</style>
 
-        {/* ── AMBIENT MORPHING BLOBS (Contained to background) ── */}
+        {/* â”€â”€ AMBIENT MORPHING BLOBS (Contained to background) â”€â”€ */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -top-20 overflow-hidden z-0 select-none">
           <div
             className="pricing-blob absolute -top-10 left-[8%] w-[55vw] max-w-[650px] h-[400px] bg-gradient-to-br from-[#22d3ee]/20 via-[#38bdf8]/15 to-[#1e3a8a]/20 dark:from-[#0891b2]/25 dark:via-[#0e7490]/20 dark:to-[#1e3a8a]/25 blur-[100px] opacity-70"
@@ -500,17 +500,17 @@ export default function Pricing() {
           />
         </div>
 
-        {/* ── CONTROLS: Currency & Billing Cycle Switcher ── */}
+        {/* â”€â”€ CONTROLS: Currency & Billing Cycle Switcher â”€â”€ */}
         <div className="pricing-controls flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 -mt-6 mb-4 relative z-10">
           {/* Location & Currency Switcher */}
           <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 dark:bg-zinc-900/70 border border-zinc-200/80 dark:border-white/10 shadow-xs backdrop-blur-md">
             {isIndia ? (
-              <span className="text-sm">🇮🇳</span>
+              <span className="text-sm">ðŸ‡®ðŸ‡³</span>
             ) : (
               <RiGlobalLine size={15} className="text-[var(--accent-cyan)]" />
             )}
             <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-              {currency === 'INR' ? 'India Pricing (₹ INR)' : 'International ($ USD)'}
+              {currency === 'INR' ? 'India Pricing (â‚¹ INR)' : 'International ($ USD)'}
             </span>
             <span className="text-zinc-300 dark:text-zinc-700">|</span>
             <button
@@ -556,7 +556,7 @@ export default function Pricing() {
           </div>
         </div>
 
-        {/* ── 3 INTERACTIVE PRICING CARDS ── */}
+        {/* â”€â”€ 3 INTERACTIVE PRICING CARDS â”€â”€ */}
         <section className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch max-w-6xl mx-auto">
           {TIERS.map((tier) => {
             const Icon = tier.icon;
@@ -567,7 +567,7 @@ export default function Pricing() {
                 key={tier.id}
                 className={`tier-card group relative flex flex-col justify-between rounded-[2rem] p-7 sm:p-9 transition-all duration-300 will-change-transform ${
                   tier.popular
-                    ? 'bg-gradient-to-b from-white via-white to-cyan-50/30 dark:from-[#0d1017] dark:via-[#090b10] dark:to-[#07090e] border-2 border-[var(--accent-cyan)] shadow-2xl shadow-cyan-500/15 lg:-translate-y-2'
+                    ? 'bg-gradient-to-b from-white via-white to-cyan-50/30 dark:from-[var(--bg-secondary)] dark:via-[var(--bg-primary)] dark:to-[var(--bg-primary)] border-2 border-[var(--accent-cyan)] shadow-2xl shadow-cyan-500/15 lg:-translate-y-2'
                     : 'bg-white/80 dark:bg-white/[0.03] border border-zinc-200/80 dark:border-white/10 shadow-lg shadow-black/[0.02] dark:shadow-none backdrop-blur-xl'
                 }`}
               >
@@ -695,7 +695,7 @@ export default function Pricing() {
           })}
         </section>
 
-        {/* ── SUPERPOWERS COMPARISON MATRIX ── */}
+        {/* â”€â”€ SUPERPOWERS COMPARISON MATRIX â”€â”€ */}
         <section className="reveal-section relative z-10 max-w-5xl mx-auto pt-6">
           <div className="text-center mb-10">
             <PillBadge variant="default" className="text-xs mb-3">
@@ -721,7 +721,7 @@ export default function Pricing() {
                     Starter
                   </th>
                   <th className="py-4 px-4 text-xs font-black uppercase tracking-wider text-[var(--accent-cyan)] w-1/5 text-center bg-[var(--accent-cyan)]/[0.04]">
-                    Pro ⭐
+                    Pro â­
                   </th>
                   <th className="py-4 px-4 text-xs font-black uppercase tracking-wider text-zinc-800 dark:text-zinc-200 w-1/5 text-center">
                     Ultra
@@ -759,7 +759,7 @@ export default function Pricing() {
           </div>
         </section>
 
-        {/* ── FREQUENTLY ASKED QUESTIONS ACCORDION ── */}
+        {/* â”€â”€ FREQUENTLY ASKED QUESTIONS ACCORDION â”€â”€ */}
         <section className="reveal-section relative z-10 max-w-4xl mx-auto pt-4">
           <div className="text-center mb-10">
             <PillBadge variant="default" className="text-xs mb-3">
@@ -822,9 +822,9 @@ export default function Pricing() {
           </div>
         </section>
 
-        {/* ── ENTERPRISE & CUSTOM ASSISTANCE CARD ── */}
+        {/* â”€â”€ ENTERPRISE & CUSTOM ASSISTANCE CARD â”€â”€ */}
         <section className="reveal-section relative z-10 max-w-4xl mx-auto pb-8">
-          <div className="relative overflow-hidden rounded-3xl border border-zinc-200/80 dark:border-white/10 bg-gradient-to-br from-white via-zinc-50 to-cyan-50/20 dark:from-[#0d1017] dark:via-[#090b10] dark:to-[#07090e] p-8 sm:p-12 text-center backdrop-blur-xl">
+          <div className="relative overflow-hidden rounded-3xl border border-zinc-200/80 dark:border-white/10 bg-gradient-to-br from-white via-zinc-50 to-cyan-50/20 dark:from-[var(--bg-secondary)] dark:via-[var(--bg-primary)] dark:to-[var(--bg-primary)] p-8 sm:p-12 text-center backdrop-blur-xl">
             <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-[var(--accent-cyan)] grid place-items-center mx-auto mb-4">
               <RiShieldKeyholeLine size={24} />
             </div>

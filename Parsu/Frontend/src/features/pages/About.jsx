@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import {
   RiSparkling2Line,
@@ -92,7 +92,7 @@ export default function About() {
     >
       <div className="space-y-16 max-w-5xl mx-auto">
         
-        {/* ── Key Metrics Ribbon ── */}
+        {/* â”€â”€ Key Metrics Ribbon â”€â”€ */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {STATS.map((stat, i) => (
             <div
@@ -109,7 +109,7 @@ export default function About() {
           ))}
         </div>
 
-        {/* ── Architectural Philosophy ── */}
+        {/* â”€â”€ Architectural Philosophy â”€â”€ */}
         <div className="p-7 sm:p-10 rounded-3xl bg-gradient-to-br from-zinc-100 to-zinc-50 dark:from-white/[0.04] dark:to-white/[0.01] border border-zinc-200 dark:border-white/[0.08] relative overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <ParsuLogo size={32} className="text-zinc-900 dark:text-white" />
@@ -123,7 +123,7 @@ export default function About() {
           </p>
         </div>
 
-        {/* ── Capabilities Matrix ── */}
+        {/* â”€â”€ Capabilities Matrix â”€â”€ */}
         <div>
           <div className="text-center mb-8">
             <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">Platform Capabilities</h2>
@@ -137,7 +137,7 @@ export default function About() {
                 <div
                   key={i}
                   ref={el => cardsRef.current[i] = el}
-                  className="p-6 rounded-2xl bg-white dark:bg-[#0c0d12] hover:bg-zinc-50 dark:hover:bg-[#12141a] border border-zinc-200 dark:border-white/[0.07] hover:border-[var(--accent-cyan)]/40 transition-all duration-200 flex flex-col justify-between group shadow-sm"
+                  className="p-6 rounded-2xl bg-white dark:bg-[var(--bg-card)] hover:bg-zinc-50 dark:hover:bg-[var(--bg-surface-hover)] border border-zinc-200 dark:border-white/[0.07] hover:border-[var(--accent-cyan)]/40 transition-all duration-200 flex flex-col justify-between group shadow-sm"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-4">
@@ -161,7 +161,7 @@ export default function About() {
           </div>
         </div>
 
-        {/* ── Ready to Start Callout ── */}
+        {/* â”€â”€ Ready to Start Callout â”€â”€ */}
         <div className="text-center pt-6 pb-2">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Ready to elevate your intelligence?</h3>
           <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-md mx-auto mb-6">

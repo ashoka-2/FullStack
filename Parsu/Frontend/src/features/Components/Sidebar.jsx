@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import {
   RiSearchLine,
@@ -48,13 +48,68 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const { handleLogout } = useAuth();
   const [modalType, setModalType] = useState(null); // 'delete'
   const [targetId, setTargetId] = useState(null);
-  // Incognito mode — chats won't be saved
+  // Incognito mode â€” chats won't be saved
   const [incognito, setIncognito] = useState(() => localStorage.getItem('parsu_incognito') === '1');
   // Per-item inline rename state: { id, val }
   const [renamingId, setRenamingId] = useState(null);
   const [renameVal, setRenameVal] = useState('');
   // Local pin overrides for optimistic UI
   const [pinnedIds, setPinnedIds] = useState({});
+  // Mobile long-press action menu & modal rename states
+  const [mobileActionThread, setMobileActionThread] = useState(null);
+  const [renameModalThread, setRenameModalThread] = useState(null);
+  const longPressTimerRef = useRef(null);
+  const touchStartPosRef = useRef({ x: 0, y: 0 });
+  const isLongPressActiveRef = useRef(false);
+
+  // Clear long press timer on unmount
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleChatTouchStart = (thread, e) => {
+    if (!e.touches || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    isLongPressActiveRef.current = false;
+
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+    }
+
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressActiveRef.current = true;
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try { navigator.vibrate(40); } catch (_) {}
+      }
+      setMobileActionThread(thread);
+    }, 450);
+  };
+
+  const handleChatTouchMove = (e) => {
+    if (!longPressTimerRef.current) return;
+    if (!e.touches || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+    const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
+    // If movement exceeds 8px (scrolling), cancel long press
+    if (dx > 8 || dy > 8) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handleChatTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
   const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const drawerRef = useRef(null);
@@ -242,7 +297,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       <aside
         ref={drawerRef}
         data-lenis-prevent="true"
-        className={`fixed top-0 left-0 z-[9990] h-[100dvh] flex flex-col bg-white dark:bg-[#0B0B0B] text-zinc-600 dark:text-zinc-400 shrink-0 border-r border-zinc-200/80 dark:border-white/[0.08] shadow-2xl lg:shadow-none
+        className={`fixed top-0 left-0 z-[9990] h-[100dvh] flex flex-col bg-white dark:bg-[var(--bg-secondary)] text-zinc-600 dark:text-zinc-400 shrink-0 border-r border-zinc-200/80 dark:border-white/[0.08] shadow-2xl lg:shadow-none
           transition-[transform,width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
           ${isOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none lg:pointer-events-auto'}
           lg:translate-x-0
@@ -322,7 +377,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   closeMobileSidebar();
                   setIsSearchOpen(true);
                 }}
-                className={`w-full flex items-center ${isSidebarCollapsed ? 'px-3 lg:px-0 lg:justify-center' : 'px-3 justify-start'} py-2 rounded-xl transition-all duration-200 group cursor-pointer text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-[#171717] hover:text-zinc-900 dark:hover:text-white`}
+                className={`w-full flex items-center ${isSidebarCollapsed ? 'px-3 lg:px-0 lg:justify-center' : 'px-3 justify-start'} py-2 rounded-xl transition-all duration-200 group cursor-pointer text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-[var(--bg-surface-hover)] hover:text-zinc-900 dark:hover:text-white`}
               >
                 <item.icon size={19} className="shrink-0 text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white" />
                 <span className={`${isSidebarCollapsed ? 'block lg:hidden' : 'block'} ml-3 truncate`}>{item.label}</span>
@@ -339,7 +394,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   closeMobileSidebar();
                 }}
                 className={`w-full flex items-center ${isSidebarCollapsed ? 'px-3 lg:px-0 lg:justify-center' : 'px-3 justify-start'} py-2 rounded-xl transition-all duration-200 group cursor-pointer text-sm font-medium
-                  ${item.active ? 'bg-zinc-100 dark:bg-[#1F1F1F] text-zinc-900 dark:text-white border border-zinc-200/90 dark:border-white/[0.08] shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-[#171717] hover:text-zinc-900 dark:hover:text-white'}`}
+                  ${item.active ? 'bg-zinc-100 dark:bg-[var(--bg-surface)] text-zinc-900 dark:text-white border border-zinc-200/90 dark:border-white/[0.08] shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-[var(--bg-surface-hover)] hover:text-zinc-900 dark:hover:text-white'}`}
               >
                 <item.icon size={19} className={`shrink-0 ${item.active ? 'text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white'}`} />
                 <span className={`${isSidebarCollapsed ? 'block lg:hidden' : 'block'} ml-3 truncate`}>{item.label}</span>
@@ -358,7 +413,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               navigate('/ai');
             }}
             title="New Chat"
-            className={`${isSidebarCollapsed ? 'flex-1 px-3 py-2 lg:flex-none lg:w-10 lg:h-10 lg:p-0 lg:justify-center' : 'flex-1 px-3 py-2'} flex items-center gap-2 rounded-xl bg-zinc-100 dark:bg-[#171717] hover:bg-zinc-200/70 dark:hover:bg-[#222222] border border-zinc-200/90 dark:border-white/[0.08] text-zinc-900 dark:text-white transition-all group cursor-pointer text-left text-sm font-medium`}
+            className={`${isSidebarCollapsed ? 'flex-1 px-3 py-2 lg:flex-none lg:w-10 lg:h-10 lg:p-0 lg:justify-center' : 'flex-1 px-3 py-2'} flex items-center gap-2 rounded-xl bg-zinc-100 dark:bg-[var(--bg-surface)] hover:bg-zinc-200/70 dark:hover:bg-[var(--bg-surface-hover)] border border-zinc-200/90 dark:border-white/[0.08] text-zinc-900 dark:text-white transition-all group cursor-pointer text-left text-sm font-medium`}
           >
             <RiAddLine size={19} className="text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white shrink-0" />
             <span className={`${isSidebarCollapsed ? 'block lg:hidden' : 'block'}`}>New Chat</span>
@@ -366,7 +421,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
           {/* Incognito toggle */}
           <button
-            title={incognito ? 'Incognito ON — chats not saved' : 'Enable Incognito'}
+            title={incognito ? 'Incognito ON â€” chats not saved' : 'Enable Incognito'}
             onClick={() => {
               const next = !incognito;
               setIncognito(next);
@@ -432,11 +487,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   const isThisPinned = pinnedIds[thread._id] !== undefined ? pinnedIds[thread._id] : (thread.isPinned || false);
                   const isThisRenaming = renamingId === thread._id;
                   return (
-                  <div key={thread._id} className="group flex items-center gap-1">
+                  <div key={thread._id} className="group relative flex items-center w-full">
                     {isThisRenaming ? (
                       // Inline rename mode
-                      <div className="flex-1 flex items-center gap-1 px-2 py-1"
-                        onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+                      <div 
+                        className="w-full flex items-center gap-1.5 px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800/90 border border-[var(--accent-cyan)]/60 rounded-xl"
+                        onClick={e => { e.preventDefault(); e.stopPropagation(); }}
+                      >
                         <input
                           autoFocus
                           value={renameVal}
@@ -444,70 +501,140 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                           onKeyDown={async e => {
                             if (e.key === 'Enter') {
                               if (renameVal.trim() && renameVal.trim() !== thread.title) {
-                                try { await renameChat(thread._id, renameVal.trim()); }
-                                catch { dispatch(addToast({ type: 'error', message: 'Rename failed' })); }
+                                try { 
+                                  await renameChat(thread._id, renameVal.trim()); 
+                                  handleGetChats();
+                                  dispatch(addToast({ type: 'success', message: 'Chat renamed' }));
+                                } catch { 
+                                  dispatch(addToast({ type: 'error', message: 'Rename failed' })); 
+                                }
                               }
                               setRenamingId(null);
                             }
                             if (e.key === 'Escape') setRenamingId(null);
                           }}
-                          className="flex-1 min-w-0 bg-zinc-100 dark:bg-zinc-800 border border-[var(--accent-cyan)]/50 rounded-md px-1.5 py-0.5 text-[12px] text-zinc-900 dark:text-zinc-100 focus:outline-none"
+                          className="flex-1 min-w-0 bg-transparent text-[13px] text-zinc-900 dark:text-zinc-100 focus:outline-none"
                         />
-                        <button onClick={async () => {
-                          if (renameVal.trim() && renameVal.trim() !== thread.title) {
-                            try { await renameChat(thread._id, renameVal.trim()); }
-                            catch { dispatch(addToast({ type: 'error', message: 'Rename failed' })); }
-                          }
-                          setRenamingId(null);
-                        }} className="p-0.5 text-emerald-500 dark:text-emerald-400 cursor-pointer"><RiCheckLine size={13} /></button>
+                        <button 
+                          type="button"
+                          onClick={async () => {
+                            if (renameVal.trim() && renameVal.trim() !== thread.title) {
+                              try { 
+                                await renameChat(thread._id, renameVal.trim()); 
+                                handleGetChats();
+                                dispatch(addToast({ type: 'success', message: 'Chat renamed' }));
+                              } catch { 
+                                dispatch(addToast({ type: 'error', message: 'Rename failed' })); 
+                              }
+                            }
+                            setRenamingId(null);
+                          }} 
+                          className="p-1 text-emerald-500 hover:bg-emerald-500/10 rounded-md cursor-pointer transition-colors"
+                          title="Save"
+                        >
+                          <RiCheckLine size={14} />
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setRenamingId(null)} 
+                          className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-white/10 rounded-md cursor-pointer transition-colors"
+                          title="Cancel"
+                        >
+                          <RiCloseLine size={14} />
+                        </button>
                       </div>
                     ) : (
                       <Link
                         to={`/chat/${thread._id}`}
                         onMouseEnter={() => triggerBlobChatSelect()}
-                        onClick={() => { triggerBlobChatSelect(); closeMobileSidebar(); }}
-                        className={`flex-1 flex items-center gap-1.5 text-left px-3 py-1.5 rounded-lg text-[13px] truncate transition-all font-medium cursor-pointer
-                        ${location.pathname === `/chat/${thread._id}` ? 'text-zinc-900 dark:text-white bg-zinc-100 dark:bg-[#1F1F1F] shadow-xs border border-zinc-200/90 dark:border-white/[0.08]' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#171717]'}`}
+                        onTouchStart={(e) => handleChatTouchStart(thread, e)}
+                        onTouchMove={handleChatTouchMove}
+                        onTouchEnd={handleChatTouchEnd}
+                        onTouchCancel={handleChatTouchEnd}
+                        onContextMenu={(e) => {
+                          if (window.innerWidth < 1024) {
+                            e.preventDefault();
+                          }
+                        }}
+                        onClick={(e) => {
+                          if (isLongPressActiveRef.current) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            isLongPressActiveRef.current = false;
+                            return;
+                          }
+                          triggerBlobChatSelect();
+                          closeMobileSidebar();
+                        }}
+                        style={{ WebkitTouchCallout: 'none' }}
+                        className={`w-full flex items-start gap-2 text-left px-3 py-2 rounded-xl text-[13px] transition-all font-medium cursor-pointer select-none
+                        ${location.pathname === `/chat/${thread._id}` 
+                          ? 'text-zinc-950 dark:text-white bg-zinc-100 dark:bg-[var(--bg-surface)] shadow-xs border border-zinc-200/90 dark:border-white/[0.08]' 
+                          : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[var(--bg-surface-hover)]'
+                        }`}
                       >
-                        {isThisPinned && <RiPushpin2Fill size={10} className="text-[var(--accent-cyan)] shrink-0" />}
-                        <span className="truncate">{thread.title || 'Untitled Chat'}</span>
+                        {isThisPinned && (
+                          <RiPushpin2Fill size={12} className="text-[var(--accent-cyan)] shrink-0 mt-0.5" />
+                        )}
+                        <span className="break-words whitespace-normal leading-snug flex-1">
+                          {thread.title || 'Untitled Chat'}
+                        </span>
                       </Link>
                     )}
 
-                    {/* Per-item action buttons — visible on hover */}
+                    {/* Per-item action buttons â€” visible on hover on desktop */}
                     {!isThisRenaming && (
-                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                      <div className="hidden lg:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all duration-150 absolute right-1.5 top-1.5 bg-white/95 dark:bg-[var(--bg-surface)]/95 backdrop-blur-md px-1 py-0.5 rounded-lg shadow-sm border border-zinc-200/80 dark:border-white/10 z-10 pointer-events-none group-hover:pointer-events-auto">
                         {/* Pin */}
                         <button
+                          type="button"
                           title={isThisPinned ? 'Unpin' : 'Pin'}
                           onClick={async (e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             try {
                               await togglePinChat(thread._id);
                               setPinnedIds(prev => ({ ...prev, [thread._id]: !isThisPinned }));
-                            } catch { /* silent fail */ }
+                              dispatch(addToast({ type: 'success', message: isThisPinned ? 'Chat unpinned' : 'Chat pinned' }));
+                            } catch { 
+                              dispatch(addToast({ type: 'error', message: 'Failed to update pin' }));
+                            }
                           }}
-                          className={`p-1 rounded cursor-pointer transition-colors ${isThisPinned ? 'text-[var(--accent-cyan)]' : 'text-zinc-400 dark:text-zinc-500 hover:text-[var(--accent-cyan)]'}`}
+                          className={`p-1 rounded-md cursor-pointer transition-colors ${
+                            isThisPinned 
+                              ? 'text-[var(--accent-cyan)] hover:bg-[var(--accent-cyan)]/10' 
+                              : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10'
+                          }`}
                         >
                           <RiPushpin2Fill size={12} />
                         </button>
                         {/* Rename */}
                         <button
+                          type="button"
                           title="Rename"
                           onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             setRenameVal(thread.title || '');
                             setRenamingId(thread._id);
                           }}
-                          className="p-1 rounded text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer transition-colors"
+                          className="p-1 rounded-md text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 cursor-pointer transition-colors"
                         >
                           <RiPencilLine size={12} />
                         </button>
                         {/* Delete */}
                         <button
+                          type="button"
+                          title="Delete"
                           onMouseEnter={() => triggerBlobChatDeleteHover()}
-                          onClick={() => { triggerBlobChatDeleteHover(); setTargetId(thread._id); setModalType('delete'); }}
-                          className="p-1 text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 transition-all cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            triggerBlobChatDeleteHover();
+                            setTargetId(thread._id);
+                            setModalType('delete');
+                          }}
+                          className="p-1 rounded-md text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                         >
                           <RiDeleteBinLine size={13} />
                         </button>
@@ -624,6 +751,182 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         title="Delete Chat"
         message="This chat session and its messages will be permanently deleted."
       />
+
+      {/* Mobile Long-Press Action Sheet */}
+      {mobileActionThread && (
+        <div className="fixed inset-0 z-[10000] flex flex-col justify-end lg:hidden animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+            onClick={() => setMobileActionThread(null)}
+          />
+          
+          {/* Action Sheet Panel */}
+          <div className="relative w-full bg-white dark:bg-[var(--bg-surface)] border-t border-zinc-200/90 dark:border-white/10 rounded-t-3xl p-5 pb-8 shadow-2xl z-10 animate-in slide-in-from-bottom duration-250 ease-out select-none">
+            {/* Drag Handle Indicator */}
+            <div className="w-10 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full mx-auto mb-4" />
+            
+            {/* Chat Title Header */}
+            <div className="text-center mb-5 px-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">
+                Chat Options
+              </p>
+              <h4 className="text-[14px] font-semibold text-zinc-900 dark:text-white line-clamp-2 leading-snug">
+                {mobileActionThread.title || 'Untitled Chat'}
+              </h4>
+            </div>
+
+            {/* Options List */}
+            <div className="space-y-1.5">
+              {/* Pin / Unpin Button */}
+              {(() => {
+                const isThisPinned = pinnedIds[mobileActionThread._id] !== undefined
+                  ? pinnedIds[mobileActionThread._id]
+                  : (mobileActionThread.isPinned || false);
+                return (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const threadId = mobileActionThread._id;
+                      setMobileActionThread(null);
+                      try {
+                        await togglePinChat(threadId);
+                        setPinnedIds(prev => ({ ...prev, [threadId]: !isThisPinned }));
+                        dispatch(addToast({ type: 'success', message: isThisPinned ? 'Chat unpinned' : 'Chat pinned to top' }));
+                      } catch {
+                        dispatch(addToast({ type: 'error', message: 'Failed to update pin' }));
+                      }
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-zinc-50 dark:bg-white/[0.04] active:bg-zinc-100 dark:active:bg-white/[0.08] text-zinc-800 dark:text-zinc-200 text-sm font-semibold transition-colors"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-zinc-200/60 dark:bg-white/[0.06] flex items-center justify-center text-[var(--accent-cyan)] shrink-0">
+                      <RiPushpin2Fill size={18} />
+                    </div>
+                    <div className="text-left flex-1 min-w-0">
+                      <span className="block">{isThisPinned ? 'Unpin from Top' : 'Pin to Top'}</span>
+                      <span className="text-[11px] font-normal text-zinc-500 dark:text-zinc-400">
+                        {isThisPinned ? 'Remove from top of list' : 'Keep this chat at the top'}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })()}
+
+              {/* Rename / Edit Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const thread = mobileActionThread;
+                  setMobileActionThread(null);
+                  setRenameModalThread(thread);
+                  setRenameVal(thread.title || '');
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-zinc-50 dark:bg-white/[0.04] active:bg-zinc-100 dark:active:bg-white/[0.08] text-zinc-800 dark:text-zinc-200 text-sm font-semibold transition-colors"
+              >
+                <div className="w-9 h-9 rounded-xl bg-zinc-200/60 dark:bg-white/[0.06] flex items-center justify-center text-zinc-700 dark:text-zinc-300 shrink-0">
+                  <RiPencilLine size={18} />
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <span className="block">Rename Chat</span>
+                  <span className="text-[11px] font-normal text-zinc-500 dark:text-zinc-400">
+                    Change the title of this conversation
+                  </span>
+                </div>
+              </button>
+
+              {/* Delete Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const threadId = mobileActionThread._id;
+                  setMobileActionThread(null);
+                  setTargetId(threadId);
+                  setModalType('delete');
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-red-500/10 active:bg-red-500/20 text-red-600 dark:text-red-400 text-sm font-semibold transition-colors"
+              >
+                <div className="w-9 h-9 rounded-xl bg-red-500/15 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
+                  <RiDeleteBinLine size={18} />
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <span className="block">Delete Chat</span>
+                  <span className="text-[11px] font-normal text-red-500/80">
+                    Permanently delete this chat
+                  </span>
+                </div>
+              </button>
+            </div>
+
+            {/* Cancel Button */}
+            <button
+              type="button"
+              onClick={() => setMobileActionThread(null)}
+              className="w-full mt-4 py-3 rounded-2xl bg-zinc-100 dark:bg-white/[0.06] text-zinc-700 dark:text-zinc-300 font-semibold text-sm active:bg-zinc-200 dark:active:bg-white/[0.1] transition-colors text-center"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Rename Chat Modal (for mobile & desktop dialog use) */}
+      {renameModalThread && (
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+            onClick={() => setRenameModalThread(null)}
+          />
+          <div className="relative w-full max-w-sm bg-white dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl z-10 animate-in zoom-in duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-zinc-900 dark:text-white">Rename Chat</h3>
+              <button 
+                type="button"
+                onClick={() => setRenameModalThread(null)}
+                className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <RiCloseLine size={18} />
+              </button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const trimmed = renameVal.trim();
+              if (trimmed && trimmed !== renameModalThread.title) {
+                try {
+                  await renameChat(renameModalThread._id, trimmed);
+                  handleGetChats();
+                  dispatch(addToast({ type: 'success', message: 'Chat renamed' }));
+                } catch {
+                  dispatch(addToast({ type: 'error', message: 'Failed to rename chat' }));
+                }
+              }
+              setRenameModalThread(null);
+            }}>
+              <input
+                autoFocus
+                value={renameVal}
+                onChange={(e) => setRenameVal(e.target.value)}
+                placeholder="Enter chat title..."
+                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-[var(--accent-cyan)] transition-colors mb-5"
+              />
+              <div className="flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setRenameModalThread(null)}
+                  className="flex-1 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold text-sm hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl bg-[var(--accent-cyan)] text-black font-bold text-sm hover:bg-[var(--accent-cyan-hover)] transition-colors shadow-sm cursor-pointer"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Drawer Overlay with Smooth Fade Transition */}
       <div

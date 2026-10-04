@@ -54,11 +54,11 @@ const PrimaryButton = forwardRef(function PrimaryButton(
   const variantClasses = {
     cyan: `
       relative overflow-hidden text-white font-display
-      bg-[radial-gradient(130%_130%_at_50%_35%,#2cd4ea_0%,#20b8cd_48%,#00bed8_100%)]
-      border border-cyan-300/40
-      shadow-[0_8px_24px_-4px_rgba(32,184,205,0.36),0_18px_44px_-8px_rgba(32,184,205,0.24),0_2px_4px_rgba(0,0,0,0.06),inset_0_1px_1.5px_0_rgba(255,255,255,0.65),inset_0_-2px_6px_0_rgba(0,70,85,0.25)]
-      hover:shadow-[0_12px_32px_-4px_rgba(32,184,205,0.48),0_24px_56px_-8px_rgba(32,184,205,0.32),inset_0_1px_2px_0_rgba(255,255,255,0.85)]
-      hover:brightness-[1.03]
+      bg-[image:var(--btn-primary-bg)]
+      border border-[var(--btn-primary-border)]/40
+      shadow-[var(--btn-primary-shadow)]
+      hover:shadow-[var(--btn-primary-shadow-hover)]
+      hover:brightness-[1.05]
     `,
     dark: `
       relative overflow-hidden text-white font-display
@@ -125,7 +125,7 @@ const PrimaryButton = forwardRef(function PrimaryButton(
   );
 
   // Outer container component classes
-  const rootClasses = `group relative ${isFull ? 'w-full flex' : 'inline-flex'} items-center justify-center p-0 bg-transparent border-0 outline-hidden focus-visible:ring-4 focus-visible:ring-cyan-400/40 rounded-full transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] ${className}`;
+  const rootClasses = `group relative ${isFull ? 'w-full flex' : 'inline-flex'} items-center justify-center p-0 bg-transparent border-0 outline-hidden focus-visible:ring-4 focus-visible:ring-[var(--accent-cyan)]/40 rounded-full transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98] ${className}`;
 
   if (!isLink && !isAnchor) {
     return (

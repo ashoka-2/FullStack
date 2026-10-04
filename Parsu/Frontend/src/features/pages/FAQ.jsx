@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Link } from 'react-router';
 import {
   RiQuestionLine,
@@ -43,7 +43,7 @@ const faqData = [
       },
       {
         q: "Can the AI generate captions and hashtags?",
-        a: "Absolutely! Just ask the AI to create captions, hashtags, or descriptions — it analyzes your images and content to generate platform-optimized social copy."
+        a: "Absolutely! Just ask the AI to create captions, hashtags, or descriptions â€” it analyzes your images and content to generate platform-optimized social copy."
       },
       {
         q: "Can I post to multiple platforms at once?",
@@ -97,7 +97,7 @@ const faqData = [
     questions: [
       {
         q: "How do I add a custom API key?",
-        a: "Go to Settings → Custom API Keys section. Enter your API key and select the provider. The key is encrypted and stored securely."
+        a: "Go to Settings â†’ Custom API Keys section. Enter your API key and select the provider. The key is encrypted and stored securely."
       },
       {
         q: "Are my API keys stored safely?",
@@ -153,7 +153,7 @@ const FAQ = () => {
         {/* FAQ Categories */}
         <div className="space-y-6">
           {faqData.map((category, catIdx) => (
-            <div key={catIdx} className="bg-white dark:bg-[#0e0f10] rounded-2xl border border-zinc-200/60 dark:border-white/5 p-5 sm:p-6 shadow-sm">
+            <div key={catIdx} className="bg-white dark:bg-[var(--bg-card)] rounded-2xl border border-zinc-200/60 dark:border-white/5 p-5 sm:p-6 shadow-sm">
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
                   <category.icon className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />

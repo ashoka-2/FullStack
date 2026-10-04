@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   RiSparkling2Line,
@@ -269,8 +269,8 @@ export default function ModelSelectorDropdown({
         }}
         className={`flex items-center gap-2 rounded-xl transition-all border backdrop-blur-md cursor-pointer ${
           compact
-            ? "px-2.5 py-1 text-xs bg-white/80 dark:bg-[#191a1a]/80 hover:bg-zinc-100 dark:hover:bg-[#202222] border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-gray-200 shadow-sm"
-            : "px-3 py-1.5 text-xs font-medium bg-white/90 dark:bg-[#141515]/90 hover:bg-zinc-100 dark:hover:bg-[#1f2121] border-zinc-200 dark:border-white/15 text-zinc-700 dark:text-gray-200 shadow-sm"
+            ? "px-2.5 py-1 text-xs bg-white/80 dark:bg-[var(--bg-surface)]/80 hover:bg-zinc-100 dark:hover:bg-[var(--bg-surface-hover)] border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-gray-200 shadow-sm"
+            : "px-3 py-1.5 text-xs font-medium bg-white/90 dark:bg-[var(--bg-surface)]/90 hover:bg-zinc-100 dark:hover:bg-[var(--bg-surface-hover)] border-zinc-200 dark:border-white/15 text-zinc-700 dark:text-gray-200 shadow-sm"
         }`}
         title={`Active AI Model: ${activeModel.name}`}
       >
@@ -326,10 +326,10 @@ export default function ModelSelectorDropdown({
             zIndex: 9990,
             animation: 'fadeInScale 0.15s ease-out'
           }}
-          className="rounded-2xl bg-[#fafafa]/98 dark:bg-[#121314]/98 backdrop-blur-2xl border border-zinc-200/90 dark:border-white/15 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col overscroll-contain"
+          className="rounded-2xl bg-[var(--bg-card)]/98 dark:bg-[var(--bg-card)]/98 backdrop-blur-2xl border border-zinc-200/90 dark:border-white/15 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col overscroll-contain"
         >
           {/* Header & Search */}
-          <div className="p-3 border-b border-zinc-200/80 dark:border-white/10 bg-zinc-50/80 dark:bg-[#171819]">
+          <div className="p-3 border-b border-zinc-200/80 dark:border-white/10 bg-zinc-50/80 dark:bg-[var(--bg-surface)]">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-600 dark:text-gray-300">
                 <RiCpuLine className="w-4 h-4 text-cyan-500 dark:text-cyan-400" />
@@ -352,7 +352,7 @@ export default function ModelSelectorDropdown({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search models (Gemini, Claude, DeepSeek...)"
-                className="w-full bg-white dark:bg-[#0c0d0d] text-xs text-zinc-900 dark:text-white rounded-lg pl-8 pr-3 py-1.5 border border-zinc-200 dark:border-white/10 focus:outline-none focus:border-cyan-500/50 placeholder-zinc-400 dark:placeholder-gray-500"
+                className="w-full bg-white dark:bg-[var(--bg-surface)] text-xs text-zinc-900 dark:text-white rounded-lg pl-8 pr-3 py-1.5 border border-zinc-200 dark:border-white/10 focus:outline-none focus:border-cyan-500/50 placeholder-zinc-400 dark:placeholder-gray-500"
               />
             </div>
 
@@ -449,7 +449,7 @@ export default function ModelSelectorDropdown({
           </div>
 
           {/* Footer Action */}
-          <div className="p-2.5 border-t border-zinc-200/80 dark:border-white/10 bg-zinc-50/80 dark:bg-[#171819] flex items-center justify-between gap-2">
+          <div className="p-2.5 border-t border-zinc-200/80 dark:border-white/10 bg-zinc-50/80 dark:bg-[var(--bg-surface)] flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => {

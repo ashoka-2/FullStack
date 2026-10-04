@@ -1,4 +1,4 @@
-import { 
+﻿import { 
     RiAddLine, 
     RiUploadCloudLine, 
     RiMicLine, 
@@ -62,7 +62,7 @@ const FollowUpInput = ({
     const dispatch = useDispatch();
     const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
 
-    // Speech Recognition (Voice to text — MIC button) & Live Caption
+    // Speech Recognition (Voice to text â€” MIC button) & Live Caption
     const [isListening, setIsListening] = useState(false);
     const [liveCaption, setLiveCaption] = useState('');
     const recognitionRef = useRef(null);
@@ -108,7 +108,7 @@ const FollowUpInput = ({
 
             recognition.onstart = () => {
                 setIsListening(true);
-                setLiveCaption('Listening to your speech... Speak now 🎙️');
+                setLiveCaption('Listening to your speech... Speak now ðŸŽ™ï¸');
                 triggerBlobInteraction('curious');
             };
 
@@ -253,7 +253,7 @@ const FollowUpInput = ({
     };
 
     return (
-        <div className={`absolute bottom-0 left-0 w-full ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} bg-gradient-to-t from-[#f4f5f7] dark:from-[#050505] via-[#f4f5f7]/95 dark:via-[#050505]/95 to-transparent z-40 pb-6 md:pb-8 pointer-events-none transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col justify-end`}>
+        <div className={`absolute bottom-0 left-0 w-full ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/95 to-transparent z-40 pb-6 md:pb-8 pointer-events-none transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col justify-end`}>
             {/* Queued Messages Tray & Stop Generating */}
             <MessageQueueTray 
                 queue={queue}
@@ -264,14 +264,14 @@ const FollowUpInput = ({
             />
 
             <div className="max-w-[800px] mx-auto px-2.5 sm:px-4 md:px-6 pointer-events-auto w-full">
-                <div className="w-full bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-[#2d2e2e] focus-within:border-zinc-300 dark:focus-within:border-zinc-700 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-4 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)]">
+                <div className="w-full bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-[var(--border-secondary)] focus-within:border-zinc-300 dark:focus-within:border-zinc-700 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-4 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)]">
                     
                     {/* Rich Attachment Preview Strip */}
                     <AttachmentPreviewStrip files={files} onRemove={removeFile} />
 
                     {/* Live Voice Captioning Stream */}
                     {isListening && (
-                        <div className="flex items-center gap-3 px-3.5 py-2 mb-2 rounded-xl bg-zinc-900/95 dark:bg-[#18181b]/95 border border-[var(--accent-cyan)]/40 text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
+                        <div className="flex items-center gap-3 px-3.5 py-2 mb-2 rounded-xl bg-zinc-900/95 dark:bg-[var(--bg-surface)]/95 border border-[var(--accent-cyan)]/40 text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
                             <div className="flex items-center gap-1 shrink-0">
                                 <span className="w-1 h-3 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:0ms]" />
                                 <span className="w-1 h-5 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:150ms]" />
@@ -308,7 +308,7 @@ const FollowUpInput = ({
                                     </span>
                                 )}
                                 <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-                                    {input.split('\n').length} lines • {input.length} characters
+                                    {input.split('\n').length} lines â€¢ {input.length} characters
                                 </span>
                             </div>
                             <button
@@ -417,7 +417,7 @@ const FollowUpInput = ({
                             )}
 
                             {/*
-                             * MIC button — ALWAYS visible (speech-to-text → fills input field)
+                             * MIC button â€” ALWAYS visible (speech-to-text â†’ fills input field)
                              * Only hidden when AI is responding without any typed text
                              */}
                             {!(isResponding && !(input.trim() || files.length > 0)) && (
@@ -429,7 +429,7 @@ const FollowUpInput = ({
                                             ? 'bg-rose-500 text-white animate-pulse ring-2 ring-rose-500/40 shadow-lg'
                                             : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'
                                     }`}
-                                    title={isListening ? 'Listening… tap to stop' : 'Mic — speak to fill input'}
+                                    title={isListening ? 'Listeningâ€¦ tap to stop' : 'Mic â€” speak to fill input'}
                                     aria-label={isListening ? 'Stop mic' : 'Mic input'}
                                 >
                                     {isListening ? <RiMicFill size={17} /> : <RiMicLine size={17} />}
@@ -438,9 +438,9 @@ const FollowUpInput = ({
 
                             {/*
                              * Smart 3-state primary button:
-                             * - AI responding + no input → STOP (stop generation)
-                             * - Has text/files          → SEND arrow
-                             * - Empty input             → VOICE orb (live voice conversation)
+                             * - AI responding + no input â†’ STOP (stop generation)
+                             * - Has text/files          â†’ SEND arrow
+                             * - Empty input             â†’ VOICE orb (live voice conversation)
                              */}
                             {isResponding && !(input.trim() || files.length > 0) ? (
                                 /* STOP */
@@ -479,7 +479,7 @@ const FollowUpInput = ({
                                     <RiArrowUpLine size={18} />
                                 </button>
                             ) : (
-                                /* VOICE ORB — only when input is empty */
+                                /* VOICE ORB â€” only when input is empty */
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -509,11 +509,11 @@ const FollowUpInput = ({
             {isFullScreenEditor && typeof document !== 'undefined' && createPortal(
                 <div 
                     data-lenis-prevent="true"
-                    className={`fixed inset-0 ${isSidebarCollapsed ? 'lg:left-16' : 'lg:left-56'} z-[9980] bg-[#0c0d10] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200 border-l border-zinc-800/80 shadow-2xl transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}
+                    className={`fixed inset-0 ${isSidebarCollapsed ? 'lg:left-16' : 'lg:left-56'} z-[9980] bg-[var(--bg-primary)] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200 border-l border-zinc-800/80 shadow-2xl transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}
                     onWheel={(e) => e.stopPropagation()}
                 >
                     {/* Studio Header */}
-                    <div className="h-14 px-4 sm:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#111216] shrink-0">
+                    <div className="h-14 px-4 sm:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[var(--bg-secondary)] shrink-0">
                         <div className="flex items-center gap-2.5">
                             <div className="p-1.5 rounded-lg bg-[var(--accent-cyan)]/15 text-[var(--accent-cyan)]">
                                 {isCodeContent ? <RiCodeSSlashLine size={18} /> : <RiFileTextLine size={18} />}
@@ -521,7 +521,7 @@ const FollowUpInput = ({
                             <div>
                                 <h3 className="text-sm font-semibold text-zinc-100">Full-Screen Prompt Studio</h3>
                                 <p className="text-[11px] text-zinc-400 font-mono">
-                                    {input.split('\n').length} lines • {input.length} characters {isCodeContent ? '• Code format preserved' : ''}
+                                    {input.split('\n').length} lines â€¢ {input.length} characters {isCodeContent ? 'â€¢ Code format preserved' : ''}
                                 </p>
                             </div>
                         </div>
@@ -561,7 +561,7 @@ const FollowUpInput = ({
                     </div>
 
                     {/* Textarea Area */}
-                    <div className="flex-1 p-4 sm:p-6 overflow-hidden flex flex-col min-h-0 bg-[#0c0d10]">
+                    <div className="flex-1 p-4 sm:p-6 overflow-hidden flex flex-col min-h-0 bg-[var(--bg-primary)]">
                         <textarea
                             autoFocus
                             value={input}
@@ -603,7 +603,7 @@ const FollowUpInput = ({
                     )}
 
                     {/* Rich Bottom Toolbar Options (Attach, Web Search, Models, Mic, Queue/Send) */}
-                    <div className="border-t border-zinc-800/80 bg-[#111216] px-4 sm:px-6 py-3 shrink-0 flex flex-col gap-2.5">
+                    <div className="border-t border-zinc-800/80 bg-[var(--bg-secondary)] px-4 sm:px-6 py-3 shrink-0 flex flex-col gap-2.5">
                         {/* Attachments Preview Strip */}
                         <AttachmentPreviewStrip files={files} onRemove={removeFile} />
 
@@ -637,9 +637,9 @@ const FollowUpInput = ({
 
                             </div>
 
-                            {/* Right Side Actions — always-visible MIC + 3-state: Stop / Send / Voice orb */}
+                            {/* Right Side Actions â€” always-visible MIC + 3-state: Stop / Send / Voice orb */}
                             <div className="flex items-center gap-2 shrink-0">
-                                {/* MIC — always present (speech-to-text) */}
+                                {/* MIC â€” always present (speech-to-text) */}
                                 {!(isResponding && !(input.trim() || files.length > 0)) && (
                                     <button
                                         type="button"
@@ -649,7 +649,7 @@ const FollowUpInput = ({
                                                 ? 'bg-rose-500 text-white animate-pulse ring-2 ring-rose-500/40'
                                                 : 'text-zinc-400 hover:text-white hover:bg-zinc-700/60'
                                         }`}
-                                        title={isListening ? 'Listening… tap to stop' : 'Mic — speak to fill input'}
+                                        title={isListening ? 'Listeningâ€¦ tap to stop' : 'Mic â€” speak to fill input'}
                                     >
                                         {isListening ? <RiMicFill size={18} /> : <RiMicLine size={18} />}
                                     </button>
@@ -715,7 +715,7 @@ const FollowUpInput = ({
                 </div>,
                 document.body
             )}
-            {/* VoiceMode — full-screen live voice conversation (rendered if no parent onOpenVoiceMode) */}
+            {/* VoiceMode â€” full-screen live voice conversation (rendered if no parent onOpenVoiceMode) */}
             {!onOpenVoiceMode && (
                 <VoiceMode
                     isOpen={isVoiceModeOpen}
