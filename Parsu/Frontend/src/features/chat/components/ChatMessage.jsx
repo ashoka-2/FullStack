@@ -507,7 +507,19 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
             }
         }
 
-        // 4. Text Route & Directions Patterns: "Directions from X to Y" / "Route from X to Y" / "Trip from X to Y" / "Map from X to Y"
+        // 4. Multi-stop Route Patterns: "from X via A, B, C to Y" or "A -> B -> C -> D"
+        const multiArrowMatch = contentToRender.match(/([A-Za-z0-9][a-zA-Z0-9\s,.-]+?(?:\s*(?:->|→)\s*[A-Za-z0-9][a-zA-Z0-9\s,.-]+?){2,})(?:\.|\n|:|,|$)/);
+        if (multiArrowMatch && multiArrowMatch[1]) {
+            return multiArrowMatch[1].trim();
+        }
+
+        const viaRouteMatch = contentToRender.match(/(?:from\s+)?([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)\s+(?:via|through)\s+([A-Za-z0-9\s,.-]+?)\s+to\s+([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)(?:\.|\n|:|,|$)/i) ||
+                              contentToRender.match(/(?:from\s+)?([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)\s+to\s+([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)\s+(?:via|through)\s+([A-Za-z0-9\s,.-]+?)(?:\.|\n|:|,|$)/i);
+        if (viaRouteMatch) {
+            return viaRouteMatch[0].trim();
+        }
+
+        // 4b. Standard 2-Point Route: "Directions from X to Y" / "Route from X to Y" / "Trip from X to Y" / "Map from X to Y"
         const routeTextMatch = contentToRender.match(/(?:map|directions?|route|trip|travel|minimum distance|shortest distance)\s+(?:from\s+)?([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)\s+(?:to|->|→)\s+([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)(?:\.|\n|:|,|$)/i);
         if (routeTextMatch && routeTextMatch[1] && routeTextMatch[2] && routeTextMatch[1].trim().length < 80 && routeTextMatch[2].trim().length < 80) {
             return `from: ${routeTextMatch[1].trim()}\nto: ${routeTextMatch[2].trim()}`;

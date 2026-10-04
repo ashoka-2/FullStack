@@ -260,9 +260,22 @@ export async function generateResponse(messages, onChunk, userContext) {
        - **AI-Refined Captions**: If the user writes a draft caption and asks "enhance this", "improve my caption", or "look at this caption and create one using AI":
          - Read the user's caption, polish the tone, fix grammar, enhance the hook, add trending hashtags, and use that refined caption.
 
-    5. Interactive Google Maps & Route Directions Embed:
-       When the user asks for a map, directions, routes, trip navigation, or minimum distance from one place to another (e.g., "directions from Mumbai to Pune", "route from Central Park to JFK Airport", "show me trip directions from my location to Goa", "minimum distance from Delhi to Agra", "plan a trip to Jaipur and show routes"):
-       - For directions and routes, ALWAYS output a dedicated route map block using:
+    5. CRITICAL AUTOMATIC ROAD TRIP & MULTI-STOP MAP EXTRACTION:
+       Whenever the user asks for a map, route, directions, trip navigation, or mentions traveling by car, bike, transit, or walking through or visiting multiple places (even with casual language or typos like "going to RJ by car through malabar visiting kasargod, manguluru, goa like conacona, baga, ratanagiri, mumbai, navi mumbai, gurjat surat, vapi, ahmedabad, sabrmati, palanpur then marvad bhinmal"):
+       - YOU MUST AUTOMATICALLY IDENTIFY AND EXTRACT EVERY LOCATION:
+         1. from (Origin / Starting City): Identify where the user starts (e.g. "Malabar, Kerala" or "Thalassery, Kerala" or "My Location").
+         2. to (Final Destination): Identify the user's final destination (e.g. "Bhinmal, Rajasthan").
+         3. stops (Intermediate Waypoints): Extract and clean EVERY SINGLE city, beach, town, landmark, highway stop, or detour mentioned by the user or along the optimal route. Fix typos and add state/region context automatically:
+            (e.g., "kasargod" -> "Kasaragod", "manguluru" -> "Mangaluru", "conacona" -> "Canacona Goa", "baga" -> "Baga Beach Goa", "ratanagiri" -> "Ratnagiri", "mumbai" -> "Mumbai", "navi mumbai" -> "Navi Mumbai", "vapi" -> "Vapi", "gurjat surat" -> "Surat", "ahmedabad" -> "Ahmedabad", "sabrmati" -> "Sabarmati Ahmedabad", "palanpur" -> "Palanpur", "marvad bhinmal" -> "Bhinmal Rajasthan").
+       - ALWAYS OUTPUT THE FULL MULTI-STOP MAP CODEBLOCK:
+         \`\`\`map
+         from: Starting City / Location
+         stops: First Stop, Second Stop, Third Stop, Fourth Stop, ...
+         to: Final Destination Place
+         mode: driving
+         \`\`\`
+       - NEVER truncate or skip intermediate stops! Every single stop requested by the user MUST be placed in \`stops:\` so the interactive map plots them sequentially on the screen.
+       - For direct 2-point routes without intermediate stops:
          \`\`\`map
          from: Starting Point / My Location
          to: Destination Place
@@ -273,8 +286,8 @@ export async function generateResponse(messages, onChunk, userContext) {
          \`\`\`map
          Place Name, City, Country
          \`\`\`
-       - The frontend will automatically render an interactive, zoomable, pannable Google Map card with Live Directions, turn-by-turn navigation, route swap, travel mode switcher (Car / Transit / Walk), and GPS Current Location detection right inside the message!
-       - In your markdown response, provide the estimated driving/transit distance (km / miles), estimated travel time, shortest path highway details, scenic stops, and practical travel tips.
+       - The frontend will automatically render an interactive, zoomable, pannable Google Map card with ALL intermediate stops mapped in sequence, live road turn-by-turn navigation, route swap, travel mode switcher (Car / Transit / Walk), and GPS Current Location detection right inside the message!
+       - In your markdown response, provide the estimated driving/transit distance (km / miles), estimated travel time, shortest path highway details (e.g. NH66, NH48), scenic stops, food/fuel halts, and practical travel tips.
 
     6. Clean Markdown Output: Format your explanations with clean, readable Markdown, emojis, and clear status summaries.`;
 

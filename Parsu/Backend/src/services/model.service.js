@@ -392,8 +392,22 @@ export async function executeModelChatStream({
 CRITICAL CITATION & LINK RULES:
 1. When real-time web search findings are provided, cite facts clearly and ALWAYS provide a dedicated '### Sources & Citations' section with clickable markdown links [Source Title](URL) at the end of your response.
 2. Whenever user uploaded files, attachments, or published social media links are provided in context, always prominently provide the direct clickable markdown link [Platform Post / File Name](URL) so the user can immediately click and view it.
-3. Interactive Map & Route Directions Generation: When the user asks for a map, directions, routes, trip plans, or minimum distance from one place to another (or from their location):
-- For directions: ALWAYS provide a route codeblock:
+3. CRITICAL AUTOMATIC ROAD TRIP & MULTI-STOP MAP EXTRACTION:
+When the user asks for a map, directions, routes, trip plans, road trip itineraries, or minimum distance from one place to another (even with casual language or typos like "going to RJ by car through malabar visiting kasargod, manguluru, goa like conacona, baga, ratanagiri, mumbai, navi mumbai, gurjat surat, vapi, ahmedabad, sabrmati, palanpur then marvad bhinmal"):
+- AUTOMATICALLY EXTRACT ALL LOCATIONS:
+  1. from (Origin / Starting City): Identify starting place (e.g. "Malabar, Kerala" or "Thalassery, Kerala" or "My Location").
+  2. to (Final Destination): Identify the user's final destination (e.g. "Bhinmal, Rajasthan").
+  3. stops (Intermediate Waypoints): Extract and clean EVERY SINGLE city, beach, town, landmark, highway stop, or detour mentioned by the user or along the optimal route. Fix typos and add state/region context automatically:
+     (e.g., "kasargod" -> "Kasaragod", "manguluru" -> "Mangaluru", "conacona" -> "Canacona Goa", "baga" -> "Baga Beach Goa", "ratanagiri" -> "Ratnagiri", "mumbai" -> "Mumbai", "navi mumbai" -> "Navi Mumbai", "vapi" -> "Vapi", "gurjat surat" -> "Surat", "ahmedabad" -> "Ahmedabad", "sabrmati" -> "Sabarmati Ahmedabad", "palanpur" -> "Palanpur", "marvad bhinmal" -> "Bhinmal Rajasthan").
+- ALWAYS OUTPUT THE FULL MULTI-STOP MAP CODEBLOCK:
+\`\`\`map
+from: Starting City / Location
+stops: First Stop, Second Stop, Third Stop, Fourth Stop, ...
+to: Final Destination Place
+mode: driving
+\`\`\`
+- NEVER truncate or skip intermediate stops! Every single stop requested by the user MUST be placed in \`stops:\` so the interactive map plots them sequentially on the screen.
+- For direct 2-point routes without intermediate stops:
 \`\`\`map
 from: Starting Point / My Location
 to: Destination Place
@@ -403,7 +417,7 @@ mode: driving
 \`\`\`map
 Place Name, City, Country
 \`\`\`
-The frontend will automatically render an interactive, pannable and zoomable Google Map card with Live Directions, turn-by-turn navigation, and GPS detection directly in chat! In your text, mention distance (km/miles) and travel advice.`;
+The frontend will automatically render an interactive, pannable and zoomable Google Map card with ALL intermediate stops pinned along the road, turn-by-turn navigation, and GPS detection directly in chat! In your text, mention distance (km/miles) and travel advice.`;
 
   // Thinking level directives
   const tLevel = (thinkingLevel || "low").toLowerCase();
