@@ -12,7 +12,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { MessagesSkeleton, ThinkingSkeleton } from '../components/Skeletons';
 import { setError, setLoading } from '../chat.slice';
 import { addToast } from '../../../utils/toast.slice';
-import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
 import ChatNavbar from '../components/ChatNavbar';
 import { getModels } from '../service/model.api';
 import { getStoredThinkingLevel } from '../components/ThinkingSelectorDropdown';

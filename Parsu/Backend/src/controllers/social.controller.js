@@ -150,14 +150,14 @@ function getClientCredentials(platform, req) {
     const backendUrl = (process.env.BACKEND_URL || hostFromReq || (process.env.NODE_ENV === 'production' ? "https://parsuai-1y3u.onrender.com" : "http://localhost:3000")).replace(/\/+$/, "");
     const map = {
         instagram: { 
-            clientId: process.env.META_APP_ID, 
-            clientSecret: process.env.META_APP_SECRET, 
-            redirectUri: process.env.META_REDIRECT_URI || `${backendUrl}/api/social/callback/instagram` 
+            clientId: (process.env.INSTAGRAM_APP_ID || process.env.META_APP_ID)?.trim(), 
+            clientSecret: (process.env.INSTAGRAM_APP_SECRET || process.env.META_APP_SECRET)?.trim(), 
+            redirectUri: process.env.META_REDIRECT_URI?.trim() || `${backendUrl}/api/social/callback/instagram` 
         },
         facebook: { 
-            clientId: process.env.META_APP_ID, 
-            clientSecret: process.env.META_APP_SECRET, 
-            redirectUri: process.env.FACEBOOK_REDIRECT_URI || `${backendUrl}/api/social/callback/facebook` 
+            clientId: process.env.META_APP_ID?.trim(), 
+            clientSecret: process.env.META_APP_SECRET?.trim(), 
+            redirectUri: process.env.FACEBOOK_REDIRECT_URI?.trim() || `${backendUrl}/api/social/callback/facebook` 
         },
         pinterest: { 
             clientId: process.env.PINTEREST_CLIENT_ID, 

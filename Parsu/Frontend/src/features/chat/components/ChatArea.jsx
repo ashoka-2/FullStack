@@ -1,43 +1,21 @@
-﻿ import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { motion } from 'motion/react';
 import {
-  RiArrowRightLine,
-  RiRobot2Line,
-  RiAddLine,
-  RiArrowDownSLine,
-  RiMicLine,
-  RiMicFill,
-  RiFileList3Line,
-  RiBookOpenLine,
-  RiBriefcaseLine,
-  RiHeart2Line,
-  RiUploadCloudLine,
-  RiCloseLine,
-  RiFileTextLine,
-  RiAttachment2,
-  RiArrowUpLine,
-  RiCompass3Line,
-  RiGlobalLine,
-  RiMagicLine,
-  RiShareForwardLine,
-  RiMailSendLine,
-  RiImageLine,
-  RiVideoLine,
-  RiFilePdfLine,
-  RiFullscreenLine,
-  RiFullscreenExitLine,
-  RiCodeSSlashLine,
-  RiSpyLine,
-  RiVoiceprintLine
+  RiArrowRightLine, RiRobot2Line, RiAddLine, RiMicLine, RiMicFill, RiFileList3Line,
+  RiBookOpenLine, RiHeart2Line, RiUploadCloudLine, RiFileTextLine, RiArrowUpLine,
+  RiCompass3Line, RiGlobalLine, RiMagicLine, RiFullscreenLine, RiFullscreenExitLine,
+  RiCodeSSlashLine, RiSpyLine, RiVoiceprintLine, RiPlayCircleLine, RiDiceLine,
 } from '@remixicon/react';
 import { useChat } from '../hook/useChat';
 import { useNavigate } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import Footer from '../../Components/Footer';
-import { setError, setMessages } from '../chat.slice';
+import { setMessages } from '../chat.slice';
 import { addToast } from '../../../utils/toast.slice';
 import ParsuLogo from '../../Components/ParsuLogo';
-import { JellyBlobMascot } from '../../Components/JellyBlobMascot';
 import { getModels } from '../service/model.api';
 import ThinkingSelectorDropdown, { getStoredThinkingLevel } from './ThinkingSelectorDropdown';
 import { useAiFeatureToggles } from '../../../utils/aiSettingsSync';
@@ -49,48 +27,282 @@ import { triggerBlobInteraction, triggerBlobTyping } from '../../../utils/blobRe
 import VoiceMode from './VoiceMode';
 import { resolveIntent } from '../hook/useVoiceAgent';
 import { executeDeviceCommandApi } from '../../device/service/device.api';
+import DemoStage, { FEATURES } from './DemoStage';
 
+gsap.registerPlugin(useGSAP);
+
+/* ==========================================================================
+   HOME PAGE PIECES (module level + memo, so typing in the input box never
+   re-renders or restarts the animations)
+   ========================================================================== */
+
+// Drifting colour blobs + dot grid behind everything (needs `isolate` on <main>)
+const Aurora = memo(() => {
+  const ref = useRef(null);
+  useGSAP(() => {
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.utils.toArray('.blob').forEach((b, i) => {
+        gsap.to(b, { x: 'random(-140,140)', y: 'random(-90,90)', scale: 'random(.85,1.25)', duration: 'random(9,15)', repeat: -1, yoyo: true, repeatRefresh: true, ease: 'sine.inOut', delay: -i * 3 });
+      });
+    });
+  }, { scope: ref });
+  const blobs = [
+    ['rgba(32,184,205,.20)', 'top-[-12%] left-[-8%] w-[46vw] h-[46vw]'],
+    ['rgba(32,184,205,.10)', 'top-[35%] right-[-12%] w-[38vw] h-[38vw]'],
+    ['rgba(32,184,205,.08)', 'bottom-[-15%] left-[28%] w-[36vw] h-[36vw]'],
+  ];
+  const mask = 'radial-gradient(ellipse at 50% 30%, black 20%, transparent 75%)';
+  return (
+    <div ref={ref} aria-hidden className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
+      {blobs.map(([c, cls], i) => (
+        <div key={i} className={`blob absolute rounded-full blur-3xl ${cls}`} style={{ background: `radial-gradient(circle, ${c}, transparent 70%)` }} />
+      ))}
+      <div className="absolute inset-0 opacity-[.35] dark:opacity-[.5]"
+        style={{ backgroundImage: 'radial-gradient(rgba(127,127,127,.25) 1px, transparent 1px)', backgroundSize: '28px 28px', maskImage: mask, WebkitMaskImage: mask }} />
+    </div>
+  );
+});
+
+// Button that follows the cursor a little
+const Magnetic = ({ children, className = '', ...rest }) => {
+  const ref = useRef(null);
+  const { contextSafe } = useGSAP({ scope: ref });
+  const move = contextSafe((e) => {
+    const r = ref.current.getBoundingClientRect();
+    gsap.to(ref.current, { x: (e.clientX - r.left - r.width / 2) * 0.25, y: (e.clientY - r.top - r.height / 2) * 0.35, duration: 0.3 });
+  });
+  const leave = contextSafe(() => gsap.to(ref.current, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1,.4)' }));
+  return <button ref={ref} type="button" onMouseMove={move} onMouseLeave={leave} className={className} {...rest}>{children}</button>;
+};
+
+const Word = ({ w }) => (
+  <span className="inline-block overflow-hidden align-bottom pb-1 mr-[.25em]">
+    <span className="word inline-block">{w}</span>
+  </span>
+);
+
+const focusInput = () => document.querySelector('main textarea')?.focus();
+const scrollToDemo = () => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+// Clean hero: logo tile that tilts with the cursor, soft pulse rings, one orbiting dot, two-tone headline
+const Hero = memo(() => {
+  const root = useRef(null);
+  const tile = useRef(null);
+  const { contextSafe } = useGSAP(() => {
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+    tl.from('.tile-wrap', { scale: 0.6, opacity: 0, duration: 0.9, ease: 'back.out(1.7)' })
+      .from('.orbit', { scale: 0.7, opacity: 0, duration: 0.9 }, '<.15')
+      .from('.word', { yPercent: 110, stagger: 0.06, duration: 0.8 }, '-=.5')
+      .from('.sub', { y: 14, opacity: 0, duration: 0.6 }, '-=.4')
+      .from('.cta', { y: 14, opacity: 0, stagger: 0.08, duration: 0.5 }, '-=.35')
+      .from('.hint', { opacity: 0, duration: 0.6 }, '-=.1');
+
+    gsap.to('.tile-float', { y: -8, duration: 2.8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+    gsap.to('.orbit', { rotate: 360, duration: 22, repeat: -1, ease: 'none' });
+    gsap.fromTo('.pulse', { scale: 1, opacity: 0.45 }, { scale: 1.8, opacity: 0, duration: 3, repeat: -1, stagger: 1.5, ease: 'power1.out' });
+    gsap.to('.hint-arrow', { y: 5, duration: 0.9, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+  }, { scope: root });
+
+  const move = contextSafe((e) => {
+    const el = tile.current; if (!el) return;
+    const r = el.getBoundingClientRect();
+    const nx = gsap.utils.clamp(-1, 1, (e.clientX - (r.left + r.width / 2)) / 500);
+    const ny = gsap.utils.clamp(-1, 1, (e.clientY - (r.top + r.height / 2)) / 500);
+    gsap.to(el, { rotateY: nx * 16, rotateX: -ny * 16, transformPerspective: 700, duration: 0.5, ease: 'power2.out', overwrite: 'auto' });
+    el.style.setProperty('--gx', `${50 + nx * 45}%`);
+    el.style.setProperty('--gy', `${50 + ny * 45}%`);
+  });
+  const leave = contextSafe(() => {
+    if (tile.current) gsap.to(tile.current, { rotateX: 0, rotateY: 0, duration: 0.8, ease: 'elastic.out(1,.5)' });
+  });
+  const pop = contextSafe(() => {
+    gsap.timeline().to(tile.current, { scale: 0.9, duration: 0.1 }).to(tile.current, { scale: 1, duration: 0.7, ease: 'elastic.out(1.1,.4)' });
+    gsap.fromTo('.ripple', { scale: 1, opacity: 0.6 }, { scale: 2.2, opacity: 0, duration: 0.8, ease: 'power2.out' });
+  });
+
+  return (
+    <section ref={root} onPointerMove={move} onPointerLeave={leave} className="relative w-full flex flex-col items-center text-center pt-2 pb-6">
+      <div className="tile-wrap relative flex items-center justify-center w-56 h-56 sm:w-64 sm:h-64 mb-6">
+        <div className="orbit absolute inset-0 rounded-full border border-zinc-300/60 dark:border-white/10">
+          <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[var(--accent-cyan)] shadow-[0_0_12px_var(--accent-cyan)]" />
+        </div>
+        <div className="tile-float relative">
+          <span className="pulse absolute inset-0 rounded-[30px] border border-[var(--accent-cyan)]/50 pointer-events-none" />
+          <span className="pulse absolute inset-0 rounded-[30px] border border-[var(--accent-cyan)]/50 pointer-events-none" />
+          <span className="ripple absolute inset-0 rounded-[30px] border-2 border-[var(--accent-cyan)] opacity-0 pointer-events-none" />
+          <button ref={tile} type="button" onClick={pop} aria-label="Parsu AI"
+            style={{ '--gx': '50%', '--gy': '30%' }}
+            className="group relative flex items-center justify-center w-28 h-28 sm:w-32 sm:h-32 rounded-[30px] overflow-hidden cursor-pointer will-change-transform bg-white dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 shadow-[0_24px_50px_-22px_rgba(32,184,205,.55)]">
+            <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+              style={{ background: 'radial-gradient(circle at var(--gx) var(--gy), rgba(32,184,205,.28), transparent 60%)' }} />
+            <ParsuLogo className="relative w-16 h-16 sm:w-20 sm:h-20 text-zinc-900 dark:text-white" />
+          </button>
+        </div>
+      </div>
+
+      <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-semibold tracking-tight leading-[1.08] text-zinc-900 dark:text-white max-w-3xl">
+        {['One', 'assistant', 'that'].map((w) => <Word key={w} w={w} />)}
+        <br className="hidden sm:block" />
+        <span className="text-zinc-400 dark:text-zinc-500">
+          {['chats,', 'acts', 'and', 'posts.'].map((w) => <Word key={w} w={w} />)}
+        </span>
+      </h1>
+      <p className="sub mt-5 max-w-xl text-sm sm:text-base text-zinc-600 dark:text-zinc-400">
+        Chat, control your desktop, post to your social accounts, plan trips on a live map and keep a memory of what matters to you.
+      </p>
+      <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+        <Magnetic onClick={focusInput} className="cta group flex items-center gap-2 h-11 px-6 rounded-full bg-[var(--accent-cyan)] text-zinc-950 text-sm font-bold cursor-pointer active:scale-95 transition-transform">
+          Start chatting <RiArrowRightLine size={18} className="transition-transform group-hover:translate-x-1" />
+        </Magnetic>
+        <Magnetic onClick={scrollToDemo} className="cta flex items-center gap-2 h-11 px-6 rounded-full border border-zinc-300 dark:border-white/15 text-sm font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/5 cursor-pointer active:scale-95 transition-colors">
+          <RiPlayCircleLine size={18} /> See what it does
+        </Magnetic>
+      </div>
+      <div className="hint mt-10 flex flex-col items-center gap-1 text-[11px] text-zinc-400 dark:text-zinc-500">
+        <span>Scroll to explore</span>
+        <RiArrowRightLine size={14} className="hint-arrow rotate-90" />
+      </div>
+    </section>
+  );
+});
+
+// "Try it now" shortcut chips for every feature
+const Shortcuts = memo(({ onTry, onTalk }) => {
+  const run = (t) => (typeof t === 'string' ? onTry(t) : t.action === 'voice' && onTalk());
+  const surprise = () => { const all = FEATURES.flatMap((f) => f.tries); run(all[Math.floor(Math.random() * all.length)]); };
+  return (
+    <section className="w-full max-w-[800px] mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">Try it now</h2>
+          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">Tap a shortcut to send it to Parsu.</p>
+        </div>
+        <motion.button type="button" onClick={surprise} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92, rotate: 180 }}
+          className="flex items-center gap-1.5 h-9 px-4 rounded-full border border-zinc-300 dark:border-white/15 text-xs font-semibold text-zinc-700 dark:text-zinc-200 cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/5">
+          <RiDiceLine size={16} /> Surprise me
+        </motion.button>
+      </div>
+      <div className="space-y-3">
+        {FEATURES.map((f) => {
+          const Icon = f.icon;
+          return (
+            <div key={f.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 sm:w-44 shrink-0 text-[13px] font-semibold text-zinc-700 dark:text-zinc-300">
+                <Icon size={16} className="text-[var(--accent-cyan)]" />{f.label}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {f.tries.map((t, k) => (
+                  <motion.button key={k} type="button" onClick={() => run(t)} whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent-cyan)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = ''; }}
+                    className="text-left min-h-8 px-3.5 py-1.5 rounded-full text-xs font-medium text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-white/[0.04] cursor-pointer transition-colors hover:text-zinc-950 dark:hover:text-white">
+                    {typeof t === 'string' ? t : t.label}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+});
+
+// Feature card: 3D tilt + cursor spotlight
+const FeatureCard = ({ f, i, onTry }) => {
+  const ref = useRef(null);
+  const Icon = f.icon;
+  const move = (e) => {
+    const el = ref.current; const r = el.getBoundingClientRect();
+    const x = e.clientX - r.left; const y = e.clientY - r.top;
+    el.style.setProperty('--mx', `${x}px`); el.style.setProperty('--my', `${y}px`);
+    gsap.to(el, { rotateY: (x / r.width - 0.5) * 10, rotateX: -(y / r.height - 0.5) * 10, transformPerspective: 700, duration: 0.4, ease: 'power2.out' });
+  };
+  const leave = () => gsap.to(ref.current, { rotateX: 0, rotateY: 0, duration: 0.8, ease: 'elastic.out(1,.45)' });
+  return (
+    <motion.div initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.5, delay: (i % 2) * 0.08, ease: [0.22, 1, 0.36, 1] }}>
+      <div ref={ref} onMouseMove={move} onMouseLeave={leave} onClick={() => onTry(f.tries[0])}
+        className="group relative h-full p-5 rounded-2xl border border-zinc-200/90 dark:border-white/10 bg-white/80 dark:bg-[var(--bg-surface)]/80 cursor-pointer overflow-hidden will-change-transform">
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          style={{ background: `radial-gradient(260px circle at var(--mx) var(--my), rgba(32,184,205,.16), transparent 70%)` }} />
+        <motion.div whileHover={{ rotate: [0, -12, 10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}
+          className="relative w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]">
+          <Icon size={20} />
+        </motion.div>
+        <h3 className="relative text-[15px] font-semibold text-zinc-900 dark:text-zinc-100">{f.title}</h3>
+        <p className="relative mt-1 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">{f.desc}</p>
+        <span className="relative mt-3 inline-block text-xs font-semibold opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all text-[var(--accent-cyan)]">Try it</span>
+      </div>
+    </motion.div>
+  );
+};
+
+const FeatureGrid = memo(({ onTry }) => (
+  <section className="w-full max-w-[800px] mx-auto">
+    <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight mb-4">Everything in one place</h2>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      {FEATURES.map((f, i) => <FeatureCard key={f.id} f={f} i={i} onTry={onTry} />)}
+    </div>
+  </section>
+));
+
+// Everything above the input bar
+const HomeShowcase = memo(({ onTry, onTalk }) => (
+  <>
+    <Aurora />
+    <div className="w-full flex flex-col items-center gap-14 sm:gap-20">
+      <Hero />
+      <DemoStage id="demo" />
+      <Shortcuts onTry={onTry} onTalk={onTalk} />
+      <FeatureGrid onTry={onTry} />
+    </div>
+  </>
+));
+
+// Live speech caption bar (used in the main input and the full-screen editor)
+const LiveCaption = ({ caption, onStop, className = '' }) => (
+  <div className={`flex items-center gap-3 px-3.5 py-2 rounded-xl bg-zinc-900/95 dark:bg-[var(--bg-surface)]/95 border border-[var(--accent-cyan)]/40 text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 ${className}`}>
+    <div className="flex items-center gap-1 shrink-0">
+      {[['h-3', 0], ['h-5', 150], ['h-2', 300], ['h-4', 450]].map(([h, d]) => (
+        <span key={d} className={`w-1 ${h} rounded-full bg-[var(--accent-cyan)] animate-bounce`} style={{ animationDelay: `${d}ms` }} />
+      ))}
+    </div>
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+        <span className="text-[10px] font-bold text-[var(--color-sky-haze)] uppercase tracking-wider">Live Speech Caption</span>
+      </div>
+      <p className="text-[13px] text-zinc-100 font-medium truncate italic mt-0.5">{caption || 'Listening to your voice... Speak now'}</p>
+    </div>
+    <button type="button" onClick={onStop} className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 cursor-pointer shrink-0">Done</button>
+  </div>
+);
+
+const ICON_MAP = { global: RiGlobalLine, robot: RiRobot2Line, file: RiFileList3Line, magic: RiMagicLine, compass: RiCompass3Line, book: RiBookOpenLine, heart: RiHeart2Line };
+
+/* ==========================================================================
+   CHAT AREA
+   ========================================================================== */
 const ChatArea = () => {
-  // Voice agent Jarvis overlay state
   const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
-
-  // Input message state
   const [input, setInput] = useState('');
-  
-  // Attached files and media items
   const [files, setFiles] = useState([]);
-  
-  // Drag and drop UI state
   const [isDragging, setIsDragging] = useState(false);
-
-  // Selected AI Model
   const [selectedModel, setSelectedModel] = useState(null);
-  
-  // Thinking Mode ('low' = Fast default, 'medium' = Balanced, 'high' = Deep Think)
   const [thinkingLevel, setThinkingLevel] = useState(getStoredThinkingLevel);
-  
-  // Chat custom hook functions
+
   const { handleSendMessage, handleGetSuggestions, loading } = useChat();
-  
-  // Global auth, error & layout state from Redux
+
   const user = useSelector(state => state.auth.user);
-  const error = useSelector(state => state.chat.error);
   const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // JellyBlob mascot reactive states
-  const [blobMood, setBlobMood] = useState('curious');
-  const [blobGaze, setBlobGaze] = useState({ x: 0, y: 0 });
-  const [isTyping, setIsTyping] = useState(false);
-  const [celebrateCount, setCelebrateCount] = useState(0);
-  const typingTimerRef = useRef(null);
-
-  // Textarea resizing & code formatting state
   const textareaRef = useRef(null);
   const [isFullScreenEditor, setIsFullScreenEditor] = useState(false);
 
-  // Detect whether pasted or typed content is code
   const isCodeContent = Boolean(
     input && (
       input.includes('```') ||
@@ -101,155 +313,103 @@ const ChatArea = () => {
     )
   );
 
-  // Auto-grow textarea naturally based on input text content
+  // Auto-grow textarea
   useEffect(() => {
     if (!textareaRef.current) return;
     textareaRef.current.style.height = 'auto';
-    const scrollH = textareaRef.current.scrollHeight;
-    const nextH = Math.min(Math.max(scrollH, 54), 280);
-    textareaRef.current.style.height = `${nextH}px`;
+    textareaRef.current.style.height = `${Math.min(Math.max(textareaRef.current.scrollHeight, 54), 280)}px`;
   }, [input]);
 
-  // Sync active model state when auto-switched by server (vision or quota failover)
+  // Sync active model when the server auto-switches (vision or quota failover)
   useEffect(() => {
     const handleAutoSwitch = (e) => {
-      if (e.detail?.modelId) {
-        setSelectedModel({
-          id: e.detail.modelId,
-          modelId: e.detail.modelId,
-          name: e.detail.name || e.detail.modelName || e.detail.modelId,
-          modelName: e.detail.name || e.detail.modelName || e.detail.modelId,
-          provider: e.detail.provider || 'gemini',
-          badge: e.detail.badge || 'Fast',
-          isCustom: Boolean(e.detail.isCustom)
-        });
-      }
+      if (!e.detail?.modelId) return;
+      setSelectedModel({
+        id: e.detail.modelId, modelId: e.detail.modelId,
+        name: e.detail.name || e.detail.modelName || e.detail.modelId,
+        modelName: e.detail.name || e.detail.modelName || e.detail.modelId,
+        provider: e.detail.provider || 'gemini', badge: e.detail.badge || 'Fast', isCustom: Boolean(e.detail.isCustom),
+      });
     };
     window.addEventListener('model_auto_switched', handleAutoSwitch);
     return () => window.removeEventListener('model_auto_switched', handleAutoSwitch);
   }, []);
 
-  // Initialize model preference from backend or user custom key on mount
+  // Initial model from backend or the user's custom key
   useEffect(() => {
     let mounted = true;
     getModels().then(data => {
       if (mounted && data?.success) {
         const activeCustom = data.customModels?.[0];
         const initial = (user?.customApiKeys?.some(k => k.isActive !== false && k.apiKey) && activeCustom)
-          ? activeCustom
-          : (data.selectedModel || data.defaultModels?.[0]);
+          ? activeCustom : (data.selectedModel || data.defaultModels?.[0]);
         if (initial) setSelectedModel(initial);
       }
     }).catch(() => {});
     return () => { mounted = false; };
   }, [user]);
 
-  // Speech Recognition (Voice to Text) state & Live Caption
+  /* ---- Speech to text ---- */
   const [isListening, setIsListening] = useState(false);
   const [liveCaption, setLiveCaption] = useState('');
   const recognitionRef = useRef(null);
   const baseInputRef = useRef('');
 
   const handleToggleVoiceInput = () => {
-    if (!user) {
-      setBlobMood('surprised');
-      navigate('/auth');
-      return;
-    }
-
+    if (!user) { navigate('/auth'); return; }
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      dispatch(addToast({
-        type: 'warning',
-        message: 'Speech recognition is not supported in this browser. Please use Chrome, Edge, or Brave.'
-      }));
+      dispatch(addToast({ type: 'warning', message: 'Speech recognition is not supported in this browser. Please use Chrome, Edge, or Brave.' }));
       return;
     }
-
     if (isListening) {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        recognitionRef.current = null;
-      }
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
       setIsListening(false);
       setLiveCaption('');
       return;
     }
-
     try {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-
-      // Smart language configuration: detect if user prefers Hindi or device language
-      const savedVoiceURI = localStorage.getItem('parsu_tts_voice') || localStorage.getItem('perplexity_tts_voice') || '';
-      const isHindiPreferred = savedVoiceURI.toLowerCase().includes('hindi') || 
-                               savedVoiceURI.toLowerCase().includes('hi-in') || 
-                               (navigator.language && navigator.language.startsWith('hi'));
+      const savedVoiceURI = (localStorage.getItem('parsu_tts_voice') || localStorage.getItem('perplexity_tts_voice') || '').toLowerCase();
+      const isHindiPreferred = savedVoiceURI.includes('hindi') || savedVoiceURI.includes('hi-in') || (navigator.language && navigator.language.startsWith('hi'));
       recognition.lang = isHindiPreferred ? 'hi-IN' : (navigator.language || 'en-US');
-
-      // Capture existing input before recognition starts to prevent re-duplication
       baseInputRef.current = input ? input.trim() : '';
 
       recognition.onstart = () => {
         setIsListening(true);
-        setLiveCaption('Listening to your speech... Speak now 🎙️');
+        setLiveCaption('Listening to your speech... Speak now');
         triggerBlobInteraction('curious');
       };
-
       recognition.onresult = (event) => {
         let finalTranscript = '';
         let interimTranscript = '';
-
-        // Iterate through all accumulated results from 0 to length - 1
-        // to prevent Chrome's non-monotonic event.resultIndex duplication bug
+        // Walk all results from 0 to avoid Chrome's non-monotonic resultIndex duplication bug
         for (let i = 0; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript;
-          }
+          if (event.results[i].isFinal) finalTranscript += transcript + ' ';
+          else interimTranscript += transcript;
         }
-
         finalTranscript = finalTranscript.trim();
         interimTranscript = interimTranscript.trim();
-
-        const fullLive = (finalTranscript + (interimTranscript ? ' ' + interimTranscript : '')).trim();
-        if (fullLive) {
-          setLiveCaption(fullLive);
-        }
-
+        const spoken = (finalTranscript + (interimTranscript ? ' ' + interimTranscript : '')).trim();
+        if (!spoken) return;
+        setLiveCaption(spoken);
         const base = baseInputRef.current;
-        const currentSpoken = fullLive;
-
-        if (currentSpoken) {
-          const combined = base ? `${base} ${currentSpoken}` : currentSpoken;
-          setInput(combined);
-          if (finalTranscript) {
-            triggerTyping();
-            triggerBlobTyping();
-          }
-        }
+        setInput(base ? `${base} ${spoken}` : spoken);
+        if (finalTranscript) { triggerBlobTyping(); }
       };
-
       recognition.onerror = (event) => {
         console.warn('Speech recognition error:', event.error);
         if (event.error !== 'no-speech') {
-          dispatch(addToast({
-            type: 'error',
-            message: `Mic error: ${event.error || 'Check microphone permissions'}`
-          }));
+          dispatch(addToast({ type: 'error', message: `Mic error: ${event.error || 'Check microphone permissions'}` }));
         }
         setIsListening(false);
         setLiveCaption('');
       };
-
-      recognition.onend = () => {
-        setIsListening(false);
-        setLiveCaption('');
-      };
-
+      recognition.onend = () => { setIsListening(false); setLiveCaption(''); };
       recognition.start();
       recognitionRef.current = recognition;
     } catch (err) {
@@ -258,47 +418,30 @@ const ChatArea = () => {
       setLiveCaption('');
     }
   };
+  useEffect(() => () => { recognitionRef.current?.stop(); }, []);
 
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, []);
-
-  const triggerTyping = () => {
-    setIsTyping(true);
-    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-    typingTimerRef.current = setTimeout(() => setIsTyping(false), 500);
-  };
-  
-  // Naye AI suggestions (pills, queries, topics) store karne ke liye
+  /* ---- Suggestions from backend (queries + topics) ---- */
   const [aiSuggestions, setAiSuggestions] = useState(null);
-  
-  // Initial suggestions laate waqt skeleton dikhane ke liye loading flag
   const [suggestionsLoading, setSuggestionsLoading] = useState(true);
+  useEffect(() => {
+    (async () => {
+      setSuggestionsLoading(true);
+      const data = await handleGetSuggestions();
+      if (data) setAiSuggestions(data);
+      setSuggestionsLoading(false);
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // File input refs for photo, video, camera and documents
+  /* ---- Files ---- */
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const videoInputRef = useRef(null);
   const docInputRef = useRef(null);
   const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
 
-  // Web Search and Cross-Chat Memory feature toggles synced across all pages & settings
-  const {
-    webSearch,
-    setWebSearch,
-    handleToggleWebSearch,
-    memoryEnabled,
-    setMemoryEnabled,
-    handleToggleMemory,
-  } = useAiFeatureToggles();
+  const { webSearch, handleToggleWebSearch, memoryEnabled, handleToggleMemory } = useAiFeatureToggles();
 
-  // Incognito mode state synced with localStorage and event
   const [incognito, setIncognito] = useState(() => localStorage.getItem('parsu_incognito') === '1');
-
   useEffect(() => {
     const handler = (e) => setIncognito(Boolean(e.detail));
     window.addEventListener('parsu_incognito_change', handler);
@@ -306,104 +449,34 @@ const ChatArea = () => {
   }, []);
 
   const handleFileUpload = (e) => {
-    const uploadedFiles = Array.from(e.target.files);
-    setFiles(prev => [...prev, ...uploadedFiles.map(f => ({ name: f.name, isLink: false, fileObject: f }))]);
+    const uploaded = Array.from(e.target.files);
+    setFiles(prev => [...prev, ...uploaded.map(f => ({ name: f.name, isLink: false, fileObject: f }))]);
     setIsUploadMenuOpen(false);
+    e.target.value = ''; // allow re-picking the same file
   };
+  const removeFile = (index) => setFiles(prev => prev.filter((_, i) => i !== index));
 
-  const removeFile = (index) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-  };
+  /* ---- Send ---- */
+  const offlineToast = () => dispatch(addToast({ type: 'warning', message: 'No internet connection. Please check your network.' }));
 
-  const getFileIcon = (file) => {
-    if (file.isLink) return <RiAttachment2 size={13} className="text-[var(--color-clear-hanada)]" />;
-    const name = file.name?.toLowerCase() || '';
-    if (name.match(/\.(mp4|webm|mov|avi|mkv)$/)) return <RiVideoLine size={13} className="text-purple-400" />;
-    if (name.match(/\.(pdf)$/)) return <RiFilePdfLine size={13} className="text-red-400" />;
-    if (name.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/)) return <RiImageLine size={13} className="text-emerald-400" />;
-    return <RiFileTextLine size={13} className="text-[var(--color-clear-hanada)]" />;
-  };
-
-  // Fetch default suggestions from backend when component mounts
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      setSuggestionsLoading(true);
-      const data = await handleGetSuggestions();
-      if (data) setAiSuggestions(data); // Update state if data is received
-      setSuggestionsLoading(false);
-    };
-    fetchSuggestions();
-  }, []);
-
-  // Icon dictionary to map backend string to proper icon component
-  const iconMap = {
-    global: RiGlobalLine,
-    robot: RiRobot2Line,
-    file: RiFileList3Line,
-    magic: RiMagicLine,
-    compass: RiCompass3Line,
-    book: RiBookOpenLine,
-    heart: RiHeart2Line
-  };
-
-  // Dynamic array of extra AI capabilities
-  // Clean monochrome native surface with subtle cyan interaction
-  const capabilities = [
-    {
-       title: "Post to Socials",
-       description: "Create & publish content to Instagram, Facebook, X, LinkedIn, YouTube, TikTok & Pinterest — all from chat.",
-       icon: RiShareForwardLine,
-       colorClass: "text-zinc-300 group-hover:text-[var(--accent-cyan)]",
-       bgHover: "hover:bg-white/[0.04] hover:border-white/20"
-    },
-    {
-       title: "Send Emails",
-       description: "Draft and send professional emails straight from the chat interface.",
-       icon: RiMailSendLine,
-       colorClass: "text-zinc-300 group-hover:text-[var(--accent-cyan)]",
-       bgHover: "hover:bg-white/[0.04] hover:border-white/20"
-    }
-  ];
-
-
-  // Handle message submission on Enter, send button, or suggestion click
   const onSubmit = async (e, text = null) => {
-    if (e) e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
 
-    // If network gone, user cannot send a message
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      dispatch(addToast({
-        type: 'warning',
-        message: 'No internet connection. Please check your network.'
-      }));
-      return;
-    }
+    if (typeof navigator !== 'undefined' && !navigator.onLine) { offlineToast(); return; }
+    if (!user) { navigate('/auth'); return; }
 
-    // Guest protection: Redirect unauthenticated users to auth immediately
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    
-    // Use passed text (suggestion click) or input box text
     const messageToSend = text || input;
-    
-    // Extract all attached file objects (supports up to 10 files)
     const fileObjects = files.map(f => f.fileObject).filter(Boolean);
-    const filesToSend = fileObjects.length > 1 ? fileObjects : (fileObjects[0] || null); 
-    
-    // Do not send if neither text nor file is present, or if already loading
+    const filesToSend = fileObjects.length > 1 ? fileObjects : (fileObjects[0] || null);
     if ((!messageToSend.trim() && !filesToSend) || loading) return;
 
-    // Check if message is an instant device, URL, or navigation action
+    // Instant device / URL / scroll actions
     const intent = resolveIntent(messageToSend);
     if (intent) {
       if (intent.type === 'device_cmd') {
         executeDeviceCommandApi({
           targetSelector: intent.targetSelector || intent.params?.targetSelector,
-          action: intent.action,
-          params: intent.params,
-          confirmed: true
+          action: intent.action, params: intent.params, confirmed: true,
         }).then((res) => {
           if (res?.success === false || res?.launched === false) {
             dispatch(addToast({ type: 'warning', message: res?.error || res?.message || 'App not found, sir, and could not be opened.' }));
@@ -415,7 +488,7 @@ const ChatArea = () => {
         });
       } else if (intent.type === 'open_url') {
         window.open(intent.url, '_blank', 'noopener,noreferrer');
-        dispatch(addToast({ type: 'info', message: `ðŸŒ Opening ${intent.label}` }));
+        dispatch(addToast({ type: 'info', message: `🌐 Opening ${intent.label}` }));
       } else if (intent.type === 'scroll') {
         if (intent.to === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });
         else if (intent.to === 'bottom') window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
@@ -425,136 +498,89 @@ const ChatArea = () => {
     }
 
     try {
-      // Clear input box immediately
       setInput('');
       setFiles([]);
-      
-      // Clear previous stored messages
+      setIsFullScreenEditor(false);
       dispatch(setMessages([]));
-      
-      // Navigate immediately to new chat without transition delay
       navigate('/chat/new');
-      
-      // Optimistically auto-switch to custom model if user added custom key and is currently on built-in model
+
+      // Auto-switch to the user's custom key model if they have one and are on a built-in model
       let effectiveSendModel = selectedModel;
       const activeCustomKey = user?.customApiKeys?.find(k => k.isActive !== false && k.apiKey);
       if (activeCustomKey && !selectedModel?.isCustom) {
-        const customModelId = activeCustomKey.models?.[0]?.id || (activeCustomKey.provider === "gemini" ? "gemini-3.6-flash" : activeCustomKey.provider === "anthropic" ? "claude-3-5-sonnet-20241022" : "gpt-4o");
+        const customModelId = activeCustomKey.models?.[0]?.id || (activeCustomKey.provider === 'gemini' ? 'gemini-3.6-flash' : activeCustomKey.provider === 'anthropic' ? 'claude-3-5-sonnet-20241022' : 'gpt-4o');
         const customModelName = activeCustomKey.models?.[0]?.name || `${activeCustomKey.provider?.toUpperCase()} (${customModelId})`;
-        const optimisticCustomModel = {
-          id: customModelId,
-          modelId: customModelId,
-          name: customModelName,
-          modelName: customModelName,
-          provider: activeCustomKey.provider,
-          badge: "Custom Key",
-          isCustom: true,
-          keyId: activeCustomKey._id
+        const optimistic = {
+          id: customModelId, modelId: customModelId, name: customModelName, modelName: customModelName,
+          provider: activeCustomKey.provider, badge: 'Custom Key', isCustom: true, keyId: activeCustomKey._id,
         };
-        setSelectedModel(optimisticCustomModel);
-        effectiveSendModel = optimisticCustomModel;
-        window.dispatchEvent(new CustomEvent('model_auto_switched', { detail: optimisticCustomModel }));
+        setSelectedModel(optimistic);
+        effectiveSendModel = optimistic;
+        window.dispatchEvent(new CustomEvent('model_auto_switched', { detail: optimistic }));
       }
 
-      // Asynchronously handle message sending with selected model, webSearch, cross-chat memory, and thinking level (plus incognito)
       const sendPromise = handleSendMessage(messageToSend, null, filesToSend, effectiveSendModel, webSearch, memoryEnabled, incognito, thinkingLevel);
       sendPromise.then(response => {
-        // Silently update URL once real chat ID is received
-        if (response && response.chat) {
-          navigate(`/chat/${response.chat._id}`, { replace: true });
-        }
-      }).catch(err => {
-          console.error("Message send failed:", err);
-      });
-
+        if (response && response.chat) navigate(`/chat/${response.chat._id}`, { replace: true });
+      }).catch(err => console.error('Message send failed:', err));
       return await sendPromise;
-      
     } catch (error) {
-      console.error("Message send failed:", error); // Dev logging
+      console.error('Message send failed:', error);
       return null;
     }
   };
 
-  // Function to handle keyboard events (Enter to send, Tab to indent code)
+  // Stable handlers for the memoised home sections (so typing doesn't re-render them)
+  const onSubmitRef = useRef(onSubmit);
+  onSubmitRef.current = onSubmit;
+  const userRef = useRef(user);
+  userRef.current = user;
+  const handleTry = useCallback((text) => {
+    if (!userRef.current) { navigate('/auth'); return; }
+    onSubmitRef.current(null, text);
+  }, [navigate]);
+  const handleTalk = useCallback(() => {
+    if (!userRef.current) { navigate('/auth'); return; }
+    setIsVoiceModeOpen(true);
+  }, [navigate]);
+
   const handleKeyDown = (e) => {
-    // Indent code or text with Tab key
     if (e.key === 'Tab') {
       e.preventDefault();
-      const textarea = e.target;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const value = textarea.value;
-
-      const newValue = value.substring(0, start) + '  ' + value.substring(end);
-      setInput(newValue);
-
+      const { selectionStart: start, selectionEnd: end, value } = e.target;
+      setInput(value.substring(0, start) + '  ' + value.substring(end));
       requestAnimationFrame(() => {
-        if (textareaRef.current) {
-          textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + 2;
-        }
+        if (textareaRef.current) textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + 2;
       });
       return;
     }
-
     if (e.key === 'Enter') {
-      // Treat shift/ctrl/meta + enter as newline
-      if (e.ctrlKey || e.metaKey || e.shiftKey) {
-        return;
-      }
-      e.preventDefault(); // Prevent default line skip
-
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        dispatch(addToast({
-          type: 'warning',
-          message: 'No internet connection. Please check your network.'
-        }));
-        return;
-      }
-
-      if (!user) {
-        navigate('/auth');
-        return;
-      }
-
-      onSubmit(e); // Message bhejna start
+      if (e.ctrlKey || e.metaKey || e.shiftKey) return; // newline
+      e.preventDefault();
+      onSubmit(e);
     }
   };
 
-  // Drag start (jab screen par file laaye)
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true); // Overlay UI dikhaye
-  };
-
-  // Jab file screen se hata di bina drop kare
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  // File chhorne par drop handle karna
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = () => setIsDragging(false);
   const handleDrop = (e) => {
     e.preventDefault();
-    setIsDragging(false); // Drop ho gaya UI wapas normal kardo
-    
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-
-    // Drop ki gyi files state me save kar lo
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    if (droppedFiles.length > 0) {
-      setFiles(prev => [...prev, ...droppedFiles.map(f => ({ name: f.name, isLink: false, fileObject: f }))]);
-    }
+    setIsDragging(false);
+    if (!user) { navigate('/auth'); return; }
+    const dropped = Array.from(e.dataTransfer.files);
+    if (dropped.length > 0) setFiles(prev => [...prev, ...dropped.map(f => ({ name: f.name, isLink: false, fileObject: f }))]);
   };
 
+  const requireAuth = (fn) => (...args) => { if (!user) { navigate('/auth'); return; } fn(...args); };
+  const offline = typeof navigator !== 'undefined' && !navigator.onLine;
+  const hasContent = input.trim() || files.length > 0;
+  const lineCount = input.split('\n').length;
+
   return (
-    <main data-lenis-prevent className="flex-1 w-full flex flex-col items-center bg-[var(--bg-primary)] relative overflow-x-hidden overflow-y-auto custom-scrollbar pt-14 sm:pt-16"
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      {/* Drag Overlay */}
+    <main data-lenis-prevent
+      className="isolate flex-1 w-full flex flex-col items-center bg-[var(--bg-primary)] relative overflow-x-hidden overflow-y-auto custom-scrollbar pt-14 sm:pt-16"
+      onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+
       {isDragging && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none px-6">
           <div className="bg-white/80 dark:bg-[var(--bg-surface)]/80 border-2 border-dashed border-[var(--color-clear-hanada)] rounded-3xl p-12 backdrop-blur-xl flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300 shadow-2xl">
@@ -565,134 +591,41 @@ const ChatArea = () => {
       )}
 
       <div className="w-full max-w-fluid flex flex-col items-center px-4 md:px-0 pt-2 sm:pt-4 md:pt-6">
-        
-        {/* Brand header */}
-        <div className="flex items-center gap-2.5 mb-4 opacity-90 hover:opacity-100 transition-opacity">
-          <ParsuLogo className="w-8 h-8 sm:w-9 sm:h-9 text-zinc-900 dark:text-white shrink-0" />
-          <span className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-            Parsu <span className="text-[var(--accent-cyan)]">AI</span>
-          </span>
-        </div>
 
-        {/* HeroUI Pro AI Showcase Header & Suggestions Grid */}
-        <div className="w-full max-w-[800px] mx-auto text-left mb-6 px-1 sm:px-2">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-2">
-            What do you want to work on?
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-6 font-normal">
-            Ask a question or start from one of the suggestions below. Powered by Parsu AI autonomous intelligence.
-          </p>
+        {/* Animated landing: hero, motion demo, shortcuts, features, mascot */}
+        <HomeShowcase onTry={handleTry} onTalk={handleTalk} />
 
-          {/* 6 Suggestion Cards (2 cols x 3 rows) matching HeroUI Pro showcase */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-            {[
-              "Summarize this week's product and design updates into a team-ready status note.",
-              "Turn a rough product brief into a launch checklist with owners and deadlines.",
-              "Rewrite this paragraph for a skeptical executive who cares about ROI.",
-              "Brainstorm onboarding flow names for a data-heavy analytics product.",
-              "Draft a weekly 1:1 agenda that surfaces blockers and growth goals.",
-              "Compare three pricing models and recommend one for a usage-based SaaS."
-            ].map((promptText, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={(e) => {
-                  if (!user) {
-                    setBlobMood('surprised');
-                    navigate('/auth');
-                    return;
-                  }
-                  setInput(promptText);
-                  onSubmit(e, promptText);
-                }}
-                className="p-3.5 sm:p-4 rounded-2xl bg-white/90 dark:bg-[var(--bg-surface)]/90 border border-zinc-200/90 dark:border-white/10 hover:border-[var(--accent-cyan)]/60 hover:bg-zinc-50/80 dark:hover:bg-white/[0.04] text-left text-xs sm:text-[13px] text-zinc-700 dark:text-zinc-300 font-medium leading-relaxed transition-all shadow-xs cursor-pointer group active:scale-[0.99]"
-              >
-                <p className="group-hover:text-zinc-950 dark:group-hover:text-white transition-colors">
-                  {promptText}
-                </p>
-              </button>
-            ))}
-          </div>
-
-          {/* Rare UI MatrixOrb when AI is thinking & formulating response */}
-          {loading && (
-            <div className="flex flex-col items-center justify-center gap-3 py-6 my-2 bg-zinc-100/60 dark:bg-white/[0.03] border border-cyan-500/20 rounded-3xl backdrop-blur-md animate-in fade-in zoom-in duration-300">
-              <MatrixOrb size={100} state="thinking" color="var(--accent-cyan)" dots={12} />
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200 tracking-wide">
-                  Parsu AI is thinking & reasoning...
-                </span>
-                <span className="text-[11px] text-zinc-500 font-medium animate-pulse">
-                  Querying models, searching web, and formulating optimal response
-                </span>
-              </div>
+        {loading && (
+          <div className="w-full max-w-[800px] flex flex-col items-center justify-center gap-3 py-6 my-4 bg-zinc-100/60 dark:bg-white/[0.03] border border-cyan-500/20 rounded-3xl backdrop-blur-md animate-in fade-in zoom-in duration-300">
+            <MatrixOrb size={100} state="thinking" color="var(--accent-cyan)" dots={12} />
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-200 tracking-wide">Parsu AI is thinking & reasoning...</span>
+              <span className="text-[11px] text-zinc-500 font-medium animate-pulse">Querying models, searching web, and formulating optimal response</span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Search Input Box — always fixed at bottom, sidebar-aware on desktop */}
+        {/* Input bar: fixed at bottom, sidebar-aware on desktop */}
         <div className={`fixed bottom-0 right-0 z-[60] p-2.5 pb-5 sm:p-4 sm:pb-8 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/95 to-transparent backdrop-blur-[2px] transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'left-0 lg:left-16' : 'left-0 lg:left-56'}`}>
-          <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[var(--bg-surface)] border ${isDragging ? 'border-[var(--color-clear-hanada)]' : 'border-zinc-200/90 dark:border-[var(--border-secondary)]'} focus-within:border-[var(--color-clear-hanada)]/60 dark:focus-within:border-[var(--color-clear-hanada)]/60 focus-within:ring-2 focus-within:ring-[var(--accent-cyan)]/20 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-5 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
+          <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[var(--bg-surface)] border ${isDragging ? 'border-[var(--color-clear-hanada)]' : 'border-zinc-200/90 dark:border-[var(--border-secondary)]'} focus-within:border-[var(--color-clear-hanada)]/60 focus-within:ring-2 focus-within:ring-[var(--accent-cyan)]/20 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-5 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
 
-            {/* Rich Attachment Preview Strip */}
             <AttachmentPreviewStrip files={files} onRemove={removeFile} />
 
-            {/* Live Voice Captioning Stream */}
-            {isListening && (
-              <div className="flex items-center gap-3 px-3.5 py-2 mb-2 rounded-xl bg-zinc-900/95 dark:bg-[var(--bg-surface)]/95 border border-[var(--accent-cyan)]/40 text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
-                <div className="flex items-center gap-1 shrink-0">
-                  <span className="w-1 h-3 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:0ms]" />
-                  <span className="w-1 h-5 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:150ms]" />
-                  <span className="w-1 h-2 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:300ms]" />
-                  <span className="w-1 h-4 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:450ms]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
-                    <span className="text-[10px] font-bold text-[var(--color-sky-haze)] uppercase tracking-wider">Live Speech Caption</span>
-                  </div>
-                  <p className="text-[13px] text-zinc-100 font-medium truncate italic mt-0.5">
-                    {liveCaption || 'Listening to your voice... Speak now'}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleToggleVoiceInput}
-                  className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 cursor-pointer shrink-0"
-                >
-                  Done
-                </button>
-              </div>
-            )}
+            {isListening && <LiveCaption caption={liveCaption} onStop={handleToggleVoiceInput} className="mb-2" />}
 
-            {/* Multi-line or Code Information & Quick Fullscreen Header */}
-            {(isCodeContent || (input && input.split('\n').length > 2)) && (
+            {(isCodeContent || (input && lineCount > 2)) && (
               <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-zinc-200/60 dark:border-zinc-800/60 text-xs text-zinc-500 dark:text-zinc-400 select-none animate-in fade-in duration-200">
                 <div className="flex items-center gap-2">
                   {isCodeContent && (
                     <span className="flex items-center gap-1 text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-[var(--color-clear-hanada)]/15 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] border border-[var(--color-clear-hanada)]/25">
-                      <RiCodeSSlashLine size={12} />
-                      Code format preserved
+                      <RiCodeSSlashLine size={12} /> Code format preserved
                     </span>
                   )}
-                  <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-                    {input.split('\n').length} lines • {input.length} characters
-                  </span>
+                  <span className="text-[11px] font-medium">{lineCount} lines • {input.length} characters</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!user) {
-                      navigate('/auth');
-                      return;
-                    }
-                    setIsFullScreenEditor(true);
-                  }}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-clear-hanada)] hover:text-[var(--color-deep-hanada)] dark:hover:text-[var(--color-sky-haze)] transition-colors cursor-pointer px-2 py-0.5 rounded-md hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"
-                  title="Open full-screen prompt and code editor"
-                >
-                  <RiFullscreenLine size={13} />
-                  <span>Full screen</span>
+                <button type="button" onClick={requireAuth(() => setIsFullScreenEditor(true))} title="Open full-screen prompt and code editor"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-clear-hanada)] hover:text-[var(--color-deep-hanada)] dark:hover:text-[var(--color-sky-haze)] transition-colors cursor-pointer px-2 py-0.5 rounded-md hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50">
+                  <RiFullscreenLine size={13} /><span>Full screen</span>
                 </button>
               </div>
             )}
@@ -702,76 +635,34 @@ const ChatArea = () => {
               rows="1"
               value={input}
               onChange={(e) => {
-                if (!user) {
-                  setBlobMood('surprised');
-                  navigate('/auth');
-                  return;
-                }
+                if (!user) { navigate('/auth'); return; }
                 setInput(e.target.value);
-                triggerTyping();
                 triggerBlobTyping();
               }}
-              onMouseEnter={() => {
-                triggerBlobInteraction('hover');
-              }}
+              onMouseEnter={() => triggerBlobInteraction('hover')}
               onFocus={() => {
-                if (!user) {
-                  setBlobMood('surprised');
-                  navigate('/auth');
-                  return;
-                }
-                setBlobMood('curious');
-                setBlobGaze({ x: 0, y: 16 });
+                if (!user) { navigate('/auth'); return; }
                 triggerBlobInteraction('focus');
               }}
-              onBlur={() => {
-                if (!loading) {
-                  setBlobMood('neutral');
-                  setBlobGaze({ x: 0, y: 0 });
-                }
-              }}
               onClick={() => {
-                if (!user) {
-                  setBlobMood('surprised');
-                  navigate('/auth');
-                  return;
-                }
+                if (!user) { navigate('/auth'); return; }
                 triggerBlobInteraction('click');
               }}
               onKeyDown={handleKeyDown}
               spellCheck={!isCodeContent}
-              style={{
-                whiteSpace: 'pre-wrap',
-                tabSize: 2,
-                MozTabSize: 2
-              }}
-              placeholder={user ? "Ask anything or paste code..." : "Click or sign in to start a new chat..."}
+              style={{ whiteSpace: 'pre-wrap', tabSize: 2, MozTabSize: 2 }}
+              placeholder={user ? 'Ask anything or paste code...' : 'Click or sign in to start a new chat...'}
               className={`w-full bg-transparent border-none outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 custom-scrollbar transition-all resize-none ${
-                isCodeContent 
-                  ? 'font-mono text-[14px] md:text-[15px] leading-relaxed' 
-                  : 'font-sans font-medium text-[17px] md:text-[18px] leading-snug md:leading-relaxed'
+                isCodeContent ? 'font-mono text-[14px] md:text-[15px] leading-relaxed' : 'font-sans font-medium text-[17px] md:text-[18px] leading-snug md:leading-relaxed'
               } min-h-[50px] max-h-[280px] cursor-text`}
             />
 
             <div className="flex items-center justify-between mt-3 sm:mt-4 gap-1.5 sm:gap-2">
               <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 overflow-x-auto no-scrollbar py-0.5">
-                {/* Apple-style Circular Attach Button (+ icon only) */}
                 <div className="relative shrink-0">
-                  <CircleButton
-                    onClick={() => {
-                      if (!user) {
-                        navigate('/auth');
-                        return;
-                      }
-                      setIsUploadMenuOpen(true);
-                    }}
-                    title="Add to chat (Photos, Videos, Files, Memory)"
-                    ariaLabel="Add to chat"
-                  >
+                  <CircleButton onClick={requireAuth(() => setIsUploadMenuOpen(true))} title="Add to chat (Photos, Videos, Files, Memory)" ariaLabel="Add to chat">
                     <RiAddLine size={18} className="shrink-0" />
                   </CircleButton>
-
-                  {/* Premium 'Add to chat' Mobile Bottom Sheet & Desktop Modal */}
                   <AddToChatSheet
                     isOpen={isUploadMenuOpen}
                     onClose={() => setIsUploadMenuOpen(false)}
@@ -786,45 +677,25 @@ const ChatArea = () => {
                   />
                 </div>
 
-                {/* Web Search Toggle Pill Button (Desktop only on input bar; accessible in sheet on mobile) */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    if (!user) {
-                      navigate('/auth');
-                      return;
-                    }
-                    handleToggleWebSearch(e);
-                  }}
+                <button type="button" onClick={requireAuth((e) => handleToggleWebSearch(e))}
                   className={`hidden sm:flex h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
-                    webSearch 
-                      ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
-                      : 'bg-zinc-100/90 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-                  }`}
-                  title={webSearch ? "Web Search: ON (Using Tavily for live internet facts)" : "Web Search: OFF (Pure AI model knowledge)"}
-                >
-                  <RiGlobalLine size={14} className={webSearch ? "text-[var(--accent-cyan)]" : "text-zinc-400 dark:text-zinc-500"} />
+                    webSearch ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]'
+                      : 'bg-zinc-100/90 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'}`}
+                  title={webSearch ? 'Web Search: ON (Using Tavily for live internet facts)' : 'Web Search: OFF (Pure AI model knowledge)'}>
+                  <RiGlobalLine size={14} className={webSearch ? 'text-[var(--accent-cyan)]' : 'text-zinc-400 dark:text-zinc-500'} />
                   <span className="text-[11px] sm:text-xs">Web</span>
                   <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
                 </button>
 
-                <ThinkingSelectorDropdown
-                  thinkingLevel={thinkingLevel}
-                  onChange={setThinkingLevel}
-                  placement="top"
-                />
+                <ThinkingSelectorDropdown thinkingLevel={thinkingLevel} onChange={setThinkingLevel} placement="top" />
 
                 {incognito && (
-                  <span
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-500/10 border border-purple-500/25 text-[11px] text-purple-400 font-semibold shrink-0 cursor-help"
-                    title="Incognito Mode is ON: This chat will not be saved to your history or library."
-                  >
-                    <RiSpyLine size={13} />
-                    <span className="hidden sm:inline">Incognito</span>
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-500/10 border border-purple-500/25 text-[11px] text-purple-400 font-semibold shrink-0 cursor-help"
+                    title="Incognito Mode is ON: This chat will not be saved to your history or library.">
+                    <RiSpyLine size={13} /><span className="hidden sm:inline">Incognito</span>
                   </span>
                 )}
 
-                {/* Hidden inputs */}
                 <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" multiple />
                 <input type="file" ref={cameraInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" capture="environment" />
                 <input type="file" ref={videoInputRef} onChange={handleFileUpload} className="hidden" accept="video/*" multiple />
@@ -832,170 +703,82 @@ const ChatArea = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Full-Screen Prompt Editor Button if text or code is long */}
                 {(input.length > 50 || input.includes('\n')) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!user) {
-                        navigate('/auth');
-                        return;
-                      }
-                      setIsFullScreenEditor(true);
-                    }}
-                    className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-all cursor-pointer"
-                    title="Open full-screen prompt and code studio"
-                  >
+                  <button type="button" onClick={requireAuth(() => setIsFullScreenEditor(true))} title="Open full-screen prompt and code studio"
+                    className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-all cursor-pointer">
                     <RiFullscreenLine size={18} />
                   </button>
                 )}
 
-                <button 
-                  type="button"
-                  onClick={(e) => {
-                    if (!user) {
-                      navigate('/auth');
-                      return;
-                    }
-                    handleToggleVoiceInput(e);
-                  }}
-                  className={`p-1.5 rounded-full transition-all cursor-pointer ${
-                    isListening 
-                      ? 'text-rose-500 bg-rose-500/15 animate-pulse ring-2 ring-rose-500/30' 
-                      : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
-                  }`}
-                  title={isListening ? "Listening... Click to stop" : "Voice input (Speech to text)"}
-                >
+                <button type="button" onClick={handleToggleVoiceInput}
+                  className={`p-1.5 rounded-full transition-all cursor-pointer ${isListening ? 'text-rose-500 bg-rose-500/15 animate-pulse ring-2 ring-rose-500/30' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}
+                  title={isListening ? 'Listening... Click to stop' : 'Voice input (Speech to text)'}>
                   {isListening ? <RiMicFill size={18} className="text-rose-500" /> : <RiMicLine size={18} />}
                 </button>
 
-                {/* 2-State Action: Live Voice Agent Orb (if input empty) vs Send Button (if text entered) */}
-                {(!input.trim() && files.length === 0) ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!user) {
-                        navigate('/auth');
-                        return;
-                      }
-                      setIsVoiceModeOpen(true);
-                    }}
-                    className="w-8.5 h-8.5 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 active:scale-95 transition-all cursor-pointer"
-                    title="Start live voice talk (Jarvis Agent)"
-                  >
+                {!hasContent ? (
+                  <button type="button" onClick={handleTalk} title="Start live voice talk (Jarvis Agent)"
+                    className="w-8.5 h-8.5 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 active:scale-95 transition-all cursor-pointer">
                     <RiVoiceprintLine size={18} />
                   </button>
                 ) : (
                   <button
-                    disabled={typeof navigator !== 'undefined' && !navigator.onLine}
+                    disabled={offline}
                     onClick={(e) => {
-                      if (typeof navigator !== 'undefined' && !navigator.onLine) {
-                        dispatch(addToast({
-                          type: 'warning',
-                          message: 'No internet connection. Please check your network.'
-                        }));
-                        return;
-                      }
-                      if (!user) {
-                        setBlobMood('surprised');
-                        navigate('/auth');
-                        return;
-                      }
-                      setBlobMood('hmm');
+                      if (!user) { navigate('/auth'); return; }
                       onSubmit(e);
                     }}
-                    onMouseEnter={() => {
-                      if (!user || input.trim() || files.length > 0) {
-                        setBlobMood('happy');
-                      }
-                    }}
-                    onMouseLeave={() => {
-                      if (!loading) {
-                        setBlobMood(input.trim() ? 'curious' : 'neutral');
-                      }
-                    }}
-                    className={`w-8.5 h-8.5 flex items-center justify-center rounded-full transition-all bg-[var(--accent-cyan)] text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 ${
-                      typeof navigator !== 'undefined' && !navigator.onLine
-                        ? 'opacity-40 cursor-not-allowed hover:scale-100'
-                        : 'hover:bg-[var(--accent-cyan-hover)] hover:scale-105 active:scale-95 cursor-pointer'
-                    }`}
-                    title={typeof navigator !== 'undefined' && !navigator.onLine ? "You are offline. Reconnect to send messages." : "Send message"}
-                  >
+                    className={`w-8.5 h-8.5 flex items-center justify-center rounded-full transition-all bg-[var(--accent-cyan)] text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 ${offline ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[var(--accent-cyan-hover)] hover:scale-105 active:scale-95 cursor-pointer'}`}
+                    title={offline ? 'You are offline. Reconnect to send messages.' : 'Send message'}>
                     <RiArrowUpLine size={19} className="stroke-[2.5]" />
                   </button>
                 )}
               </div>
             </div>
-            <p className="text-center text-[11px] text-zinc-400 dark:text-zinc-500 mt-2 font-medium">
-              Parsu AI can make mistakes. Check important info.
-            </p>
+            <p className="text-center text-[11px] text-zinc-400 dark:text-zinc-500 mt-2 font-medium">Parsu AI can make mistakes. Check important info.</p>
           </div>
         </div>
 
-        {/* Guest prompt indicator */}
         {!user && (
-          <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 dark:bg-zinc-900/60 border border-zinc-200 dark:border-white/5 text-xs text-zinc-500 animate-in fade-in duration-500">
+          <div className="mt-8 flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 dark:bg-zinc-900/60 border border-zinc-200 dark:border-white/5 text-xs text-zinc-500 animate-in fade-in duration-500">
             <span className="w-2 h-2 rounded-full bg-[var(--accent-cyan)] animate-pulse" />
             <span>Sign in to save chat history, analyze files, and publish to social networks.</span>
           </div>
         )}
 
-        {/* Suggested Queries List */}
-        <div className="w-full max-w-[800px] mt-10 space-y-4">
+        {/* Suggested queries from backend */}
+        <div className="w-full max-w-[800px] mt-14 space-y-4">
           {suggestionsLoading ? (
-            [1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="w-full h-8 bg-zinc-900/50 rounded-lg animate-pulse" />
-            ))
+            [1, 2, 3, 4, 5].map(i => <div key={i} className="w-full h-8 bg-zinc-900/50 rounded-lg animate-pulse" />)
           ) : (
             (aiSuggestions?.queries || [
-              'Show me latest Flipkart deals',
-              'Find online courses to master digital art',
-              'Recommend Bollywood movies for a long flight',
-              'Show me best practices for CSS Grid and Flexbox',
-              'Compare CSS flexbox vs grid layouts'
+              'Show me latest Flipkart deals', 'Find online courses to master digital art',
+              'Recommend Bollywood movies for a long flight', 'Show me best practices for CSS Grid and Flexbox',
+              'Compare CSS flexbox vs grid layouts',
             ]).map((query, i) => (
-              <button 
-                key={i} 
-                onClick={(e) => {
-                  if (!user) {
-                    navigate('/auth');
-                    return;
-                  }
-                  onSubmit(e, query);
-                }}
-                className="w-full text-left px-4 py-2.5 text-[14px] text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all border-b border-zinc-100 dark:border-zinc-900/50 block font-medium break-words whitespace-normal cursor-pointer"
-              >
+              <button key={i} type="button" onClick={() => handleTry(query)}
+                className="w-full text-left px-4 py-2.5 text-[14px] text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all border-b border-zinc-100 dark:border-zinc-900/50 block font-medium break-words whitespace-normal cursor-pointer">
                 {query}
               </button>
             ))
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10 w-full max-w-[800px] mb-20 px-1">
+        {/* Trending topics from backend */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10 w-full max-w-[800px] px-1">
           {suggestionsLoading ? (
-            [1, 2, 3, 4].map(i => (
-              <div key={i} className="h-[120px] bg-zinc-900/30 border border-white/5 rounded-2xl animate-pulse" />
-            ))
+            [1, 2, 3, 4].map(i => <div key={i} className="h-[120px] bg-zinc-900/30 border border-white/5 rounded-2xl animate-pulse" />)
           ) : (
             (aiSuggestions?.topics || [
               { label: 'Advancements in Fusion Energy', desc: 'Science · 4h ago', iconType: 'global' },
               { label: 'Build AI agents with Node.js', desc: 'Tutorial · Today', iconType: 'robot' },
               { label: 'Deep dive into tech layoffs', desc: 'Business · 1d ago', iconType: 'file' },
-              { label: 'The 3-body problem explained', desc: 'Physics · 6h ago', iconType: 'magic' }
+              { label: 'The 3-body problem explained', desc: 'Physics · 6h ago', iconType: 'magic' },
             ]).map((topic, i) => {
-              const Icon = iconMap[topic.iconType] || RiMagicLine;
+              const Icon = ICON_MAP[topic.iconType] || RiMagicLine;
               return (
-                <button 
-                    key={i} 
-                    onClick={(e) => {
-                      if (!user) {
-                        navigate('/auth');
-                        return;
-                      }
-                      onSubmit(e, topic.label);
-                    }}
-                    className="flex flex-col gap-3 p-5 bg-zinc-50 dark:bg-zinc-900/30 border border-zinc-200 dark:border-white/5 rounded-2xl hover:border-zinc-300 dark:hover:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/30 transition-all text-left group shadow-sm dark:shadow-none cursor-pointer"
-                >
+                <button key={i} type="button" onClick={() => handleTry(topic.label)}
+                  className="flex flex-col gap-3 p-5 bg-zinc-50 dark:bg-zinc-900/30 border border-zinc-200 dark:border-white/5 rounded-2xl hover:border-zinc-300 dark:hover:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/30 transition-all text-left group shadow-sm dark:shadow-none cursor-pointer">
                   <div className="flex items-center justify-between w-full">
                     <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 transition-colors">
                       <Icon className="text-zinc-500 dark:text-zinc-600 group-hover:text-zinc-900 dark:group-hover:text-zinc-400" size={18} />
@@ -1003,62 +786,28 @@ const ChatArea = () => {
                     <RiArrowRightLine size={14} className="text-zinc-300 dark:text-zinc-800 group-hover:text-zinc-600 dark:group-hover:text-zinc-500 mr-1 transition-colors" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-[14px] font-bold text-zinc-900 dark:text-zinc-200 group-hover:text-black dark:group-hover:text-white transition-colors leading-[1.4] break-words line-clamp-2">
-                      {topic.label}
-                    </h3>
-                    <p className="text-[10px] text-zinc-500 dark:text-zinc-600 mt-1 font-bold uppercase tracking-tight transition-colors">{topic.desc}</p>
+                    <h3 className="text-[14px] font-bold text-zinc-900 dark:text-zinc-200 group-hover:text-black dark:group-hover:text-white transition-colors leading-[1.4] break-words line-clamp-2">{topic.label}</h3>
+                    <p className="text-[10px] text-zinc-500 dark:text-zinc-600 mt-1 font-bold uppercase tracking-tight">{topic.desc}</p>
                   </div>
                 </button>
               );
             })
           )}
         </div>
-        
-        {/* Dynamic AI Capabilities Showcase */}
-        {/* Is component block se humne Instagram aur Email jaise specific integrations ko darshaya hai. Ye generic hai. */}
-        <div className="w-full max-w-[800px] mt-6 mb-20 px-1">
-          <div className="mb-4">
-             <h3 className="text-[12px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest pl-1">Capabilities</h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {capabilities.map((cap, i) => {
-               const Icon = cap.icon;
-               return (
-                 <div key={i} className={`group flex flex-col gap-2 p-4 bg-white dark:bg-[var(--bg-card)] border border-zinc-200/90 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/20 rounded-2xl transition-all cursor-default shadow-xs ${cap.bgHover}`}>
-                   <div className="flex items-center gap-3">
-                     <div className={`w-8 h-8 rounded-xl bg-zinc-100 dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/[0.08] flex items-center justify-center transition-colors shadow-xs ${cap.colorClass}`}>
-                        <Icon size={16} />
-                     </div>
-                     <span className="text-[14px] font-semibold text-zinc-900 dark:text-zinc-100">{cap.title}</span>
-                   </div>
-                   <p className="text-[12px] text-zinc-600 dark:text-zinc-400 font-normal leading-[1.5] mt-1 pr-4">
-                     {cap.description}
-                   </p>
-                 </div>
-               )
-            })}
-          </div>
-        </div>
 
-        {/* Spacer so scrollable content doesn't hide behind fixed input bar */}
+        {/* Spacer so content isn't hidden behind the fixed input bar */}
         <div className="h-36 sm:h-40 shrink-0" />
       </div>
 
-      {/* Full-width responsive footer - never trapped behind sidebar */}
       <div className="w-full border-t border-zinc-200 dark:border-white/[0.08] mt-auto bg-zinc-100 dark:bg-[var(--bg-primary)]">
         <Footer />
-        {/* Dedicated space below footer with identical footer background color so footer is fully visible above fixed input form */}
         <div className="w-full h-44 sm:h-52 bg-zinc-100 dark:bg-[var(--bg-primary)]" />
       </div>
 
-      {/* Full-Screen Prompt & Code Editor Studio via React Portal */}
+      {/* Full-screen prompt & code editor */}
       {isFullScreenEditor && typeof document !== 'undefined' && createPortal(
-        <div 
-          data-lenis-prevent="true"
-          className={`fixed inset-0 ${isSidebarCollapsed ? 'lg:left-16' : 'lg:left-56'} z-[9980] bg-[var(--bg-primary)] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200 border-l border-zinc-800/80 shadow-2xl transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}
-          onWheel={(e) => e.stopPropagation()}
-        >
-          {/* Studio Header */}
+        <div data-lenis-prevent="true" onWheel={(e) => e.stopPropagation()}
+          className={`fixed inset-0 ${isSidebarCollapsed ? 'lg:left-16' : 'lg:left-56'} z-[9980] bg-[var(--bg-primary)] text-zinc-100 flex flex-col pointer-events-auto select-auto animate-in fade-in zoom-in-95 duration-200 border-l border-zinc-800/80 shadow-2xl transition-[left] ease-[cubic-bezier(0.4,0,0.2,1)]`}>
           <div className="h-14 px-4 sm:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[var(--bg-secondary)] shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 rounded-lg bg-[var(--accent-cyan)]/15 text-[var(--accent-cyan)]">
@@ -1066,169 +815,66 @@ const ChatArea = () => {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-zinc-100">Full-Screen Prompt Studio</h3>
-                <p className="text-[11px] text-zinc-400 font-mono">
-                  {input.split('\n').length} lines • {input.length} characters {isCodeContent ? '• Code format preserved' : ''}
-                </p>
+                <p className="text-[11px] text-zinc-400 font-mono">{lineCount} lines • {input.length} characters {isCodeContent ? '• Code format preserved' : ''}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               {input && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setInput('');
-                    dispatch(addToast({ message: "Prompt cleared", type: "info" }));
-                  }}
-                  className="px-2.5 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700 text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
-                >
-                  Clear
-                </button>
+                <button type="button" onClick={() => { setInput(''); dispatch(addToast({ message: 'Prompt cleared', type: 'info' })); }}
+                  className="px-2.5 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700 text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer">Clear</button>
               )}
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(input);
-                  dispatch(addToast({ message: "Prompt copied to clipboard!", type: "info" }));
-                }}
-                className="px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition-colors cursor-pointer"
-              >
-                Copy
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsFullScreenEditor(false)}
-                className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
-                title="Exit full-screen mode"
-              >
-                <RiFullscreenExitLine size={16} />
-                <span>Done</span>
+              <button type="button" onClick={() => { navigator.clipboard.writeText(input); dispatch(addToast({ message: 'Prompt copied to clipboard!', type: 'info' })); }}
+                className="px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition-colors cursor-pointer">Copy</button>
+              <button type="button" onClick={() => setIsFullScreenEditor(false)} title="Exit full-screen mode"
+                className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer">
+                <RiFullscreenExitLine size={16} /><span>Done</span>
               </button>
             </div>
           </div>
 
-          {/* Textarea Area */}
           <div className="flex-1 p-4 sm:p-6 overflow-hidden flex flex-col min-h-0 bg-[var(--bg-primary)]">
-            <textarea
-              autoFocus
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                triggerTyping();
-                triggerBlobTyping();
-              }}
+            <textarea autoFocus value={input}
+              onChange={(e) => { setInput(e.target.value); triggerBlobTyping(); }}
               onKeyDown={handleKeyDown}
               spellCheck={!isCodeContent}
               style={{ whiteSpace: 'pre-wrap', tabSize: 2, MozTabSize: 2 }}
               placeholder="Type or paste your prompt, code or instructions..."
-              className="w-full flex-1 bg-transparent border-none outline-none resize-none font-mono text-sm sm:text-base leading-relaxed text-zinc-100 placeholder:text-zinc-600 custom-scrollbar p-2"
-            />
+              className="w-full flex-1 bg-transparent border-none outline-none resize-none font-mono text-sm sm:text-base leading-relaxed text-zinc-100 placeholder:text-zinc-600 custom-scrollbar p-2" />
           </div>
 
-          {/* Live Voice Captioning Stream in Studio */}
-          {isListening && (
-            <div className="mx-4 sm:mx-6 mb-2 px-3.5 py-2 rounded-xl bg-zinc-900/95 border border-[var(--accent-cyan)]/40 text-white shadow-xl backdrop-blur-md flex items-center gap-3">
-              <div className="flex items-center gap-1 shrink-0">
-                <span className="w-1 h-3 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:0ms]" />
-                <span className="w-1 h-5 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:150ms]" />
-                <span className="w-1 h-2 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:300ms]" />
-                <span className="w-1 h-4 rounded-full bg-[var(--accent-cyan)] animate-bounce [animation-delay:450ms]" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-[10px] font-bold text-[var(--color-sky-haze)] uppercase tracking-wider block">Live Voice Caption</span>
-                <p className="text-[13px] text-zinc-100 font-medium truncate italic mt-0.5">
-                  {liveCaption || 'Listening to your voice... Speak now'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleToggleVoiceInput}
-                className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 cursor-pointer shrink-0"
-              >
-                Done
-              </button>
-            </div>
-          )}
+          {isListening && <LiveCaption caption={liveCaption} onStop={handleToggleVoiceInput} className="mx-4 sm:mx-6 mb-2" />}
 
-          {/* Rich Bottom Toolbar Options (Attach, Web Search, Models, Mic, Send) */}
           <div className="border-t border-zinc-800/80 bg-[var(--bg-secondary)] px-4 sm:px-6 py-3 shrink-0 flex flex-col gap-2.5">
-            {/* Attachments Preview Strip */}
             <AttachmentPreviewStrip files={files} onRemove={removeFile} />
-
             <div className="flex items-center justify-between gap-2">
-              {/* Left Side Actions */}
               <div className="flex items-center gap-2 min-w-0 overflow-x-auto no-scrollbar py-0.5">
-                {/* Attach Button */}
-                <CircleButton
-                  onClick={() => setIsUploadMenuOpen(true)}
-                  title="Add to chat (Photos, Videos, Files, Memory)"
-                  ariaLabel="Add to chat"
-                >
+                <CircleButton onClick={() => setIsUploadMenuOpen(true)} title="Add to chat (Photos, Videos, Files, Memory)" ariaLabel="Add to chat">
                   <RiAddLine size={18} className="shrink-0" />
                 </CircleButton>
-
-                {/* Web Search Toggle */}
-                <button
-                  type="button"
-                  onClick={handleToggleWebSearch}
+                <button type="button" onClick={handleToggleWebSearch}
                   className={`h-8.5 px-3 rounded-full border flex items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
-                    webSearch 
-                      ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
-                      : 'bg-white/[0.06] border-white/15 text-zinc-400 hover:text-zinc-200'
-                  }`}
-                  title={webSearch ? "Web Search: ON (Using Tavily for live internet facts)" : "Web Search: OFF (Pure AI model knowledge)"}
-                >
-                  <RiGlobalLine size={14} className={webSearch ? "text-[var(--accent-cyan)]" : "text-zinc-400"} />
+                    webSearch ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]' : 'bg-white/[0.06] border-white/15 text-zinc-400 hover:text-zinc-200'}`}
+                  title={webSearch ? 'Web Search: ON (Using Tavily for live internet facts)' : 'Web Search: OFF (Pure AI model knowledge)'}>
+                  <RiGlobalLine size={14} className={webSearch ? 'text-[var(--accent-cyan)]' : 'text-zinc-400'} />
                   <span className="text-xs">Web</span>
                   <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-600'}`} />
                 </button>
-
               </div>
-
-              {/* Right Side Actions */}
               <div className="flex items-center gap-2 shrink-0">
-                {/* Microphone Button */}
-                <button
-                  type="button"
-                  onClick={handleToggleVoiceInput}
-                  className={`p-2 rounded-full transition-all cursor-pointer ${
-                    isListening 
-                      ? 'text-rose-500 bg-rose-500/15 animate-pulse ring-2 ring-rose-500/30' 
-                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'
-                  }`}
-                  title={isListening ? "Listening... Click to stop" : "Voice input (Speech to text)"}
-                >
+                <button type="button" onClick={handleToggleVoiceInput}
+                  className={`p-2 rounded-full transition-all cursor-pointer ${isListening ? 'text-rose-500 bg-rose-500/15 animate-pulse ring-2 ring-rose-500/30' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'}`}
+                  title={isListening ? 'Listening... Click to stop' : 'Voice input (Speech to text)'}>
                   {isListening ? <RiMicFill size={19} className="text-rose-500" /> : <RiMicLine size={19} />}
                 </button>
-
-                {/* 2-State Action: Live Voice Agent Orb vs Send Button */}
-                {(!input.trim() && files.length === 0) ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!user) {
-                        navigate('/auth');
-                        return;
-                      }
-                      setIsFullScreenEditor(false);
-                      setIsVoiceModeOpen(true);
-                    }}
-                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 active:scale-95 transition-all cursor-pointer"
-                    title="Start live voice talk (Jarvis Agent)"
-                  >
+                {!hasContent ? (
+                  <button type="button" onClick={() => { setIsFullScreenEditor(false); handleTalk(); }} title="Start live voice talk (Jarvis Agent)"
+                    className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 active:scale-95 transition-all cursor-pointer">
                     <RiVoiceprintLine size={18} />
                   </button>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      setIsFullScreenEditor(false);
-                      onSubmit(e);
-                    }}
-                    className="px-4 py-2 h-9 flex items-center justify-center rounded-full transition-all gap-1.5 text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-lg hover:scale-105 cursor-pointer"
-                    title="Send prompt"
-                  >
-                    <span>Send</span>
-                    <RiArrowUpLine size={16} />
+                  <button type="button" onClick={(e) => onSubmit(e)} title="Send prompt"
+                    className="px-4 py-2 h-9 flex items-center justify-center rounded-full transition-all gap-1.5 text-xs font-bold bg-white text-black hover:bg-zinc-200 shadow-lg hover:scale-105 cursor-pointer">
+                    <span>Send</span><RiArrowUpLine size={16} />
                   </button>
                 )}
               </div>
@@ -1238,7 +884,7 @@ const ChatArea = () => {
         document.body
       )}
 
-      {/* Jarvis Voice Agent Overlay */}
+      {/* Jarvis voice agent overlay */}
       <VoiceMode
         isOpen={isVoiceModeOpen}
         onClose={() => setIsVoiceModeOpen(false)}
@@ -1247,7 +893,7 @@ const ChatArea = () => {
             const res = await onSubmit(null, text);
             return res?.aiMessage?.content || null;
           } catch (err) {
-            console.error("VoiceMode send failed:", err);
+            console.error('VoiceMode send failed:', err);
             return null;
           }
         }}
