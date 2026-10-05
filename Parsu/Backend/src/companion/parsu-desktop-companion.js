@@ -18,6 +18,7 @@ import { io } from "socket.io-client";
 import os from "os";
 import fetch from "node-fetch";
 import { desktopWindowsService } from "../services/device/desktopWindows.service.js";
+import { runDesktopAction } from "../services/device/desktopActions.service.js";
 
 // ─── Configuration ─────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -96,7 +97,27 @@ async function connectSocket() {
             userAgent: `NodeJS/${process.version} ${os.type()}/${os.release()}`
         });
 
+        // Join the verified companion channel so the orchestrator can reach this PC
+        // from any device logged in with the same account (phone, tablet, other browser).
+        socket.emit("companion:register", { token: JWT }, (ack) => {
+            if (ack?.ok) console.log("🛰️  Companion channel ready — remote control enabled");
+            else console.error("❌ Companion registration rejected:", ack?.error);
+        });
+
         startHeartbeat(socket);
+    });
+
+    // Actions forwarded by the Parsu backend (e.g. typed on phone → runs on this PC)
+    socket.on("companion:execute", async ({ commandId, action, params }) => {
+        console.log(`\n⚡ Remote command: [${action}]`);
+        try {
+            const { result } = await runDesktopAction(action, params || {});
+            socket.emit("companion:result", { commandId, success: true, result });
+            console.log(`✅ [${action}] completed`);
+        } catch (err) {
+            console.error(`❌ [${action}] failed:`, err.message);
+            socket.emit("companion:result", { commandId, success: false, error: err.message });
+        }
     });
 
     socket.on("device:auto_registered", ({ success, device }) => {
@@ -110,53 +131,7 @@ async function connectSocket() {
         console.log(`\n⚡ Relay command from "${senderDeviceName}": [${action}]`);
         let result;
         try {
-            switch (action) {
-                case "launch_app":
-                    result = await desktopWindowsService.launchApp(params.appName);
-                    break;
-                case "close_app":
-                    result = await desktopWindowsService.closeApp(params.processName);
-                    break;
-                case "list_processes":
-                    result = await desktopWindowsService.listRunningProcesses(params.limit);
-                    break;
-                case "window_control":
-                    result = await desktopWindowsService.controlWindow(params.windowTitle, params.windowAction);
-                    break;
-                case "simulate_input":
-                    result = await desktopWindowsService.simulateInput(params.type, params.payload);
-                    break;
-                case "file_operation":
-                    result = await desktopWindowsService.fileOperation(params.operation, params.fileParams);
-                    break;
-                case "read_clipboard":
-                    result = await desktopWindowsService.readClipboard();
-                    break;
-                case "write_clipboard":
-                    result = await desktopWindowsService.writeClipboard(params.text);
-                    break;
-                case "set_clipboard":
-                    result = await desktopWindowsService.writeClipboard(params.text);
-                    break;
-                case "system_settings":
-                    result = await desktopWindowsService.controlSystemSettings(params.setting, params.value);
-                    break;
-                case "take_screenshot":
-                    result = await desktopWindowsService.takeScreenshot(params.region);
-                    break;
-                case "send_notification":
-                    result = await desktopWindowsService.sendNotification(params.title, params.message);
-                    break;
-                case "browser_open":
-                case "open_url":
-                    result = await desktopWindowsService.openBrowserUrl(params.url);
-                    break;
-                case "get_stats":
-                    result = await desktopWindowsService.getSystemStats();
-                    break;
-                default:
-                    throw new Error(`Unsupported companion action: ${action}`);
-            }
+            ({ result } = await runDesktopAction(action, params || {}));
 
             console.log(`✅ [${action}] completed`);
             socket.emit("device:relay_result", {
@@ -210,7 +185,7 @@ function startHeartbeat(socket) {
     stopHeartbeat();
     heartbeatTimer = setInterval(async () => {
         try {
-            const stats = await desktopWindowsService.getSystemStats();
+            const stats = await desktopWindowsService.getSystemMetrics();
             socket.emit("device:heartbeat", {
                 systemMetrics: {
                     cpuUsagePercent: stats.cpuUsagePercent || 0,

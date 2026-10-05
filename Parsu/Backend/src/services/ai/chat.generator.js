@@ -260,14 +260,14 @@ export async function generateResponse(messages, onChunk, userContext) {
        - **AI-Refined Captions**: If the user writes a draft caption and asks "enhance this", "improve my caption", or "look at this caption and create one using AI":
          - Read the user's caption, polish the tone, fix grammar, enhance the hook, add trending hashtags, and use that refined caption.
 
-    5. CRITICAL AUTOMATIC ROAD TRIP & MULTI-STOP MAP EXTRACTION:
-       Whenever the user asks for a map, route, directions, trip navigation, or mentions traveling by car, bike, transit, or walking through or visiting multiple places (even with casual language or typos like "going to RJ by car through malabar visiting kasargod, manguluru, goa like conacona, baga, ratanagiri, mumbai, navi mumbai, gurjat surat, vapi, ahmedabad, sabrmati, palanpur then marvad bhinmal"):
-       - YOU MUST AUTOMATICALLY IDENTIFY AND EXTRACT EVERY LOCATION:
-         1. from (Origin / Starting City): Identify where the user starts (e.g. "Malabar, Kerala" or "Thalassery, Kerala" or "My Location").
-         2. to (Final Destination): Identify the user's final destination (e.g. "Bhinmal, Rajasthan").
-         3. stops (Intermediate Waypoints): Extract and clean EVERY SINGLE city, beach, town, landmark, highway stop, or detour mentioned by the user or along the optimal route. Fix typos and add state/region context automatically:
-            (e.g., "kasargod" -> "Kasaragod", "manguluru" -> "Mangaluru", "conacona" -> "Canacona Goa", "baga" -> "Baga Beach Goa", "ratanagiri" -> "Ratnagiri", "mumbai" -> "Mumbai", "navi mumbai" -> "Navi Mumbai", "vapi" -> "Vapi", "gurjat surat" -> "Surat", "ahmedabad" -> "Ahmedabad", "sabrmati" -> "Sabarmati Ahmedabad", "palanpur" -> "Palanpur", "marvad bhinmal" -> "Bhinmal Rajasthan").
-       - ALWAYS OUTPUT THE FULL MULTI-STOP MAP CODEBLOCK:
+    5. ROAD TRIP, ROUTE & MAP EXTRACTION (ONLY WHEN ASKED FOR MAP / DIRECTIONS):
+       - CRITICAL RULE: When the user asks to plan a trip, itinerary, or places to visit WITHOUT explicitly asking to see a map or directions, provide the full trip itinerary, travel tips, distances, and halts in regular markdown. DO NOT output a \`\`\`map codeblock unless requested.
+       - ONLY output the \`\`\`map codeblock when the user explicitly asks for a map, directions, route visualization, or says 'show map', 'show me directions', 'yes show map', 'navigate to...', etc.
+       - When a map is requested:
+         1. from (Origin / Starting City): Identify where the user starts.
+         2. to (Final Destination): Identify the user's destination.
+         3. stops (Intermediate Waypoints): Extract and clean intermediate cities/stops.
+       - OUTPUT THE MULTI-STOP MAP CODEBLOCK:
          \`\`\`map
          from: Starting City / Location
          stops: First Stop, Second Stop, Third Stop, Fourth Stop, ...
@@ -289,7 +289,58 @@ export async function generateResponse(messages, onChunk, userContext) {
        - The frontend will automatically render an interactive, zoomable, pannable Google Map card with ALL intermediate stops mapped in sequence, live road turn-by-turn navigation, route swap, travel mode switcher (Car / Transit / Walk), and GPS Current Location detection right inside the message!
        - In your markdown response, provide the estimated driving/transit distance (km / miles), estimated travel time, shortest path highway details (e.g. NH66, NH48), scenic stops, food/fuel halts, and practical travel tips.
 
-    6. INTERACTIVE AI GUIDED WALKTHROUGHS & APP TOURS:
+       - If the user asks to see images of this place/trip (e.g. "show me few images of this place in map or in chat"), ALSO output an image gallery block:
+         \`\`\`gallery
+         query: Place Name
+         \`\`\`
+
+    6. WEB SEARCH IMAGES & PRODUCT CARDS WITH DETAILS:
+       - When a user asks to see photos, pictures, or images of anything (e.g. "show me few pictures/images of a mango", "show me photos of red roses", "show images of Tesla Model S"):
+         ALWAYS output an image gallery block:
+         \`\`\`gallery
+         query: mango
+         \`\`\`
+         Add a warm, engaging markdown description of the subject above or below the gallery block.
+       - When a user asks for product recommendations or items WITH photos and their details/uses (e.g. "show me some creams and with it details", "show me sunscreens with uses and details", "show me face washes with details"):
+         ALWAYS output a structured cards codeblock in JSON format:
+         \`\`\`cards
+         [
+           {
+             "name": "Nivea Soft Light Moisturizing Cream",
+             "imageQuery": "Nivea Soft Light Moisturizing Cream",
+             "description": "A light, non-greasy refreshing daily moisturizing cream infused with Vitamin E and Jojoba Oil.",
+             "uses": [
+               "Instant skin hydration for face, hands, and body",
+               "Quick absorption without sticky residue",
+               "Suitable for daily use across all skin types"
+             ]
+           },
+           {
+             "name": "Cetaphil Moisturizing Cream",
+             "imageQuery": "Cetaphil Moisturizing Cream tub",
+             "description": "Rich, fragrance-free formula packed with sweet almond oil, niacinamide, and provitamin B5.",
+             "uses": [
+               "Intense 48-hour moisture barrier hydration",
+               "Deep nourishment for dry to very dry sensitive skin",
+               "Dermatologist tested and hypoallergenic"
+             ]
+           },
+           {
+             "name": "Neutrogena Hydro Boost Water Gel",
+             "imageQuery": "Neutrogena Hydro Boost Water Gel moisturizer",
+             "description": "Oil-free gel moisturizer powered by purified Hyaluronic Acid.",
+             "uses": [
+               "Deep hydration with an ultra-lightweight water-like feel",
+               "Locks in moisture for 72 hours for a supple, dewy glow",
+               "Ideal for oily and combination acne-prone skin"
+             ]
+           }
+         ]
+         \`\`\`
+         Always provide 3 to 5 realistic items. Each item must have: "name", "imageQuery" (precise keyword for web image search), "description" (concise overview), and "uses" (array of 2-4 key benefits / instructions).
+         The frontend will automatically fetch real web photos and present each product with its image on top and details & uses neatly organized underneath!
+
+    7. INTERACTIVE AI GUIDED WALKTHROUGHS & APP TOURS:
        Whenever the user asks how to do something in the app, or where to find a setting, or asks for help navigating Parsu AI features:
        - Provide a warm, concise, friendly answer in markdown.
        - AT THE VERY END OF YOUR RESPONSE, append an automatic guide trigger codeblock:
@@ -309,7 +360,7 @@ export async function generateResponse(messages, onChunk, userContext) {
          * post_social        -> Attaching media and posting to social platforms
        - The frontend will smoothly glide the user to the destination page without lag, showing a futuristic spotlight on each interactive button!
 
-    7. Clean Markdown Output: Format your explanations with clean, readable Markdown, emojis, and clear status summaries.`;
+    8. Clean Markdown Output: Format your explanations with clean, readable Markdown, emojis, and clear status summaries.`;
 
   if (hasImage) {
     const geminiMessages = history.map((msg, idx) => {

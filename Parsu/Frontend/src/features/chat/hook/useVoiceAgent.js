@@ -25,7 +25,7 @@ const SITE_MAP = {
     x: 'https://x.com',
     instagram: 'https://instagram.com',
     linkedin: 'https://linkedin.com',
-    whatsapp: 'https://web.whatsapp.com',
+    'whatsapp web': 'https://web.whatsapp.com',
     maps: 'https://maps.google.com',
     'google maps': 'https://maps.google.com',
     netflix: 'https://netflix.com',
@@ -77,7 +77,8 @@ const DESKTOP_APPS = {
     teams: 'Teams.exe',
     zoom: 'Zoom.exe',
     discord: 'Discord.exe',
-    whatsapp: 'WhatsApp.exe',
+    whatsapp: 'whatsapp',
+    spotify: 'spotify',
     telegram: 'Telegram.exe',
     photoshop: 'photoshop.exe',
     camera: 'microsoft.windows.camera:',
@@ -146,6 +147,49 @@ export function resolveIntent(text) {
         return { type: 'device_cmd', targetSelector, action: 'capture_screenshot', params: { targetSelector }, label: 'Taking screenshot' };
     }
 
+    // ── System shortcuts (media keys, lock, show desktop, etc.) ──
+    const SHORTCUTS = [
+        [/^(?:pause|resume|play\/pause|play pause)(?:\s+(?:the\s+)?(?:music|song|media|video|track))?$/, 'play_pause', 'Play / pause'],
+        [/^(?:next|skip)(?:\s+(?:the\s+)?(?:song|track|music))?$/, 'next_track', 'Next track'],
+        [/^(?:previous|prev|go back)\s*(?:song|track)?$/, 'prev_track', 'Previous track'],
+        [/^lock(?:\s+(?:the\s+)?(?:screen|pc|computer|laptop|windows))?$/, 'lock', 'Locking screen'],
+        [/^(?:show desktop|minimi[sz]e all(?: windows)?)$/, 'show_desktop', 'Showing desktop'],
+        [/^(?:task view|show all windows)$/, 'task_view', 'Task view'],
+        [/^(?:switch window|alt tab)$/, 'switch_window', 'Switching window'],
+        [/^close (?:this |the )?(?:window|tab)$/, 'close_window', 'Closing window'],
+        [/^(?:snip|snipping tool)$/, 'snip', 'Snipping tool'],
+    ];
+    for (const [re, shortcut, label] of SHORTCUTS) {
+        if (re.test(t)) {
+            return { type: 'device_cmd', targetSelector, action: 'system_shortcut', params: { shortcut, targetSelector }, label };
+        }
+    }
+
+    // ── Compound: "open <app> and play/search <thing>" or "play <thing> on/in <app>" ──
+    // The app is opened normally, then the query is searched INSIDE the app (never typed into Windows search).
+    const compoundMatch =
+        t.match(/^(?:open|launch|start)\s+(?:the\s+)?([a-z0-9 .]+?)(?:\s+app)?\s+(?:and|then|&)\s+(?:play|search(?:\s+for)?|find|look\s+for)\s+(.+)$/i) ||
+        t.match(/^(?:play|search|find)\s+(.+?)\s+(?:on|in|using)\s+([a-z0-9 .]+?)(?:\s+app)?$/i);
+    if (compoundMatch) {
+        const swapped = !/^(?:open|launch|start)\s/i.test(t);
+        const appName = (swapped ? compoundMatch[2] : compoundMatch[1]).trim().toLowerCase();
+        let query = (swapped ? compoundMatch[1] : compoundMatch[2]).trim();
+        query = query.replace(/\s+(?:song|songs|music|track|video|videos)$/i, '').replace(/^(?:the\s+)?(?:song|songs|music|track)\s+/i, '').trim() || query;
+        const q = encodeURIComponent(query);
+        if (swapped && !/^(?:spotify|apple music|vlc|youtube|google|amazon|discord|slack|telegram|notepad|word|excel|chrome|edge|firefox)$/.test(appName)) {
+            // not a known app → let other rules / the AI handle it (e.g. "find a cafe in bangalore")
+        } else if (appName === 'youtube') return { type: 'open_url', url: `https://youtube.com/results?search_query=${q}`, label: `YouTube: "${query}"` };
+        if (appName === 'google') return { type: 'open_url', url: `https://google.com/search?q=${q}`, label: `Google: "${query}"` };
+        if (appName === 'amazon') return { type: 'open_url', url: `https://amazon.in/s?k=${q}`, label: `Amazon: "${query}"` };
+        if (appName !== 'whatsapp') {
+            return {
+                type: 'device_cmd', targetSelector, action: 'app_search',
+                params: { app: appName, query, targetSelector },
+                label: `Searching "${query}" in ${appName}`
+            };
+        }
+    }
+
     // ── Calendar event scheduling & opening ──
     const calMatch = t.match(/^(?:add|schedule|create|put)\s+(?:event|meeting|reminder|task)?\s*(.+?)\s*(?:to|in|on)?\s*calendar$/i) ||
                      t.match(/^(?:add|schedule|create)\s+(?:to|in)?\s*calendar\s*:?\s*(.+)$/i);
@@ -166,20 +210,32 @@ export function resolveIntent(text) {
         return { type: 'device_cmd', targetSelector, action: 'close_process', params: { processIdOrName: exe.replace('.exe', ''), targetSelector }, label: `Closing ${target}` };
     }
 
-    // ── WhatsApp messaging commands ──
-    // e.g. "open whatsapp and send message <message> to <person>" or "open whatsapp and message <person> <message>"
+    // ── WhatsApp messaging commands (desktop app first; multi-word contact names or phone numbers) ──
+    const orig = text.trim().replace(/[.,!?]+$/, '');
+    const restoreCase = (s) => {
+        const i = orig.toLowerCase().indexOf(s.toLowerCase());
+        return i >= 0 ? orig.substr(i, s.length) : s;
+    };
+    const waIntent = (contact, message) => ({
+        type: 'device_cmd',
+        targetSelector,
+        action: 'whatsapp_message',
+        params: { contactOrPhone: contact ? contact.trim() : null, message: restoreCase(message.trim()), targetSelector },
+        label: contact ? `WhatsApp → ${contact.trim()}` : 'WhatsApp message to the open chat'
+    });
+
+    // "[open whatsapp and] send [a] [whatsapp] message to <contact> saying/that/: <message>"
+    // "[open whatsapp and] message|text <contact> saying/that/: <message>"
+    const waNamed = t.match(/^(?:open\s+whatsapp\s+(?:and\s+)?)?(?:send\s+(?:a\s+)?(?:whatsapp\s+)?(?:message|msg|text)\s+to|message|text|whatsapp)\s+(.+?)\s*(?:\bsaying\b|\bthat\b|\bwith message\b|\bmessage\b|:)\s*:?\s*(.+?)(?:\s+(?:on|in)\s+whatsapp)?$/i);
+    if (waNamed && (/whatsapp/.test(t) || /^send\s/.test(t)) && !/^in\s+whatsapp/.test(t)) return waIntent(waNamed[1], waNamed[2]);
+
+    // "send [a] message <message> to <contact> [on whatsapp]"
+    const waMsgFirst = t.match(/^(?:open\s+whatsapp\s+(?:and\s+)?)?send\s+(?:a\s+)?(?:whatsapp\s+)?(?:message|msg|text)\s+(?!to\s)(.+?)\s+to\s+(.+?)(?:\s+(?:on|in)\s+whatsapp)?$/i);
+    if (waMsgFirst) return waIntent(waMsgFirst[2], waMsgFirst[1]);
+
+    // Single-word contact without delimiter: "open whatsapp and message rahul hi there"
     const waOpenSendMatch = t.match(/^(?:open\s+whatsapp\s+(?:and\s+)?(?:send\s+(?:a\s+)?message\s+(?:to\s+)?|message\s+))([a-zA-Z0-9_+]+)\s+(?:saying\s+|that\s+|message\s+:?\s*)?(.+)$/i);
-    if (waOpenSendMatch) {
-        const contactOrPhone = waOpenSendMatch[1].trim();
-        const message = waOpenSendMatch[2].trim();
-        return {
-            type: 'device_cmd',
-            targetSelector,
-            action: 'whatsapp_message',
-            params: { contactOrPhone, message, targetSelector },
-            label: `Sending WhatsApp to ${contactOrPhone}: "${message}"`
-        };
-    }
+    if (waOpenSendMatch) return waIntent(waOpenSendMatch[1], waOpenSendMatch[2]);
 
     // e.g. "send [a] [whatsapp] message [to] <person> [saying/with] <message>"
     const waSendToMatch = t.match(/^(?:send\s+(?:a\s+)?(?:whatsapp\s+)?message\s+(?:to\s+)?([a-zA-Z0-9_+]+)\s+(?:saying\s+|with\s+|message\s+:?\s*)?(.+?)(?:\s+on\s+whatsapp)?)$/i) ||
@@ -286,6 +342,10 @@ export function resolveIntent(text) {
     const openGenericMatch = t.match(/^(?:open|launch|start)\s+(?:the\s+)?([a-zA-Z0-9_\-\s.]+?)(?:\s+app)?$/i);
     if (openGenericMatch) {
         const rawName = openGenericMatch[1].trim().toLowerCase();
+        // Do not greedily treat multi-clause sentences or actions as single app names
+        if (rawName.includes(' and ') || rawName.includes(' then ') || rawName.split(/\s+/).length > 4) {
+            return null;
+        }
         if (APP_ROUTES[rawName]) {
             return { type: 'navigate', route: APP_ROUTES[rawName], label: rawName };
         }
@@ -347,46 +407,154 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
     const recognitionRef = useRef(null);
     const stoppedRef = useRef(false);
     const latestTranscript = useRef('');
+    const startListeningRef = useRef(null);
 
-    // ─── TTS ─────────────────────────────────────────────────────────────────
+    // Real-time Streaming Speech Queue Refs
+    const speechQueueRef = useRef([]);
+    const isSpeakingRef = useRef(false);
+    const streamingBufferRef = useRef('');
+    const isStreamingRef = useRef(false);
+
+    // Clean markdown code blocks, links, and formatting symbols before speech synthesis
+    const cleanForSpeech = (str) => {
+        return String(str || '')
+            .replace(/```[\s\S]*?```/g, '')
+            .replace(/[*_#`~>]/g, '')
+            .replace(/https?:\/\/\S+/g, '')
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+            .replace(/\s+/g, ' ')
+            .trim();
+    };
+
+    // ─── Active Voice Resolution from Settings ───────────────────────────────
+    const getActiveVoiceConfig = useCallback(() => {
+        const savedVoiceURI = localStorage.getItem('parsu_tts_voice');
+        const savedRate = parseFloat(localStorage.getItem('parsu_tts_rate') || '1');
+        const savedPitch = parseFloat(localStorage.getItem('parsu_tts_pitch') || '1');
+        const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+
+        const isCharon = savedVoiceURI === 'charon_jarvis' || !savedVoiceURI;
+
+        if (isCharon) {
+            // Charon Jarvis: Deep, poised, confident British butler / AI assistant
+            const jarvisVoice = voices.find(v => (v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('george') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('guy') || v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('neural')) && v.lang.startsWith('en'))
+                || voices.find(v => v.lang.startsWith('en-GB') || v.lang.startsWith('en-US'))
+                || voices[0];
+            return {
+                voice: jarvisVoice || null,
+                rate: savedRate !== 1 ? savedRate : 1.05,
+                pitch: savedPitch !== 1 ? savedPitch : 0.92,
+            };
+        }
+
+        const matchedVoice = voices.find(v => v.voiceURI === savedVoiceURI || v.name === savedVoiceURI);
+        return {
+            voice: matchedVoice || voices[0] || null,
+            rate: savedRate,
+            pitch: savedPitch,
+        };
+    }, []);
+
+    // ─── Speech Queue Worker ─────────────────────────────────────────────────
+    const processSpeechQueue = useCallback(() => {
+        if (isSpeakingRef.current || stoppedRef.current) return;
+        if (speechQueueRef.current.length === 0) {
+            if (!isStreamingRef.current) {
+                setStatus('idle');
+                if (!stoppedRef.current) {
+                    startListeningRef.current?.();
+                }
+            }
+            return;
+        }
+
+        const nextSentence = speechQueueRef.current.shift();
+        if (!nextSentence || !window.speechSynthesis) {
+            processSpeechQueue();
+            return;
+        }
+
+        const { voice, rate, pitch } = getActiveVoiceConfig();
+        const utt = new SpeechSynthesisUtterance(nextSentence);
+        utt.voice = voice;
+        utt.rate = rate;
+        utt.pitch = pitch;
+        utt.volume = 1;
+
+        utt.onstart = () => {
+            isSpeakingRef.current = true;
+            setStatus('speaking');
+        };
+
+        utt.onend = () => {
+            isSpeakingRef.current = false;
+            processSpeechQueue();
+        };
+
+        utt.onerror = () => {
+            isSpeakingRef.current = false;
+            processSpeechQueue();
+        };
+
+        window.speechSynthesis.speak(utt);
+    }, [getActiveVoiceConfig]);
+
+    // ─── Listen for Real-Time Streaming Chunks from Backend ───────────────────
+    useEffect(() => {
+        const handleChunk = (e) => {
+            if (!isStreamingRef.current || stoppedRef.current) return;
+            const chunk = e.detail || '';
+            streamingBufferRef.current += chunk;
+
+            // Extract completed sentence boundaries (. ! ? or newline)
+            const match = streamingBufferRef.current.match(/^([\s\S]*?[.!?\n]+)([\s\S]*)$/);
+            if (match) {
+                const completeSentence = match[1];
+                streamingBufferRef.current = match[2];
+                const clean = cleanForSpeech(completeSentence);
+                if (clean.length > 2) {
+                    speechQueueRef.current.push(clean);
+                    processSpeechQueue();
+                }
+            }
+        };
+
+        window.addEventListener('ai_stream_chunk', handleChunk);
+        return () => window.removeEventListener('ai_stream_chunk', handleChunk);
+    }, [processSpeechQueue]);
+
+    // ─── Direct TTS speak helper (for greetings & actions) ─────────────────────
     const speak = useCallback((text, onDone) => {
         if (!text || !window.speechSynthesis) { onDone?.(); return; }
         window.speechSynthesis.cancel();
+        speechQueueRef.current = [];
+        isSpeakingRef.current = false;
+        isStreamingRef.current = false;
 
-        // Chunk long text for better TTS naturalness
-        const MAX_CHUNK = 200;
-        const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
-        const chunks = [];
-        let cur = '';
-        for (const s of sentences) {
-            if ((cur + s).length > MAX_CHUNK && cur) { chunks.push(cur.trim()); cur = s; }
-            else cur += s;
-        }
-        if (cur.trim()) chunks.push(cur.trim());
+        const clean = cleanForSpeech(text);
+        const { voice, rate, pitch } = getActiveVoiceConfig();
+        const utt = new SpeechSynthesisUtterance(clean);
+        utt.voice = voice;
+        utt.rate = rate;
+        utt.pitch = pitch;
+        utt.volume = 1;
 
-        const voices = window.speechSynthesis.getVoices();
-        // Priority: Charon voice -> deep British/natural/neural male voices (Daniel, George, Guy, David) -> Google US/UK English -> system default
-        const voice = voices.find(v => v.name.toLowerCase().includes('charon'))
-            || voices.find(v => (v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('george') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('guy') || v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('neural')) && v.lang.startsWith('en'))
-            || voices.find(v => (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('english')) && v.lang.startsWith('en'))
-            || voices.find(v => v.lang === 'en-US' || v.lang === 'en-GB')
-            || voices[0];
-
-        let idx = 0;
-        const next = () => {
-            if (idx >= chunks.length || stoppedRef.current) { setStatus('idle'); onDone?.(); return; }
-            const utt = new SpeechSynthesisUtterance(chunks[idx++]);
-            utt.voice = voice || null;
-            utt.rate = 1.05;
-            utt.pitch = 0.95; // Deep, composed, confident Charon Jarvis tone
-            utt.volume = 1;
-            if (idx === 1) { utt.onstart = () => setStatus('speaking'); }
-            utt.onend = next;
-            utt.onerror = () => { setStatus('idle'); onDone?.(); };
-            window.speechSynthesis.speak(utt);
+        utt.onstart = () => {
+            isSpeakingRef.current = true;
+            setStatus('speaking');
         };
-        next();
-    }, []);
+        utt.onend = () => {
+            isSpeakingRef.current = false;
+            setStatus('idle');
+            onDone?.();
+        };
+        utt.onerror = () => {
+            isSpeakingRef.current = false;
+            setStatus('idle');
+            onDone?.();
+        };
+        window.speechSynthesis.speak(utt);
+    }, [getActiveVoiceConfig]);
 
     // ─── Execute device command via backend ───────────────────────────────────
     const executeDeviceCommand = useCallback(async (action, params, label, targetSelector = null) => {
@@ -415,27 +583,54 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
     // ─── Handle resolved intent ───────────────────────────────────────────────
     const handleIntent = useCallback(async (intent, rawText) => {
         if (!intent) {
-            // Send to AI
+            // Send to AI with streaming chunk speech playback
             setStatus('thinking');
             setFeedback('Processing…');
             setHistory(p => [...p, { role: 'user', content: rawText }]);
+
+            // Reset speech queue for incoming streamed response
+            window.speechSynthesis?.cancel();
+            speechQueueRef.current = [];
+            isSpeakingRef.current = false;
+            streamingBufferRef.current = '';
+            isStreamingRef.current = true;
+
             try {
                 const reply = await onSendMessage(rawText);
+                isStreamingRef.current = false;
+
                 if (reply && !stoppedRef.current) {
                     setHistory(p => [...p, { role: 'ai', content: reply }]);
                     setFeedback(reply.length > 80 ? reply.slice(0, 80) + '…' : reply);
 
-                    let spokenReply = reply;
-                    if (!reply.trim().endsWith('?') && !reply.toLowerCase().includes('what else') && !reply.toLowerCase().includes('what\'s next')) {
-                        spokenReply = `${reply}. Yes sir, what's next?`;
+                    // Flush any remaining chunk left in streaming buffer
+                    if (streamingBufferRef.current.trim()) {
+                        const cleanRest = cleanForSpeech(streamingBufferRef.current);
+                        if (cleanRest.length > 2) {
+                            speechQueueRef.current.push(cleanRest);
+                        }
+                        streamingBufferRef.current = '';
                     }
-                    speak(spokenReply, () => { if (!stoppedRef.current) startListening(); });
+
+                    // Fallback if chunks weren't received (speak full reply)
+                    if (speechQueueRef.current.length === 0 && !isSpeakingRef.current) {
+                        let spokenReply = cleanForSpeech(reply);
+                        if (spokenReply.length > 260) spokenReply = spokenReply.slice(0, 260) + '...';
+                        if (!spokenReply) spokenReply = "Here is what I found for you, sir.";
+                        speechQueueRef.current.push(spokenReply);
+                    }
+
+                    // Append concluding check prompt
+                    speechQueueRef.current.push("Yes sir, what's next?");
+                    processSpeechQueue();
                 } else {
+                    isStreamingRef.current = false;
                     setStatus('idle');
                     setFeedback('At your service, sir. Tap mic or speak.');
-                    setTimeout(() => { if (!stoppedRef.current) startListening(); }, 400);
+                    setTimeout(() => { if (!stoppedRef.current) startListeningRef.current?.(); }, 400);
                 }
             } catch {
+                isStreamingRef.current = false;
                 setStatus('idle');
                 setFeedback('I encountered an issue, sir. Tap mic to retry.');
             }
@@ -455,7 +650,7 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
             const voiceMsg = `Opening ${label}, sir. Yes sir, what's next?`;
             speak(voiceMsg, () => {
                 navigate(intent.route);
-                setTimeout(() => { if (!stoppedRef.current) startListening(); }, 800);
+                setTimeout(() => { if (!stoppedRef.current) startListeningRef.current?.(); }, 800);
             });
             return;
         }
@@ -466,7 +661,7 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
             const voiceMsg = `Opening ${label}, sir. Yes sir, what's next?`;
             speak(voiceMsg, () => {
                 window.open(intent.url, '_blank', 'noopener,noreferrer');
-                setTimeout(() => { if (!stoppedRef.current) startListening(); }, 600);
+                setTimeout(() => { if (!stoppedRef.current) startListeningRef.current?.(); }, 600);
             });
             return;
         }
@@ -475,7 +670,7 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
             if (intent.to === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });
             else if (intent.to === 'bottom') window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
             else window.scrollBy({ top: intent.by, behavior: 'smooth' });
-            speak("Right away, sir. Yes sir, what's next?", () => { if (!stoppedRef.current) startListening(); });
+            speak("Right away, sir. Yes sir, what's next?", () => { if (!stoppedRef.current) startListeningRef.current?.(); });
             return;
         }
 
@@ -483,24 +678,28 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
             const text = lastAiMessage || '';
             if (text) {
                 navigator.clipboard.writeText(text);
-                speak("Copied to clipboard, sir. Yes sir, what's next?", () => { if (!stoppedRef.current) startListening(); });
+                speak("Copied to clipboard, sir. Yes sir, what's next?", () => { if (!stoppedRef.current) startListeningRef.current?.(); });
             } else {
-                speak("No response available to copy, sir. What else can I assist you with?", () => { if (!stoppedRef.current) startListening(); });
+                speak("No response available to copy, sir. What else can I assist you with?", () => { if (!stoppedRef.current) startListeningRef.current?.(); });
             }
             return;
         }
 
         if (type === 'device_cmd') {
-            setHistory(p => [...p, { role: 'action', content: `⚡ ${label}` }]);
+            setHistory(p => [...p, { role: 'user', content: rawText }, { role: 'action', content: `⚡ ${label}` }]);
+            // Send into chat conversation so user sees what was spoken in chat messages
+            if (typeof onSendMessage === 'function') {
+                onSendMessage(rawText).catch(() => {});
+            }
             const result = await executeDeviceCommand(intent.action, intent.params, label, intent.targetSelector);
             if (result && result.success !== false) {
                 const voiceMsg = `Done, sir. ${label}. Yes sir, what's next?`;
                 setFeedback(voiceMsg);
-                speak(voiceMsg, () => { if (!stoppedRef.current) startListening(); });
+                speak(voiceMsg, () => { if (!stoppedRef.current) startListeningRef.current?.(); });
             } else {
                 const failMsg = result?.message || 'App not found, sir, and could not be opened.';
                 setFeedback(failMsg);
-                speak(failMsg, () => { if (!stoppedRef.current) startListening(); });
+                speak(failMsg, () => { if (!stoppedRef.current) startListeningRef.current?.(); });
             }
             return;
         }
@@ -563,8 +762,14 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [handleIntent, dispatch]);
 
+    startListeningRef.current = startListening;
+
     const stopAll = useCallback(() => {
         stoppedRef.current = true;
+        isStreamingRef.current = false;
+        speechQueueRef.current = [];
+        isSpeakingRef.current = false;
+        streamingBufferRef.current = '';
         try { recognitionRef.current?.stop(); } catch {}
         recognitionRef.current = null;
         window.speechSynthesis?.cancel();
@@ -576,11 +781,29 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
     const toggleMic = useCallback(() => {
         if (status === 'listening') {
             recognitionRef.current?.stop();
+            setStatus('idle');
+        } else if (status === 'speaking' || status === 'thinking') {
+            // User interrupted while AI was speaking/thinking
+            window.speechSynthesis?.cancel();
+            speechQueueRef.current = [];
+            isSpeakingRef.current = false;
+            isStreamingRef.current = false;
+            stoppedRef.current = false;
+            startListening();
         } else if (status === 'idle') {
             stoppedRef.current = false;
             startListening();
         }
     }, [status, startListening]);
+
+    const submitText = useCallback((text) => {
+        const raw = String(text || '').trim();
+        if (!raw) return;
+        try { recognitionRef.current?.stop(); } catch {}
+        setTranscript('');
+        const intent = resolveIntent(raw);
+        handleIntent(intent, raw);
+    }, [handleIntent]);
 
     return {
         status,
@@ -590,6 +813,7 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
         startListening,
         stopAll,
         toggleMic,
+        submitText,
         speak,
         setHistory,
     };

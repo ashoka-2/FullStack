@@ -58,7 +58,15 @@ const VoiceSettingsForm = ({ onSuccess }) => {
     const newURI = e.target.value;
     setSelectedVoiceURI(newURI);
     localStorage.setItem('parsu_tts_voice', newURI);
-    dispatch(addToast({ message: "Voice preference updated!", type: "success" }));
+    if (newURI === 'charon_jarvis') {
+      setRate(1.05);
+      setPitch(0.92);
+      localStorage.setItem('parsu_tts_rate', '1.05');
+      localStorage.setItem('parsu_tts_pitch', '0.92');
+      dispatch(addToast({ message: "Charon (Jarvis AI) voice activated!", type: "success" }));
+    } else {
+      dispatch(addToast({ message: "Voice preference updated!", type: "success" }));
+    }
     if (onSuccess) onSuccess();
   };
 
@@ -92,10 +100,21 @@ const VoiceSettingsForm = ({ onSuccess }) => {
 
     window.speechSynthesis.cancel();
 
-    const matchedVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
+    const isCharon = selectedVoiceURI === 'charon_jarvis' || !selectedVoiceURI;
+    let matchedVoice = null;
+    if (isCharon) {
+      matchedVoice = voices.find(v => (v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('george') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('guy') || v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('neural')) && v.lang.startsWith('en'))
+        || voices.find(v => v.lang.startsWith('en-GB') || v.lang.startsWith('en-US'))
+        || voices[0];
+    } else {
+      matchedVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
+    }
+
     const isHindiVoice = matchedVoice?.lang?.toLowerCase().startsWith('hi') || matchedVoice?.name?.toLowerCase().includes('hindi');
 
-    const text = isHindiVoice
+    const text = isCharon
+      ? "Greetings, sir. I am Charon, your AI companion. All systems are operational and ready for your instruction."
+      : isHindiVoice
       ? "नमस्ते! मैं पार्सू एआई हूँ। यह मेरी आवाज़ का परीक्षण है। मैं हिंदी और अंग्रेज़ी दोनों पढ़ सकता हूँ।"
       : "Hello! This is a preview of my voice. I will use this voice to read AI responses for you.";
 
@@ -103,16 +122,16 @@ const VoiceSettingsForm = ({ onSuccess }) => {
 
     if (matchedVoice) {
       utterance.voice = matchedVoice;
-      utterance.lang = matchedVoice.lang || (isHindiVoice ? "hi-IN" : "en-US");
+      utterance.lang = matchedVoice.lang || (isHindiVoice ? "hi-IN" : "en-GB");
     }
 
-    utterance.rate = rate;
-    utterance.pitch = pitch;
+    utterance.rate = isCharon ? 1.05 : rate;
+    utterance.pitch = isCharon ? 0.92 : pitch;
 
     utterance.onstart = () => {
       setIsPlayingTest(true);
       window.dispatchEvent(new CustomEvent('blob_speech_state', {
-        detail: { speaking: true, text: "Testing my voice! 🎙️" }
+        detail: { speaking: true, text: isCharon ? "Charon online. Systems ready. ⚡" : "Testing my voice! 🎙️" }
       }));
     };
 
@@ -129,7 +148,10 @@ const VoiceSettingsForm = ({ onSuccess }) => {
     window.speechSynthesis.speak(utterance);
   };
 
-  const currentVoiceObj = voices.find(v => v.voiceURI === selectedVoiceURI);
+  const isCharon = selectedVoiceURI === 'charon_jarvis';
+  const currentVoiceObj = isCharon
+    ? { name: "Charon (Jarvis AI)", lang: "en-GB / en-US" }
+    : voices.find(v => v.voiceURI === selectedVoiceURI);
 
   return (
     <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 shadow-xs">
@@ -181,6 +203,9 @@ const VoiceSettingsForm = ({ onSuccess }) => {
               onChange={handleVoiceChange}
               className="w-full bg-zinc-50 dark:bg-[#181818] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-[var(--accent-cyan)] transition-all cursor-pointer"
             >
+              <option value="charon_jarvis">
+                ⚡ Charon — Jarvis AI (Sophisticated, Deep British Voice)
+              </option>
               {voices.length === 0 && (
                 <option value="">Loading system voices...</option>
               )}

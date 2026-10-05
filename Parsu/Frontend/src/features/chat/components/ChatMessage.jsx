@@ -39,6 +39,8 @@ import { sendFeedback } from '../service/chat.api';
 import { useDispatch } from 'react-redux';
 import { addToast } from '../../../utils/toast.slice';
 import { EmbeddedMapCard } from './EmbeddedMapCard';
+import { ImageGalleryBlock } from './ImageGalleryBlock';
+import { ProductCardsBlock } from './ProductCardsBlock';
 
 const CodeBlock = React.memo(({ code, language, ...props }) => {
     const [copied, setCopied] = useState(false);
@@ -507,46 +509,10 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
             }
         }
 
-        // 4. Multi-stop Route Patterns: "from X via A, B, C to Y" or "A -> B -> C -> D"
-        const multiArrowMatch = contentToRender.match(/([A-Za-z0-9][a-zA-Z0-9\s,.-]+?(?:\s*(?:->|→)\s*[A-Za-z0-9][a-zA-Z0-9\s,.-]+?){2,})(?:\.|\n|:|,|$)/);
-        if (multiArrowMatch && multiArrowMatch[1]) {
-            return multiArrowMatch[1].trim();
-        }
-
-        const viaRouteMatch = contentToRender.match(/(?:from\s+)?([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)\s+(?:via|through)\s+([A-Za-z0-9\s,.-]+?)\s+to\s+([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)(?:\.|\n|:|,|$)/i) ||
-                              contentToRender.match(/(?:from\s+)?([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)\s+to\s+([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)\s+(?:via|through)\s+([A-Za-z0-9\s,.-]+?)(?:\.|\n|:|,|$)/i);
-        if (viaRouteMatch) {
-            return viaRouteMatch[0].trim();
-        }
-
-        // 4b. Standard 2-Point Route: "Directions from X to Y" / "Route from X to Y" / "Trip from X to Y" / "Map from X to Y"
-        const routeTextMatch = contentToRender.match(/(?:map|directions?|route|trip|travel|minimum distance|shortest distance)\s+(?:from\s+)?([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)\s+(?:to|->|→)\s+([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)(?:\.|\n|:|,|$)/i);
-        if (routeTextMatch && routeTextMatch[1] && routeTextMatch[2] && routeTextMatch[1].trim().length < 80 && routeTextMatch[2].trim().length < 80) {
-            return `from: ${routeTextMatch[1].trim()}\nto: ${routeTextMatch[2].trim()}`;
-        }
-
-        // 5. "Directions from your/my location to [Place]"
-        const fromLocMatch = contentToRender.match(/(?:directions?|route|trip)\s+from\s+(?:your|my)\s+(?:current\s+)?location\s+to\s+([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)(?:\.|\n|:|,|$)/i);
-        if (fromLocMatch && fromLocMatch[1] && fromLocMatch[1].trim().length < 60) {
-            return `from: My Location\nto: ${fromLocMatch[1].trim()}`;
-        }
-
-        // 6. Markdown explicit map links: [Map: Tokyo](...)
+        // 4. Markdown explicit map links: [Map: Tokyo](...)
         const mdMapMatch = contentToRender.match(/\[(?:Google\s+)?Map(?:\s+of)?:\s*([^\]]+)\]\([^\)]+\)/i);
         if (mdMapMatch && mdMapMatch[1]) {
             return mdMapMatch[1].trim();
-        }
-
-        // 7. Standalone "map [Place]" line
-        const standaloneMapMatch = contentToRender.match(/(?:^|\n)\s*map\s+([A-Za-z0-9][a-zA-Z0-9\s,.-]+?)(?:\.|\n|:|$)/i);
-        if (standaloneMapMatch && standaloneMapMatch[1] && standaloneMapMatch[1].trim().length < 80) {
-            return standaloneMapMatch[1].trim();
-        }
-
-        // 8. Fallback: "Here is the map of [Place]" or "Interactive map of [Place]"
-        const mapOfMatch = contentToRender.match(/(?:here is (?:the|an?)\s+(?:interactive\s+)?map of|interactive map of|map of)\s+([A-Z][a-zA-Z0-9\s,.-]+?)(?:\.|\n|:|$)/i);
-        if (mapOfMatch && mapOfMatch[1] && mapOfMatch[1].trim().length < 60) {
-            return mapOfMatch[1].trim();
         }
 
         return null;
@@ -941,6 +907,9 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                             // Embedded Interactive Google Map:
                                             // 1) Explicit ```map ... ``` codeblock
                                             // 2) Inline code tag or block starting with `map `, `route `, `from: ...`
+                                            // Embedded Interactive Google Map:
+                                            // 1) Explicit ```map ... ``` codeblock
+                                            // 2) Inline code tag or block starting with `map `, `route `, `from: ...`
                                             // 3) Code containing "origin to destination"
                                             const isExplicitMap = match?.[1] && /^(map|maps|googlemap|googlemaps|route|directions)$/i.test(match[1]);
                                             const isMapDirective = /^(?:map|maps|googlemap|googlemaps|route|directions?)\s+/i.test(trimmedCode) ||
@@ -955,6 +924,18 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                         />
                                                     </div>
                                                 );
+                                            }
+
+                                            // Web Image Gallery: ```gallery ... ```
+                                            if (match?.[1] && /^gallery$/i.test(match[1])) {
+                                                const qMatch = trimmedCode.match(/(?:query|q|search):\s*(.+)/i);
+                                                const query = qMatch ? qMatch[1].trim() : trimmedCode;
+                                                return <ImageGalleryBlock query={query} />;
+                                            }
+
+                                            // Product Cards with Details & Uses: ```cards ... ``` or ```product_cards ... ```
+                                            if (match?.[1] && /^(cards|product_cards|products)$/i.test(match[1])) {
+                                                return <ProductCardsBlock code={trimmedCode} />;
                                             }
 
                                             return !inline && match ? (

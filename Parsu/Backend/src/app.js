@@ -104,6 +104,7 @@ import subscriptionRouter from "./routes/subscription.routes.js";
 import settingsRouter from "./routes/settings.routes.js";
 import deviceRouter from "./routes/device.routes.js";
 import notificationRouter from "./routes/notification.routes.js";
+import mediaRouter from "./routes/media.routes.js";
 
 app.use("/api/auth", authRouter)
 app.use("/api/chats", chatRouter)
@@ -117,6 +118,7 @@ app.use("/api/subscription", subscriptionRouter)
 app.use("/api/settings", settingsRouter)
 app.use("/api/devices", deviceRouter)
 app.use("/api/notifications", notificationRouter)
+app.use("/api/media", mediaRouter)
 
 export default app;
 

@@ -1,6 +1,8 @@
 import { Server } from "socket.io";
 import Device from "../models/device.model.js";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
+import { companionRelayService } from "../services/device/companionRelay.service.js";
 
 let io;
 
@@ -25,6 +27,25 @@ export function initSocket(httpServer) {
     io.on("connection", (socket) => {
         let connectedDeviceId = null;
         let connectedUserId = null;
+        let companionUserId = null;
+
+        // ─── Desktop Companion Registration (JWT verified) ────────────────────────
+        socket.on("companion:register", ({ token } = {}, ack) => {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                companionUserId = String(decoded.id);
+                socket.join(`companion:${companionUserId}`);
+                socket.join(`user:${companionUserId}`);
+                io.to(`user:${companionUserId}`).emit("companion:status", { online: true });
+                if (typeof ack === "function") ack({ ok: true });
+            } catch {
+                if (typeof ack === "function") ack({ ok: false, error: "Invalid token" });
+            }
+        });
+
+        socket.on("companion:result", (payload) => {
+            if (companionUserId) companionRelayService.resolveResult(companionUserId, payload || {});
+        });
 
         // ─── User Room Subscription ────────────────────────────────────────────────
         socket.on("user:subscribe", (userId) => {

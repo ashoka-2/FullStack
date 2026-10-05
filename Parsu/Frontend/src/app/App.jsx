@@ -23,6 +23,7 @@ const App = () => {
     const socket = initializeSocketConnection();
     socket.on("chunk", (chunk) => {
       dispatch(appendChunk(chunk));
+      window.dispatchEvent(new CustomEvent("ai_stream_chunk", { detail: chunk }));
     });
 
     // Cross-Device Auto-Sync: Listen for incoming commands from user's other devices

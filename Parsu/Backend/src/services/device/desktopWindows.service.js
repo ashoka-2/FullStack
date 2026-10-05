@@ -95,12 +95,14 @@ export const desktopWindowsService = {
                 "store"          = "ms-windows-store:"
                 "calendar"       = "outlookcal:"
                 "mail"           = "outlookmail:"
+                "spotify"        = "spotify:"
+                "whatsapp"       = "whatsapp:"
             }
             $targetLower = $target.ToLower()
 
             if ($uriMap.ContainsKey($targetLower)) {
                 try {
-                    $proc = Start-Process $uriMap[$targetLower] -PassThru -ErrorAction SilentlyContinue
+                    $proc = Start-Process $uriMap[$targetLower] -PassThru -ErrorAction Stop
                     $launched = $true
                     $pName = $target
                     if ($proc) { $appPid = $proc.Id }
@@ -162,6 +164,114 @@ export const desktopWindowsService = {
                 error = if (-not $launched) { "App not found and could not open." } else { $null }
             } | ConvertTo-Json -Compress
         `;
+        return await runPowerShell(script);
+    },
+
+    /**
+     * Open an installed desktop app and run a search INSIDE it (e.g. Spotify song search).
+     * The app is opened via its protocol/Start menu entry (never by typing a sentence into Windows search).
+     * Other apps: launch → focus → search shortcut (Ctrl+K for Slack/Discord, Ctrl+F otherwise) → paste → Enter.
+     * Best effort UI automation: auto-playing the top result cannot be verified.
+     */
+    async appSearch(appName, query, { waitMs = 3500 } = {}) {
+        const app = String(appName || "").trim();
+        const q = String(query || "").trim();
+        if (!app || !q) throw new Error("appSearch requires both an app name and a search query.");
+        const appLower = app.toLowerCase();
+
+        const launch = await this.launchApp(appLower === "spotify" ? "spotify" : app);
+        if (launch && launch.launched === false) {
+            throw new Error(launch.error || `${app} is not installed or could not be opened.`);
+        }
+
+        const shortcut = /discord|slack/.test(appLower) ? "^k" : (appLower === "spotify" ? "^l" : "^f");
+        const psQ = q.replace(/'/g, "''");
+        const psApp = app.replace(/'/g, "''");
+        const script = `
+            Add-Type -AssemblyName System.Windows.Forms
+            Add-Type @"
+                using System;
+                using System.Runtime.InteropServices;
+                public class SrchWin {
+                    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+                    [DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+                }
+"@
+            Start-Sleep -Milliseconds ${waitMs}
+            $name = '${psApp}'
+            $proc = $null
+            for ($i = 0; $i -lt 10 -and -not $proc; $i++) {
+                $proc = Get-Process | Where-Object { ($_.ProcessName -like "*$name*" -or $_.MainWindowTitle -like "*$name*") -and $_.MainWindowHandle -ne [IntPtr]::Zero } | Select-Object -First 1
+                if (-not $proc) { Start-Sleep -Milliseconds 700 }
+            }
+            if (-not $proc) { [PSCustomObject]@{ searched = $false; error = "Window for $name did not appear" } | ConvertTo-Json -Compress; exit }
+            [SrchWin]::ShowWindowAsync($proc.MainWindowHandle, 9) | Out-Null
+            [SrchWin]::SetForegroundWindow($proc.MainWindowHandle) | Out-Null
+            Start-Sleep -Milliseconds 500
+            $old = $null
+            try { $old = Get-Clipboard -Raw } catch {}
+            Set-Clipboard -Value '${psQ}'
+            $w = New-Object -ComObject wscript.shell
+            $w.SendKeys("${shortcut}")
+            Start-Sleep -Milliseconds 400
+            $w.SendKeys("^a")
+            $w.SendKeys("^v")
+            Start-Sleep -Milliseconds 500
+            $w.SendKeys("{ENTER}")
+            Start-Sleep -Milliseconds 300
+            if ($old) { Set-Clipboard -Value $old }
+            [PSCustomObject]@{ searched = $true; app = $name; query = '${psQ}'; window = $proc.MainWindowTitle } | ConvertTo-Json -Compress
+        `;
+        const res = await runPowerShell(script, 30000);
+        if (res && res.searched === false) throw new Error(res.error || "Search failed");
+        return res;
+    },
+
+    /**
+     * System-wide keyboard shortcuts: media keys, mute, lock, show desktop, task view, etc.
+     */
+    async systemShortcut(name) {
+        const key = String(name || "").toLowerCase().replace(/[\s-]+/g, "_");
+        const mediaKeys = { play_pause: 179, next_track: 176, prev_track: 177, stop: 178, mute_toggle: 173 };
+        let script;
+        if (mediaKeys[key]) {
+            script = `
+                $w = New-Object -ComObject wscript.shell
+                $w.SendKeys([char]${mediaKeys[key]})
+                [PSCustomObject]@{ done = $true; shortcut = "${key}" } | ConvertTo-Json -Compress
+            `;
+        } else if (key === "lock") {
+            script = `rundll32.exe user32.dll,LockWorkStation; [PSCustomObject]@{ done = $true; shortcut = "lock" } | ConvertTo-Json -Compress`;
+        } else {
+            const winKeyCombos = {
+                show_desktop: [0x5B, 0x44],
+                task_view: [0x5B, 0x09],
+                snip: [0x5B, 0x10, 0x53],
+                settings: [0x5B, 0x49],
+                run: [0x5B, 0x52],
+                switch_window: [0x12, 0x09],
+                minimize_all: [0x5B, 0x44],
+                close_window: [0x12, 0x73],
+                new_tab: [0x11, 0x54],
+                refresh: [0x74]
+            };
+            const combo = winKeyCombos[key];
+            if (!combo) throw new Error(`Unknown system shortcut: ${name}`);
+            script = `
+                Add-Type @"
+                    using System;
+                    using System.Runtime.InteropServices;
+                    public class KbdSim {
+                        [DllImport("user32.dll")] public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+                    }
+"@
+                $keys = @(${combo.join(",")})
+                foreach ($k in $keys) { [KbdSim]::keybd_event([byte]$k, 0, 0, [UIntPtr]::Zero) }
+                [array]::Reverse($keys)
+                foreach ($k in $keys) { [KbdSim]::keybd_event([byte]$k, 0, 2, [UIntPtr]::Zero) }
+                [PSCustomObject]@{ done = $true; shortcut = "${key}" } | ConvertTo-Json -Compress
+            `;
+        }
         return await runPowerShell(script);
     },
 
