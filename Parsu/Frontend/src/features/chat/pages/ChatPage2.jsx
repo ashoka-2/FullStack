@@ -36,6 +36,7 @@ const ChatPage2 = () => {
     // References & Elements
     const scrollerRef = useRef(null); // Chat message history container scroll reference
     const fileInputRef = useRef(null); // Hidden file input element
+    const isSubmittingRef = useRef(false); // Guard against rapid double submissions
     
     // Attachment & Upload Menu States
     const [files, setFiles] = useState([]); // Selected local file attachments
@@ -80,7 +81,7 @@ const ChatPage2 = () => {
     useEffect(() => {
         const handleAutoSwitch = (e) => {
             if (e.detail?.modelId) {
-                setSelectedModel({
+                const switched = {
                     id: e.detail.modelId,
                     modelId: e.detail.modelId,
                     name: e.detail.name || e.detail.modelName || e.detail.modelId,
@@ -88,27 +89,44 @@ const ChatPage2 = () => {
                     provider: e.detail.provider || 'gemini',
                     badge: e.detail.badge || 'Fast',
                     isCustom: Boolean(e.detail.isCustom)
-                });
+                };
+                setSelectedModel(switched);
+                try {
+                    localStorage.setItem('parsu_selected_model', JSON.stringify(switched));
+                } catch {}
             }
         };
         window.addEventListener('model_auto_switched', handleAutoSwitch);
         return () => window.removeEventListener('model_auto_switched', handleAutoSwitch);
     }, []);
 
-    // Initialize model preference from backend or user custom key on mount
+    // Initialize model preference from localStorage, server, or custom key on mount
     useEffect(() => {
         let mounted = true;
         getModels().then(data => {
             if (mounted && data?.success) {
+                let cached = null;
+                try {
+                    cached = JSON.parse(localStorage.getItem('parsu_selected_model') || 'null');
+                } catch {}
+
+                const serverSelected = data.selectedModel?.modelId ? data.selectedModel : null;
                 const activeCustom = data.customModels?.[0];
-                const initial = (user?.customApiKeys?.some(k => k.isActive !== false && k.apiKey) && activeCustom)
-                    ? activeCustom
-                    : (data.selectedModel || data.defaultModels?.[0]);
+                const defaultModel = data.defaultModels?.[0];
+
+                const initial = cached || serverSelected || activeCustom || defaultModel;
                 if (initial) setSelectedModel(initial);
             }
         }).catch(() => {});
         return () => { mounted = false; };
     }, [user]);
+
+    const handleModelChange = (model) => {
+        setSelectedModel(model);
+        try {
+            localStorage.setItem('parsu_selected_model', JSON.stringify(model));
+        } catch {}
+    };
 
     // Share link button state
     const [isCopied, setIsCopied] = useState(false);
@@ -304,10 +322,13 @@ const ChatPage2 = () => {
         const filesToSend = fileObjects.length > 1 ? fileObjects : (fileObjects[0] || null);
         const currentInput = textOverride !== null ? textOverride : input;
         if (!currentInput.trim() && !filesToSend) return null;
+        if (loading || isSubmittingRef.current) return null;
 
         // Check if message is an instant device, URL, or navigation action
         const intent = resolveIntent(currentInput);
         if (intent) {
+            setInput('');
+            setFiles([]);
             if (intent.type === 'device_cmd') {
                 executeDeviceCommandApi({
                     targetSelector: intent.targetSelector || intent.params?.targetSelector,
@@ -323,14 +344,17 @@ const ChatPage2 = () => {
                 }).catch(err => {
                     dispatch(addToast({ type: 'warning', message: `Device: ${err?.response?.data?.message || err.message}` }));
                 });
+                return null;
             } else if (intent.type === 'open_url') {
                 window.open(intent.url, '_blank', 'noopener,noreferrer');
                 dispatch(addToast({ type: 'info', message: `🌐 Opening ${intent.label}` }));
+                return null;
             } else if (intent.type === 'scroll') {
                 if (intent.to === 'top') scrollerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
                 else if (intent.to === 'bottom') scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight, behavior: 'smooth' });
                 else scrollerRef.current?.scrollBy({ top: intent.by, behavior: 'smooth' });
                 dispatch(addToast({ type: 'info', message: `Scrolling ${intent.by > 0 ? 'down' : 'up'}` }));
+                return null;
             }
         }
 
@@ -375,51 +399,64 @@ const ChatPage2 = () => {
             return null;
         }
 
+        const cleanChatId = (!id || id === 'new' || id === 'null') ? null : id;
+        isSubmittingRef.current = true;
         setInput(''); // Immediately clear input
         setFiles([]);
 
         try {
-            const response = await handleSendMessage(currentInput, id, filesToSend, effectiveSendModel, webSearch, memoryEnabled, incognito, thinkingLevel);
+            const response = await handleSendMessage(currentInput, cleanChatId, filesToSend, effectiveSendModel, webSearch, memoryEnabled, incognito, thinkingLevel);
             if (response && response.aiMessage) {
                 setLatestMessageId(response.aiMessage._id);
                 setTimeout(scrollToBottom, 100);
+            }
+            if ((!id || id === 'new') && response?.chat?._id) {
+                navigate(`/chat/${response.chat._id}`, { replace: true });
             }
             return response;
         } catch (error) {
             console.error("Failed to send follow-up:", error);
             if (textOverride === null) setInput(currentInput); // Restore on error
             return null;
+        } finally {
+            isSubmittingRef.current = false;
         }
     };
 
-    // Auto-process message queue once active AI response is finished
+    const isProcessingQueueRef = useRef(false);
+
+    // Auto-process message queue sequentially once active AI response is finished
     useEffect(() => {
-        if (!isGenerating && messageQueue.length > 0) {
-            const nextItem = messageQueue[0];
-            setMessageQueue(prev => prev.slice(1));
-            removeQueueItem(nextItem.id);
-            (async () => {
-                try {
-                    const response = await handleSendMessage(
-                        nextItem.text, 
-                        id, 
-                        nextItem.fileObjects, 
-                        nextItem.model || selectedModel,
-                        nextItem.webSearch !== undefined ? nextItem.webSearch : webSearch,
-                        memoryEnabled,
-                        incognito,
-                        nextItem.thinkingLevel || thinkingLevel
-                    );
-                    if (response && response.aiMessage) {
-                        setLatestMessageId(response.aiMessage._id);
-                        setTimeout(scrollToBottom, 100);
-                    }
-                } catch (err) {
-                    console.error("Failed to execute queued message:", err);
+        if (isGenerating || isProcessingQueueRef.current || messageQueue.length === 0) return;
+
+        const nextItem = messageQueue[0];
+        isProcessingQueueRef.current = true;
+        setMessageQueue(prev => prev.slice(1));
+        removeQueueItem(nextItem.id);
+
+        (async () => {
+            try {
+                const response = await handleSendMessage(
+                    nextItem.text, 
+                    id, 
+                    nextItem.fileObjects, 
+                    nextItem.model || selectedModel,
+                    nextItem.webSearch !== undefined ? nextItem.webSearch : webSearch,
+                    memoryEnabled,
+                    incognito,
+                    nextItem.thinkingLevel || thinkingLevel
+                );
+                if (response && response.aiMessage) {
+                    setLatestMessageId(response.aiMessage._id);
+                    setTimeout(scrollToBottom, 100);
                 }
-            })();
-        }
-    }, [isGenerating, messageQueue, id, selectedModel, webSearch]);
+            } catch (err) {
+                console.error("Failed to execute queued message:", err);
+            } finally {
+                isProcessingQueueRef.current = false;
+            }
+        })();
+    }, [isGenerating, messageQueue.length, id, selectedModel, webSearch]);
 
     // Queue management actions
     const handleEditQueuedMessage = (item, index) => {
@@ -573,7 +610,7 @@ const ChatPage2 = () => {
                     fileInputRef={fileInputRef}
                     handleFileUpload={handleFileUpload}
                     selectedModel={selectedModel}
-                    onModelChange={setSelectedModel}
+                    onModelChange={handleModelChange}
                     thinkingLevel={thinkingLevel}
                     onThinkingChange={setThinkingLevel}
                     isResponding={isGenerating}
@@ -597,16 +634,9 @@ const ChatPage2 = () => {
                     isOpen={isVoiceModeOpen}
                     onClose={() => setIsVoiceModeOpen(false)}
                     onStopGenerating={handleStopGenerating}
-                    lastAiMessage={messages.filter(m => m.role === 'ai').at(-1)?.content || ''}
-                    onSendMessage={async (text) => {
-                        try {
-                            const res = await handleSendFollowUp(null, text);
-                            return res?.aiMessage?.content || null;
-                        } catch (err) {
-                            console.error("VoiceMode send failed:", err);
-                            return null;
-                        }
-                    }}
+                    isSidebarCollapsed={isSidebarCollapsed}
+                    lastAiMessage={messages.length > 0 ? (messages.filter(m => m.role === 'ai').at(-1)?.content || '') : ''}
+                    onSendMessage={handleSendFollowUp}
                 />
             </div>
         </div>

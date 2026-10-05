@@ -32,7 +32,8 @@ export async function sendMessage(message, chatId, fileOrFiles, socketId, modelO
     const response = await api.post("/api/chats/message", formData, {
         headers: {
             'Content-Type': 'multipart/form-data'
-        }
+        },
+        timeout: 120000
     });
     return response.data;
 }

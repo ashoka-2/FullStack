@@ -12,11 +12,8 @@ export async function connectToDB() {
     try {
         await mongoose.connect(process.env.MONGODB_URI, {
             serverSelectionTimeoutMS: 5000,
-            connectTimeoutMS: 10000,
-            maxPoolSize: 50,
-            minPoolSize: 10,
             socketTimeoutMS: 45000,
-            maxIdleTimeMS: 30000,
+            maxPoolSize: 50,
         });
         console.log("✅ [Database] Connected successfully to MongoDB");
         if (retryTimer) {
@@ -48,11 +45,13 @@ export async function connectToDB() {
 }
 
 mongoose.connection.on("disconnected", () => {
-    console.warn("⚠️ [Database] Disconnected from MongoDB. Attempting to reconnect...");
-    if (!retryTimer) {
-        retryTimer = setTimeout(() => {
-            retryTimer = null;
-            connectToDB();
-        }, 5000);
+    if (mongoose.connection.readyState === 0 && !isConnecting) {
+        console.warn("⚠️ [Database] Disconnected from MongoDB. Attempting to reconnect...");
+        if (!retryTimer) {
+            retryTimer = setTimeout(() => {
+                retryTimer = null;
+                connectToDB();
+            }, 5000);
+        }
     }
 });

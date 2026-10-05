@@ -489,6 +489,7 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
         utt.onstart = () => {
             isSpeakingRef.current = true;
             setStatus('speaking');
+            try { recognitionRef.current?.abort(); } catch {}
         };
 
         utt.onend = () => {
@@ -548,6 +549,7 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
         utt.onstart = () => {
             isSpeakingRef.current = true;
             setStatus('speaking');
+            try { recognitionRef.current?.abort(); } catch {}
         };
         utt.onend = () => {
             isSpeakingRef.current = false;
@@ -605,9 +607,14 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
                 const reply = await onSendMessage(rawText);
                 isStreamingRef.current = false;
 
-                if (reply && !stoppedRef.current) {
-                    setHistory(p => [...p, { role: 'ai', content: reply }]);
-                    setFeedback(reply.length > 80 ? reply.slice(0, 80) + '…' : reply);
+                // Extract reply string whether reply is a string or an API response object
+                const replyText = typeof reply === 'string'
+                    ? reply
+                    : (reply?.aiMessage?.content || reply?.content || reply?.message || '');
+
+                if (replyText && !stoppedRef.current) {
+                    setHistory(p => [...p, { role: 'ai', content: replyText }]);
+                    setFeedback(replyText.length > 80 ? replyText.slice(0, 80) + '…' : replyText);
 
                     // Flush any remaining chunk left in streaming buffer
                     if (streamingBufferRef.current.trim()) {
@@ -620,7 +627,7 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
 
                     // Fallback if chunks weren't received (speak full reply)
                     if (speechQueueRef.current.length === 0 && !isSpeakingRef.current) {
-                        let spokenReply = cleanForSpeech(reply);
+                        let spokenReply = cleanForSpeech(replyText);
                         if (spokenReply.length > 260) spokenReply = spokenReply.slice(0, 260) + '...';
                         if (!spokenReply) spokenReply = "Here is what I found for you, sir.";
                         speechQueueRef.current.push(spokenReply);
@@ -631,7 +638,11 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
                     isStreamingRef.current = false;
                     setStatus('idle');
                     setFeedback('At your service, sir. Tap mic or speak.');
-                    setTimeout(() => { if (!stoppedRef.current) startListeningRef.current?.(); }, 400);
+                    setTimeout(() => { 
+                        if (!stoppedRef.current && !isSpeakingRef.current && !(typeof window !== 'undefined' && window.speechSynthesis?.speaking)) {
+                            startListeningRef.current?.(); 
+                        }
+                    }, 400);
                 }
             } catch {
                 isStreamingRef.current = false;
@@ -714,6 +725,9 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
     const startListening = useCallback(() => {
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SR) return;
+        if (stoppedRef.current || isSpeakingRef.current || (typeof window !== 'undefined' && window.speechSynthesis?.speaking)) {
+            return;
+        }
         stoppedRef.current = false;
 
         try {
@@ -726,6 +740,11 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
             rec.onstart = () => { setStatus('listening'); setFeedback('Listening…'); setTranscript(''); };
 
             rec.onresult = (e) => {
+                if (isSpeakingRef.current || (typeof window !== 'undefined' && window.speechSynthesis?.speaking)) {
+                    latestTranscript.current = '';
+                    setTranscript('');
+                    return;
+                }
                 let final = '', interim = '';
                 for (let i = 0; i < e.results.length; i++) {
                     if (e.results[i].isFinal) final += e.results[i][0].transcript;
@@ -738,20 +757,34 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
 
             rec.onend = () => {
                 if (stoppedRef.current) return;
+                if (isSpeakingRef.current || (typeof window !== 'undefined' && window.speechSynthesis?.speaking)) {
+                    latestTranscript.current = '';
+                    setTranscript('');
+                    return;
+                }
                 const spoken = latestTranscript.current.trim();
+                latestTranscript.current = '';
                 setTranscript('');
                 if (spoken) {
                     const intent = resolveIntent(spoken);
                     handleIntent(intent, spoken);
                 } else {
-                    // No speech — auto-retry after brief pause
-                    setTimeout(() => { if (!stoppedRef.current) startListening(); }, 500);
+                    // No speech — auto-retry after brief pause if still not speaking
+                    setTimeout(() => { 
+                        if (!stoppedRef.current && !isSpeakingRef.current && !(typeof window !== 'undefined' && window.speechSynthesis?.speaking)) {
+                            startListening(); 
+                        }
+                    }, 500);
                 }
             };
 
             rec.onerror = (e) => {
                 if (e.error === 'no-speech') {
-                    setTimeout(() => { if (!stoppedRef.current) startListening(); }, 400);
+                    setTimeout(() => { 
+                        if (!stoppedRef.current && !isSpeakingRef.current && !(typeof window !== 'undefined' && window.speechSynthesis?.speaking)) {
+                            startListening(); 
+                        }
+                    }, 400);
                 } else {
                     if (e.error !== 'aborted') dispatch(addToast({ type: 'error', message: `Mic: ${e.error}` }));
                     setStatus('idle');
@@ -790,20 +823,13 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
         if (typeof window !== 'undefined' && window.speechSynthesis) {
             window.speechSynthesis.cancel();
             try { window.speechSynthesis.pause(); } catch {}
+            try { window.speechSynthesis.resume(); } catch {}
             window.speechSynthesis.cancel();
         }
         setStatus('idle');
         setTranscript('');
         setFeedback('');
     }, []);
-
-    useEffect(() => {
-        const handleStop = () => {
-            stopAll();
-        };
-        window.addEventListener('ai_stream_stop', handleStop);
-        return () => window.removeEventListener('ai_stream_stop', handleStop);
-    }, [stopAll]);
 
     const toggleMic = useCallback(() => {
         if (status === 'listening') {
@@ -831,6 +857,14 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
         const intent = resolveIntent(raw);
         handleIntent(intent, raw);
     }, [handleIntent]);
+
+    useEffect(() => {
+        const handleStop = () => {
+            stopAll();
+        };
+        window.addEventListener('ai_stream_stop', handleStop);
+        return () => window.removeEventListener('ai_stream_stop', handleStop);
+    }, [stopAll]);
 
     return {
         status,

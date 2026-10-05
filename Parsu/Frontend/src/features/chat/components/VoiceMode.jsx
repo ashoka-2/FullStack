@@ -11,7 +11,6 @@
  */
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useSelector } from 'react-redux';
 import {
     RiMicLine,
     RiMicOffLine,
@@ -130,22 +129,15 @@ function FluidVoiceOrb({ status, onClick }) {
     );
 }
 
-// ─── Main Export: Floating Voice Orb Overlay (Non-Blocking) ───────────────────
-export default function VoiceMode({ isOpen, onClose, onSendMessage, lastAiMessage, onStopGenerating }) {
+function VoiceModeActive({ onClose, onSendMessage, lastAiMessage, onStopGenerating, isSidebarCollapsed = false }) {
     const agent = useVoiceAgent({ onSendMessage, onClose, lastAiMessage });
-    const isSidebarCollapsed = useSelector(state => state.chat?.isSidebarCollapsed);
 
     useEffect(() => {
-        if (isOpen) {
-            agent.start();
-        } else {
+        agent.start();
+        return () => {
             agent.stopAll();
-        }
-        return () => agent.stopAll();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen]);
-
-    if (!isOpen || typeof document === 'undefined') return null;
+        };
+    }, []);
 
     const isListening = agent.status === 'listening';
 
@@ -160,6 +152,8 @@ export default function VoiceMode({ isOpen, onClose, onSendMessage, lastAiMessag
         }
         onClose();
     };
+
+    if (typeof document === 'undefined') return null;
 
     return createPortal(
         <div className={`fixed top-0 bottom-0 right-0 ${isSidebarCollapsed ? 'lg:left-16' : 'lg:left-56'} left-0 z-[990] pointer-events-none flex flex-col justify-center items-center select-none transition-[left] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
@@ -220,3 +214,10 @@ export default function VoiceMode({ isOpen, onClose, onSendMessage, lastAiMessag
         document.body
     );
 }
+
+// ─── Main Export: Floating Voice Orb Overlay (Non-Blocking) ───────────────────
+export default function VoiceMode({ isOpen, ...props }) {
+    if (!isOpen) return null;
+    return <VoiceModeActive {...props} />;
+}
+

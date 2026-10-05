@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import {
   RiSearchLine,
@@ -40,6 +40,7 @@ import GlobalSearchModal from '../chat/components/GlobalSearchModal';
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const user = useSelector(state => state.auth.user);
   const chats = useSelector(state => state.chat.chats);
+  const currentChatId = useSelector(state => state.chat.currentChatId);
   const loading = useSelector(state => state.chat.loading);
   const location = useLocation();
   const navigate = useNavigate();
@@ -471,8 +472,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             ) : (
               <>
                 {isCreating && (
-                    <div className="px-3 py-1.5 animate-pulse">
-                        <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4"></div>
+                    <div className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-gradient-to-r from-[var(--accent-cyan)]/15 via-[var(--accent-cyan)]/5 to-transparent border border-[var(--accent-cyan)]/35 animate-pulse text-[13px] text-zinc-900 dark:text-zinc-100 shadow-xs select-none mb-1.5">
+                        <RiSparkling2Line size={15} className="text-[var(--accent-cyan)] shrink-0 animate-spin" style={{ animationDuration: '3s' }} />
+                        <div className="flex-1 flex flex-col gap-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[12px] font-semibold text-[var(--accent-cyan)] tracking-wide">
+                                    Creating title by AI…
+                                </span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-cyan)] animate-ping" />
+                            </div>
+                            <div className="h-2 bg-zinc-300 dark:bg-zinc-700/60 rounded-full w-4/5 animate-pulse" />
+                        </div>
                     </div>
                 )}
                 {/* Sort pinned first */}
@@ -486,6 +496,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   .map((thread) => {
                   const isThisPinned = pinnedIds[thread._id] !== undefined ? pinnedIds[thread._id] : (thread.isPinned || false);
                   const isThisRenaming = renamingId === thread._id;
+                  const isSelected = location.pathname === `/chat/${thread._id}` || currentChatId === thread._id;
                   return (
                   <div key={thread._id} className="group relative flex items-center w-full">
                     {isThisRenaming ? (
@@ -567,10 +578,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                           closeMobileSidebar();
                         }}
                         style={{ WebkitTouchCallout: 'none' }}
-                        className={`w-full flex items-start gap-2 text-left px-3 py-2 rounded-xl text-[13px] transition-all font-medium cursor-pointer select-none
-                        ${location.pathname === `/chat/${thread._id}` 
-                          ? 'text-zinc-950 dark:text-white bg-zinc-100 dark:bg-[var(--bg-surface)] shadow-xs border border-zinc-200/90 dark:border-white/[0.08]' 
-                          : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[var(--bg-surface-hover)]'
+                        className={`w-full flex items-start gap-2 text-left px-3 py-2 rounded-xl text-[13px] transition-all cursor-pointer select-none
+                        ${isSelected 
+                          ? 'text-zinc-950 dark:text-white bg-zinc-100 dark:bg-[var(--bg-surface)] shadow-xs border border-[var(--accent-cyan)]/45 dark:border-[var(--accent-cyan)]/35 font-semibold' 
+                          : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[var(--bg-surface-hover)] font-medium'
                         }`}
                       >
                         {isThisPinned && (

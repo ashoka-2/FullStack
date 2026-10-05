@@ -29,6 +29,15 @@ const chatSlice = createSlice({
         setChats: (state, action) => {
             state.chats = action.payload;
         },
+        prependChat: (state, action) => {
+            if (!action.payload?._id) return;
+            const exists = state.chats.some(c => c._id === action.payload._id);
+            if (!exists) {
+                state.chats = [action.payload, ...state.chats];
+            } else {
+                state.chats = state.chats.map(c => c._id === action.payload._id ? { ...c, ...action.payload } : c);
+            }
+        },
         setMessages: (state, action) => {
             state.messages = action.payload;
         },
@@ -94,7 +103,7 @@ const chatSlice = createSlice({
 });
 
 export const { 
-    setChats, setMessages, addMessage, setCurrentChatId, 
+    setChats, prependChat, setMessages, addMessage, setCurrentChatId, 
     setLoading, setIsGenerating, setError, setIsCreating, clearChat, appendChunk, stopStreaming,
     prependMessages, setHasMoreMessages, setMessagesPage, setTotalMessages, setIsLoadingMore,
     toggleSidebarCollapse, setSidebarCollapse

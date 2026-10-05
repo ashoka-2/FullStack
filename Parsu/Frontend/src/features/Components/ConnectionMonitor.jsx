@@ -58,60 +58,20 @@ export default function ConnectionMonitor({ children }) {
         isOfflineRef.current = isOffline;
     }, [isOffline]);
 
-    // Check health of backend server (throttled to avoid rapid request storm)
-    const checkServerHealth = useCallback(async (force = false) => {
-        const now = Date.now();
-        if (!force && (isCheckingRef.current || now - lastCheckTimeRef.current < 4000)) {
-            return false;
+    // Check health purely client-side without HTTP network overhead
+    const checkServerHealth = useCallback(async () => {
+        const offline = !navigator.onLine;
+        setIsOffline(offline);
+        setIsServerDown(false);
+        broadcastStatus(offline, false);
+        if (!offline && wasDisconnectedRef.current) {
+            wasDisconnectedRef.current = false;
+            dispatch(addToast({ 
+                message: "Connection restored! Resuming your session...", 
+                type: "success" 
+            }));
         }
-
-        if (!navigator.onLine) {
-            setIsOffline(true);
-            broadcastStatus(true, isServerDownRef.current);
-            return false;
-        }
-
-        isCheckingRef.current = true;
-        lastCheckTimeRef.current = now;
-        setIsChecking(true);
-
-        try {
-            const res = await customAxios.get(`/api/health?_t=${now}`, { timeout: 5000 });
-            
-            if (res.status === 200) {
-                if (isServerDownRef.current || isOfflineRef.current) {
-                    setIsServerDown(false);
-                    setIsOffline(false);
-                    broadcastStatus(false, false);
-                    if (wasDisconnectedRef.current) {
-                        wasDisconnectedRef.current = false;
-                        dispatch(addToast({ 
-                            message: "Connection restored! Resuming your session...", 
-                            type: "success" 
-                        }));
-                    }
-                }
-                return true;
-            } else {
-                setIsServerDown(true);
-                wasDisconnectedRef.current = true;
-                broadcastStatus(isOfflineRef.current, true);
-                return false;
-            }
-        } catch (err) {
-            if (!navigator.onLine) {
-                setIsOffline(true);
-                broadcastStatus(true, isServerDownRef.current);
-            } else {
-                setIsServerDown(true);
-                broadcastStatus(false, true);
-            }
-            wasDisconnectedRef.current = true;
-            return false;
-        } finally {
-            isCheckingRef.current = false;
-            setIsChecking(false);
-        }
+        return !offline;
     }, [dispatch, broadcastStatus]);
 
     // Setup network event listeners (only check if an actual network error occurs)

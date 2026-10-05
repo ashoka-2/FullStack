@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { generateChatTitle, generateResponse, generateSuggestions } from "../services/ai.service.js";
 import chatModel from "../models/chat.model.js";
 import userModel from "../models/user.model.js";
@@ -11,9 +12,40 @@ import { generateEmbedding, generateEmbeddings, chunkText, cosineSimilarity } fr
 import { extractTextFromPdf } from "../services/pdf.service.js";
 import { extractAndStoreMemory } from "../services/memory.service.js";
 
+// Global deduplication registry to prevent duplicate chats/messages from rapid multi-clicks or network retries
+const inFlightRequests = new Map();
+
 export async function sendMessage(req, res) {
+    let dedupKey = null;
+    let resolveInFlight = null;
+    let rejectInFlight = null;
     try {
-        const { message, chat: chatId } = req.body;
+        const { message, chat: rawChatId } = req.body;
+        let chatId = rawChatId;
+        if (!chatId || chatId === "new" || chatId === "null" || chatId === "undefined" || !mongoose.Types.ObjectId.isValid(chatId)) {
+            chatId = null;
+        }
+
+        const normalizedMsg = (message || "").trim();
+        dedupKey = `${req.user.id}:${chatId || 'new'}:${normalizedMsg}`;
+
+        // If an identical request from this user is already in-flight, await its result rather than spawning a duplicate chat
+        if (inFlightRequests.has(dedupKey)) {
+            console.warn(`[sendMessage Deduplication] Duplicate in-flight request detected for key: ${dedupKey}. Awaiting existing response...`);
+            try {
+                const responseData = await inFlightRequests.get(dedupKey);
+                return res.status(200).json(responseData);
+            } catch (err) {
+                return res.status(500).json({ message: err.message || "Request failed" });
+            }
+        }
+
+        const inFlightPromise = new Promise((resolve, reject) => {
+            resolveInFlight = resolve;
+            rejectInFlight = reject;
+        });
+        inFlightRequests.set(dedupKey, inFlightPromise);
+
         const io = getIO();
         const socketId = req.body.socketId;
 
@@ -184,19 +216,41 @@ export async function sendMessage(req, res) {
         let title = null, chat = null;
 
         if (!chatId) {
-            const fallbackTitle = primaryFile?.fileType === "video" ? "Video Analysis" 
-                : primaryFile?.fileType === "image" ? (uploadedFiles.length > 1 ? `Album (${uploadedFiles.length} photos)` : "Image Upload")
-                : (primaryFile?.fileType === "document" ? `Doc: ${primaryFile.name}` : "New Chat");
-            title = await generateChatTitle(message || fallbackTitle);
-            chat = await chatModel.create({
+            // Check if user recently submitted the exact same query in a brand-new chat within last 6s (idempotency guard)
+            const recentChat = await chatModel.findOne({
                 user: req.user.id,
-                title,
-                incognito: isIncognito
-            });
+                createdAt: { $gte: new Date(Date.now() - 6000) }
+            }).sort({ createdAt: -1 });
 
-            // Link newly indexed document to chat if created
-            if (newlyIndexedDocument && chat) {
-                await documentModel.updateOne({ _id: newlyIndexedDocument._id }, { $set: { chat: chat._id } });
+            if (recentChat) {
+                const recentFirstMsg = await messageModel.findOne({
+                    chat: recentChat._id,
+                    role: "user"
+                }).sort({ createdAt: 1 });
+
+                if (recentFirstMsg && recentFirstMsg.content?.trim() === normalizedMsg) {
+                    console.warn(`[Backend Deduplication] Blocked duplicate chat creation for user ${req.user.id}: "${normalizedMsg}". Reusing recent chat ${recentChat._id}.`);
+                    chat = recentChat;
+                    chatId = recentChat._id;
+                }
+            }
+
+            if (!chat) {
+                const fallbackTitle = primaryFile?.fileType === "video" ? "Video Analysis" 
+                    : primaryFile?.fileType === "image" ? (uploadedFiles.length > 1 ? `Album (${uploadedFiles.length} photos)` : "Image Upload")
+                    : (primaryFile?.fileType === "document" ? `Doc: ${primaryFile.name}` : "New Chat");
+                title = await generateChatTitle(message || fallbackTitle);
+                chat = await chatModel.create({
+                    user: req.user.id,
+                    title,
+                    incognito: isIncognito
+                });
+                chatId = chat._id;
+
+                // Link newly indexed document to chat if created
+                if (newlyIndexedDocument && chat) {
+                    await documentModel.updateOne({ _id: newlyIndexedDocument._id }, { $set: { chat: chat._id } });
+                }
             }
         }
 
@@ -303,7 +357,6 @@ export async function sendMessage(req, res) {
 
             if (socketId) {
                 io.to(socketId).emit("model:switched", activeSwitchedModel);
-                io.to(socketId).emit("chunk", `*(Switched to ${newDisplayName} for image analysis)*\n\n`);
             }
 
             // Persist model preference to user
@@ -346,7 +399,6 @@ export async function sendMessage(req, res) {
 
                 if (socketId) {
                     io.to(socketId).emit("model:switched", activeSwitchedModel);
-                    io.to(socketId).emit("chunk", `*(Using your connected ${newDisplayName} custom model)*\n\n`);
                 }
 
                 await userModel.updateOne(
@@ -696,19 +748,14 @@ export async function sendMessage(req, res) {
                 if (idx < candidates.length - 1) {
                     const nextCandidate = candidates[idx + 1];
                     const nextDisplayName = getModelDisplayName(nextCandidate.modelId, nextCandidate.provider);
-                    const isLimit = /429|quota|rate.*limit|insufficient|balance|credit|capacity|overload|exhaust/i.test(err.message || "");
-                    
-                    const switchNotice = isLimit
-                        ? `\n\n*(Notice: ${candidateDisplayName} quota/rate limit reached. Seamlessly switching to ${nextDisplayName}...)*\n\n`
-                        : `\n\n*(Notice: ${candidateDisplayName} encountered high traffic. Seamlessly switching to ${nextDisplayName}...)*\n\n`;
 
                     if (socketId) {
-                        io.to(socketId).emit("chunk", switchNotice);
                         io.to(socketId).emit("model:switched", {
                             modelId: nextCandidate.modelId,
                             provider: nextCandidate.provider,
                             name: nextDisplayName,
-                            reason: `${candidateDisplayName} limit reached. Switched to ${nextDisplayName}`
+                            badge: doesModelSupportVision(nextCandidate.modelId, nextCandidate.provider) ? "Vision" : "Fast",
+                            reason: `Switched to ${nextDisplayName}`
                         });
                     }
                 }
@@ -731,13 +778,23 @@ export async function sendMessage(req, res) {
             role: "ai"
         });
 
-        res.status(201).json({
+        const responsePayload = {
             title: title,
             chat: chat || await chatModel.findById(chatId),
             userMessage,
             aiMessage,
             switchedModel: activeSwitchedModel
-        });
+        };
+
+        if (resolveInFlight) {
+            resolveInFlight(responsePayload);
+            // Retain for 3.5 seconds to absorb trailing rapid duplicate calls
+            setTimeout(() => {
+                if (dedupKey) inFlightRequests.delete(dedupKey);
+            }, 3500);
+        }
+
+        res.status(201).json(responsePayload);
 
         // Fire-and-forget: Generate embeddings for both messages and learn user facts into memory
         if (!isIncognito) {
@@ -763,6 +820,12 @@ export async function sendMessage(req, res) {
             })();
         }
     } catch (error) {
+        if (rejectInFlight) {
+            rejectInFlight(error);
+        }
+        if (dedupKey) {
+            inFlightRequests.delete(dedupKey);
+        }
         console.error("Error in sendMessage controller:", error);
         const isOverload = /overload|429|503|quota|resource.*exhaust|high traffic|rate limit|capacity|failed to parse stream/i.test(error.message);
         const statusCode = isOverload ? 429 : 500;

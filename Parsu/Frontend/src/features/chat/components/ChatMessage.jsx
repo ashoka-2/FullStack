@@ -154,8 +154,6 @@ const isRawCodeBlock = (text) => {
 const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
     const isUser = msg.role === 'user' || (msg.role !== 'assistant' && msg.role !== 'ai');
     const dispatch = useDispatch();
-    const [displayedContent, setDisplayedContent] = useState(msg.content);
-    const [isTyping, setIsTyping] = useState(false);
     const [copied, setCopied] = useState(false);
 
     // Feedback State ('like' | 'dislike' | null)
@@ -168,7 +166,12 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [selectedPlatforms, setSelectedPlatforms] = useState(['instagram']);
     const [postMode, setPostMode] = useState('together'); // 'together' | 'separately'
-    const [captionText, setCaptionText] = useState('');
+    // Caption Text for social sharing
+    const [captionText, setCaptionText] = useState(
+        (msg.content && msg.content !== 'Sent an image' && msg.content !== 'Sent a video' && !msg.content.startsWith('Sent ')) 
+            ? msg.content 
+            : ''
+    );
     const [isPosting, setIsPosting] = useState(false);
     const [publishFeedback, setPublishFeedback] = useState(null);
     const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
@@ -210,11 +213,10 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
     const isMultipleMedia = allMediaItems.length > 1;
 
     useEffect(() => {
-        setDisplayedContent(msg.content);
-        if (msg.content && msg.content !== 'Sent an image' && msg.content !== 'Sent a video' && !msg.content.startsWith('Sent ')) {
+        if (!captionText && msg.content && msg.content !== 'Sent an image' && msg.content !== 'Sent a video' && !msg.content.startsWith('Sent ')) {
             setCaptionText(msg.content);
         }
-    }, [msg.content]);
+    }, [msg.content, captionText]);
 
     useEffect(() => {
         if (msg.feedback !== undefined) {
@@ -263,6 +265,27 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
         }
     };
 
+    // Sync isSpeaking state with other messages and global cancel events
+    useEffect(() => {
+        const handleCancelSpeech = (e) => {
+            if (!e.detail?.activeId || e.detail.activeId !== msg._id) {
+                setIsSpeaking(false);
+            }
+        };
+        const handleGlobalStop = () => {
+            setIsSpeaking(false);
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        };
+        window.addEventListener('cancel_all_message_speech', handleCancelSpeech);
+        window.addEventListener('ai_stream_stop', handleGlobalStop);
+        return () => {
+            window.removeEventListener('cancel_all_message_speech', handleCancelSpeech);
+            window.removeEventListener('ai_stream_stop', handleGlobalStop);
+        };
+    }, [msg._id]);
+
     // Handle Text-to-Speech playback & mascot speech sync
     const handleToggleSpeech = () => {
         if (!('speechSynthesis' in window)) {
@@ -272,11 +295,17 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
 
         if (isSpeaking) {
             window.speechSynthesis.cancel();
+            try { window.speechSynthesis.pause(); } catch {}
+            try { window.speechSynthesis.resume(); } catch {}
+            window.speechSynthesis.cancel();
             setIsSpeaking(false);
             window.dispatchEvent(new CustomEvent('blob_speech_state', { detail: { speaking: false } }));
             return;
         }
 
+        window.speechSynthesis.cancel();
+        try { window.speechSynthesis.pause(); } catch {}
+        try { window.speechSynthesis.resume(); } catch {}
         window.speechSynthesis.cancel();
         window.dispatchEvent(new CustomEvent('cancel_all_message_speech', { detail: { activeId: msg._id } }));
 
@@ -470,7 +499,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
         }
     };
 
-    const contentToRender = isTyping ? displayedContent : msg.content;
+    const contentToRender = msg.content;
 
     // Check if content already contains a markdown map block or inline map code
     const hasMapCodeBlock = typeof contentToRender === 'string' && (

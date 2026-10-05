@@ -9,6 +9,7 @@ import {
 } from "../service/chat.api";
 import { 
     setChats, 
+    prependChat,
     setMessages, 
     addMessage, 
     setLoading, 
@@ -26,6 +27,10 @@ import {
 import { getSocket, initializeSocketConnection } from "../service/chat.socket";
 import { useNavigate } from "react-router";
 
+let activeInFlightPromise = null;
+let lastSendFingerprint = null;
+let lastSendTime = 0;
+
 // Yeh custom hook chat se related saare operations (send message, fetch chats, etc.) handle karta hai
 export const useChat = () => {
     const dispatch = useDispatch(); // For dispatching Redux state updates
@@ -33,6 +38,19 @@ export const useChat = () => {
 
     // Sends user message, creates chat if needed, and sets up optimistic streaming
     async function handleSendMessage(message, chatId, file, modelOptions = null, webSearch = false, memory = true, incognito = null, thinkingLevel = 'low') {
+        const cleanChatId = (!chatId || chatId === 'new' || chatId === 'null' || chatId === 'undefined') ? null : chatId;
+        const fingerprint = `${cleanChatId || 'new'}:${(message || '').trim()}`;
+        const now = Date.now();
+        // Prevent duplicate simultaneous chat submissions for the same prompt
+        if (activeInFlightPromise && lastSendFingerprint === fingerprint && (now - lastSendTime) < 3000) {
+            console.warn("[useChat] Deduping duplicate handleSendMessage call:", fingerprint);
+            return activeInFlightPromise;
+        }
+
+        lastSendFingerprint = fingerprint;
+        lastSendTime = now;
+
+        const executeSend = async () => {
         try {
             dispatch(setError(null));
             dispatch(setLoading(true));
@@ -41,7 +59,7 @@ export const useChat = () => {
             const isIncognito = incognito !== null ? Boolean(incognito) : (localStorage.getItem('parsu_incognito') === '1');
 
             // If there is no chatId, a new chat is being created
-            if (!chatId) {
+            if (!cleanChatId) {
                 dispatch(setIsCreating(true));
             }
 
@@ -71,7 +89,7 @@ export const useChat = () => {
             // Obtain socket instance for receiving token streams
             const socket = getSocket();
             const resolvedThinking = thinkingLevel || modelOptions?.thinkingLevel || 'low';
-            const response = await sendMessage(message, chatId, file, socket?.id, modelOptions, webSearch, memory, isIncognito, resolvedThinking);
+            const response = await sendMessage(message, cleanChatId, file, socket?.id, modelOptions, webSearch, memory, isIncognito, resolvedThinking);
             
             // If the model was auto-switched on the server (vision routing or quota failover), dispatch UI update
             if (response.switchedModel && typeof window !== "undefined") {
@@ -82,7 +100,8 @@ export const useChat = () => {
             if (response.chat) {
                 dispatch(setCurrentChatId(response.chat._id));
                 if (!isIncognito && !response.chat.incognito) {
-                    handleGetChats();
+                    dispatch(prependChat(response.chat));
+                    handleGetChats().catch(() => {});
                 }
             }
             
@@ -110,7 +129,12 @@ export const useChat = () => {
             dispatch(setLoading(false));
             dispatch(setIsGenerating(false));
             dispatch(setIsCreating(false));
+            activeInFlightPromise = null;
         }
+        };
+
+        activeInFlightPromise = executeSend();
+        return activeInFlightPromise;
     }
 
     // Fetches conversation history list for the active user

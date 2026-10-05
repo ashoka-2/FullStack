@@ -301,6 +301,7 @@ const ChatArea = () => {
   const navigate = useNavigate();
 
   const textareaRef = useRef(null);
+  const isSubmittingRef = useRef(false);
   const [isFullScreenEditor, setIsFullScreenEditor] = useState(false);
 
   const isCodeContent = Boolean(
@@ -474,7 +475,7 @@ const ChatArea = () => {
     const messageToSend = text || input;
     const fileObjects = files.map(f => f.fileObject).filter(Boolean);
     const filesToSend = fileObjects.length > 1 ? fileObjects : (fileObjects[0] || null);
-    if ((!messageToSend.trim() && !filesToSend) || loading) return;
+    if ((!messageToSend.trim() && !filesToSend) || loading || isSubmittingRef.current) return null;
 
     // Instant device / URL / scroll actions
     const intent = resolveIntent(messageToSend);
@@ -492,18 +493,25 @@ const ChatArea = () => {
         }).catch(err => {
           dispatch(addToast({ type: 'warning', message: `Device: ${err?.response?.data?.message || err.message}` }));
         });
+        setInput('');
+        return null;
       } else if (intent.type === 'open_url') {
         window.open(intent.url, '_blank', 'noopener,noreferrer');
         dispatch(addToast({ type: 'info', message: `🌐 Opening ${intent.label}` }));
+        setInput('');
+        return null;
       } else if (intent.type === 'scroll') {
         if (intent.to === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });
         else if (intent.to === 'bottom') window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         else window.scrollBy({ top: intent.by, behavior: 'smooth' });
         dispatch(addToast({ type: 'info', message: `Scrolling ${intent.by > 0 ? 'down' : 'up'}` }));
+        setInput('');
+        return null;
       }
     }
 
     try {
+      isSubmittingRef.current = true;
       setInput('');
       setFiles([]);
       setIsFullScreenEditor(false);
@@ -533,6 +541,8 @@ const ChatArea = () => {
     } catch (error) {
       console.error('Message send failed:', error);
       return null;
+    } finally {
+      isSubmittingRef.current = false;
     }
   };
 

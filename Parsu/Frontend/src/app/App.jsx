@@ -21,13 +21,13 @@ const App = () => {
     
     // Initialize global socket and chunk listener
     const socket = initializeSocketConnection();
-    socket.on("chunk", (chunk) => {
+
+    const handleChunk = (chunk) => {
       dispatch(appendChunk(chunk));
       window.dispatchEvent(new CustomEvent("ai_stream_chunk", { detail: chunk }));
-    });
+    };
 
-    // Cross-Device Auto-Sync: Listen for incoming commands from user's other devices
-    socket.on("device:incoming_relay", ({ action, params, senderDeviceName }) => {
+    const handleRelay = ({ action, params, senderDeviceName }) => {
       if (action === "open_url" && params?.url) {
         window.open(params.url, "_blank");
       } else if (action === "write_clipboard" && params?.text) {
@@ -35,11 +35,14 @@ const App = () => {
       } else if (action === "vibrate" && typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate([200, 100, 200]);
       }
-    });
+    };
+
+    socket.on("chunk", handleChunk);
+    socket.on("device:incoming_relay", handleRelay);
 
     return () => {
-      socket.off("chunk");
-      socket.off("device:incoming_relay");
+      socket.off("chunk", handleChunk);
+      socket.off("device:incoming_relay", handleRelay);
     };
   }, [isMaintenance]);
 
