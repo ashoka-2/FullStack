@@ -12,16 +12,19 @@ import {
   RiHistoryLine,
   RiArrowRightSLine,
   RiFullscreenLine,
-  RiFullscreenExitLine
+  RiFullscreenExitLine,
+  RiCpuLine
 } from '@remixicon/react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence, useDragControls } from 'motion/react';
+import ModelSelectorDropdown from './ModelSelectorDropdown';
 
 /**
  * AddToChatSheet Component
  * - Spring slide-up animation
  * - Drag downwards on top handle to dismiss
  * - Non-interfering clicks on action buttons and toggles
+ * - AI Model Selector: switch models directly inside the sheet
  * - Web Search & Memory toggles synced with global state
  * - 4 Quick Media Pickers: Camera, Photos, Videos, Files
  */
@@ -35,7 +38,9 @@ const AddToChatSheet = ({
   webSearch,
   onToggleWebSearch,
   memoryEnabled,
-  onToggleMemory
+  onToggleMemory,
+  selectedModel,
+  onModelChange
 }) => {
   const navigate = useNavigate();
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -215,6 +220,34 @@ const AddToChatSheet = ({
 
             {/* Options List */}
             <div className="space-y-2">
+              {/* Row 0: AI Model Selector */}
+              <div
+                data-guide="sheet-model-row"
+                className="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-[#1c1c1e] hover:bg-[#252528] border border-white/5 transition-colors group select-none"
+              >
+                <div className="flex items-center gap-3.5 min-w-0 pr-2">
+                  <div className="w-10 h-10 rounded-full bg-[#2c2c2e] group-hover:bg-[#38383c] flex items-center justify-center text-[var(--accent-cyan)] shrink-0 transition-colors">
+                    <RiCpuLine size={20} />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[14px] font-semibold text-zinc-200 group-hover:text-white transition-colors">
+                      AI Model
+                    </span>
+                    <span className="text-xs text-zinc-400 truncate">
+                      {selectedModel?.name || 'Gemini 2.5 Flash'}
+                    </span>
+                  </div>
+                </div>
+
+                <div data-guide="model-selector-btn" className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <ModelSelectorDropdown
+                    selectedModel={selectedModel}
+                    onModelChange={onModelChange}
+                    placement="bottom"
+                  />
+                </div>
+              </div>
+
               {/* Row 1: Web search */}
               <div
                 onClick={() => onToggleWebSearch?.()}

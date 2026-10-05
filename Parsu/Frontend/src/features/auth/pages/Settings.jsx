@@ -63,8 +63,8 @@ const SETTING_GROUPS = [
             {
                 to: '/settings/api-keys',
                 icon: RiKeyLine,
-                title: 'API Keys',
-                description: 'Add your own Gemini, OpenAI, Groq or other provider API keys.',
+                title: 'AI Models & API Keys',
+                description: 'Configure active models or add your own API keys for Gemini, Claude, OpenAI, DeepSeek & Groq.',
                 color: '#f59e0b',
                 glow: 'rgba(245,158,11,0.12)',
             },

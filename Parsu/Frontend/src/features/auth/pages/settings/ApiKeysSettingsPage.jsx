@@ -10,9 +10,9 @@ const ApiKeysSettingsPage = () => {
 
     return (
         <SettingsPageLayout
-            title="API Keys"
+            title="AI Models & API Keys"
             icon={RiKeyLine}
-            description="Manage your custom AI provider API keys"
+            description="Configure active models or add custom API keys for Gemini, Claude, OpenAI, DeepSeek & Groq"
         >
             <CustomKeyManager
                 onNotify={(message, type) => dispatch(addToast({ message, type }))}

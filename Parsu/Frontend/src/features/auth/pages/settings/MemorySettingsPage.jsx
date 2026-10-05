@@ -187,21 +187,23 @@ const MemorySettingsPage = () => {
 
                     {/* ── Master Memory Toggle ─────────────────────────── */}
                     <Surface>
-                        <SettingRow
-                            icon={RiBrainLine}
-                            title="Enable Memory"
-                            description="Allow Parsu AI to remember things about you across conversations"
-                            noBorder
-                            action={
-                                <PremiumToggle
-                                    checked={memoryEnabled}
-                                    onChange={(val) => {
-                                        setMemoryEnabled(val);
-                                        setMemorySetting(val);
-                                    }}
-                                />
-                            }
-                        />
+                        <div data-guide="memory-enable-toggle">
+                            <SettingRow
+                                icon={RiBrainLine}
+                                title="Enable Memory"
+                                description="Allow Parsu AI to remember things about you across conversations"
+                                noBorder
+                                action={
+                                    <PremiumToggle
+                                        checked={memoryEnabled}
+                                        onChange={(val) => {
+                                            setMemoryEnabled(val);
+                                            setMemorySetting(val);
+                                        }}
+                                    />
+                                }
+                            />
+                        </div>
                     </Surface>
 
                     {/* ── Personal Info ─────────────────────────────────── */}
@@ -270,6 +272,7 @@ const MemorySettingsPage = () => {
                             </div>
                             <textarea
                                 value={customInstructions}
+                                data-guide="memory-custom-instructions"
                                 onChange={e => setCustomInstructions(e.target.value)}
                                 placeholder="e.g. Keep answers concise, prioritize technical accuracy, or respond in a specific persona..."
                                 maxLength={2000}
@@ -329,7 +332,7 @@ const MemorySettingsPage = () => {
                             </div>
 
                             {/* Learned Facts Section */}
-                            <div className="pt-4">
+                            <div className="pt-4" data-guide="memory-facts-list">
                                 <div className="flex items-center justify-between mb-3">
                                     <p className="text-xs font-bold text-zinc-500 uppercase tracking-wide">Learned Facts & Details</p>
                                     <span className="text-[11px] text-zinc-400">{memoryFacts.length} stored</span>

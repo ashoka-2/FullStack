@@ -317,7 +317,10 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
         {/* Controls Column */}
         <div className="space-y-6">
           {/* Eye Tracking (Cursor Follow) Card */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl border border-cyan-500/25 bg-gradient-to-r from-cyan-500/10 via-sky-500/5 to-transparent dark:border-cyan-400/20">
+          <div
+            data-guide="mascot-eye-tracking-card"
+            className="flex items-center justify-between p-3.5 rounded-2xl border border-cyan-500/25 bg-gradient-to-r from-cyan-500/10 via-sky-500/5 to-transparent dark:border-cyan-400/20"
+          >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-cyan-500/15 text-[var(--accent-cyan)] flex items-center justify-center font-bold">
                 {eyeTracking ? <RiEyeLine size={20} className="text-[var(--accent-cyan)]" /> : <RiEyeOffLine size={20} className="text-zinc-400" />}
@@ -348,7 +351,10 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
           </div>
 
           {/* Fiery Head Flame Effect Card */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent dark:border-amber-400/20">
+          <div
+            data-guide="mascot-flame-card"
+            className="flex items-center justify-between p-3.5 rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent dark:border-amber-400/20"
+          >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-orange-500/15 text-orange-500 flex items-center justify-center font-bold">
                 <RiFireLine size={20} className={hasFlame ? "animate-pulse text-orange-500" : "text-zinc-400"} />
@@ -390,7 +396,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
               </span>
             </div>
 
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2" data-guide="mascot-color-picker">
               {BLOB_COLORS.map((item) => {
                 const isSelected = blobColor === item.id;
                 return (
@@ -426,7 +432,7 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
           </div>
 
           {/* Size Slider */}
-          <div className="space-y-2">
+          <div className="space-y-2" data-guide="mascot-size-slider">
             <div className="flex items-center justify-between text-xs font-semibold">
               <span className="text-zinc-700 dark:text-zinc-300">Mascot Size</span>
               <span className="text-[var(--accent-cyan)] font-mono font-bold">{blobSize}px</span>

@@ -177,6 +177,7 @@ const VoiceSettingsForm = ({ onSuccess }) => {
           <div className="relative">
             <select
               value={selectedVoiceURI}
+              data-guide="voice-tts-toggle"
               onChange={handleVoiceChange}
               className="w-full bg-zinc-50 dark:bg-[#181818] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-[var(--accent-cyan)] transition-all cursor-pointer"
             >

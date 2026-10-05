@@ -10,12 +10,16 @@ import FloatingBlobMascot from '../features/Components/FloatingBlobMascot';
 import { ToastContainer } from '../features/Components/Toast';
 import ConnectionMonitor from '../features/Components/ConnectionMonitor';
 import { usePWA } from '../hooks/usePWA';
+import GuideOverlay from '../features/guide/GuideOverlay';
+import useGuideEngine from '../features/guide/useGuideEngine';
 
 const Layout = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     // Register service worker, push notifications & background sync
     usePWA();
+    // AI Guided Help engine — watches AI messages for guide triggers
+    useGuideEngine();
     const authLoading = useSelector(state => state.auth.loading);
     
     // Check if the user has already seen the initial loader in this browser session
@@ -112,6 +116,7 @@ const Layout = () => {
                     <ScrollToTop />
                     <Outlet />
                     <FloatingBlobMascot />
+                    <GuideOverlay />
                     <ToastContainer />
                 </div>
             </ConnectionMonitor>

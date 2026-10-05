@@ -211,11 +211,15 @@ function V1Eyes({ mood, blinkLeft, blinkRight, dilate, reduced, happyEyes, spark
         const arc = (mood === "happy" && happyEyes === "smile") || mood === "wave" || Boolean(closedEyes) || mood === "password";
         const openVisible = !arc && !love && !angry && mood !== "password" && mood !== "sideEye" && !closedEyes;
 
+        const shiftArr = V1_EYE_SHIFT[mood] || V1_EYE_SHIFT.neutral;
+        const currentShift = shiftArr?.[index] || shiftArr?.[0] || pose({});
+        const currentShape = V1_EYE_SHAPE[mood] || V1_EYE_SHAPE.neutral;
+
         return (
-          <motion.g key={side} id={`${side}-eye`} initial={false} animate={V1_EYE_SHIFT[mood][index]} transition={springy} style={centre}>
+          <motion.g key={side} id={`${side}-eye`} initial={false} animate={currentShift} transition={springy} style={centre}>
             <motion.g initial={false} animate={still(roamFor(mood, s), reduced)} transition={roamTransition} style={centre}>
               <motion.g initial={false} animate={{ opacity: openVisible ? 1 : 0 }} transition={quick}>
-                <motion.g initial={false} animate={V1_EYE_SHAPE[mood]} transition={springy} style={centre}>
+                <motion.g initial={false} animate={currentShape} transition={springy} style={centre}>
                   <motion.g clipPath={`url(#${uid}-lidClip-${index})`} style={{ ...centre, scaleX: index === 0 ? eyeLX : eyeRX, scaleY: index === 0 ? eyeLY : eyeRY }}>
                     <motion.circle
                       id={`${side}-eye-sleepy-glint`}
@@ -1798,9 +1802,9 @@ export function JellyBlobMascot({
                   <motion.path
                     initial={false}
                     id="mouth"
-                    d={MOUTH_PATHS[mood]}
+                    d={MOUTH_PATHS[mood] || MOUTH_PATHS.neutral}
                     animate={{
-                      d: MOUTH_PATHS[mood],
+                      d: MOUTH_PATHS[mood] || MOUTH_PATHS.neutral,
                       opacity: mouth || mood === "password" || mood === "surprised" || mood === "curious" || mood === "love" ? 0 : 1,
                       x: mood === "sad" && !reduce ? [0, 1.6, -1.4, 1.1, -0.7, 0.4, 0] : 0,
                     }}
@@ -1823,7 +1827,7 @@ export function JellyBlobMascot({
 
                   <motion.path
                     id="mouth-oh"
-                    d={TALK_MOUTH_PATHS.open[0]}
+                    d={TALK_MOUTH_PATHS.open?.[0] || ""}
                     fill="#21102f"
                     initial={false}
                     animate={
@@ -1835,7 +1839,7 @@ export function JellyBlobMascot({
                             scaleX: [1, 1.03, 0.96, 1.04, 1],
                             scaleY: [0.94, 1.04, 0.98, 1.02, 0.94],
                           }
-                        : { opacity: mouth ? 1 : 0, d: TALK_MOUTH_PATHS[mouth ?? "open"][0], y: 0, scaleX: mouth ? 1 : 0.72, scaleY: mouth ? 1 : 0.35 }
+                        : { opacity: mouth ? 1 : 0, d: Array.isArray(TALK_MOUTH_PATHS[mouth]) ? TALK_MOUTH_PATHS[mouth][0] : (TALK_MOUTH_PATHS.open?.[0] || ""), y: 0, scaleX: mouth ? 1 : 0.72, scaleY: mouth ? 1 : 0.35 }
                     }
                     transition={
                       mouth && !reduce

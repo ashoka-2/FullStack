@@ -1,4 +1,4 @@
-﻿import { 
+import { 
     RiAddLine, 
     RiUploadCloudLine, 
     RiMicLine, 
@@ -70,6 +70,12 @@ const FollowUpInput = ({
 
     // Live Voice Conversation mode (orb, continuous TTS loop)
     const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
+
+    useEffect(() => {
+        const handleOpenSheet = () => setIsUploadMenuOpen?.(true);
+        window.addEventListener('open_add_to_chat_sheet', handleOpenSheet);
+        return () => window.removeEventListener('open_add_to_chat_sheet', handleOpenSheet);
+    }, [setIsUploadMenuOpen]);
 
     const handleToggleVoiceInput = () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -325,6 +331,7 @@ const FollowUpInput = ({
 
                     <textarea 
                         ref={textareaRef}
+                        data-guide="chat-main-input"
                         rows="1"
                         value={input}
                         onChange={(e) => {
@@ -353,7 +360,7 @@ const FollowUpInput = ({
                         {/* Left Side Actions */}
                         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 overflow-x-auto no-scrollbar py-0.5">
                             {/* Apple-style Circular Attach Button (+ icon only) */}
-                            <div className="relative shrink-0">
+                            <div className="relative shrink-0" data-guide="chat-attach-btn">
                                 <CircleButton
                                     onClick={() => setIsUploadMenuOpen(true)}
                                     title="Add to chat (Photos, Videos, Files, Memory)"
@@ -374,12 +381,15 @@ const FollowUpInput = ({
                                     onToggleWebSearch={onToggleWebSearch}
                                     memoryEnabled={memoryEnabled}
                                     onToggleMemory={onToggleMemory}
+                                    selectedModel={selectedModel}
+                                    onModelChange={onModelChange}
                                 />
                             </div>
 
                             {/* Web Search Toggle Pill Button (Desktop only on input bar; kept in sheet on mobile) */}
                             <button
                                 type="button"
+                                data-guide="chat-web-search-btn"
                                 onClick={onToggleWebSearch}
                                 className={`hidden sm:flex h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
                                     webSearch 
@@ -395,11 +405,13 @@ const FollowUpInput = ({
 
 
                             {/* AI Thinking Mode Selector */}
-                            <ThinkingSelectorDropdown
-                                thinkingLevel={thinkingLevel}
-                                onChange={onThinkingChange}
-                                placement="top"
-                            />
+                            <div data-guide="thinking-level-selector">
+                                <ThinkingSelectorDropdown
+                                    thinkingLevel={thinkingLevel}
+                                    onChange={onThinkingChange}
+                                    placement="top"
+                                />
+                            </div>
                         </div>
 
                         {/* Right Side Actions */}

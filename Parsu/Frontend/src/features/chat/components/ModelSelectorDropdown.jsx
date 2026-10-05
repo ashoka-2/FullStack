@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   RiSparkling2Line,
@@ -260,6 +260,7 @@ export default function ModelSelectorDropdown({
       {/* Trigger Button */}
       <button
         type="button"
+        data-guide="model-selector-btn"
         onClick={() => {
           if (!user) {
             navigate('/auth');
@@ -313,6 +314,7 @@ export default function ModelSelectorDropdown({
       {isOpen && typeof document !== 'undefined' && createPortal(
         <div
           ref={popoverRef}
+          data-guide="model-selector-list"
           data-lenis-prevent="true"
           onWheel={(e) => e.stopPropagation()}
           style={{
@@ -323,7 +325,7 @@ export default function ModelSelectorDropdown({
               : { top: `${Math.max(16, popoverCoords.top)}px` }),
             width: `${popoverCoords.width}px`,
             maxHeight: 'min(480px, 75vh)',
-            zIndex: 9990,
+            zIndex: 10005,
             animation: 'fadeInScale 0.15s ease-out'
           }}
           className="rounded-2xl bg-[var(--bg-card)]/98 dark:bg-[var(--bg-card)]/98 backdrop-blur-2xl border border-zinc-200/90 dark:border-white/15 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col overscroll-contain"
@@ -452,6 +454,7 @@ export default function ModelSelectorDropdown({
           <div className="p-2.5 border-t border-zinc-200/80 dark:border-white/10 bg-zinc-50/80 dark:bg-[var(--bg-surface)] flex items-center justify-between gap-2">
             <button
               type="button"
+              data-guide="model-selector-custom-keys-btn"
               onClick={() => {
                 setIsOpen(false);
                 navigate("/settings/api-keys");

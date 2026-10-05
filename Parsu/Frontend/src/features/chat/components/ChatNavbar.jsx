@@ -14,6 +14,7 @@ import ParsuLogo from '../../Components/ParsuLogo';
 import { CircleButton, PillGroup, PillBadge } from '../../Components/PillButton';
 import PrimaryButton from '../../Components/PrimaryButton';
 import { addToast } from '../../../utils/toast.slice';
+import GuideLauncherDropdown from '../../guide/GuideLauncherDropdown';
 
 /**
  * Main AI Chatbot Navbar — styled faithfully to ChatGPT's header design.
@@ -147,6 +148,9 @@ export default function ChatNavbar({
         
         {/* Optional Right Action Slot (e.g. Create Post or Status pills) */}
         {rightSlot}
+
+        {/* Interactive AI Feature Tours Dropdown */}
+        <GuideLauncherDropdown />
 
         {/* Share Button (PillBadge) */}
         {showShareButton && (

@@ -26,6 +26,7 @@ export default function SocialPlatformCard({
 
     return (
         <div
+            data-guide={`social-card-${platform.id}`}
             className={`group relative bg-white/70 dark:bg-[#121212]/70 backdrop-blur-2xl rounded-3xl sm:rounded-[28px] border transition-all duration-300 overflow-hidden flex flex-col justify-between
                 ${connection
                     ? 'border-emerald-500/30 shadow-[0_8px_30px_rgba(16,185,129,0.08)] ring-1 ring-emerald-500/20'
@@ -124,6 +125,7 @@ export default function SocialPlatformCard({
                 ) : (
                     <button
                         type="button"
+                        data-guide={`social-connect-btn-${platform.id}`}
                         onClick={() => onConnect(platform)}
                         onMouseEnter={() => triggerBlobSocialHover(platform.id)}
                         disabled={isLoading}

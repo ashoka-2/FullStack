@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -439,6 +439,12 @@ const ChatArea = () => {
   const docInputRef = useRef(null);
   const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
 
+  useEffect(() => {
+    const handleOpenSheet = () => setIsUploadMenuOpen(true);
+    window.addEventListener('open_add_to_chat_sheet', handleOpenSheet);
+    return () => window.removeEventListener('open_add_to_chat_sheet', handleOpenSheet);
+  }, []);
+
   const { webSearch, handleToggleWebSearch, memoryEnabled, handleToggleMemory } = useAiFeatureToggles();
 
   const [incognito, setIncognito] = useState(() => localStorage.getItem('parsu_incognito') === '1');
@@ -632,6 +638,7 @@ const ChatArea = () => {
 
             <textarea
               ref={textareaRef}
+              data-guide="chat-main-input"
               rows="1"
               value={input}
               onChange={(e) => {
@@ -659,7 +666,7 @@ const ChatArea = () => {
 
             <div className="flex items-center justify-between mt-3 sm:mt-4 gap-1.5 sm:gap-2">
               <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 overflow-x-auto no-scrollbar py-0.5">
-                <div className="relative shrink-0">
+                <div className="relative shrink-0" data-guide="chat-attach-btn">
                   <CircleButton onClick={requireAuth(() => setIsUploadMenuOpen(true))} title="Add to chat (Photos, Videos, Files, Memory)" ariaLabel="Add to chat">
                     <RiAddLine size={18} className="shrink-0" />
                   </CircleButton>
@@ -674,10 +681,13 @@ const ChatArea = () => {
                     onToggleWebSearch={handleToggleWebSearch}
                     memoryEnabled={memoryEnabled}
                     onToggleMemory={handleToggleMemory}
+                    selectedModel={selectedModel}
+                    onModelChange={setSelectedModel}
                   />
                 </div>
 
                 <button type="button" onClick={requireAuth((e) => handleToggleWebSearch(e))}
+                  data-guide="chat-web-search-btn"
                   className={`hidden sm:flex h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
                     webSearch ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]'
                       : 'bg-zinc-100/90 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'}`}
@@ -687,7 +697,9 @@ const ChatArea = () => {
                   <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
                 </button>
 
-                <ThinkingSelectorDropdown thinkingLevel={thinkingLevel} onChange={setThinkingLevel} placement="top" />
+                <div data-guide="thinking-level-selector">
+                  <ThinkingSelectorDropdown thinkingLevel={thinkingLevel} onChange={setThinkingLevel} placement="top" />
+                </div>
 
                 {incognito && (
                   <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-500/10 border border-purple-500/25 text-[11px] text-purple-400 font-semibold shrink-0 cursor-help"

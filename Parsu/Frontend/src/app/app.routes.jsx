@@ -139,6 +139,14 @@ export const router = createBrowserRouter([
                 element: <Protected><ApiKeysSettingsPage /></Protected>
             },
             {
+                path: "/settings/models",
+                element: <Protected><ApiKeysSettingsPage /></Protected>
+            },
+            {
+                path: "/models",
+                element: <Protected><ApiKeysSettingsPage /></Protected>
+            },
+            {
                 path: "/settings/mascot",
                 element: <Protected><MascotSettingsPage /></Protected>
             },

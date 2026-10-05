@@ -210,6 +210,7 @@ export default function CustomKeyManager({ onNotify }) {
 
         <button
           type="button"
+          data-guide="api-keys-add-btn"
           onClick={() => {
             setIsAdding(!isAdding);
             setTestResult(null);
@@ -235,6 +236,7 @@ export default function CustomKeyManager({ onNotify }) {
             {selectedProviderConfig.docs && (
               <a
                 href={selectedProviderConfig.docs}
+                data-guide="api-keys-get-key-link"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25 text-xs font-semibold transition-all hover:scale-105 active:scale-95 shrink-0 self-start xs:self-auto shadow-xs"
@@ -255,6 +257,7 @@ export default function CustomKeyManager({ onNotify }) {
                 <button
                   key={p.id}
                   type="button"
+                  data-guide={p.id === "gemini" ? "api-keys-provider-gemini" : undefined}
                   onClick={() => handleProviderSelect(p.id)}
                   className={`p-2.5 rounded-xl border text-xs font-medium text-left transition-all cursor-pointer flex items-center gap-2 ${
                     provider === p.id
@@ -309,6 +312,7 @@ export default function CustomKeyManager({ onNotify }) {
               <input
                 type={showKey ? "text" : "password"}
                 value={apiKey}
+                data-guide="api-keys-key-input"
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder={selectedProviderConfig.placeholder}
                 className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl pl-3 pr-10 py-2.5 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-cyan-500 font-mono"
@@ -365,6 +369,7 @@ export default function CustomKeyManager({ onNotify }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-2">
             <button
               type="button"
+              data-guide="api-keys-test-btn"
               onClick={handleTestKey}
               disabled={testing || !apiKey.trim()}
               className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
@@ -384,6 +389,7 @@ export default function CustomKeyManager({ onNotify }) {
 
             <PrimaryButton
               type="submit"
+              data-guide="api-keys-save-btn"
               disabled={loading || !apiKey.trim()}
               loading={loading}
               icon={RiCheckLine}

@@ -246,3 +246,31 @@ export function triggerBlobSocialConnected(platformName) {
   // Include platform name dynamically if desired
   dispatchMascotEvent(chosen, 2800);
 }
+
+// ─── AI Guided Help ──────────────────────────────────────────
+// Guide step mascot reaction (called by GuideOverlay per step)
+export function triggerBlobGuide(speech, mood = 'curious') {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(
+    new CustomEvent('blob_trigger_mood', {
+      detail: {
+        mood,
+        speech,
+        duration: 4500,
+        celebrate: false,
+        revert: false // Stay in guide mood until guide ends
+      }
+    })
+  );
+}
+
+// Guide completion celebration
+export function triggerBlobGuideEnd() {
+  const messages = [
+    { speech: "All done! You've got this! 🎉", mood: "happy" },
+    { speech: "Guide complete! You're a pro now! 🏆", mood: "happy" },
+    { speech: "That's it! Easy, right? ✨", mood: "wave" },
+  ];
+  const chosen = pickRandomUnique(messages, 'guide_end');
+  dispatchMascotEvent({ ...chosen, celebrate: true }, 3000);
+}

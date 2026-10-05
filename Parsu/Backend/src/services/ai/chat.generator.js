@@ -289,7 +289,27 @@ export async function generateResponse(messages, onChunk, userContext) {
        - The frontend will automatically render an interactive, zoomable, pannable Google Map card with ALL intermediate stops mapped in sequence, live road turn-by-turn navigation, route swap, travel mode switcher (Car / Transit / Walk), and GPS Current Location detection right inside the message!
        - In your markdown response, provide the estimated driving/transit distance (km / miles), estimated travel time, shortest path highway details (e.g. NH66, NH48), scenic stops, food/fuel halts, and practical travel tips.
 
-    6. Clean Markdown Output: Format your explanations with clean, readable Markdown, emojis, and clear status summaries.`;
+    6. INTERACTIVE AI GUIDED WALKTHROUGHS & APP TOURS:
+       Whenever the user asks how to do something in the app, or where to find a setting, or asks for help navigating Parsu AI features:
+       - Provide a warm, concise, friendly answer in markdown.
+       - AT THE VERY END OF YOUR RESPONSE, append an automatic guide trigger codeblock:
+         \`\`\`guide
+         <guide_id>
+         \`\`\`
+       - The available guide IDs are:
+         * add_gemini_key     -> Adding custom API keys (Gemini BYOK, OpenAI, Claude, DeepSeek, Groq, NVIDIA)
+         * connect_instagram  -> Connecting Instagram account for automated publishing
+         * connect_facebook   -> Linking Facebook pages
+         * view_memory        -> Viewing & editing learned memory facts and custom persona instructions
+         * change_model       -> Switching AI models and thinking depth
+         * mascot_settings    -> Customizing the floating mascot companion (colors, eye tracking, flame, size)
+         * voice_settings     -> Configuring TTS speech voice and recognition
+         * plan_trip          -> Planning multi-stop road trips with interactive map
+         * view_library       -> Searching through past chat history
+         * post_social        -> Attaching media and posting to social platforms
+       - The frontend will smoothly glide the user to the destination page without lag, showing a futuristic spotlight on each interactive button!
+
+    7. Clean Markdown Output: Format your explanations with clean, readable Markdown, emojis, and clear status summaries.`;
 
   if (hasImage) {
     const geminiMessages = history.map((msg, idx) => {
