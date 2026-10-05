@@ -787,11 +787,14 @@ export async function getChats(req,res){
     const skip = (page - 1) * limit;
 
     const query = { user: user.id, incognito: { $ne: true } };
-    const totalChats = await chatModel.countDocuments(query);
-    const chats = await chatModel.find(query)
-        .sort({ updatedAt: -1 })
-        .skip(skip)
-        .limit(limit);
+    const [totalChats, chats] = await Promise.all([
+        chatModel.countDocuments(query),
+        chatModel.find(query)
+            .sort({ updatedAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean()
+    ]);
 
     res.status(200).json({
         message: "Chats retrieved successfully",
@@ -809,12 +812,12 @@ export async function getMessages(req,res){
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
-    const chat = await chatModel.findById(chatId);
+    const chat = await chatModel.findById(chatId).select("user").lean();
 
     if(!chat){
         return res.status(404).json({
             message: "Chat not found"
-        })
+        });
     }
 
     // Total messages count for pagination metadata
@@ -828,7 +831,8 @@ export async function getMessages(req,res){
     const messages = await messageModel.find({ chat: chatId })
         .sort({ createdAt: 1 }) // Chronological order
         .skip(skip)
-        .limit(actualLimit);
+        .limit(actualLimit)
+        .lean();
 
     res.status(200).json({
         message: "Messages retrieved successfully",

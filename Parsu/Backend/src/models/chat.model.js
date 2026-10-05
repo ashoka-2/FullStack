@@ -23,6 +23,10 @@ const chatSchema = new mongoose.Schema({
     timestamps:true
 })
 
+// High performance compound indexes for fast chat list queries
+chatSchema.index({ user: 1, incognito: 1, updatedAt: -1 });
+chatSchema.index({ user: 1, isPinned: -1, updatedAt: -1 });
+
 const chatModel = mongoose.model('Chat',chatSchema);
 
 export default chatModel;

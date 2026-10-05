@@ -69,6 +69,14 @@ const chatSlice = createSlice({
                 lastMessage.content += action.payload;
             }
         },
+        stopStreaming: (state) => {
+            state.isGenerating = false;
+            state.loading = false;
+            const lastMessage = state.messages[state.messages.length - 1];
+            if (lastMessage && lastMessage.isStreaming) {
+                lastMessage.isStreaming = false;
+            }
+        },
         // ─── Pagination reducers ──────────────────────────────────
         setHasMoreMessages: (state, action) => {
             state.hasMoreMessages = action.payload;
@@ -87,7 +95,7 @@ const chatSlice = createSlice({
 
 export const { 
     setChats, setMessages, addMessage, setCurrentChatId, 
-    setLoading, setIsGenerating, setError, setIsCreating, clearChat, appendChunk,
+    setLoading, setIsGenerating, setError, setIsCreating, clearChat, appendChunk, stopStreaming,
     prependMessages, setHasMoreMessages, setMessagesPage, setTotalMessages, setIsLoadingMore,
     toggleSidebarCollapse, setSidebarCollapse
 } = chatSlice.actions;

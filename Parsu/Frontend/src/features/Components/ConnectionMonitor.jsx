@@ -114,10 +114,8 @@ export default function ConnectionMonitor({ children }) {
         }
     }, [dispatch, broadcastStatus]);
 
-    // Setup network event listeners & health check polling (without dependency loops)
+    // Setup network event listeners (only check if an actual network error occurs)
     useEffect(() => {
-        checkServerHealth(true);
-
         const handleOnline = () => {
             setIsOffline(false);
             checkServerHealth(true);
@@ -137,16 +135,10 @@ export default function ConnectionMonitor({ children }) {
         window.addEventListener('offline', handleOffline);
         window.addEventListener('app_network_error', handleAxiosNetworkError);
 
-        // Periodic health check every 15 seconds
-        const interval = setInterval(() => {
-            checkServerHealth();
-        }, 15000);
-
         return () => {
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
             window.removeEventListener('app_network_error', handleAxiosNetworkError);
-            clearInterval(interval);
         };
     }, [checkServerHealth, broadcastStatus]);
 

@@ -10,7 +10,7 @@ import FollowUpInput from '../components/FollowUpInput';
 import { useChat } from '../hook/useChat';
 import { useSelector, useDispatch } from 'react-redux';
 import { MessagesSkeleton, ThinkingSkeleton } from '../components/Skeletons';
-import { setError, setLoading } from '../chat.slice';
+import { setError, setLoading, stopStreaming } from '../chat.slice';
 import { addToast } from '../../../utils/toast.slice';
 import ChatNavbar from '../components/ChatNavbar';
 import { getModels } from '../service/model.api';
@@ -442,8 +442,11 @@ const ChatPage2 = () => {
     };
 
     const handleStopGenerating = () => {
-        dispatch(setIsGenerating(false));
-        dispatch(setLoading(false));
+        dispatch(stopStreaming());
+        if (typeof window !== 'undefined') {
+            window.speechSynthesis?.cancel();
+            window.dispatchEvent(new CustomEvent("ai_stream_stop"));
+        }
         setBlobMood('surprised');
         dispatch(addToast({ message: "Stopped AI response.", type: "info" }));
     };
@@ -582,6 +585,8 @@ const ChatPage2 = () => {
                     onToggleWebSearch={handleToggleWebSearch}
                     memoryEnabled={memoryEnabled}
                     onToggleMemory={handleToggleMemory}
+                    isVoiceModeOpen={isVoiceModeOpen}
+                    onCloseVoiceMode={() => setIsVoiceModeOpen(false)}
                     onOpenVoiceMode={() => setIsVoiceModeOpen(true)}
                 />
 
@@ -591,6 +596,7 @@ const ChatPage2 = () => {
                 <VoiceMode
                     isOpen={isVoiceModeOpen}
                     onClose={() => setIsVoiceModeOpen(false)}
+                    onStopGenerating={handleStopGenerating}
                     lastAiMessage={messages.filter(m => m.role === 'ai').at(-1)?.content || ''}
                     onSendMessage={async (text) => {
                         try {

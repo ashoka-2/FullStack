@@ -52,6 +52,8 @@ const FollowUpInput = ({
     onToggleWebSearch,
     memoryEnabled = true,
     onToggleMemory,
+    isVoiceModeOpen: isVoiceModeOpenProp,
+    onCloseVoiceMode,
     onOpenVoiceMode
 }) => {
     // Separate refs for each file type
@@ -62,14 +64,30 @@ const FollowUpInput = ({
     const dispatch = useDispatch();
     const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
 
-    // Speech Recognition (Voice to text â€” MIC button) & Live Caption
+    // Speech Recognition (Voice to text — MIC button) & Live Caption
     const [isListening, setIsListening] = useState(false);
     const [liveCaption, setLiveCaption] = useState('');
     const recognitionRef = useRef(null);
     const baseInputRef = useRef('');
 
     // Live Voice Conversation mode (orb, continuous TTS loop)
-    const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
+    const [isVoiceModeOpenLocal, setIsVoiceModeOpenLocal] = useState(false);
+    const isVoiceActive = Boolean(isVoiceModeOpenProp !== undefined ? isVoiceModeOpenProp : isVoiceModeOpenLocal);
+
+    const handleOpenVoice = () => {
+        if (onOpenVoiceMode) onOpenVoiceMode();
+        else setIsVoiceModeOpenLocal(true);
+    };
+
+    const handleCloseVoice = () => {
+        if (onCloseVoiceMode) onCloseVoiceMode();
+        setIsVoiceModeOpenLocal(false);
+        if (onStopGenerating) onStopGenerating();
+        if (typeof window !== 'undefined') {
+            window.speechSynthesis?.cancel();
+            window.dispatchEvent(new CustomEvent("ai_stream_stop"));
+        }
+    };
 
     useEffect(() => {
         const handleOpenSheet = () => setIsUploadMenuOpen?.(true);
@@ -207,7 +225,7 @@ const FollowUpInput = ({
         if (!textareaRef.current) return;
         textareaRef.current.style.height = 'auto';
         const scrollH = textareaRef.current.scrollHeight;
-        const nextH = Math.min(Math.max(scrollH, 40), 260);
+        const nextH = Math.min(Math.max(scrollH, 28), 220);
         textareaRef.current.style.height = `${nextH}px`;
     }, [input]);
 
@@ -259,7 +277,7 @@ const FollowUpInput = ({
     };
 
     return (
-        <div className={`absolute bottom-0 left-0 w-full ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/95 to-transparent z-40 pb-6 md:pb-8 pointer-events-none transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col justify-end`}>
+        <div className={`absolute bottom-0 left-0 w-full ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/95 to-transparent z-40 pb-2.5 sm:pb-3.5 md:pb-4 pointer-events-none transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col justify-end`}>
             {/* Queued Messages Tray & Stop Generating */}
             <MessageQueueTray 
                 queue={queue}
@@ -269,8 +287,8 @@ const FollowUpInput = ({
                 onDeleteQueuedMessage={onDeleteQueuedMessage}
             />
 
-            <div className="max-w-[800px] mx-auto px-2.5 sm:px-4 md:px-6 pointer-events-auto w-full">
-                <div className="w-full bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-[var(--border-secondary)] focus-within:border-zinc-300 dark:focus-within:border-zinc-700 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-4 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)]">
+            <div className={`mx-auto px-2 sm:px-3 md:px-5 pointer-events-auto w-full transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isVoiceActive ? 'max-w-[500px]' : 'max-w-[800px]'}`}>
+                <div className="w-full bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-[var(--border-secondary)] focus-within:border-zinc-300 dark:focus-within:border-zinc-700 rounded-[20px] sm:rounded-[24px] px-3 sm:px-4.5 py-1.5 sm:py-2 transition-all duration-500 shadow-[0_8px_25px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.85)]">
                     
                     {/* Rich Attachment Preview Strip */}
                     <AttachmentPreviewStrip files={files} onRemove={removeFile} />
@@ -349,11 +367,11 @@ const FollowUpInput = ({
                             MozTabSize: 2
                         }}
                         placeholder={isResponding ? "Add a follow-up or code snippet to queue..." : "Ask a follow-up or paste code..."}
-                        className={`w-full bg-transparent border-none outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 custom-scrollbar mb-2 sm:mb-3 py-1 transition-all resize-none ${
+                        className={`w-full bg-transparent border-none outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 custom-scrollbar mb-1 sm:mb-1.5 py-0.5 transition-all resize-none ${
                             isCodeContent 
-                                ? 'font-mono text-[13px] sm:text-[14px] md:text-[15px] leading-relaxed' 
-                                : 'font-sans font-medium text-[16px] sm:text-[18px] md:text-[20px]'
-                        } min-h-[40px] max-h-[260px] cursor-text`}
+                                ? 'font-mono text-[13px] sm:text-[14px] leading-relaxed' 
+                                : 'font-sans font-medium text-[15px] sm:text-[16px] md:text-[17px]'
+                        } min-h-[28px] sm:min-h-[30px] max-h-[220px] cursor-text`}
                     />
 
                     <div className="flex items-center justify-between gap-1.5 sm:gap-2">
@@ -387,25 +405,37 @@ const FollowUpInput = ({
                             </div>
 
                             {/* Web Search Toggle Pill Button (Desktop only on input bar; kept in sheet on mobile) */}
-                            <button
-                                type="button"
-                                data-guide="chat-web-search-btn"
-                                onClick={onToggleWebSearch}
-                                className={`hidden sm:flex h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
-                                    webSearch 
-                                        ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
-                                        : 'bg-zinc-100/90 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-                                }`}
-                                title={webSearch ? "Web Search: ON (Using Tavily for live internet facts)" : "Web Search: OFF (Pure AI model knowledge)"}
-                            >
-                                <RiGlobalLine size={14} className={webSearch ? "text-[var(--accent-cyan)]" : "text-zinc-400 dark:text-zinc-500"} />
-                                <span className="text-[11px] sm:text-xs">Web</span>
-                                <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
-                            </button>
-
+                            <div className={`transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${
+                                isVoiceActive 
+                                    ? 'max-w-0 opacity-0 -translate-x-2 pointer-events-none scale-90' 
+                                    : 'max-w-[120px] opacity-100 translate-x-0 scale-100'
+                            }`}>
+                                <button
+                                    type="button"
+                                    data-guide="chat-web-search-btn"
+                                    onClick={onToggleWebSearch}
+                                    className={`hidden sm:flex h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
+                                        webSearch 
+                                            ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]' 
+                                            : 'bg-zinc-100/90 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+                                    }`}
+                                    title={webSearch ? "Web Search: ON (Using Tavily for live internet facts)" : "Web Search: OFF (Pure AI model knowledge)"}
+                                >
+                                    <RiGlobalLine size={14} className={webSearch ? "text-[var(--accent-cyan)]" : "text-zinc-400 dark:text-zinc-500"} />
+                                    <span className="text-[11px] sm:text-xs">Web</span>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
+                                </button>
+                            </div>
 
                             {/* AI Thinking Mode Selector */}
-                            <div data-guide="thinking-level-selector">
+                            <div 
+                                data-guide="thinking-level-selector"
+                                className={`transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${
+                                    isVoiceActive 
+                                        ? 'max-w-0 opacity-0 -translate-x-2 pointer-events-none scale-90' 
+                                        : 'max-w-[160px] opacity-100 translate-x-0 scale-100'
+                                }`}
+                            >
                                 <ThinkingSelectorDropdown
                                     thinkingLevel={thinkingLevel}
                                     onChange={onThinkingChange}
@@ -429,10 +459,13 @@ const FollowUpInput = ({
                             )}
 
                             {/*
-                             * MIC button â€” ALWAYS visible (speech-to-text â†’ fills input field)
-                             * Only hidden when AI is responding without any typed text
+                             * MIC button — speech-to-text (smoothly hidden when voice mode is active)
                              */}
-                            {!(isResponding && !(input.trim() || files.length > 0)) && (
+                            <div className={`transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${
+                                isVoiceActive || (isResponding && !(input.trim() || files.length > 0))
+                                    ? 'max-w-0 opacity-0 scale-75 pointer-events-none' 
+                                    : 'max-w-9 opacity-100 scale-100'
+                            }`}>
                                 <button
                                     type="button"
                                     onClick={handleToggleVoiceInput}
@@ -441,24 +474,43 @@ const FollowUpInput = ({
                                             ? 'bg-rose-500 text-white animate-pulse ring-2 ring-rose-500/40 shadow-lg'
                                             : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'
                                     }`}
-                                    title={isListening ? 'Listeningâ€¦ tap to stop' : 'Mic â€” speak to fill input'}
+                                    title={isListening ? 'Listening… tap to stop' : 'Mic — speak to fill input'}
                                     aria-label={isListening ? 'Stop mic' : 'Mic input'}
                                 >
                                     {isListening ? <RiMicFill size={17} /> : <RiMicLine size={17} />}
                                 </button>
-                            )}
+                            </div>
 
                             {/*
-                             * Smart 3-state primary button:
-                             * - AI responding + no input â†’ STOP (stop generation)
-                             * - Has text/files          â†’ SEND arrow
-                             * - Empty input             â†’ VOICE orb (live voice conversation)
+                             * Smart primary action button:
+                             * - Voice mode active      → SQUARE shaped button (responding / stop)
+                             * - AI responding + no input → STOP circular
+                             * - Has text/files         → SEND arrow
+                             * - Empty input            → VOICE orb (starts voice conversation)
                              */}
-                            {isResponding && !(input.trim() || files.length > 0) ? (
+                            {isVoiceActive ? (
+                                /* SQUARE SHAPED RESPONDING / STOP BUTTON */
+                                <button
+                                    type="button"
+                                    onClick={handleCloseVoice}
+                                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-lg group relative"
+                                    title="Stop AI responding and close voice mode"
+                                    aria-label="Stop responding"
+                                >
+                                    <span className="w-3.5 h-3.5 rounded-[3px] bg-current transition-transform group-hover:scale-110 shadow-sm" />
+                                    <span className="absolute inset-0 rounded-xl border border-current opacity-30 animate-ping pointer-events-none" />
+                                </button>
+                            ) : isResponding && !(input.trim() || files.length > 0) ? (
                                 /* STOP */
                                 <button
                                     type="button"
-                                    onClick={onStopGenerating}
+                                    onClick={() => {
+                                        if (typeof window !== 'undefined') {
+                                            window.speechSynthesis?.cancel();
+                                            window.dispatchEvent(new CustomEvent("ai_stream_stop"));
+                                        }
+                                        if (onStopGenerating) onStopGenerating();
+                                    }}
                                     className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-lg group"
                                     title="Stop AI from generating"
                                     aria-label="Stop generating"
@@ -491,14 +543,11 @@ const FollowUpInput = ({
                                     <RiArrowUpLine size={18} />
                                 </button>
                             ) : (
-                                /* VOICE ORB â€” only when input is empty */
+                                /* VOICE ORB — circular */
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        if (onOpenVoiceMode) onOpenVoiceMode();
-                                        else setIsVoiceModeOpen(true);
-                                    }}
-                                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 active:scale-95 text-black transition-all cursor-pointer shadow-lg shadow-[var(--accent-cyan)]/30"
+                                    onClick={handleOpenVoice}
+                                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 active:scale-95 text-black transition-all duration-300 cursor-pointer shadow-lg shadow-[var(--accent-cyan)]/30"
                                     title="Start live voice conversation"
                                     aria-label="Voice conversation"
                                 >
@@ -710,10 +759,7 @@ const FollowUpInput = ({
                                     /* VOICE ORB */
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            if (onOpenVoiceMode) onOpenVoiceMode();
-                                            else setIsVoiceModeOpen(true);
-                                        }}
+                                        onClick={handleOpenVoice}
                                         className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 text-black active:scale-95 transition-all cursor-pointer shadow-lg shadow-[var(--accent-cyan)]/30"
                                         title="Start live voice conversation"
                                     >
@@ -727,11 +773,11 @@ const FollowUpInput = ({
                 </div>,
                 document.body
             )}
-            {/* VoiceMode â€” full-screen live voice conversation (rendered if no parent onOpenVoiceMode) */}
+            {/* VoiceMode — full-screen live voice conversation (rendered if no parent onOpenVoiceMode) */}
             {!onOpenVoiceMode && (
                 <VoiceMode
-                    isOpen={isVoiceModeOpen}
-                    onClose={() => setIsVoiceModeOpen(false)}
+                    isOpen={isVoiceActive}
+                    onClose={handleCloseVoice}
                     onSendMessage={async (text) => {
                         try {
                             const res = await onSubmit(null, text);

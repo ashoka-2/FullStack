@@ -50,6 +50,11 @@ const messageSchema = new mongoose.Schema({
     timestamps:true
 })
 
+// High performance compound indexes for fast message pagination & retrieval
+messageSchema.index({ chat: 1, createdAt: 1 });
+messageSchema.index({ chat: 1, createdAt: -1 });
+messageSchema.index({ chat: 1, role: 1 });
+
 const messageModel = mongoose.model('Message',messageSchema);
 
 export default messageModel;

@@ -11,6 +11,7 @@
  */
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useSelector } from 'react-redux';
 import {
     RiMicLine,
     RiMicOffLine,
@@ -130,12 +131,13 @@ function FluidVoiceOrb({ status, onClick }) {
 }
 
 // ─── Main Export: Floating Voice Orb Overlay (Non-Blocking) ───────────────────
-export default function VoiceMode({ isOpen, onClose, onSendMessage, lastAiMessage }) {
+export default function VoiceMode({ isOpen, onClose, onSendMessage, lastAiMessage, onStopGenerating }) {
     const agent = useVoiceAgent({ onSendMessage, onClose, lastAiMessage });
+    const isSidebarCollapsed = useSelector(state => state.chat?.isSidebarCollapsed);
 
     useEffect(() => {
         if (isOpen) {
-            agent.speak("Charon online. Systems operational.", () => agent.startListening());
+            agent.start();
         } else {
             agent.stopAll();
         }
@@ -147,17 +149,29 @@ export default function VoiceMode({ isOpen, onClose, onSendMessage, lastAiMessag
 
     const isListening = agent.status === 'listening';
 
+    const handleClose = () => {
+        agent.stopAll();
+        if (typeof onStopGenerating === 'function') {
+            onStopGenerating();
+        }
+        if (typeof window !== 'undefined') {
+            window.speechSynthesis?.cancel();
+            window.dispatchEvent(new CustomEvent("ai_stream_stop"));
+        }
+        onClose();
+    };
+
     return createPortal(
-        <div className="fixed inset-0 z-[990] pointer-events-none flex flex-col justify-end items-center pb-24 sm:pb-28 select-none">
-            {/* FLOATING VOICE ORB + MINIMAL CONTROLS (Hovering directly above existing chat input) */}
+        <div className={`fixed top-0 bottom-0 right-0 ${isSidebarCollapsed ? 'lg:left-16' : 'lg:left-56'} left-0 z-[990] pointer-events-none flex flex-col justify-center items-center select-none transition-[left] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
+            {/* FLOATING VOICE ORB + MINIMAL CONTROLS (Centered directly in chat page area excluding sidebar) */}
             <div className="pointer-events-auto flex flex-col items-center transition-all duration-300">
                 {/* Live Real-Time Spoken Transcript / Status Pill */}
                 {agent.transcript ? (
-                    <div className="max-w-md px-4 py-2 mb-3 rounded-2xl bg-zinc-900/90 backdrop-blur-xl border border-white/15 text-xs text-zinc-100 shadow-xl text-center italic animate-in fade-in zoom-in-95">
+                    <div className="max-w-md px-4 py-2 mb-4 rounded-2xl bg-zinc-900/90 backdrop-blur-xl border border-white/15 text-xs sm:text-sm text-zinc-100 shadow-2xl text-center italic animate-in fade-in zoom-in-95">
                         “{agent.transcript}”
                     </div>
                 ) : agent.feedback && agent.status !== 'idle' ? (
-                    <div className="px-3.5 py-1 mb-2.5 rounded-full bg-zinc-900/85 backdrop-blur-md border border-white/10 text-[11px] font-medium text-zinc-300 shadow-lg text-center flex items-center gap-1.5 animate-in fade-in">
+                    <div className="px-3.5 py-1 mb-3.5 rounded-full bg-zinc-900/85 backdrop-blur-md border border-white/10 text-[11px] sm:text-xs font-medium text-zinc-300 shadow-xl text-center flex items-center gap-1.5 animate-in fade-in">
                         <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                         <span>{agent.feedback}</span>
                     </div>
@@ -171,12 +185,12 @@ export default function VoiceMode({ isOpen, onClose, onSendMessage, lastAiMessag
                     />
 
                     {/* Minimal Floating Control Badges attached to the Orb */}
-                    <div className="absolute -bottom-2 flex items-center gap-2">
+                    <div className="absolute -bottom-4 flex items-center gap-2.5">
                         {/* Mic Mute / Unmute Button */}
                         <button
                             type="button"
                             onClick={agent.toggleMic}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg border border-white/15 ${
+                            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-xl border border-white/15 ${
                                 isListening 
                                     ? 'bg-zinc-900/90 text-white hover:bg-zinc-800' 
                                     : 'bg-rose-500/90 text-white hover:bg-rose-600'
@@ -184,23 +198,20 @@ export default function VoiceMode({ isOpen, onClose, onSendMessage, lastAiMessag
                             title={isListening ? "Mute microphone" : "Unmute microphone"}
                         >
                             {isListening ? (
-                                <RiMicLine size={16} />
+                                <RiMicLine size={17} />
                             ) : (
-                                <RiMicOffLine size={16} />
+                                <RiMicOffLine size={17} />
                             )}
                         </button>
 
                         {/* Circular Close Button (White circle with dark X) */}
                         <button
                             type="button"
-                            onClick={() => {
-                                agent.stopAll();
-                                onClose();
-                            }}
-                            className="w-8 h-8 rounded-full bg-white text-zinc-950 flex items-center justify-center hover:bg-zinc-200 active:scale-90 transition-all cursor-pointer shadow-lg"
+                            onClick={handleClose}
+                            className="w-9 h-9 rounded-full bg-white text-zinc-950 flex items-center justify-center hover:bg-zinc-200 active:scale-90 transition-all cursor-pointer shadow-xl"
                             title="Close voice mode"
                         >
-                            <RiCloseLine size={18} className="stroke-[2.5]" />
+                            <RiCloseLine size={19} className="stroke-[2.5]" />
                         </button>
                     </div>
                 </div>

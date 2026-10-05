@@ -461,8 +461,13 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
         if (speechQueueRef.current.length === 0) {
             if (!isStreamingRef.current) {
                 setStatus('idle');
+                setFeedback('Listening…');
                 if (!stoppedRef.current) {
-                    startListeningRef.current?.();
+                    setTimeout(() => {
+                        if (!stoppedRef.current && !isSpeakingRef.current) {
+                            startListeningRef.current?.();
+                        }
+                    }, 350);
                 }
             }
             return;
@@ -526,6 +531,7 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
     // ─── Direct TTS speak helper (for greetings & actions) ─────────────────────
     const speak = useCallback((text, onDone) => {
         if (!text || !window.speechSynthesis) { onDone?.(); return; }
+        stoppedRef.current = false;
         window.speechSynthesis.cancel();
         speechQueueRef.current = [];
         isSpeakingRef.current = false;
@@ -620,8 +626,6 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
                         speechQueueRef.current.push(spokenReply);
                     }
 
-                    // Append concluding check prompt
-                    speechQueueRef.current.push("Yes sir, what's next?");
                     processSpeechQueue();
                 } else {
                     isStreamingRef.current = false;
@@ -709,7 +713,8 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
     // ─── STT ─────────────────────────────────────────────────────────────────
     const startListening = useCallback(() => {
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SR || stoppedRef.current) return;
+        if (!SR) return;
+        stoppedRef.current = false;
 
         try {
             const rec = new SR();
@@ -764,19 +769,41 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
 
     startListeningRef.current = startListening;
 
+    const start = useCallback(() => {
+        stoppedRef.current = false;
+        speak("Parsu AI online. Systems operational.", () => {
+            if (!stoppedRef.current) {
+                startListening();
+            }
+        });
+    }, [speak, startListening]);
+
     const stopAll = useCallback(() => {
         stoppedRef.current = true;
         isStreamingRef.current = false;
         speechQueueRef.current = [];
         isSpeakingRef.current = false;
         streamingBufferRef.current = '';
+        try { recognitionRef.current?.abort(); } catch {}
         try { recognitionRef.current?.stop(); } catch {}
         recognitionRef.current = null;
-        window.speechSynthesis?.cancel();
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+            try { window.speechSynthesis.pause(); } catch {}
+            window.speechSynthesis.cancel();
+        }
         setStatus('idle');
         setTranscript('');
         setFeedback('');
     }, []);
+
+    useEffect(() => {
+        const handleStop = () => {
+            stopAll();
+        };
+        window.addEventListener('ai_stream_stop', handleStop);
+        return () => window.removeEventListener('ai_stream_stop', handleStop);
+    }, [stopAll]);
 
     const toggleMic = useCallback(() => {
         if (status === 'listening') {
@@ -810,6 +837,7 @@ export function useVoiceAgent({ onSendMessage, onClose, lastAiMessage }) {
         transcript,
         feedback,
         history,
+        start,
         startListening,
         stopAll,
         toggleMic,

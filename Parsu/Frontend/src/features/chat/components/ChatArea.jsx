@@ -613,7 +613,7 @@ const ChatArea = () => {
 
         {/* Input bar: fixed at bottom, sidebar-aware on desktop */}
         <div className={`fixed bottom-0 right-0 z-[60] p-2.5 pb-5 sm:p-4 sm:pb-8 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/95 to-transparent backdrop-blur-[2px] transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'left-0 lg:left-16' : 'left-0 lg:left-56'}`}>
-          <div className={`w-full max-w-[800px] mx-auto bg-white dark:bg-[var(--bg-surface)] border ${isDragging ? 'border-[var(--color-clear-hanada)]' : 'border-zinc-200/90 dark:border-[var(--border-secondary)]'} focus-within:border-[var(--color-clear-hanada)]/60 focus-within:ring-2 focus-within:ring-[var(--accent-cyan)]/20 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-5 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
+          <div className={`w-full ${isVoiceModeOpen ? 'max-w-[500px]' : 'max-w-[800px]'} mx-auto bg-white dark:bg-[var(--bg-surface)] border ${isDragging ? 'border-[var(--color-clear-hanada)]' : 'border-zinc-200/90 dark:border-[var(--border-secondary)]'} focus-within:border-[var(--color-clear-hanada)]/60 focus-within:ring-2 focus-within:ring-[var(--accent-cyan)]/20 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-5 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
 
             <AttachmentPreviewStrip files={files} onRemove={removeFile} />
 
@@ -686,22 +686,37 @@ const ChatArea = () => {
                   />
                 </div>
 
-                <button type="button" onClick={requireAuth((e) => handleToggleWebSearch(e))}
-                  data-guide="chat-web-search-btn"
-                  className={`hidden sm:flex h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
-                    webSearch ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]'
-                      : 'bg-zinc-100/90 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'}`}
-                  title={webSearch ? 'Web Search: ON (Using Tavily for live internet facts)' : 'Web Search: OFF (Pure AI model knowledge)'}>
-                  <RiGlobalLine size={14} className={webSearch ? 'text-[var(--accent-cyan)]' : 'text-zinc-400 dark:text-zinc-500'} />
-                  <span className="text-[11px] sm:text-xs">Web</span>
-                  <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
-                </button>
+                {/* Web Search Button (Hidden smoothly in Voice Mode) */}
+                <div className={`transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${
+                  isVoiceModeOpen 
+                    ? 'max-w-0 opacity-0 -translate-x-2 pointer-events-none scale-90' 
+                    : 'max-w-[120px] opacity-100 translate-x-0 scale-100'
+                }`}>
+                  <button type="button" onClick={requireAuth((e) => handleToggleWebSearch(e))}
+                    data-guide="chat-web-search-btn"
+                    className={`hidden sm:flex h-8 sm:h-8.5 px-2.5 sm:px-3 rounded-full border items-center gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer active:scale-95 shrink-0 ${
+                      webSearch ? 'bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/40 text-[var(--color-deep-hanada)] dark:text-[var(--color-sky-haze)] shadow-[0_0_12px_rgba(32,184,205,0.2)]'
+                        : 'bg-zinc-100/90 dark:bg-white/[0.06] border-zinc-300 dark:border-white/15 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'}`}
+                    title={webSearch ? 'Web Search: ON (Using Tavily for live internet facts)' : 'Web Search: OFF (Pure AI model knowledge)'}>
+                    <RiGlobalLine size={14} className={webSearch ? 'text-[var(--accent-cyan)]' : 'text-zinc-400 dark:text-zinc-500'} />
+                    <span className="text-[11px] sm:text-xs">Web</span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${webSearch ? 'bg-[var(--accent-cyan)] animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
+                  </button>
+                </div>
 
-                <div data-guide="thinking-level-selector">
+                {/* Thinking Mode Dropdown (Hidden smoothly in Voice Mode) */}
+                <div 
+                  data-guide="thinking-level-selector"
+                  className={`transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${
+                    isVoiceModeOpen 
+                      ? 'max-w-0 opacity-0 -translate-x-2 pointer-events-none scale-90' 
+                      : 'max-w-[160px] opacity-100 translate-x-0 scale-100'
+                  }`}
+                >
                   <ThinkingSelectorDropdown thinkingLevel={thinkingLevel} onChange={setThinkingLevel} placement="top" />
                 </div>
 
-                {incognito && (
+                {incognito && !isVoiceModeOpen && (
                   <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-500/10 border border-purple-500/25 text-[11px] text-purple-400 font-semibold shrink-0 cursor-help"
                     title="Incognito Mode is ON: This chat will not be saved to your history or library.">
                     <RiSpyLine size={13} /><span className="hidden sm:inline">Incognito</span>
@@ -714,7 +729,7 @@ const ChatArea = () => {
                 <input type="file" ref={docInputRef} onChange={handleFileUpload} className="hidden" accept=".pdf,.txt,.md,.doc,.docx" multiple />
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 {(input.length > 50 || input.includes('\n')) && (
                   <button type="button" onClick={requireAuth(() => setIsFullScreenEditor(true))} title="Open full-screen prompt and code studio"
                     className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-all cursor-pointer">
@@ -722,15 +737,34 @@ const ChatArea = () => {
                   </button>
                 )}
 
-                <button type="button" onClick={handleToggleVoiceInput}
-                  className={`p-1.5 rounded-full transition-all cursor-pointer ${isListening ? 'text-rose-500 bg-rose-500/15 animate-pulse ring-2 ring-rose-500/30' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}
-                  title={isListening ? 'Listening... Click to stop' : 'Voice input (Speech to text)'}>
-                  {isListening ? <RiMicFill size={18} className="text-rose-500" /> : <RiMicLine size={18} />}
-                </button>
+                {/* MIC button (Hidden smoothly in Voice Mode) */}
+                <div className={`transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${
+                  isVoiceModeOpen 
+                    ? 'max-w-0 opacity-0 scale-75 pointer-events-none' 
+                    : 'max-w-9 opacity-100 scale-100'
+                }`}>
+                  <button type="button" onClick={handleToggleVoiceInput}
+                    className={`p-1.5 rounded-full transition-all cursor-pointer ${isListening ? 'text-rose-500 bg-rose-500/15 animate-pulse ring-2 ring-rose-500/30' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}
+                    title={isListening ? 'Listening... Click to stop' : 'Voice input (Speech to text)'}>
+                    {isListening ? <RiMicFill size={18} className="text-rose-500" /> : <RiMicLine size={18} />}
+                  </button>
+                </div>
 
-                {!hasContent ? (
+                {isVoiceModeOpen ? (
+                  /* SQUARE SHAPED RESPONDING / STOP BUTTON */
+                  <button 
+                    type="button" 
+                    onClick={() => setIsVoiceModeOpen(false)} 
+                    title="Stop AI responding and close voice mode"
+                    aria-label="Stop responding"
+                    className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-lg group relative"
+                  >
+                    <span className="w-3.5 h-3.5 rounded-[3px] bg-current transition-transform group-hover:scale-110 shadow-sm" />
+                    <span className="absolute inset-0 rounded-xl border border-current opacity-30 animate-ping pointer-events-none" />
+                  </button>
+                ) : !hasContent ? (
                   <button type="button" onClick={handleTalk} title="Start live voice talk (Jarvis Agent)"
-                    className="w-8.5 h-8.5 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 active:scale-95 transition-all cursor-pointer">
+                    className="w-8.5 h-8.5 flex items-center justify-center rounded-full bg-[var(--accent-cyan)] hover:brightness-110 text-zinc-950 shadow-md shadow-[var(--accent-cyan)]/25 active:scale-95 transition-all duration-300 cursor-pointer">
                     <RiVoiceprintLine size={18} />
                   </button>
                 ) : (

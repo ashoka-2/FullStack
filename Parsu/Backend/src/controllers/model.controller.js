@@ -20,7 +20,7 @@ export async function getAvailableModels(req, res) {
     };
 
     if (req.user?.id) {
-      const user = await userModel.findById(req.user.id).select("+customApiKeys.apiKey");
+      const user = await userModel.findById(req.user.id).select("+customApiKeys.apiKey").lean();
       if (user) {
         if (user.selectedModel?.modelId) {
           selectedModel = user.selectedModel;
