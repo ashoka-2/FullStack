@@ -109,7 +109,13 @@ const ChatArea = () => {
   const [input, setInput] = useState('');
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(null);
+  const [selectedModel, setSelectedModel] = useState(() => {
+    try {
+      const saved = localStorage.getItem('parsu_selected_model');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return null;
+  });
   const [thinkingLevel, setThinkingLevel] = useState(getStoredThinkingLevel);
 
   const { handleSendMessage, handleGetSuggestions, loading } = useChat();
@@ -140,30 +146,46 @@ const ChatArea = () => {
     textareaRef.current.style.height = `${Math.min(Math.max(textareaRef.current.scrollHeight, 54), 280)}px`;
   }, [input]);
 
-  // Sync active model when the server auto-switches (vision or quota failover)
+  // Sync active model when the server auto-switches (vision, faster model, or failover)
   useEffect(() => {
     const handleAutoSwitch = (e) => {
       if (!e.detail?.modelId) return;
-      setSelectedModel({
+      const updated = {
         id: e.detail.modelId, modelId: e.detail.modelId,
         name: e.detail.name || e.detail.modelName || e.detail.modelId,
         modelName: e.detail.name || e.detail.modelName || e.detail.modelId,
         provider: e.detail.provider || 'gemini', badge: e.detail.badge || 'Fast', isCustom: Boolean(e.detail.isCustom),
-      });
+      };
+      setSelectedModel(updated);
+      try {
+        localStorage.setItem('parsu_selected_model', JSON.stringify(updated));
+      } catch (err) {}
     };
     window.addEventListener('model_auto_switched', handleAutoSwitch);
     return () => window.removeEventListener('model_auto_switched', handleAutoSwitch);
   }, []);
 
-  // Initial model from backend or the user's custom key
+  // Initial model from backend or the user's custom key if not already cached
   useEffect(() => {
     let mounted = true;
     getModels().then(data => {
       if (mounted && data?.success) {
-        const activeCustom = data.customModels?.[0];
-        const initial = (user?.customApiKeys?.some(k => k.isActive !== false && k.apiKey) && activeCustom)
-          ? activeCustom : (data.selectedModel || data.defaultModels?.[0]);
-        if (initial) setSelectedModel(initial);
+        let currentSaved = null;
+        try {
+          currentSaved = JSON.parse(localStorage.getItem('parsu_selected_model') || 'null');
+        } catch (e) {}
+
+        if (!currentSaved) {
+          const activeCustom = data.customModels?.[0];
+          const initial = (user?.customApiKeys?.some(k => k.isActive !== false && k.apiKey) && activeCustom)
+            ? activeCustom : (data.selectedModel || data.defaultModels?.[0]);
+          if (initial) {
+            setSelectedModel(initial);
+            try {
+              localStorage.setItem('parsu_selected_model', JSON.stringify(initial));
+            } catch (err) {}
+          }
+        }
       }
     }).catch(() => {});
     return () => { mounted = false; };

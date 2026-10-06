@@ -810,7 +810,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                 </code>
                                             );
                                         },
-                                        p: ({children}) => <p className="whitespace-pre-wrap break-words leading-relaxed mb-2 last:mb-0 font-medium">{children}</p>
+                                        p: ({children}) => <div className="whitespace-pre-wrap break-words leading-relaxed mb-2 last:mb-0 font-medium">{children}</div>
                                     }}
                                 >
                                     {contentToRender}
@@ -994,7 +994,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                 </a>
                                             );
                                         },
-                                        p: ({children}) => <p className="text-zinc-800 dark:text-zinc-300 leading-relaxed mb-6 last:mb-0">{children}</p>,
+                                        p: ({children}) => <div className="text-zinc-800 dark:text-zinc-300 leading-relaxed mb-6 last:mb-0">{children}</div>,
                                         ul: ({children}) => <ul className="list-disc pl-5 space-y-3 mb-6 last:mb-0">{children}</ul>,
                                         li: ({children}) => <li className="text-zinc-800 dark:text-zinc-300 leading-relaxed pl-1">{children}</li>,
                                         h1: ({children}) => <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white mt-10 mb-6 tracking-tight">{children}</h1>,

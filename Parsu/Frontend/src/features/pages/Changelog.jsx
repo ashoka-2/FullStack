@@ -15,11 +15,36 @@ import { Link } from 'react-router';
 
 const RELEASES = [
     {
+        version: 'v2.6.0',
+        date: 'October 2026',
+        title: 'Minimalist Dashboard Workspace & Interactive Landing Page Demo',
+        category: 'Core UI & UX',
+        badge: 'Latest',
+        highlights: [
+            {
+                title: 'Minimalist Chat Canvas',
+                desc: 'Overhauled the dashboard into a distraction-free workspace displaying only the glowing PARSU AI logo, capability shortcut chips, and backend daily suggestions.'
+            },
+            {
+                title: 'Interactive Live Demo Stage',
+                desc: 'Moved the animated DemoStage to the landing page so visitors can experience real-time AI reasoning, desktop automation, and route planning live.'
+            },
+            {
+                title: 'Official Brand SVG Badges',
+                desc: 'Added authentic SVG logos for Gemini, Claude, GPT-4o, DeepSeek, Google Workspace, and 7 social networks with high-contrast panel typography.'
+            },
+            {
+                title: 'Optimistic Sidebar State & Thread De-duplication',
+                desc: 'Instant skeleton loading indicator in the sidebar on chat creation while title synthesis runs asynchronously, preventing thread duplication.'
+            }
+        ]
+    },
+    {
         version: 'v2.5.0',
         date: 'September 2026',
         title: 'Google Workspace Hub, Maps Grounding & Production Hardening',
         category: 'Integrations',
-        badge: 'Latest',
+        badge: 'Major',
         highlights: [
             {
                 title: 'Google Workspace Hub',

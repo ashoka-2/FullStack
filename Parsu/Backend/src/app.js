@@ -120,5 +120,29 @@ app.use("/api/devices", deviceRouter)
 app.use("/api/notifications", notificationRouter)
 app.use("/api/media", mediaRouter)
 
+// ─── 404 Catch-All for unknown API endpoints ──────────────────────────────────
+app.use("/api", (req, res) => {
+    res.status(404).json({ success: false, message: `Endpoint ${req.originalUrl} not found` });
+});
+
+// ─── Centralized Error Handling Middleware (CORS & Exception Safety) ──────────
+app.use((err, req, res, next) => {
+    console.error("⚠️ [API Error Catch]:", err.message || err);
+    if (err.message === "Not allowed by CORS") {
+        return res.status(403).json({
+            success: false,
+            message: "Request origin blocked by CORS policy",
+            origin: req.headers.origin || null
+        });
+    }
+
+    const statusCode = err.status || err.statusCode || 500;
+    res.status(statusCode).json({
+        success: false,
+        message: err.message || "An unexpected server error occurred",
+        ...(process.env.NODE_ENV !== "production" ? { stack: err.stack } : {})
+    });
+});
+
 export default app;
 

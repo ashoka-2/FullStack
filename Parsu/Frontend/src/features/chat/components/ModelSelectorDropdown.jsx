@@ -10,7 +10,8 @@ import {
   RiArrowDownSLine,
   RiSettings3Line,
   RiSearchLine,
-  RiCloseLine
+  RiCloseLine,
+  RiLockLine
 } from "@remixicon/react";
 import { useNavigate } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
@@ -59,7 +60,7 @@ export default function ModelSelectorDropdown({
   const user = useSelector(state => state.auth?.user);
   const [popoverCoords, setPopoverCoords] = useState({ top: 0, left: 0, width: 384, openUpward: false });
 
-  // Listen for automatic model switches (vision routing or quota failover)
+  // Listen for automatic model switches (vision routing, faster model, or failover)
   useEffect(() => {
     function handleAutoSwitch(e) {
       const switched = e.detail;
@@ -75,6 +76,10 @@ export default function ModelSelectorDropdown({
         isCustom: switched.isCustom || false
       };
 
+      try {
+        localStorage.setItem("parsu_selected_model", JSON.stringify(normalized));
+      } catch (err) {}
+
       if (onModelChange) {
         onModelChange(normalized);
       }
@@ -84,7 +89,7 @@ export default function ModelSelectorDropdown({
     return () => window.removeEventListener("model_auto_switched", handleAutoSwitch);
   }, [onModelChange]);
 
-  // Load models from API
+  // Load models from API & cache
   useEffect(() => {
     let mounted = true;
     async function loadData() {
@@ -95,9 +100,14 @@ export default function ModelSelectorDropdown({
           setDefaultModels(data.defaultModels || []);
           setCustomModels(data.customModels || []);
           
-          // If no model currently selected, default to backend's preference or first default
+          // If no model currently selected in state, read from localStorage or default
           if (!selectedModel) {
-            const initial = data.selectedModel || data.defaultModels?.[0];
+            let cached = null;
+            try {
+              cached = JSON.parse(localStorage.getItem("parsu_selected_model") || "null");
+            } catch (e) {}
+
+            const initial = cached || data.selectedModel || data.defaultModels?.[0];
             if (initial && onModelChange) {
               onModelChange(initial);
             }
@@ -201,7 +211,8 @@ export default function ModelSelectorDropdown({
     if (!matchesSearch) return false;
 
     // Filter tab
-    if (filterTab === "default") return !m.isCustom;
+    if (filterTab === "default" || filterTab === "free") return !m.isCustom && m.tier !== "paid";
+    if (filterTab === "pro") return m.tier === "paid" || m.requiresPro;
     if (filterTab === "custom") return m.isCustom;
     if (filterTab === "reasoning") return m.category === "reasoning" || m.name.toLowerCase().includes("reason") || m.id.includes("r1") || m.id.includes("pro");
     if (filterTab === "fast") return m.category === "fast" || m.name.toLowerCase().includes("flash") || m.id.includes("mini") || m.provider === "groq";
@@ -209,8 +220,8 @@ export default function ModelSelectorDropdown({
     return true;
   });
 
-  const currentId = selectedModel?.id || selectedModel?.modelId || defaultModels[0]?.id || "gemini-2.5-flash";
-  const currentName = selectedModel?.name || selectedModel?.modelName || defaultModels[0]?.name || "Gemini 2.5 Flash";
+  const currentId = selectedModel?.id || selectedModel?.modelId || defaultModels[0]?.id || "gemini-3.6-flash";
+  const currentName = selectedModel?.name || selectedModel?.modelName || defaultModels[0]?.name || "Gemini 3.6 Flash";
   const currentProvider = selectedModel?.provider || defaultModels[0]?.provider || "gemini";
 
   const activeModel = {
@@ -225,6 +236,17 @@ export default function ModelSelectorDropdown({
   };
 
   const handleSelect = async (model) => {
+    // If model requires Pro plan and user has not unlocked it
+    if (model.isLocked || model.requiresPro) {
+      dispatch(addToast({
+        type: "info",
+        message: `${model.name} is a Pro model. Upgrade to a Pro plan or add your custom API key in Settings to use it!`
+      }));
+      setIsOpen(false);
+      navigate("/pricing");
+      return;
+    }
+
     const normalizedModel = {
       ...model,
       id: model.id,
@@ -233,6 +255,11 @@ export default function ModelSelectorDropdown({
       modelName: model.name,
       provider: model.provider || "gemini"
     };
+
+    try {
+      localStorage.setItem("parsu_selected_model", JSON.stringify(normalizedModel));
+    } catch (err) {}
+
     if (onModelChange) {
       onModelChange(normalizedModel);
     }
@@ -362,7 +389,8 @@ export default function ModelSelectorDropdown({
             <div className="flex items-center gap-1.5 mt-2 overflow-x-auto pb-0.5 no-scrollbar text-[11px]">
               {[
                 { id: "all", label: "All" },
-                { id: "default", label: "Default / Free" },
+                { id: "free", label: "Free / Default" },
+                { id: "pro", label: "Pro Models" },
                 { id: "custom", label: `Custom Keys (${customModels.length})` },
                 { id: "reasoning", label: "Reasoning" },
                 { id: "fast", label: "Fast" }
@@ -433,6 +461,12 @@ export default function ModelSelectorDropdown({
                         {m.isCustom && (
                           <span className="text-[9px] uppercase px-1 rounded bg-cyan-500/20 text-cyan-400 font-bold">
                             Key Added
+                          </span>
+                        )}
+                        {(m.isLocked || m.requiresPro) && (
+                          <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 dark:text-amber-300 font-bold border border-amber-500/30 flex items-center gap-1">
+                            <RiLockLine className="w-2.5 h-2.5" />
+                            Pro
                           </span>
                         )}
                       </div>

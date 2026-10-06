@@ -1,6 +1,6 @@
 # CODEBASE ARCHITECTURE — Parsu AI Social Media Command Center
 
-> **Last Updated:** September 23, 2026
+> **Last Updated:** October 2026
 > **Maintainer:** Ashok Kumar
 > **Live Frontend URL:** https://parsuai.vercel.app/
 > **Live Backend URL:** https://parsuai.onrender.com
@@ -40,7 +40,11 @@ Parsu AI is an AI-powered conversational search platform and social media comman
 ## FOLDER STRUCTURE
 
 ```
-/Perplexity
+/Parsu
+├── README.md                            # Comprehensive project overview, features, and setup
+├── AI_DEVELOPMENT_CONTEXT.md            # Critical agent rules & recent updates
+├── CODEBASE_ARCHITECTURE.md             # This document
+│
 ├── Backend/
 │   ├── server.js                        # HTTP server + Socket.io entry point
 │   ├── .env                             # Environment variables & secrets
@@ -55,7 +59,8 @@ Parsu AI is an AI-powered conversational search platform and social media comman
 │       │   ├── auth.controller.js       # Register, Login, Google OAuth, Email verification
 │       │   ├── chat.controller.js       # Send message, get threads, search, suggestions
 │       │   ├── model.controller.js      # List models, test keys, save encrypted custom keys
-│       │   └── social.controller.js     # OAuth flows & publishing across 7 social platforms
+│       │   ├── social.controller.js     # OAuth flows & publishing across 7 social platforms
+│       │   └── device.controller.js     # Desktop device control command execution
 │       ├── middlewares/
 │       │   ├── auth.middleware.js       # JWT cookie validation
 │       │   └── rateLimiter.middleware.js# Endpoint rate limiting
@@ -68,7 +73,8 @@ Parsu AI is an AI-powered conversational search platform and social media comman
 │       │   ├── auth.routes.js           # /api/auth/* routes
 │       │   ├── chat.routes.js           # /api/chats/* routes
 │       │   ├── model.routes.js          # /api/models/* routes
-│       │   └── social.routes.js         # /api/social/* routes
+│       │   ├── social.routes.js         # /api/social/* routes
+│       │   └── device.routes.js         # /api/device/* routes
 │       ├── services/
 │       │   ├── imagekit.service.js      # ImageKit media upload & CDN hosting
 │       │   ├── mail.service.js          # Nodemailer email verification
@@ -108,6 +114,7 @@ Parsu AI is an AI-powered conversational search platform and social media comman
 │           ├── Components/              # Shared UI design system
 │           │   ├── JellyBlobMascot.jsx  # Interactive SVG physics mascot
 │           │   ├── FloatingBlobMascot.jsx# Persistent floating mascot container (z-[10000])
+│           │   ├── LiquidGlassNav.jsx   # Header navigation with glassmorphism & theme toggle
 │           │   ├── Loading.jsx          # GSAP page transition preloader
 │           │   ├── Toast.jsx            # Redux-backed notification toasts
 │           │   ├── Footer.jsx           # Global brand & legal footer
@@ -115,26 +122,32 @@ Parsu AI is an AI-powered conversational search platform and social media comman
 │           │   ├── ParsuLogo.jsx        # Vector brand mark
 │           │   └── ScrollToTop.jsx      # Route transition scroll reset
 │           ├── pages/                   # Public & Information pages
+│           │   ├── LandingPage.jsx      # Modern hero with 3D tilt, DemoStage, & 5 Superpowers
+│           │   ├── LandingPageExtras.jsx# Brand SVG logos, floating blobs, marquee, support cards
+│           │   ├── Changelog.jsx        # Version release notes & product milestones
+│           │   ├── Pricing.jsx          # Subscription plans & feature matrix
+│           │   ├── Status.jsx           # System uptime telemetry
 │           │   ├── MaintenanceMode.jsx  # Complete offline maintenance page
 │           │   ├── PrivacyPolicy.jsx    # Privacy policy documentation
 │           │   ├── TermsOfService.jsx   # Terms of service documentation
 │           │   ├── About.jsx            # Platform story & architecture
-│           │   ├── Contact.jsx          # Support & feedback channels
-│           │   └── FAQ.jsx              # Frequently asked questions
+│           │   └── Contact.jsx          # Support & feedback channels
 │           ├── auth/
 │           │   ├── auth.slice.js        # Auth state management
 │           │   ├── pages/               # Auth, Social Hub, & Settings pages
 │           │   └── components/          # CustomKeyManager, FormField, Protected
 │           └── chat/
 │               ├── chat.slice.js        # Chat state management
-│               ├── hook/                # useChat hook
-│               ├── pages/               # Dashboard (home) & ChatPage2 (active thread)
+│               ├── hook/                # useChat, useVoiceAgent hooks
+│               ├── pages/               # Dashboard (minimal home) & ChatPage2 (active thread)
 │               └── components/
-│                   ├── ChatArea.jsx     # Main prompt input with auto-grow & full-screen studio
+│                   ├── ChatArea.jsx     # Minimal dashboard canvas (Brand logo, shortcuts, prompt bar)
+│                   ├── DemoStage.jsx    # Looping GSAP product demo stage (rendered on LandingPage)
+│                   ├── VoiceMode.jsx    # Jarvis hands-free live voice agent with intent routing
 │                   ├── FollowUpInput.jsx# Thread follow-up bar with queue & full-screen studio
 │                   ├── ChatMessage.jsx  # Memoized Markdown/CodeBlock renderer with 70-line folding
-│                   ├── ModelSelectorDropdown.jsx # Portaled dropdown (z-[9990]) with mobile short brand names
-│                   ├── AddToChatSheet.jsx# Framer Motion animated bottom sheet with drag-to-dismiss & mobile fullscreen
+│                   ├── ModelSelectorDropdown.jsx # Portaled dropdown (z-[9990]) with mobile short names
+│                   ├── AddToChatSheet.jsx# Framer Motion animated bottom sheet with mobile fullscreen
 │                   ├── MessageQueueTray.jsx # Queued prompts tray
 │                   └── AttachmentPreviewStrip.jsx # Multi-media attachment bar
 ```

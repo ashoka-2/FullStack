@@ -12,7 +12,8 @@ export const DEFAULT_MODELS = [
     isBuiltIn: true,
     isDefault: true,
     category: "general",
-    supportsVision: true
+    supportsVision: true,
+    tier: "free"
   },
   {
     id: "gemini-flash-latest",
@@ -22,7 +23,8 @@ export const DEFAULT_MODELS = [
     description: "Ultra-fast generation with long context window",
     isBuiltIn: true,
     category: "fast",
-    supportsVision: true
+    supportsVision: true,
+    tier: "free"
   },
   {
     id: "gemini-pro-latest",
@@ -32,7 +34,8 @@ export const DEFAULT_MODELS = [
     description: "Complex reasoning, coding & analysis",
     isBuiltIn: true,
     category: "reasoning",
-    supportsVision: true
+    supportsVision: true,
+    tier: "paid"
   },
   {
     id: "open-mistral-nemo",
@@ -42,7 +45,8 @@ export const DEFAULT_MODELS = [
     description: "Mistral's powerful 12B reasoning model (free tier supported)",
     isBuiltIn: true,
     category: "fast",
-    supportsVision: false
+    supportsVision: false,
+    tier: "free"
   },
   {
     id: "codestral-latest",
@@ -52,7 +56,8 @@ export const DEFAULT_MODELS = [
     description: "Mistral's code generation & software reasoning specialist",
     isBuiltIn: true,
     category: "reasoning",
-    supportsVision: false
+    supportsVision: false,
+    tier: "paid"
   },
   {
     id: "llama-3.3-70b-versatile",
@@ -62,7 +67,8 @@ export const DEFAULT_MODELS = [
     description: "Meta Llama 3.3 running on ultra-fast Groq LPU",
     isBuiltIn: true,
     category: "fast",
-    supportsVision: false
+    supportsVision: false,
+    tier: "free"
   },
   {
     id: "deepseek-chat",
@@ -72,7 +78,8 @@ export const DEFAULT_MODELS = [
     description: "State-of-the-art general purpose chat and coding",
     isBuiltIn: true,
     category: "general",
-    supportsVision: false
+    supportsVision: false,
+    tier: "free"
   },
   {
     id: "deepseek-reasoner",
@@ -82,7 +89,8 @@ export const DEFAULT_MODELS = [
     description: "Deep reasoning model with internal thought process",
     isBuiltIn: true,
     category: "reasoning",
-    supportsVision: false
+    supportsVision: false,
+    tier: "paid"
   }
 ];
 

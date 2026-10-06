@@ -22,6 +22,7 @@ export function useGuideEngine() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const user = useSelector((s) => s.auth?.user);
   const messages = useSelector((s) => s.chat.messages);
   const guideActive = useSelector((s) => s.guide.active);
   const lastProcessedIdRef = useRef(null);
@@ -29,6 +30,11 @@ export function useGuideEngine() {
   // ─── Trigger a guide smoothly ──────────────────────────────
   const launchGuide = useCallback(
     (guideId) => {
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+
       const guide = GUIDES[guideId];
       if (!guide) {
         console.warn(`[GuideEngine] Unknown guide ID: "${guideId}"`);
@@ -101,11 +107,12 @@ export function useGuideEngine() {
         );
       }
     },
-    [dispatch, navigate, location.pathname]
+    [dispatch, navigate, location.pathname, user]
   );
 
   // ─── Watch for AI Message Triggers ─────────────────────────
   useEffect(() => {
+    if (!user) return;
     if (guideActive) return;
     if (!messages || messages.length === 0) return;
 
@@ -127,7 +134,7 @@ export function useGuideEngine() {
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [messages, guideActive, launchGuide]);
+  }, [messages, guideActive, launchGuide, user]);
 
   return { launchGuide };
 }

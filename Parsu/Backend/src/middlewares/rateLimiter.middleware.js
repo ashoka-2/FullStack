@@ -44,14 +44,20 @@ export const registerLimiter = rateLimit({
 });
 
 // ─── Chat / AI limiter ─────────────────────────────────────────────────────────
-// 60 AI generations per 15 minutes — prevent API abuse and token burn
+// Dynamically scales: Free tier gets 60/15min, Pro/Ultra gets 300/15min, Admin gets 1000/15min
 export const chatLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 60,
+    max: (req) => {
+        if (req.user?.role === "admin") return 1000;
+        if (req.user?.subscription?.plan && req.user?.subscription?.plan !== "free") return 300;
+        return 60; // Standard free tier rate limit
+    },
+    keyGenerator: (req) => req.user?.id || req.ip,
+    validate: { keyGeneratorIpFallback: false },
     standardHeaders: true,
     legacyHeaders: false,
     message: {
         success: false,
-        message: "You've sent too many messages. Please wait a few minutes before sending more.",
+        message: "You've sent messages too quickly. Please pause for a moment before sending more.",
     },
 });

@@ -91,9 +91,13 @@ export const useChat = () => {
             const resolvedThinking = thinkingLevel || modelOptions?.thinkingLevel || 'low';
             const response = await sendMessage(message, cleanChatId, file, socket?.id, modelOptions, webSearch, memory, isIncognito, resolvedThinking);
             
-            // If the model was auto-switched on the server (vision routing or quota failover), dispatch UI update
-            if (response.switchedModel && typeof window !== "undefined") {
-                window.dispatchEvent(new CustomEvent("model_auto_switched", { detail: response.switchedModel }));
+            // If the model was auto-switched on the server (vision routing, faster model, or failover), dispatch UI update & persist in localStorage
+            const activeModelResult = response.switchedModel || response.modelUsed;
+            if (activeModelResult && typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("model_auto_switched", { detail: activeModelResult }));
+                try {
+                    localStorage.setItem("parsu_selected_model", JSON.stringify(activeModelResult));
+                } catch (e) {}
             }
 
             // If a new chat was created, update current active chat ID and refresh list (skip sidebar sync if incognito)

@@ -55,12 +55,36 @@ export async function sendMessage(req, res) {
             return res.status(404).json({ message: "User account not found." });
         }
 
+        let targetProvider = req.body.provider || fullUser?.selectedModel?.provider || "gemini";
+        let targetModelId = req.body.modelId || fullUser?.selectedModel?.modelId || "gemini-3.6-flash";
+        const keyId = req.body.keyId;
+
+        // Check if user has a custom API key for this provider (BYOK)
+        let customKeyEntry = null;
+        if (fullUser && fullUser.customApiKeys && fullUser.customApiKeys.length > 0) {
+            customKeyEntry = fullUser.customApiKeys.find(k => 
+                (keyId && k._id.toString() === keyId.toString()) ||
+                (k.provider === targetProvider && (!req.body.keyName || k.name === req.body.keyName))
+            );
+        }
+
+        // True if user is providing their own key for this request
+        const isUsingCustomKey = Boolean(
+            (customKeyEntry && customKeyEntry.apiKey && customKeyEntry.isActive !== false) ||
+            (targetProvider === "gemini" && fullUser.geminiApiKey)
+        );
+
+        // General indicator if user has any active custom API key configured
+        const hasActiveCustomKeys = Boolean(
+            (fullUser.customApiKeys && fullUser.customApiKeys.some(k => k.isActive !== false && k.apiKey)) ||
+            fullUser.geminiApiKey
+        );
+
         // ── Free Tier Message Limit Enforcement ──
-        // If a user has added active custom API keys, they can send unlimited messages through their custom keys/models!
-        const hasActiveCustomKeys = (fullUser.customApiKeys && fullUser.customApiKeys.some(k => k.isActive !== false && k.apiKey)) || Boolean(fullUser.geminiApiKey);
+        // If a user is using their own custom API key, they can send unlimited messages without quota limits!
         const isFreeTier = fullUser.subscription?.plan === "free" && fullUser.role !== "admin";
 
-        if (isFreeTier && !hasActiveCustomKeys) {
+        if (isFreeTier && !isUsingCustomKey) {
             const now = new Date();
             const lastReset = fullUser.usageQuotas?.lastQueryReset ? new Date(fullUser.usageQuotas.lastQueryReset) : new Date(0);
             const isDifferentDay = now.toDateString() !== lastReset.toDateString();
@@ -88,7 +112,7 @@ export async function sendMessage(req, res) {
                 { $inc: { "usageQuotas.queriesToday": 1 } }
             );
         } else {
-            // User has custom API keys or paid plan: track queries for dashboard statistics without blocking
+            // User is using custom API keys or paid plan: track queries for analytics without blocking
             await userModel.updateOne(
                 { _id: fullUser._id },
                 { $inc: { "usageQuotas.queriesToday": 1 } }
@@ -215,7 +239,12 @@ export async function sendMessage(req, res) {
         const isIncognito = req.body.incognito === 'true' || req.body.incognito === true;
         let title = null, chat = null;
 
-        if (!chatId) {
+        if (chatId) {
+            chat = await chatModel.findOne({ _id: chatId, user: req.user.id });
+            if (!chat) {
+                return res.status(404).json({ message: "Chat not found or access denied." });
+            }
+        } else {
             // Check if user recently submitted the exact same query in a brand-new chat within last 6s (idempotency guard)
             const recentChat = await chatModel.findOne({
                 user: req.user.id,
@@ -294,30 +323,17 @@ export async function sendMessage(req, res) {
         }
         const hasImageInRequest = imagesForModel.length > 0;
 
-        let targetProvider = req.body.provider || fullUser?.selectedModel?.provider || "gemini";
-        let targetModelId = req.body.modelId || fullUser?.selectedModel?.modelId || "gemini-3.6-flash";
-        const keyId = req.body.keyId;
-
-        // Check if user has a custom key for this provider
-        let customKeyEntry = null;
-        if (fullUser && fullUser.customApiKeys && fullUser.customApiKeys.length > 0) {
-            customKeyEntry = fullUser.customApiKeys.find(k => 
-                (keyId && k._id.toString() === keyId.toString()) ||
-                (k.provider === targetProvider && (!req.body.keyName || k.name === req.body.keyName))
-            );
-        }
-
         let activeSwitchedModel = null;
 
-        // SMART TASK ROUTING: If user uploaded an image, ensure a Vision-capable model is used
-        if (hasImageInRequest && !doesModelSupportVision(targetModelId, targetProvider)) {
-            console.log(`[SmartRouter] Upload contains image, but selected model [${targetModelId}] does not support vision. Auto-routing to Vision model...`);
-            
+        // SMART TASK ROUTING & MODEL SELECTION:
+        // 1. If user provided an image, prioritize their custom API key's vision model,
+        // and if non-available, fallback to system built-in .env API model (gemini-3.6-flash).
+        if (hasImageInRequest) {
             let chosenVisionKey = null;
             let chosenVisionModelId = null;
             let chosenVisionProvider = null;
 
-            // 1. Check if user has a custom API key for a vision model (e.g. OpenAI GPT-4o, Claude 3.5, or Gemini)
+            // Check if user has connected a custom API key for a vision-capable model
             if (fullUser.customApiKeys && fullUser.customApiKeys.length > 0) {
                 for (const k of fullUser.customApiKeys) {
                     if (!k.apiKey || k.isActive === false) continue;
@@ -337,10 +353,12 @@ export async function sendMessage(req, res) {
             }
 
             if (chosenVisionKey) {
+                // Found active custom vision model from user's custom key!
                 targetProvider = chosenVisionProvider;
                 targetModelId = chosenVisionModelId;
                 customKeyEntry = chosenVisionKey;
             } else {
+                // Non available from custom keys: fallback to server's built-in .env API model
                 targetProvider = "gemini";
                 targetModelId = "gemini-3.6-flash";
                 customKeyEntry = null;
@@ -352,59 +370,57 @@ export async function sendMessage(req, res) {
                 provider: targetProvider,
                 name: newDisplayName,
                 badge: "Vision",
-                reason: `Auto-switched to ${newDisplayName} for image analysis and captioning`
+                isCustom: Boolean(customKeyEntry && customKeyEntry.apiKey),
+                reason: customKeyEntry
+                    ? `Auto-routed to your connected ${newDisplayName} vision model for image processing`
+                    : `Auto-routed to built-in ${newDisplayName} vision model for image processing`
             };
 
             if (socketId) {
                 io.to(socketId).emit("model:switched", activeSwitchedModel);
             }
 
-            // Persist model preference to user
             await userModel.updateOne(
                 { _id: fullUser._id },
                 { $set: { selectedModel: { provider: targetProvider, modelId: targetModelId, modelName: newDisplayName } } }
             ).catch(() => {});
-        }
+        } else {
+            // 2. Text message: If user has connected custom API key(s) and is currently on built-in model,
+            // automatically route prompts to their custom model (free or paid) and reflect this in UI
+            const isUsingBuiltInModel = !customKeyEntry || !customKeyEntry.apiKey;
+            if (hasActiveCustomKeys && isUsingBuiltInModel && fullUser.customApiKeys && fullUser.customApiKeys.length > 0) {
+                const activeCustomKey = fullUser.customApiKeys.find(k => k.isActive !== false && k.apiKey);
+                if (activeCustomKey) {
+                    const chosenCustomModel = activeCustomKey.models?.[0]?.id || 
+                        (activeCustomKey.provider === "gemini" ? "gemini-3.6-flash" 
+                            : activeCustomKey.provider === "groq" ? "llama-3.3-70b-versatile"
+                            : activeCustomKey.provider === "mistral" ? "open-mistral-nemo"
+                            : activeCustomKey.provider === "anthropic" ? "claude-3-5-sonnet-20241022" 
+                            : "gpt-4o");
 
-        // AUTO-PRIORITIZE CUSTOM MODEL: If user has connected custom API key(s) and is currently on a built-in model,
-        // automatically route prompts to their custom model and reflect this in the UI
-        const isUsingBuiltInModel = !customKeyEntry || !customKeyEntry.apiKey;
-        if (hasActiveCustomKeys && isUsingBuiltInModel && fullUser.customApiKeys && fullUser.customApiKeys.length > 0) {
-            const activeCustomKey = fullUser.customApiKeys.find(k => k.isActive !== false && k.apiKey);
-            if (activeCustomKey) {
-                let chosenCustomModel = null;
-                if (hasImageInRequest) {
-                    chosenCustomModel = (activeCustomKey.models || []).find(m => doesModelSupportVision(m.id, activeCustomKey.provider))?.id;
-                    if (!chosenCustomModel && doesModelSupportVision(activeCustomKey.provider === "gemini" ? "gemini-3.6-flash" : "gpt-4o", activeCustomKey.provider)) {
-                        chosenCustomModel = activeCustomKey.provider === "gemini" ? "gemini-3.6-flash" : "gpt-4o";
+                    targetProvider = activeCustomKey.provider;
+                    targetModelId = chosenCustomModel;
+                    customKeyEntry = activeCustomKey;
+
+                    const newDisplayName = getModelDisplayName(targetModelId, targetProvider);
+                    activeSwitchedModel = {
+                        modelId: targetModelId,
+                        provider: targetProvider,
+                        name: newDisplayName,
+                        badge: "Custom",
+                        isCustom: true,
+                        reason: `Auto-switched to your connected ${newDisplayName} custom model`
+                    };
+
+                    if (socketId) {
+                        io.to(socketId).emit("model:switched", activeSwitchedModel);
                     }
+
+                    await userModel.updateOne(
+                        { _id: fullUser._id },
+                        { $set: { selectedModel: { provider: targetProvider, modelId: targetModelId, modelName: newDisplayName } } }
+                    ).catch(() => {});
                 }
-                if (!chosenCustomModel) {
-                    chosenCustomModel = activeCustomKey.models?.[0]?.id || (activeCustomKey.provider === "gemini" ? "gemini-3.6-flash" : activeCustomKey.provider === "anthropic" ? "claude-3-5-sonnet-20241022" : "gpt-4o");
-                }
-
-                targetProvider = activeCustomKey.provider;
-                targetModelId = chosenCustomModel;
-                customKeyEntry = activeCustomKey;
-
-                const newDisplayName = getModelDisplayName(targetModelId, targetProvider);
-                activeSwitchedModel = {
-                    modelId: targetModelId,
-                    provider: targetProvider,
-                    name: newDisplayName,
-                    badge: doesModelSupportVision(targetModelId, targetProvider) ? "Vision" : "Custom",
-                    isCustom: true,
-                    reason: `Auto-switched to your connected ${newDisplayName} custom model`
-                };
-
-                if (socketId) {
-                    io.to(socketId).emit("model:switched", activeSwitchedModel);
-                }
-
-                await userModel.updateOne(
-                    { _id: fullUser._id },
-                    { $set: { selectedModel: { provider: targetProvider, modelId: targetModelId, modelName: newDisplayName } } }
-                ).catch(() => {});
             }
         }
 
@@ -464,11 +480,12 @@ export async function sendMessage(req, res) {
         const isMemoryEnabled = !isIncognito && req.body.memory !== 'false' && req.body.memory !== false;
         let memoryContext = "";
 
-        if (isMemoryEnabled && req.user?._id) {
+        const currentUserId = req.user?.id || req.user?._id;
+        if (isMemoryEnabled && currentUserId) {
             try {
                 const currentChatId = chatId || chat._id;
                 const otherChats = await chatModel.find({
-                    user: req.user._id,
+                    user: currentUserId,
                     _id: { $ne: currentChatId }
                 }).select('_id title').limit(20);
 
@@ -687,6 +704,8 @@ export async function sendMessage(req, res) {
                     targetBaseUrl = candidate.keyEntry.baseUrl;
                 }
 
+                const execStartTime = Date.now();
+
                 // If candidate is default built-in Gemini without custom key, execute standard Gemini pipeline
                 if (candidate.provider === "gemini" && !decryptedApiKey) {
                     result = await generateResponse(messages, (chunk) => {
@@ -717,21 +736,27 @@ export async function sendMessage(req, res) {
 
                 if (result && result.trim()) {
                     executedSuccessfully = true;
+                    const durationMs = Date.now() - execStartTime;
 
-                    // If failover chose a different model than the original target, inform client and persist in DB
-                    if (candidate.modelId !== targetModelId || candidate.provider !== targetProvider) {
+                    // If failover chose a different model or ran successfully, record and notify UI
+                    if (candidate.modelId !== targetModelId || candidate.provider !== targetProvider || !activeSwitchedModel) {
                         activeSwitchedModel = {
                             modelId: candidate.modelId,
                             provider: candidate.provider,
                             name: candidateDisplayName,
                             badge: doesModelSupportVision(candidate.modelId, candidate.provider) ? "Vision" : "Fast",
-                            reason: `Switched to ${candidateDisplayName} because previous model hit quota or rate limit`
+                            isCustom: Boolean(candidate.isCustom),
+                            durationMs,
+                            reason: (candidate.modelId !== targetModelId || candidate.provider !== targetProvider)
+                                ? `Switched to faster model ${candidateDisplayName} (${(durationMs / 1000).toFixed(1)}s)`
+                                : `Executed via ${candidateDisplayName} in ${(durationMs / 1000).toFixed(1)}s`
                         };
 
                         if (socketId) {
                             io.to(socketId).emit("model:switched", activeSwitchedModel);
                         }
 
+                        // Remember and persist this fast model for the user's next messages and new chats
                         await userModel.updateOne(
                             { _id: fullUser._id },
                             { $set: { selectedModel: { provider: candidate.provider, modelId: candidate.modelId, modelName: candidateDisplayName } } }
@@ -755,7 +780,7 @@ export async function sendMessage(req, res) {
                             provider: nextCandidate.provider,
                             name: nextDisplayName,
                             badge: doesModelSupportVision(nextCandidate.modelId, nextCandidate.provider) ? "Vision" : "Fast",
-                            reason: `Switched to ${nextDisplayName}`
+                            reason: `Switched to faster available model: ${nextDisplayName}`
                         });
                     }
                 }
@@ -778,12 +803,23 @@ export async function sendMessage(req, res) {
             role: "ai"
         });
 
+        const chosenModelId = activeSwitchedModel?.modelId || targetModelId;
+        const chosenProvider = activeSwitchedModel?.provider || targetProvider;
+        const chosenDisplayName = activeSwitchedModel?.name || getModelDisplayName(chosenModelId, chosenProvider);
+
         const responsePayload = {
             title: title,
             chat: chat || await chatModel.findById(chatId),
             userMessage,
             aiMessage,
-            switchedModel: activeSwitchedModel
+            switchedModel: activeSwitchedModel,
+            modelUsed: {
+                modelId: chosenModelId,
+                provider: chosenProvider,
+                name: chosenDisplayName,
+                badge: doesModelSupportVision(chosenModelId, chosenProvider) ? "Vision" : "Fast",
+                isCustom: Boolean(activeSwitchedModel?.isCustom || customKeyEntry)
+            }
         };
 
         if (resolveInFlight) {
@@ -883,6 +919,14 @@ export async function getMessages(req,res){
         });
     }
 
+    // Strict Authorization Guard: Ensure only the chat owner can access their messages
+    if (chat.user.toString() !== req.user.id) {
+        return res.status(403).json({
+            message: "Access denied. You do not own this chat.",
+            isOwner: false
+        });
+    }
+
     // Total messages count for pagination metadata
     const totalMessages = await messageModel.countDocuments({ chat: chatId });
     
@@ -900,7 +944,7 @@ export async function getMessages(req,res){
     res.status(200).json({
         message: "Messages retrieved successfully",
         messages,
-        isOwner: chat.user.toString() === req.user.id,
+        isOwner: true,
         totalMessages,
         currentPage: page,
         hasMore: skip > 0
@@ -934,9 +978,14 @@ export async function getSuggestions(req, res) {
         const { chatId } = req.query;
         let messages = [];
 
-        // Agar chatId query context mein hai, toh wahan se messages nikalo
+        // Verify that the requested chat belongs to the authenticated user before extracting messages
         if (chatId) {
-            messages = await messageModel.find({ chat: chatId });
+            if (req.user?.id) {
+                const chat = await chatModel.findOne({ _id: chatId, user: req.user.id }).select("_id").lean();
+                if (chat) {
+                    messages = await messageModel.find({ chat: chatId });
+                }
+            }
         }
 
         const suggestions = await generateSuggestions(messages);
@@ -975,11 +1024,11 @@ export async function searchMessages(req, res) {
             return res.status(200).json({ results: [] });
         }
 
-        // 2. Query messages matching the keyword using regex in messageModel
-        // 'i' in regex means case-insensitive (matches both uppercase and lowercase)
+        // 2. Query messages matching the keyword using sanitized regex in messageModel
+        const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const matchedMessages = await messageModel.find({
             chat: { $in: chatIds },
-            content: { $regex: q, $options: 'i' }
+            content: { $regex: safeQ, $options: 'i' }
         })
         .sort({ createdAt: -1 }) // New messages appear at the top
         .limit(20) // Only top 20 to avoid slowing down app or DB (for performance)
@@ -1015,15 +1064,22 @@ export async function rateMessageFeedback(req, res) {
             return res.status(400).json({ message: "Invalid feedback value. Must be 'like', 'dislike', or null." });
         }
 
-        const message = await messageModel.findByIdAndUpdate(
-            messageId,
-            { feedback },
-            { returnDocument: 'after' }
-        );
+        const message = await messageModel.findById(messageId).populate({
+            path: 'chat',
+            select: 'user'
+        });
 
         if (!message) {
             return res.status(404).json({ message: "Message not found" });
         }
+
+        // Verify that the user owns the chat containing this message
+        if (message.chat && message.chat.user && message.chat.user.toString() !== req.user.id) {
+            return res.status(403).json({ message: "Access denied. You do not own this chat." });
+        }
+
+        message.feedback = feedback;
+        await message.save();
 
         res.status(200).json({
             success: true,

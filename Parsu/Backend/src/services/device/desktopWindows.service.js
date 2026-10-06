@@ -535,8 +535,27 @@ ${msgClean}
         return Array.isArray(res) ? res : (res ? [res] : []);
     },
 
+    isPathBlocked(targetPath) {
+        const normalized = path.resolve(targetPath).toLowerCase();
+        const forbiddenPatterns = [
+            ".env",
+            ".git",
+            "id_rsa",
+            "id_ed25519",
+            "node_modules",
+            "sam",
+            "system32\\config",
+            "etc/shadow",
+            "etc/passwd"
+        ];
+        return forbiddenPatterns.some(p => normalized.includes(p));
+    },
+
     async readFile(filePath, maxBytes = 100000) {
         const resolved = path.resolve(filePath);
+        if (this.isPathBlocked(resolved)) {
+            throw new Error("Access denied: reading sensitive configuration or system files is prohibited.");
+        }
         const stats = await fs.stat(resolved);
         if (stats.size > maxBytes) {
             const buf = Buffer.alloc(maxBytes);
@@ -555,6 +574,9 @@ ${msgClean}
 
     async writeFile(filePath, content) {
         const resolved = path.resolve(filePath);
+        if (this.isPathBlocked(resolved)) {
+            throw new Error("Access denied: modifying sensitive configuration or system files is prohibited.");
+        }
         await fs.mkdir(path.dirname(resolved), { recursive: true });
         
         let previousContent = null;

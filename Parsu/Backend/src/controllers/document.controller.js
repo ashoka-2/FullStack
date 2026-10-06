@@ -205,10 +205,11 @@ export async function semanticMessageSearch(req, res) {
         // 2. Generate query embedding
         const queryEmbedding = await generateEmbedding(q);
 
-        // 3. Regex search (fast, always available)
+        // 3. Regex search (fast, sanitized against ReDoS)
+        const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regexResults = await messageModel.find({
             chat: { $in: chatIds },
-            content: { $regex: q, $options: 'i' }
+            content: { $regex: safeQ, $options: 'i' }
         })
         .sort({ createdAt: -1 })
         .limit(20)

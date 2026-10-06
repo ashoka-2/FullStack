@@ -10,6 +10,8 @@ import {
   RiMapPinRangeLine,
   RiArrowRightSLine,
 } from "@remixicon/react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router";
 import { useGuideEngine } from "./useGuideEngine";
 import { PillBadge } from "../Components/PillButton";
 
@@ -69,6 +71,8 @@ export default function GuideLauncherDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const { launchGuide } = useGuideEngine();
   const dropdownRef = useRef(null);
+  const user = useSelector((s) => s.auth?.user);
+  const navigate = useNavigate();
 
   // Close when clicking outside
   useEffect(() => {
@@ -83,7 +87,19 @@ export default function GuideLauncherDropdown() {
     return () => window.removeEventListener("pointerdown", handleOutside);
   }, [isOpen]);
 
+  const handleToggle = () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    setIsOpen(!isOpen);
+  };
+
   const handleSelectTour = (tourId) => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
     setIsOpen(false);
     launchGuide(tourId);
   };
@@ -91,7 +107,7 @@ export default function GuideLauncherDropdown() {
   return (
     <div className="relative" ref={dropdownRef}>
       <PillBadge
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className="cursor-pointer font-semibold py-1.5 px-2.5 sm:px-3 text-[var(--accent-cyan)] hover:bg-[var(--accent-cyan)]/10 transition-all active:scale-95"
         title="Interactive AI Feature Walkthroughs"
       >
@@ -99,7 +115,7 @@ export default function GuideLauncherDropdown() {
         <span className="hidden sm:inline font-bold">AI Tours</span>
       </PillBadge>
 
-      {isOpen && (
+      {isOpen && user && (
         <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 rounded-2xl bg-zinc-950/95 dark:bg-[#141416]/98 border border-white/10 shadow-2xl backdrop-blur-2xl p-2 z-[9999] animate-in fade-in zoom-in-95 duration-150">
           <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
             <div>

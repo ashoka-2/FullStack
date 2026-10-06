@@ -15,13 +15,18 @@ export async function getAvailableModels(req, res) {
     let customKeys = [];
     let selectedModel = {
       provider: "gemini",
-      modelId: "gemini-2.5-flash",
-      modelName: "Gemini 2.5 Flash"
+      modelId: "gemini-3.6-flash",
+      modelName: "Gemini 3.6 Flash"
     };
+
+    let isPaidUser = false;
 
     if (req.user?.id) {
       const user = await userModel.findById(req.user.id).select("+customApiKeys.apiKey").lean();
       if (user) {
+        const userPlan = user.subscription?.plan || "free";
+        isPaidUser = userPlan === "pro" || userPlan === "ultra" || userPlan === "enterprise" || user.role === "admin";
+
         if (user.selectedModel?.modelId) {
           selectedModel = user.selectedModel;
         }
@@ -52,20 +57,36 @@ export async function getAvailableModels(req, res) {
             providerName: key.name,
             keyId: key._id,
             badge: "Custom Key",
-            description: m.description || `Unlocked via ${key.name}`,
+            description: m.description || `Unlocked via your connected ${key.name} API key`,
             isCustom: true,
+            tier: "custom",
+            isLocked: false,
             baseUrl: key.baseUrl
           });
         }
       }
     }
 
+    // Gated models: If user bought a plan, all free and paid models are fully unlocked.
+    // If on free plan, paid models require either an upgraded plan or the user's custom key for that provider.
+    const mappedDefaultModels = DEFAULT_MODELS.map(m => {
+      const isPaidModel = m.tier === "paid";
+      const hasProviderKey = customKeys.some(k => k.provider === m.provider && k.isActive !== false);
+      const isUnlocked = isPaidUser || !isPaidModel || hasProviderKey;
+      return {
+        ...m,
+        isLocked: !isUnlocked,
+        requiresPro: isPaidModel && !isPaidUser && !hasProviderKey
+      };
+    });
+
     res.status(200).json({
       success: true,
-      defaultModels: DEFAULT_MODELS,
+      defaultModels: mappedDefaultModels,
       customModels: customModelsList,
       customKeys,
       selectedModel,
+      isPaidUser,
       providerConfigs: PROVIDER_CONFIGS
     });
   } catch (error) {

@@ -64,6 +64,17 @@
 - **Mobile Model Names**: In `ModelSelectorDropdown.jsx`, shows compact brand names on mobile (`Gemini`, `Mistral`, `Groq`, `DeepSeek`, `Claude`, `OpenAI`) via `getShortBrandName()` and full model names on desktop.
 - **Full-Screen Prompt & Code Editor**: Textareas auto-expand with content; users can trigger a dedicated Full-Screen Prompt & Code Studio modal to comfortably write, indent, and format large prompts and code.
 
+### 8. Minimal Dashboard Workspace & Sidebar Optimistic State
+- **Zero-Bloat ChatArea**: Completely streamlined `ChatArea.jsx` to feature only the glowing Parsu icon and site name (`PARSU AI`), removing all marketing copy, hero banners, and "Start chatting" buttons.
+- **Interactive Capability Shortcuts**: Instant test chips showcasing real-world capabilities (quantum computing, Spotify lofi, Instagram captions, Gmail summary, Munnar trip, Python scripts, live voice).
+- **Dashboard Footer Removal**: Cleaned out the footer and extra spacers from the dashboard page so the viewport remains focused on the chat input and conversation.
+- **Sidebar Optimistic Loading**: Instant skeleton loader in the sidebar when creating a new chat while AI title generation runs asynchronously, eliminating latency and preventing duplicate thread creation.
+
+### 9. Landing Page Interactive Live Demo & High-Contrast Visuals
+- **Interactive Live Demo Stage**: Migrated `DemoStage.jsx` from the dashboard to a dedicated showcase section on `LandingPage.jsx`, featuring automated typewriter simulation and animated route mapping.
+- **Official Brand SVG Badges**: Integrated authentic brand logos across the 5 superpower panels (Gemini, Claude, GPT-4o, DeepSeek, Google Workspace, and 7 social platforms).
+- **High-Contrast Unified Stats**: Upgraded `STATS` with solid, crisp numbers (`text-zinc-950 dark:text-white`) and unified brand badges (`bg-[var(--accent-cyan)]/15 border-[var(--accent-cyan)]/30`), eliminating washed-out transparent gradient clipping and color fragmentation.
+
 ---
 
 ## DESIGN SYSTEM TOKENS

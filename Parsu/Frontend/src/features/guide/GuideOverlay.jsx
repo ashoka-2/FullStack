@@ -98,6 +98,7 @@ export const GuideOverlay = () => {
     autoPlay,
     soundEnabled,
   } = useSelector((s) => s.guide);
+  const user = useSelector((s) => s.auth?.user);
 
   const [rect, setRect] = useState(null);
   const [tooltipStyle, setTooltipStyle] = useState({});
@@ -105,6 +106,13 @@ export const GuideOverlay = () => {
   const [actionDone, setActionDone] = useState(false);
   const rafRef = useRef(null);
   const observerRef = useRef(null);
+
+  // If user is not logged in, immediately terminate and hide any active guide
+  useEffect(() => {
+    if (active && !user) {
+      dispatch(skipGuide());
+    }
+  }, [active, user, dispatch]);
 
   const currentStep = steps[stepIndex] || null;
 

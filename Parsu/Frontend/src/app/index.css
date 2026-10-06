@@ -765,3 +765,33 @@ html, body {
     transform: scale(1.15);
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════════
+   LOW-SPEC / LOW-RAM DEVICE & REDUCED MOTION PERFORMANCE ACCELERATION
+   Prevents GPU heating, dropped frames, and memory thrashing on budget hardware
+   ══════════════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-shimmer,
+  .animate-wave-flow,
+  .animate-wave-flow-slow,
+  .animate-pulse,
+  .animate-spin {
+    animation: none !important;
+  }
+}
+
+/* Hardware composite layers for smooth 60fps scrolling on budget phones & laptops */
+.hardware-accelerated,
+.chat-container,
+.model-dropdown,
+.sidebar-drawer {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
