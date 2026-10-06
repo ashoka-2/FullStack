@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useSelector } from 'react-redux';
 import { useLenis } from 'lenis/react';
@@ -16,7 +16,13 @@ import Footer from '../Components/Footer';
 import PrimaryButton from '../Components/PrimaryButton';
 import useSEO from '../../utils/useSEO';
 import { GRAIN_PATTERN_DATA } from '../../assets/grainData';
-import { BlobBackground, IntegrationsStrip, SupportCard, EXTRA_FAQ } from './LandingPageExtras';
+import DemoStage from '../chat/components/DemoStage';
+import {
+  BlobBackground, IntegrationsStrip, SupportCard, EXTRA_FAQ,
+  GeminiIcon, ClaudeIcon, OpenAIIcon, DeepSeekIcon,
+  GmailIcon, GoogleCalendarIcon, GoogleDriveIcon, YouTubeIcon,
+  InstagramIcon, FacebookIcon, XIcon, PinterestIcon, TikTokIcon, LinkedInIcon,
+} from './LandingPageExtras';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -39,18 +45,89 @@ const Split = ({ text }) =>
   ));
 
 const PANELS = [
-  { n: '01', icon: RiCpuLine, title: 'Every top model, one chat', desc: 'Switch between Gemini, Claude, GPT-4o and DeepSeek mid-conversation without losing context.', chips: ['Gemini', 'Claude', 'GPT-4o', 'DeepSeek'], a: 'from-[#22d3ee] via-[#38bdf8] to-[#1e3a8a]', b: 'from-white via-[#cffafe] to-[#7dd3fc]' },
-  { n: '02', icon: RiGlobalLine, title: 'Answers with sources', desc: 'Live web search returns citations you can click, so you can check every claim yourself.', chips: ['Live search', 'Source links', 'Timestamps'], a: 'from-[#2dd4bf] via-[#22d3ee] to-[#0e7490]', b: 'from-white via-[#ccfbf1] to-[#67e8f9]' },
-  { n: '03', icon: RiMailLine, title: 'Works with Google', desc: 'Connect Gmail, Calendar and Drive when you want. Drafts and events wait for your approval.', chips: ['Gmail', 'Calendar', 'Drive'], a: 'from-[#38bdf8] via-[#60a5fa] to-[#1d4ed8]', b: 'from-white via-[#e0f2fe] to-[#93c5fd]' },
-  { n: '04', icon: RiShareLine, title: 'Publish to seven networks', desc: 'Write once, tailor it per platform, then post or schedule to Instagram, X, LinkedIn and more.', chips: ['Instagram', 'X', 'LinkedIn', 'YouTube'], a: 'from-[#67e8f9] via-[#38bdf8] to-[#0369a1]', b: 'from-white via-[#cffafe] to-[#a5f3fc]' },
-  { n: '05', icon: RiMicLine, title: 'Talk to it', desc: 'Voice conversations with live captions, plus memory that remembers your documents and preferences.', chips: ['Voice', 'Live captions', 'Memory'], a: 'from-[#22d3ee] via-[#0ea5e9] to-[#164e63]', b: 'from-white via-[#cffafe] to-[#38bdf8]' },
+  {
+    n: '01',
+    icon: RiCpuLine,
+    title: 'Every top model, one chat',
+    desc: 'Switch between Gemini, Claude, GPT-4o and DeepSeek mid-conversation without losing context.',
+    badges: [
+      { label: 'Gemini', icon: GeminiIcon, color: 'bg-blue-500/10 text-blue-500 dark:text-blue-400 border-blue-500/25' },
+      { label: 'Claude', icon: ClaudeIcon, color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25' },
+      { label: 'GPT-4o', icon: OpenAIIcon, color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25' },
+      { label: 'DeepSeek', icon: DeepSeekIcon, color: 'bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-500/25' },
+    ],
+    chips: ['Multi-model reasoning', 'Context preservation', 'Seamless switching'],
+    a: 'from-[#22d3ee] via-[#38bdf8] to-[#1e3a8a]',
+    b: 'from-white via-[#cffafe] to-[#7dd3fc]',
+  },
+  {
+    n: '02',
+    icon: RiGlobalLine,
+    title: 'Answers with sources',
+    desc: 'Live web search returns citations you can click, so you can check every claim yourself in real-time.',
+    badges: [
+      { label: 'Live Search', icon: RiGlobalLine, color: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/25' },
+      { label: 'Verified Sources', icon: RiExternalLinkLine, color: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25' },
+      { label: 'Timestamped', icon: RiCheckLine, color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25' },
+    ],
+    chips: ['Tavily web search', 'Direct URL citations', 'Live facts'],
+    a: 'from-[#2dd4bf] via-[#22d3ee] to-[#0e7490]',
+    b: 'from-white via-[#ccfbf1] to-[#67e8f9]',
+  },
+  {
+    n: '03',
+    icon: RiMailLine,
+    title: 'Works with Google',
+    desc: 'Connect Gmail, Calendar, Drive and YouTube when you want. Drafts and events wait for your approval.',
+    badges: [
+      { label: 'Gmail', icon: GmailIcon, color: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/25' },
+      { label: 'Calendar', icon: GoogleCalendarIcon, color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25' },
+      { label: 'Drive', icon: GoogleDriveIcon, color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25' },
+      { label: 'YouTube', icon: YouTubeIcon, color: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25' },
+    ],
+    chips: ['OAuth verified', 'Manual approval required', 'Google Workspace'],
+    a: 'from-[#38bdf8] via-[#60a5fa] to-[#1d4ed8]',
+    b: 'from-white via-[#e0f2fe] to-[#93c5fd]',
+  },
+  {
+    n: '04',
+    icon: RiShareLine,
+    title: 'Publish to seven networks',
+    desc: 'Write once, tailor it per platform, then post or schedule to Instagram, X, LinkedIn, YouTube, Facebook, Pinterest, and TikTok.',
+    badges: [
+      { label: 'Instagram', icon: InstagramIcon, color: 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/25' },
+      { label: 'X', icon: XIcon, color: 'bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/25' },
+      { label: 'LinkedIn', icon: LinkedInIcon, color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25' },
+      { label: 'YouTube', icon: YouTubeIcon, color: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25' },
+      { label: 'Facebook', icon: FacebookIcon, color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25' },
+      { label: 'Pinterest', icon: PinterestIcon, color: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/25' },
+      { label: 'TikTok', icon: TikTokIcon, color: 'bg-teal-500/10 text-teal-600 dark:text-teal-300 border-teal-500/25' },
+    ],
+    chips: ['Multi-platform queue', 'Hashtags & scheduling', 'Direct API'],
+    a: 'from-[#67e8f9] via-[#38bdf8] to-[#0369a1]',
+    b: 'from-white via-[#cffafe] to-[#a5f3fc]',
+  },
+  {
+    n: '05',
+    icon: RiMicLine,
+    title: 'Talk to it & remembers you',
+    desc: 'Hands-free voice conversations with live captions, desktop app control, plus adaptive memory that remembers your preferences.',
+    badges: [
+      { label: 'Live Voice Agent', icon: RiMicLine, color: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25' },
+      { label: 'Live Captions', icon: RiFileTextLine, color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25' },
+      { label: 'Adaptive Memory', icon: RiShieldCheckLine, color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25' },
+    ],
+    chips: ['Hands-free talk', 'Desktop automation', 'Cross-session memory'],
+    a: 'from-[#22d3ee] via-[#0ea5e9] to-[#164e63]',
+    b: 'from-white via-[#cffafe] to-[#38bdf8]',
+  },
 ];
 
 const STATS = [
-  { end: 4, suffix: '+', label: 'AI models' },
-  { end: 7, suffix: '', label: 'Social networks' },
-  { end: 4, suffix: '', label: 'Google integrations' },
-  { end: 256, suffix: '-bit', label: 'AES encryption' },
+  { end: 4, suffix: '+', label: 'AI models', desc: 'Gemini, Claude, GPT-4o, DeepSeek', icon: RiCpuLine },
+  { end: 7, suffix: '', label: 'Social networks', desc: 'Direct publishing & scheduling', icon: RiShareLine },
+  { end: 4, suffix: '', label: 'Google integrations', desc: 'Gmail, Calendar, Drive & YouTube', icon: RiMailLine },
+  { end: 256, suffix: '-bit', label: 'AES encryption', desc: 'Bank-grade security & privacy', icon: RiShieldCheckLine },
 ];
 
 const SCOPES = [
@@ -313,6 +390,27 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* INTERACTIVE LIVE DEMO STAGE */}
+      <section id="demo" className="relative z-10 scroll-mt-24 px-4 sm:px-6 py-12 sm:py-20 max-w-5xl mx-auto">
+        <div className="text-center mb-8 sm:mb-10">
+          <div className="inline-flex mb-3">
+            <PillBadge variant="accent">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-cyan)] animate-ping" />
+              <span>Interactive Live Demo</span>
+            </PillBadge>
+          </div>
+          <h2 className="font-display text-3xl sm:text-5xl font-black tracking-tight text-zinc-900 dark:text-white">
+            See PARSU AI in action
+          </h2>
+          <p className="mt-3 text-sm sm:text-base text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto">
+            Experience our multi-model intelligence, desktop agent automation, Google integrations, and social publishing live.
+          </p>
+        </div>
+        <div className="rounded-3xl border border-zinc-200/90 dark:border-white/10 bg-white/80 dark:bg-white/[0.03] p-3 sm:p-6 backdrop-blur-2xl shadow-2xl">
+          <DemoStage id="interactive-demo" />
+        </div>
+      </section>
+
       {/* KINETIC BAND */}
       <div className="band relative z-10 overflow-hidden border-y border-zinc-200/80 dark:border-white/5 py-6 sm:py-8">
         <div aria-hidden="true" className="band-track flex w-max gap-10 whitespace-nowrap font-display text-[clamp(3rem,10vw,8rem)] font-black leading-none tracking-tight">
@@ -331,13 +429,34 @@ const LandingPage = () => {
 
       {/* STATS */}
       <section className="relative z-10 px-4 sm:px-6 pb-16 sm:pb-24">
-        <div className="reveal mx-auto grid max-w-5xl grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {STATS.map((s) => (
-            <div key={s.label} data-lift className="min-w-0 rounded-3xl border border-zinc-200/80 dark:border-white/[0.08] bg-white/70 dark:bg-white/[0.03] p-5 sm:p-7 text-center backdrop-blur-xl shadow-sm">
-              <div className="stat-num font-display font-black tabular-nums whitespace-nowrap leading-none tracking-tight text-zinc-900 dark:text-white text-[clamp(1.9rem,6vw,3.4rem)]" data-end={s.end} data-suffix={s.suffix}>{s.end}{s.suffix}</div>
-              <p className="mt-2 text-[11px] sm:text-sm font-medium text-zinc-500 dark:text-zinc-400">{s.label}</p>
-            </div>
-          ))}
+        <div className="reveal mx-auto grid max-w-5xl grid-cols-2 gap-3.5 sm:gap-6 lg:grid-cols-4">
+          {STATS.map((s) => {
+            const StatIcon = s.icon;
+            return (
+              <div
+                key={s.label}
+                data-lift
+                className="group min-w-0 rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[var(--bg-card)] p-5 sm:p-7 text-center backdrop-blur-xl shadow-lg hover:border-[var(--accent-cyan)]/60 dark:hover:border-[var(--accent-cyan)]/60 transition-all duration-300 hover:-translate-y-1"
+              >
+                <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[var(--accent-cyan)]/15 text-[var(--accent-cyan)] border border-[var(--accent-cyan)]/30 group-hover:scale-110 transition-transform">
+                  <StatIcon size={24} />
+                </div>
+                <div
+                  className="stat-num font-display font-black tabular-nums whitespace-nowrap leading-none tracking-tight text-zinc-950 dark:text-white text-[clamp(2.4rem,6.5vw,3.6rem)]"
+                  data-end={s.end}
+                  data-suffix={s.suffix}
+                >
+                  {s.end}{s.suffix}
+                </div>
+                <p className="mt-3 text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                  {s.label}
+                </p>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 font-medium line-clamp-1">
+                  {s.desc}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -354,22 +473,50 @@ const LandingPage = () => {
             {PANELS.map((p) => {
               const Icon = p.icon;
               return (
-                <article key={p.n} className="panel relative h-[420px] w-full shrink-0 overflow-hidden rounded-[2rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[var(--bg-card)] lg:h-[68vh] lg:w-[min(62vw,760px)]">
-                  <div aria-hidden="true" className="absolute inset-0">
-                    <div data-d="1" className={`p-blob absolute -top-1/3 -right-1/4 h-[90%] w-[75%] bg-gradient-to-br ${p.a} opacity-55 blur-[70px]`} style={{ borderRadius: SHAPE }} />
-                    <div data-d="1.6" className={`p-blob absolute -top-1/4 -right-[8%] h-[55%] w-[45%] bg-gradient-to-tr ${p.b} opacity-70 dark:opacity-50 blur-[40px]`} style={{ borderRadius: SHAPE }} />
+                <article key={p.n} className="panel relative h-auto min-h-[460px] w-full shrink-0 overflow-hidden rounded-[2.2rem] border border-zinc-200/90 dark:border-white/10 bg-white/95 dark:bg-[var(--bg-card)]/95 shadow-xl lg:h-[72vh] lg:w-[min(62vw,760px)]">
+                  <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
+                    <div data-d="1" className={`p-blob absolute -top-1/3 -right-1/4 h-[90%] w-[75%] bg-gradient-to-br ${p.a} opacity-40 dark:opacity-55 blur-[70px]`} style={{ borderRadius: SHAPE }} />
+                    <div data-d="1.6" className={`p-blob absolute -top-1/4 -right-[8%] h-[55%] w-[45%] bg-gradient-to-tr ${p.b} opacity-60 dark:opacity-45 blur-[40px]`} style={{ borderRadius: SHAPE }} />
                     <div className="absolute inset-0 opacity-40 dark:opacity-30 mix-blend-overlay" style={{ backgroundImage: `url(${GRAIN_PATTERN_DATA})`, backgroundSize: '160px 160px' }} />
                   </div>
                   <div className="relative z-10 flex h-full flex-col justify-between p-7 sm:p-10">
                     <div className="flex items-start justify-between">
-                      <span className="font-display text-6xl sm:text-7xl font-black leading-none text-transparent" style={{ WebkitTextStroke: '1.5px var(--accent-cyan)' }}>{p.n}</span>
-                      <span className="p-icon grid h-12 w-12 place-items-center rounded-2xl border border-white/40 bg-white/50 dark:bg-white/10 text-[var(--accent-cyan)] backdrop-blur-md"><Icon size={24} /></span>
+                      <span className="font-display text-5xl sm:text-7xl font-black leading-none tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-cyan-500 via-sky-400 to-blue-600 dark:from-cyan-400 dark:via-sky-300 dark:to-blue-500 drop-shadow-[0_4px_16px_rgba(34,211,238,0.35)]">
+                        {p.n}
+                      </span>
+                      <span className="p-icon grid h-13 w-13 place-items-center rounded-2xl border border-cyan-400/40 bg-white/90 dark:bg-zinc-900/90 text-cyan-600 dark:text-cyan-300 shadow-md shadow-cyan-500/10 backdrop-blur-xl">
+                        <Icon size={24} />
+                      </span>
                     </div>
-                    <div>
-                      <h3 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white">{p.title}</h3>
-                      <p className="mt-3 max-w-md text-sm sm:text-base leading-relaxed text-zinc-700 dark:text-zinc-300">{p.desc}</p>
-                      <div className="mt-5 flex flex-wrap gap-2">
-                        {p.chips.map((c) => <span key={c} className="rounded-full border border-zinc-300/70 dark:border-white/15 bg-white/60 dark:bg-white/[0.06] px-3 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-200 backdrop-blur">{c}</span>)}
+                    <div className="my-auto py-3">
+                      <h3 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white leading-tight">{p.title}</h3>
+                      <p className="mt-3 max-w-lg text-sm sm:text-base leading-relaxed text-zinc-700 dark:text-zinc-300">{p.desc}</p>
+
+                      {/* Authentic Brand Badges with official SVG logos */}
+                      {p.badges && p.badges.length > 0 && (
+                        <div className="mt-5 flex flex-wrap gap-2">
+                          {p.badges.map((b) => {
+                            const BadgeIcon = b.icon;
+                            return (
+                              <div
+                                key={b.label}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold backdrop-blur-md shadow-xs ${b.color}`}
+                              >
+                                <BadgeIcon />
+                                <span>{b.label}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Capabilities chips */}
+                      <div className="mt-3.5 flex flex-wrap gap-1.5">
+                        {p.chips.map((c) => (
+                          <span key={c} className="rounded-full border border-zinc-200 dark:border-white/10 bg-zinc-100/80 dark:bg-white/[0.04] px-2.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:text-zinc-400">
+                            {c}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>

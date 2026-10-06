@@ -7,12 +7,12 @@ import {
   RiArrowRightLine, RiRobot2Line, RiAddLine, RiMicLine, RiMicFill, RiFileList3Line,
   RiBookOpenLine, RiHeart2Line, RiUploadCloudLine, RiFileTextLine, RiArrowUpLine,
   RiCompass3Line, RiGlobalLine, RiMagicLine, RiFullscreenLine, RiFullscreenExitLine,
-  RiCodeSSlashLine, RiSpyLine, RiVoiceprintLine, RiPlayCircleLine, RiDiceLine,
+  RiCodeSSlashLine, RiSpyLine, RiVoiceprintLine, RiChat3Line, RiComputerLine,
+  RiShareForwardLine, RiMailLine, RiMapPin2Line,
 } from '@remixicon/react';
 import { useChat } from '../hook/useChat';
 import { useNavigate } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
-import Footer from '../../Components/Footer';
 import { setMessages } from '../chat.slice';
 import { addToast } from '../../../utils/toast.slice';
 import ParsuLogo from '../../Components/ParsuLogo';
@@ -27,238 +27,57 @@ import { triggerBlobInteraction, triggerBlobTyping } from '../../../utils/blobRe
 import VoiceMode from './VoiceMode';
 import { resolveIntent } from '../hook/useVoiceAgent';
 import { executeDeviceCommandApi } from '../../device/service/device.api';
-import DemoStage, { FEATURES } from './DemoStage';
 
 gsap.registerPlugin(useGSAP);
 
-/* ==========================================================================
-   HOME PAGE PIECES (module level + memo, so typing in the input box never
-   re-renders or restarts the animations)
-   ========================================================================== */
-
-// Drifting colour blobs + dot grid behind everything (needs `isolate` on <main>)
-const Aurora = memo(() => {
-  const ref = useRef(null);
-  useGSAP(() => {
-    const mm = gsap.matchMedia();
-    mm.add('(prefers-reduced-motion: no-preference)', () => {
-      gsap.utils.toArray('.blob').forEach((b, i) => {
-        gsap.to(b, { x: 'random(-140,140)', y: 'random(-90,90)', scale: 'random(.85,1.25)', duration: 'random(9,15)', repeat: -1, yoyo: true, repeatRefresh: true, ease: 'sine.inOut', delay: -i * 3 });
-      });
-    });
-  }, { scope: ref });
-  const blobs = [
-    ['rgba(32,184,205,.20)', 'top-[-12%] left-[-8%] w-[46vw] h-[46vw]'],
-    ['rgba(32,184,205,.10)', 'top-[35%] right-[-12%] w-[38vw] h-[38vw]'],
-    ['rgba(32,184,205,.08)', 'bottom-[-15%] left-[28%] w-[36vw] h-[36vw]'],
-  ];
-  const mask = 'radial-gradient(ellipse at 50% 30%, black 20%, transparent 75%)';
-  return (
-    <div ref={ref} aria-hidden className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
-      {blobs.map(([c, cls], i) => (
-        <div key={i} className={`blob absolute rounded-full blur-3xl ${cls}`} style={{ background: `radial-gradient(circle, ${c}, transparent 70%)` }} />
-      ))}
-      <div className="absolute inset-0 opacity-[.35] dark:opacity-[.5]"
-        style={{ backgroundImage: 'radial-gradient(rgba(127,127,127,.25) 1px, transparent 1px)', backgroundSize: '28px 28px', maskImage: mask, WebkitMaskImage: mask }} />
+// Minimal Brand Header: Logo and Site Name only, no other texts
+const MinimalBrandHeader = memo(() => (
+  <div className="flex flex-col items-center justify-center pt-6 sm:pt-10 pb-3 select-none">
+    <div className="relative flex items-center justify-center mb-3">
+      <div className="absolute inset-0 rounded-full bg-[var(--accent-cyan)]/25 blur-2xl pointer-events-none scale-150 animate-pulse" />
+      <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 shadow-[0_10px_25px_rgba(32,184,205,0.2)] flex items-center justify-center">
+        <ParsuLogo className="w-9 h-9 sm:w-10 sm:h-10 text-zinc-900 dark:text-white" />
+      </div>
     </div>
-  );
-});
-
-// Button that follows the cursor a little
-const Magnetic = ({ children, className = '', ...rest }) => {
-  const ref = useRef(null);
-  const { contextSafe } = useGSAP({ scope: ref });
-  const move = contextSafe((e) => {
-    const r = ref.current.getBoundingClientRect();
-    gsap.to(ref.current, { x: (e.clientX - r.left - r.width / 2) * 0.25, y: (e.clientY - r.top - r.height / 2) * 0.35, duration: 0.3 });
-  });
-  const leave = contextSafe(() => gsap.to(ref.current, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1,.4)' }));
-  return <button ref={ref} type="button" onMouseMove={move} onMouseLeave={leave} className={className} {...rest}>{children}</button>;
-};
-
-const Word = ({ w }) => (
-  <span className="inline-block overflow-hidden align-bottom pb-1 mr-[.25em]">
-    <span className="word inline-block">{w}</span>
-  </span>
-);
-
-const focusInput = () => document.querySelector('main textarea')?.focus();
-const scrollToDemo = () => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-// Clean hero: logo tile that tilts with the cursor, soft pulse rings, one orbiting dot, two-tone headline
-const Hero = memo(() => {
-  const root = useRef(null);
-  const tile = useRef(null);
-  const { contextSafe } = useGSAP(() => {
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-    tl.from('.tile-wrap', { scale: 0.6, opacity: 0, duration: 0.9, ease: 'back.out(1.7)' })
-      .from('.orbit', { scale: 0.7, opacity: 0, duration: 0.9 }, '<.15')
-      .from('.word', { yPercent: 110, stagger: 0.06, duration: 0.8 }, '-=.5')
-      .from('.sub', { y: 14, opacity: 0, duration: 0.6 }, '-=.4')
-      .from('.cta', { y: 14, opacity: 0, stagger: 0.08, duration: 0.5 }, '-=.35')
-      .from('.hint', { opacity: 0, duration: 0.6 }, '-=.1');
-
-    gsap.to('.tile-float', { y: -8, duration: 2.8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
-    gsap.to('.orbit', { rotate: 360, duration: 22, repeat: -1, ease: 'none' });
-    gsap.fromTo('.pulse', { scale: 1, opacity: 0.45 }, { scale: 1.8, opacity: 0, duration: 3, repeat: -1, stagger: 1.5, ease: 'power1.out' });
-    gsap.to('.hint-arrow', { y: 5, duration: 0.9, repeat: -1, yoyo: true, ease: 'sine.inOut' });
-  }, { scope: root });
-
-  const move = contextSafe((e) => {
-    const el = tile.current; if (!el) return;
-    const r = el.getBoundingClientRect();
-    const nx = gsap.utils.clamp(-1, 1, (e.clientX - (r.left + r.width / 2)) / 500);
-    const ny = gsap.utils.clamp(-1, 1, (e.clientY - (r.top + r.height / 2)) / 500);
-    gsap.to(el, { rotateY: nx * 16, rotateX: -ny * 16, transformPerspective: 700, duration: 0.5, ease: 'power2.out', overwrite: 'auto' });
-    el.style.setProperty('--gx', `${50 + nx * 45}%`);
-    el.style.setProperty('--gy', `${50 + ny * 45}%`);
-  });
-  const leave = contextSafe(() => {
-    if (tile.current) gsap.to(tile.current, { rotateX: 0, rotateY: 0, duration: 0.8, ease: 'elastic.out(1,.5)' });
-  });
-  const pop = contextSafe(() => {
-    gsap.timeline().to(tile.current, { scale: 0.9, duration: 0.1 }).to(tile.current, { scale: 1, duration: 0.7, ease: 'elastic.out(1.1,.4)' });
-    gsap.fromTo('.ripple', { scale: 1, opacity: 0.6 }, { scale: 2.2, opacity: 0, duration: 0.8, ease: 'power2.out' });
-  });
-
-  return (
-    <section ref={root} onPointerMove={move} onPointerLeave={leave} className="relative w-full flex flex-col items-center text-center pt-2 pb-6">
-      <div className="tile-wrap relative flex items-center justify-center w-56 h-56 sm:w-64 sm:h-64 mb-6">
-        <div className="orbit absolute inset-0 rounded-full border border-zinc-300/60 dark:border-white/10">
-          <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[var(--accent-cyan)] shadow-[0_0_12px_var(--accent-cyan)]" />
-        </div>
-        <div className="tile-float relative">
-          <span className="pulse absolute inset-0 rounded-[30px] border border-[var(--accent-cyan)]/50 pointer-events-none" />
-          <span className="pulse absolute inset-0 rounded-[30px] border border-[var(--accent-cyan)]/50 pointer-events-none" />
-          <span className="ripple absolute inset-0 rounded-[30px] border-2 border-[var(--accent-cyan)] opacity-0 pointer-events-none" />
-          <button ref={tile} type="button" onClick={pop} aria-label="Parsu AI"
-            style={{ '--gx': '50%', '--gy': '30%' }}
-            className="group relative flex items-center justify-center w-28 h-28 sm:w-32 sm:h-32 rounded-[30px] overflow-hidden cursor-pointer will-change-transform bg-white dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 shadow-[0_24px_50px_-22px_rgba(32,184,205,.55)]">
-            <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-              style={{ background: 'radial-gradient(circle at var(--gx) var(--gy), rgba(32,184,205,.28), transparent 60%)' }} />
-            <ParsuLogo className="relative w-16 h-16 sm:w-20 sm:h-20 text-zinc-900 dark:text-white" />
-          </button>
-        </div>
-      </div>
-
-      <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-semibold tracking-tight leading-[1.08] text-zinc-900 dark:text-white max-w-3xl">
-        {['One', 'assistant', 'that'].map((w) => <Word key={w} w={w} />)}
-        <br className="hidden sm:block" />
-        <span className="text-zinc-400 dark:text-zinc-500">
-          {['chats,', 'acts', 'and', 'posts.'].map((w) => <Word key={w} w={w} />)}
-        </span>
-      </h1>
-      <p className="sub mt-5 max-w-xl text-sm sm:text-base text-zinc-600 dark:text-zinc-400">
-        Chat, control your desktop, post to your social accounts, plan trips on a live map and keep a memory of what matters to you.
-      </p>
-      <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-        <Magnetic onClick={focusInput} className="cta group flex items-center gap-2 h-11 px-6 rounded-full bg-[var(--accent-cyan)] text-zinc-950 text-sm font-bold cursor-pointer active:scale-95 transition-transform">
-          Start chatting <RiArrowRightLine size={18} className="transition-transform group-hover:translate-x-1" />
-        </Magnetic>
-        <Magnetic onClick={scrollToDemo} className="cta flex items-center gap-2 h-11 px-6 rounded-full border border-zinc-300 dark:border-white/15 text-sm font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/5 cursor-pointer active:scale-95 transition-colors">
-          <RiPlayCircleLine size={18} /> See what it does
-        </Magnetic>
-      </div>
-      <div className="hint mt-10 flex flex-col items-center gap-1 text-[11px] text-zinc-400 dark:text-zinc-500">
-        <span>Scroll to explore</span>
-        <RiArrowRightLine size={14} className="hint-arrow rotate-90" />
-      </div>
-    </section>
-  );
-});
-
-// "Try it now" shortcut chips for every feature
-const Shortcuts = memo(({ onTry, onTalk }) => {
-  const run = (t) => (typeof t === 'string' ? onTry(t) : t.action === 'voice' && onTalk());
-  const surprise = () => { const all = FEATURES.flatMap((f) => f.tries); run(all[Math.floor(Math.random() * all.length)]); };
-  return (
-    <section className="w-full max-w-[800px] mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">Try it now</h2>
-          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">Tap a shortcut to send it to Parsu.</p>
-        </div>
-        <motion.button type="button" onClick={surprise} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92, rotate: 180 }}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-full border border-zinc-300 dark:border-white/15 text-xs font-semibold text-zinc-700 dark:text-zinc-200 cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/5">
-          <RiDiceLine size={16} /> Surprise me
-        </motion.button>
-      </div>
-      <div className="space-y-3">
-        {FEATURES.map((f) => {
-          const Icon = f.icon;
-          return (
-            <div key={f.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <div className="flex items-center gap-2 sm:w-44 shrink-0 text-[13px] font-semibold text-zinc-700 dark:text-zinc-300">
-                <Icon size={16} className="text-[var(--accent-cyan)]" />{f.label}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {f.tries.map((t, k) => (
-                  <motion.button key={k} type="button" onClick={() => run(t)} whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent-cyan)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = ''; }}
-                    className="text-left min-h-8 px-3.5 py-1.5 rounded-full text-xs font-medium text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-white/[0.04] cursor-pointer transition-colors hover:text-zinc-950 dark:hover:text-white">
-                    {typeof t === 'string' ? t : t.label}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-});
-
-// Feature card: 3D tilt + cursor spotlight
-const FeatureCard = ({ f, i, onTry }) => {
-  const ref = useRef(null);
-  const Icon = f.icon;
-  const move = (e) => {
-    const el = ref.current; const r = el.getBoundingClientRect();
-    const x = e.clientX - r.left; const y = e.clientY - r.top;
-    el.style.setProperty('--mx', `${x}px`); el.style.setProperty('--my', `${y}px`);
-    gsap.to(el, { rotateY: (x / r.width - 0.5) * 10, rotateX: -(y / r.height - 0.5) * 10, transformPerspective: 700, duration: 0.4, ease: 'power2.out' });
-  };
-  const leave = () => gsap.to(ref.current, { rotateX: 0, rotateY: 0, duration: 0.8, ease: 'elastic.out(1,.45)' });
-  return (
-    <motion.div initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.5, delay: (i % 2) * 0.08, ease: [0.22, 1, 0.36, 1] }}>
-      <div ref={ref} onMouseMove={move} onMouseLeave={leave} onClick={() => onTry(f.tries[0])}
-        className="group relative h-full p-5 rounded-2xl border border-zinc-200/90 dark:border-white/10 bg-white/80 dark:bg-[var(--bg-surface)]/80 cursor-pointer overflow-hidden will-change-transform">
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-          style={{ background: `radial-gradient(260px circle at var(--mx) var(--my), rgba(32,184,205,.16), transparent 70%)` }} />
-        <motion.div whileHover={{ rotate: [0, -12, 10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}
-          className="relative w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]">
-          <Icon size={20} />
-        </motion.div>
-        <h3 className="relative text-[15px] font-semibold text-zinc-900 dark:text-zinc-100">{f.title}</h3>
-        <p className="relative mt-1 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">{f.desc}</p>
-        <span className="relative mt-3 inline-block text-xs font-semibold opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all text-[var(--accent-cyan)]">Try it</span>
-      </div>
-    </motion.div>
-  );
-};
-
-const FeatureGrid = memo(({ onTry }) => (
-  <section className="w-full max-w-[800px] mx-auto">
-    <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight mb-4">Everything in one place</h2>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-      {FEATURES.map((f, i) => <FeatureCard key={f.id} f={f} i={i} onTry={onTry} />)}
-    </div>
-  </section>
+    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white font-display">
+      PARSU AI
+    </h1>
+  </div>
 ));
 
-// Everything above the input bar
-const HomeShowcase = memo(({ onTry, onTalk }) => (
-  <>
-    <Aurora />
-    <div className="w-full flex flex-col items-center gap-14 sm:gap-20">
-      <Hero />
-      <DemoStage id="demo" />
-      <Shortcuts onTry={onTry} onTalk={onTalk} />
-      <FeatureGrid onTry={onTry} />
+// Clean, informative shortcuts so users immediately know what the site can do
+const DASHBOARD_SHORTCUTS = [
+  { icon: RiChat3Line, label: 'Explain quantum computing simply', color: 'text-cyan-500 dark:text-cyan-400' },
+  { icon: RiComputerLine, label: 'Open Spotify & search lofi', color: 'text-purple-500 dark:text-purple-400' },
+  { icon: RiShareForwardLine, label: 'Draft an Instagram caption', color: 'text-pink-500 dark:text-pink-400' },
+  { icon: RiMailLine, label: 'Summarize unread Gmail', color: 'text-amber-500 dark:text-amber-400' },
+  { icon: RiMapPin2Line, label: 'Plan a 3-day trip to Munnar', color: 'text-rose-500 dark:text-rose-400' },
+  { icon: RiGlobalLine, label: 'Latest tech news & insights', color: 'text-emerald-500 dark:text-emerald-400' },
+  { icon: RiCodeSSlashLine, label: 'Write Python automation script', color: 'text-blue-500 dark:text-blue-400' },
+  { icon: RiVoiceprintLine, label: 'Live hands-free voice talk', color: 'text-sky-500 dark:text-sky-400', isVoice: true },
+];
+
+const MinimalShortcuts = memo(({ onTry, onTalk }) => (
+  <div className="w-full max-w-[800px] mx-auto mt-3 px-2 sm:px-0">
+    <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
+      {DASHBOARD_SHORTCUTS.map((s, idx) => {
+        const Icon = s.icon;
+        return (
+          <motion.button
+            key={idx}
+            type="button"
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={() => s.isVoice ? onTalk() : onTry(s.label)}
+            className="flex items-center gap-2 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-[13px] font-medium text-zinc-700 dark:text-zinc-300 border border-zinc-200/90 dark:border-white/10 bg-white/70 dark:bg-white/[0.04] hover:border-[var(--accent-cyan)] dark:hover:border-[var(--accent-cyan)] hover:bg-white dark:hover:bg-white/[0.08] hover:text-zinc-950 dark:hover:text-white transition-all shadow-xs cursor-pointer backdrop-blur-sm"
+          >
+            <Icon size={15} className={`shrink-0 ${s.color}`} />
+            <span>{s.label}</span>
+          </motion.button>
+        );
+      })}
     </div>
-  </>
+  </div>
 ));
 
 // Live speech caption bar (used in the main input and the full-screen editor)
@@ -608,8 +427,9 @@ const ChatArea = () => {
 
       <div className="w-full max-w-fluid flex flex-col items-center px-4 md:px-0 pt-2 sm:pt-4 md:pt-6">
 
-        {/* Animated landing: hero, motion demo, shortcuts, features, mascot */}
-        <HomeShowcase onTry={handleTry} onTalk={handleTalk} />
+        {/* Minimal header: logo and site name only, plus quick shortcuts */}
+        <MinimalBrandHeader />
+        <MinimalShortcuts onTry={handleTry} onTalk={handleTalk} />
 
         {loading && (
           <div className="w-full max-w-[800px] flex flex-col items-center justify-center gap-3 py-6 my-4 bg-zinc-100/60 dark:bg-white/[0.03] border border-cyan-500/20 rounded-3xl backdrop-blur-md animate-in fade-in zoom-in duration-300">
@@ -795,15 +615,8 @@ const ChatArea = () => {
           </div>
         </div>
 
-        {!user && (
-          <div className="mt-8 flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 dark:bg-zinc-900/60 border border-zinc-200 dark:border-white/5 text-xs text-zinc-500 animate-in fade-in duration-500">
-            <span className="w-2 h-2 rounded-full bg-[var(--accent-cyan)] animate-pulse" />
-            <span>Sign in to save chat history, analyze files, and publish to social networks.</span>
-          </div>
-        )}
-
         {/* Suggested queries from backend */}
-        <div className="w-full max-w-[800px] mt-14 space-y-4">
+        <div className="w-full max-w-[800px] mt-10 space-y-3">
           {suggestionsLoading ? (
             [1, 2, 3, 4, 5].map(i => <div key={i} className="w-full h-8 bg-zinc-900/50 rounded-lg animate-pulse" />)
           ) : (
@@ -853,11 +666,6 @@ const ChatArea = () => {
 
         {/* Spacer so content isn't hidden behind the fixed input bar */}
         <div className="h-36 sm:h-40 shrink-0" />
-      </div>
-
-      <div className="w-full border-t border-zinc-200 dark:border-white/[0.08] mt-auto bg-zinc-100 dark:bg-[var(--bg-primary)]">
-        <Footer />
-        <div className="w-full h-44 sm:h-52 bg-zinc-100 dark:bg-[var(--bg-primary)]" />
       </div>
 
       {/* Full-screen prompt & code editor */}
