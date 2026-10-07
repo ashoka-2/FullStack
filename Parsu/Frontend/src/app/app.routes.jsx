@@ -1,56 +1,78 @@
+import React, { lazy, Suspense } from "react";
 import { createBrowserRouter, Navigate } from "react-router";
 import Auth from "../features/auth/pages/Auth";
 import Dashboard from "../features/chat/pages/Dashboard";
 import ChatPage2 from "../features/chat/pages/ChatPage2";
-import Library from "../features/chat/pages/Library";
-import SocialConnections from "../features/auth/pages/SocialConnections";
-import Settings from "../features/auth/pages/Settings";
 import Protected from "../features/auth/components/Protected";
-import Layout from "./Layout";
-import ErrorBoundary from "./ErrorBoundary"; // Global Error handler import
-
-// Settings Sub-Pages
-import ProfileSettingsPage from "../features/auth/pages/settings/ProfileSettingsPage";
-import PasswordSettingsPage from "../features/auth/pages/settings/PasswordSettingsPage";
-import ApiKeysSettingsPage from "../features/auth/pages/settings/ApiKeysSettingsPage";
-import MascotSettingsPage from "../features/auth/pages/settings/MascotSettingsPage";
-import VoiceSettingsPage from "../features/auth/pages/settings/VoiceSettingsPage";
-import SubscriptionSettingsPage from "../features/auth/pages/settings/SubscriptionSettingsPage";
-import MemorySettingsPage from "../features/auth/pages/settings/MemorySettingsPage";
-import GeneralSettingsPage from "../features/auth/pages/settings/GeneralSettingsPage";
-import NotificationsSettingsPage from "../features/auth/pages/settings/NotificationsSettingsPage";
-import SafetySettingsPage from "../features/auth/pages/settings/SafetySettingsPage";
-import StorageSettingsPage from "../features/auth/pages/settings/StorageSettingsPage";
-import ReportBugPage from "../features/auth/pages/settings/ReportBugPage";
-import DevicesPage from "../features/device/pages/DevicesPage";
-
-// Info Pages
-import PrivacyPolicy from "../features/pages/PrivacyPolicy";
-import TermsOfService from "../features/pages/TermsOfService";
-import About from "../features/pages/About";
-import Contact from "../features/pages/Contact";
-import FAQ from "../features/pages/FAQ";
-import Pricing from "../features/pages/Pricing";
-import SystemStatus from "../features/pages/SystemStatus";
-import Changelog from "../features/pages/Changelog";
-import NotFound from "../features/pages/NotFound";
-import MaintenanceMode from "../features/pages/MaintenanceMode";
-import AdminLayout from "../features/admin/components/AdminLayout";
-import AdminDashboardPage from "../features/admin/pages/AdminDashboardPage";
-import AdminUsersPage from "../features/admin/pages/AdminUsersPage";
-import AdminNewsletterPage from "../features/admin/pages/AdminNewsletterPage";
-import AdminContactsPage from "../features/admin/pages/AdminContactsPage";
-import AdminApiUsagePage from "../features/admin/pages/AdminApiUsagePage";
-import AdminPricingPage from "../features/admin/pages/AdminPricingPage";
-import AdminSocialHubPage from "../features/admin/pages/AdminSocialHubPage";
-import AdminMediaVaultPage from "../features/admin/pages/AdminMediaVaultPage";
-import AdminAiWorkspacePage from "../features/admin/pages/AdminAiWorkspacePage";
-import AdminSettingsPage from "../features/admin/pages/AdminSettingsPage";
-import AdminBugReportsPage from "../features/admin/pages/AdminBugReportsPage";
 import AdminProtected from "../features/admin/components/AdminProtected";
-
+import Layout from "./Layout";
+import ErrorBoundary from "./ErrorBoundary";
 import { useSelector } from "react-redux";
 import LandingPage from "../features/pages/LandingPage";
+
+// Route Loading Spinner for Lazy Chunk Loading
+const RouteLoadingFallback = () => (
+    <div className="min-h-[50vh] w-full flex items-center justify-center p-8" aria-label="Loading page">
+        <div className="w-7 h-7 rounded-full border-2 border-zinc-700 border-t-[var(--accent-cyan)] animate-spin" />
+    </div>
+);
+
+const withLazy = (importFn) => {
+    const LazyComponent = lazy(importFn);
+    return function LazyWrapper(props) {
+        return (
+            <Suspense fallback={<RouteLoadingFallback />}>
+                <LazyComponent {...props} />
+            </Suspense>
+        );
+    };
+};
+
+// Secondary Chat & Hub Pages (Lazy Loaded)
+const Library = withLazy(() => import("../features/chat/pages/Library"));
+const SocialConnections = withLazy(() => import("../features/auth/pages/SocialConnections"));
+const Settings = withLazy(() => import("../features/auth/pages/Settings"));
+
+// Settings Sub-Pages (Lazy Loaded)
+const ProfileSettingsPage = withLazy(() => import("../features/auth/pages/settings/ProfileSettingsPage"));
+const PasswordSettingsPage = withLazy(() => import("../features/auth/pages/settings/PasswordSettingsPage"));
+const ApiKeysSettingsPage = withLazy(() => import("../features/auth/pages/settings/ApiKeysSettingsPage"));
+const MascotSettingsPage = withLazy(() => import("../features/auth/pages/settings/MascotSettingsPage"));
+const VoiceSettingsPage = withLazy(() => import("../features/auth/pages/settings/VoiceSettingsPage"));
+const SubscriptionSettingsPage = withLazy(() => import("../features/auth/pages/settings/SubscriptionSettingsPage"));
+const MemorySettingsPage = withLazy(() => import("../features/auth/pages/settings/MemorySettingsPage"));
+const GeneralSettingsPage = withLazy(() => import("../features/auth/pages/settings/GeneralSettingsPage"));
+const NotificationsSettingsPage = withLazy(() => import("../features/auth/pages/settings/NotificationsSettingsPage"));
+const SafetySettingsPage = withLazy(() => import("../features/auth/pages/settings/SafetySettingsPage"));
+const StorageSettingsPage = withLazy(() => import("../features/auth/pages/settings/StorageSettingsPage"));
+const ReportBugPage = withLazy(() => import("../features/auth/pages/settings/ReportBugPage"));
+const DevicesPage = withLazy(() => import("../features/device/pages/DevicesPage"));
+
+// Info & Legal Pages (Lazy Loaded)
+const PrivacyPolicy = withLazy(() => import("../features/pages/PrivacyPolicy"));
+const TermsOfService = withLazy(() => import("../features/pages/TermsOfService"));
+const About = withLazy(() => import("../features/pages/About"));
+const Contact = withLazy(() => import("../features/pages/Contact"));
+const FAQ = withLazy(() => import("../features/pages/FAQ"));
+const Pricing = withLazy(() => import("../features/pages/Pricing"));
+const SystemStatus = withLazy(() => import("../features/pages/SystemStatus"));
+const Changelog = withLazy(() => import("../features/pages/Changelog"));
+const NotFound = withLazy(() => import("../features/pages/NotFound"));
+const MaintenanceMode = withLazy(() => import("../features/pages/MaintenanceMode"));
+
+// Admin Console (Lazy Loaded)
+const AdminLayout = withLazy(() => import("../features/admin/components/AdminLayout"));
+const AdminDashboardPage = withLazy(() => import("../features/admin/pages/AdminDashboardPage"));
+const AdminUsersPage = withLazy(() => import("../features/admin/pages/AdminUsersPage"));
+const AdminNewsletterPage = withLazy(() => import("../features/admin/pages/AdminNewsletterPage"));
+const AdminContactsPage = withLazy(() => import("../features/admin/pages/AdminContactsPage"));
+const AdminApiUsagePage = withLazy(() => import("../features/admin/pages/AdminApiUsagePage"));
+const AdminPricingPage = withLazy(() => import("../features/admin/pages/AdminPricingPage"));
+const AdminSocialHubPage = withLazy(() => import("../features/admin/pages/AdminSocialHubPage"));
+const AdminMediaVaultPage = withLazy(() => import("../features/admin/pages/AdminMediaVaultPage"));
+const AdminAiWorkspacePage = withLazy(() => import("../features/admin/pages/AdminAiWorkspacePage"));
+const AdminSettingsPage = withLazy(() => import("../features/admin/pages/AdminSettingsPage"));
+const AdminBugReportsPage = withLazy(() => import("../features/admin/pages/AdminBugReportsPage"));
 
 const RootRoute = () => {
     const user = useSelector(state => state.auth.user);

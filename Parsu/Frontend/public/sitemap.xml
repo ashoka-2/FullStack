@@ -7,51 +7,79 @@
   <!-- Homepage -->
   <url>
     <loc>https://parsuai.vercel.app/</loc>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+  </url>
+
+  <!-- Pricing -->
+  <url>
+    <loc>https://parsuai.vercel.app/pricing</loc>
+    <lastmod>2026-10-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
 
   <!-- Auth -->
   <url>
     <loc>https://parsuai.vercel.app/auth</loc>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- Info / Legal Pages -->
+  <!-- About -->
   <url>
     <loc>https://parsuai.vercel.app/about</loc>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- FAQ -->
+  <url>
+    <loc>https://parsuai.vercel.app/faq</loc>
+    <lastmod>2026-10-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Product Changelog -->
+  <url>
+    <loc>https://parsuai.vercel.app/changelog</loc>
+    <lastmod>2026-10-07</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
+  <!-- System Status -->
   <url>
-    <loc>https://parsuai.vercel.app/privacy</loc>
-    <lastmod>2026-09-24</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <loc>https://parsuai.vercel.app/status</loc>
+    <lastmod>2026-10-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
   </url>
 
-  <url>
-    <loc>https://parsuai.vercel.app/terms</loc>
-    <lastmod>2026-09-24</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <url>
-    <loc>https://parsuai.vercel.app/faq</loc>
-    <lastmod>2026-09-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
+  <!-- Contact -->
   <url>
     <loc>https://parsuai.vercel.app/contact</loc>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-10-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Privacy Policy -->
+  <url>
+    <loc>https://parsuai.vercel.app/privacy</loc>
+    <lastmod>2026-10-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Terms of Service -->
+  <url>
+    <loc>https://parsuai.vercel.app/terms</loc>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

@@ -20,8 +20,15 @@ import { useAiFeatureToggles } from '../../../utils/aiSettingsSync';
 import VoiceMode from '../components/VoiceMode';
 import { resolveIntent } from '../hook/useVoiceAgent';
 import { executeDeviceCommandApi } from '../../device/service/device.api';
+import useSEO from '../../../utils/useSEO';
 
 const ChatPage2 = () => {
+    useSEO({
+        title: "Chat Session — Parsu AI",
+        description: "Autonomous AI conversation workspace.",
+        noIndex: true
+    });
+
     // Extract chat id from URL parameters (e.g., /chat/123 -> id: 123)
     const { id } = useParams();
     

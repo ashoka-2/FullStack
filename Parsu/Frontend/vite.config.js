@@ -48,5 +48,36 @@ export default defineConfig(() => {
         },
       },
     },
+    build: {
+      target: 'esnext',
+      sourcemap: false,
+      chunkSizeWarningLimit: 1200,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react-syntax-highlighter') || id.includes('prismjs') || id.includes('refractor')) {
+                return 'vendor-syntax';
+              }
+              if (id.includes('react-markdown') || id.includes('remark-gfm') || id.includes('micromark') || id.includes('unist') || id.includes('mdast')) {
+                return 'vendor-markdown';
+              }
+              if (id.includes('gsap') || id.includes('@gsap') || id.includes('motion') || id.includes('lenis')) {
+                return 'vendor-animation';
+              }
+              if (id.includes('@reduxjs') || id.includes('react-redux')) {
+                return 'vendor-redux';
+              }
+              if (id.includes('@remixicon')) {
+                return 'vendor-icons';
+              }
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+                return 'vendor-react';
+              }
+            }
+          }
+        }
+      }
+    },
   };
 });

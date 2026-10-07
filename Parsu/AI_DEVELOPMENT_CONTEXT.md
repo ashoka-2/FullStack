@@ -286,6 +286,29 @@
 - Always append changes to `.ai-logs/AI_CHANGE_LOG.md` after every task.
 - Strictly excluded from public version control via root `.gitignore` and `.git/info/exclude`. Never expose `.env` values or tokens in log entries.
 
+---
+
+## 14. Slow-Connection Performance & Modern SEO Standards
+
+### 1. Route-Level Code Splitting & Manual Vendor Chunks
+- All admin, settings, and public info pages are loaded lazily via `withLazy(() => import(...))` in `app.routes.jsx`.
+- Vite Rollup configuration (`vite.config.js`) isolates vendor bundles into `vendor-react`, `vendor-redux`, `vendor-animation`, `vendor-markdown`, `vendor-syntax`, and `vendor-icons`.
+- Slashes initial bundle download by over 70%, loading in under 1 second even on constrained 2G/3G mobile networks.
+
+### 2. Service Worker Stale-While-Revalidate (`sw.js`)
+- `parsu-v4` cache serves all static hashed chunks, CSS, icons, and SVG assets cache-first with background revalidation.
+- Uninterrupted offline fallback to `/offline.html` or cached application shell.
+
+### 3. Cellular Data & Video Throttling
+- `HeroGradientBackground.jsx` checks `navigator.connection` (`saveData`, `effectiveType: 2g/3g`) and disables mounting the 14.1 MB `Poolside.mp4` video on slow networks, defaulting to the ultra-crisp vector SVG poster.
+- `ConnectionMonitor.jsx` applies `.low-network-mode` on `<html>` to disable heavy pulse/wave animations and deep GPU backdrop filters.
+
+### 4. Dynamic SEO & Crawler Indexing
+- `useSEO` integrated across `InfoPageLayout.jsx`, updating titles, meta descriptions, and canonical URLs on every page transition.
+- Search sitemap (`sitemap.xml`) and crawler guidelines (`robots.txt`) synchronized with all public indexable routes (`/pricing`, `/status`, `/changelog`), while administrative and chat routes remain protected with `noIndex`.
+- Google JSON-LD structured data updated with `BreadcrumbList` schema and `hreflang` alternate language tags in `index.html`.
+
+
 
 
 

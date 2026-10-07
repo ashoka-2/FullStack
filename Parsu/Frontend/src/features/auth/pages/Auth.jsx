@@ -11,6 +11,7 @@ import {
   useDisplayFont, useAuthMotion, AuthBackground, AuthTopBar, MascotStage, AuthCard,
   FormHeading, ModeSwitch, VerifyEmailPanel, AuthFooter,
 } from '../components/Authparts.jsx';
+import useSEO from '../../../utils/useSEO';
 
 /** Google button + the active form. Prop plumbing lives here so the page stays tidy. */
 const AuthForms = ({ c }) => {
@@ -77,6 +78,12 @@ const Auth = ({ initialMode }) => {
   const navigate = useNavigate();
   const rootRef = useRef(null);
   const c = useAuthController({ initialMode });
+
+  useSEO({
+    title: c.mode === 'register' ? 'Create Account — Parsu AI' : 'Sign In — Parsu AI',
+    description: 'Sign in to Parsu AI to access real-time web research, code generation, and multi-channel social publishing.',
+    canonical: '/auth'
+  });
 
   useDisplayFont();
   useAuthMotion(rootRef, { mode: c.mode, step: c.forgotStep, done: c.isRegistered, bubble: c.bubbleText, error: c.reduxError || c.localError });

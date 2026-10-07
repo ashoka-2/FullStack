@@ -9,6 +9,7 @@ export const ConnectionContext = createContext({
     isOffline: false,
     isServerDown: false,
     isChecking: false,
+    isSlowNetwork: false,
     checkServerHealth: () => {}
 });
 
@@ -18,10 +19,9 @@ export const useConnection = () => useContext(ConnectionContext);
  * ConnectionMonitor
  * Non-intrusive connection & health monitor:
  * 1. Tracks browser network status (navigator.onLine).
- * 2. Tracks backend server health (/api/health).
- * 3. Never forces a full-screen takeover — displays a sleek, non-intrusive inline banner
- *    right below the navbar so users can continue viewing their active page.
- * 4. Preserves current route on reload.
+ * 2. Tracks slow network / data-saver mode (navigator.connection).
+ * 3. Tracks backend server health (/api/health).
+ * 4. Displays a sleek, non-intrusive inline banner right below the navbar.
  */
 export default function ConnectionMonitor({ children }) {
     const location = useLocation();
@@ -30,6 +30,36 @@ export default function ConnectionMonitor({ children }) {
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
     const [isServerDown, setIsServerDown] = useState(false);
     const [isChecking, setIsChecking] = useState(false);
+    const [isSlowNetwork, setIsSlowNetwork] = useState(() => {
+        if (typeof navigator === 'undefined') return false;
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        return Boolean(conn && (conn.saveData || conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g'));
+    });
+
+    // Toggle low-data mode class on root element
+    useEffect(() => {
+        if (typeof document !== 'undefined') {
+            document.documentElement.classList.toggle('low-network-mode', isSlowNetwork);
+        }
+    }, [isSlowNetwork]);
+
+    // Listen to network speed changes
+    useEffect(() => {
+        if (typeof navigator === 'undefined') return;
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (!conn) return;
+
+        const checkSpeed = () => {
+            const slow = Boolean(conn.saveData || conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g');
+            setIsSlowNetwork(slow);
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('network_speed_change', { detail: { isSlow: slow } }));
+            }
+        };
+
+        conn.addEventListener('change', checkSpeed);
+        return () => conn.removeEventListener('change', checkSpeed);
+    }, []);
 
     // Track if user was previously disconnected to trigger reconnection toast
     const wasDisconnectedRef = useRef(false);
@@ -103,7 +133,7 @@ export default function ConnectionMonitor({ children }) {
     }, [checkServerHealth, broadcastStatus]);
 
     return (
-        <ConnectionContext.Provider value={{ isOffline, isServerDown, isChecking, checkServerHealth }}>
+        <ConnectionContext.Provider value={{ isOffline, isServerDown, isChecking, isSlowNetwork, checkServerHealth }}>
             {/* Non-intrusive Inline Connection Banner right below ChatNavbar / top of page */}
             {(isOffline || isServerDown) && (
                 <div 

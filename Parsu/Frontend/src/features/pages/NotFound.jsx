@@ -12,9 +12,16 @@ import {
     RiCompassDiscoverLine
 } from '@remixicon/react';
 import ParsuLogo from '../Components/ParsuLogo';
+import useSEO from '../../utils/useSEO';
 
 export default function NotFound() {
     const navigate = useNavigate();
+
+    useSEO({
+        title: "Page Not Found (404) — Parsu AI",
+        description: "The page you are looking for does not exist or has been moved.",
+        noIndex: true
+    });
 
     const quickLinks = [
         { label: 'AI Assistant', desc: 'Ask questions & start research', to: '/', icon: RiSparkling2Line, color: 'text-cyan-500' },

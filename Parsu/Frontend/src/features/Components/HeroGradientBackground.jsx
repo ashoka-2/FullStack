@@ -14,7 +14,16 @@ const HeroGradientBackground = () => {
   const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef(null);
 
+  // Detect slow connection or Data Saver to save 14MB video download
+  const isSlowConnection = React.useMemo(() => {
+    if (typeof navigator === 'undefined') return false;
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (!conn) return false;
+    return Boolean(conn.saveData || conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g' || conn.effectiveType === '3g');
+  }, []);
+
   useEffect(() => {
+    if (isSlowConnection) return;
     const v = videoRef.current;
     if (!v) return;
     const onCanPlay = () => setVideoReady(true);
@@ -22,7 +31,7 @@ const HeroGradientBackground = () => {
     // If already buffered
     if (v.readyState >= 4) setVideoReady(true);
     return () => v.removeEventListener('canplaythrough', onCanPlay);
-  }, []);
+  }, [isSlowConnection]);
 
   return (
     <div aria-hidden="true" className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none z-0">
@@ -40,22 +49,24 @@ const HeroGradientBackground = () => {
           decoding="async"
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoReady ? 'opacity-0' : 'opacity-75 dark:opacity-85'}`}
         />
-        {/* Video — preloads behind, plays and crossfades in */}
-        <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          poster={poolsideSvg}
-          preload="auto"
-          onCanPlayThrough={() => setVideoReady(true)}
-          onPlaying={() => setVideoReady(true)}
-          className={`absolute inset-0 w-full h-full object-cover dark:mix-blend-screen transition-opacity duration-1000 ${videoReady ? 'opacity-75 dark:opacity-85' : 'opacity-0'}`}
-        >
-          <source src={heroVideo} type="video/mp4" />
-          <source src={heroVideoFallback} type="video/mp4" />
-        </video>
+        {/* Video — only downloaded on high-speed connections to save 14MB cellular data */}
+        {!isSlowConnection && (
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster={poolsideSvg}
+            preload="metadata"
+            onCanPlayThrough={() => setVideoReady(true)}
+            onPlaying={() => setVideoReady(true)}
+            className={`absolute inset-0 w-full h-full object-cover dark:mix-blend-screen transition-opacity duration-1000 ${videoReady ? 'opacity-75 dark:opacity-85' : 'opacity-0'}`}
+          >
+            <source src={heroVideo} type="video/mp4" />
+            <source src={heroVideoFallback} type="video/mp4" />
+          </video>
+        )}
         {/* Color wash overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--accent-cyan)]/20 via-[var(--color-clear-hanada)]/25 to-[var(--color-deep-hanada)]/60 mix-blend-color dark:mix-blend-overlay pointer-events-none" />
 

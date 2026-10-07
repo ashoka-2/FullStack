@@ -2,10 +2,13 @@
 User-agent: *
 Allow: /
 Allow: /about
+Allow: /pricing
 Allow: /privacy
 Allow: /terms
 Allow: /faq
 Allow: /contact
+Allow: /status
+Allow: /changelog
 Allow: /parsu.svg
 Allow: /favicon.ico
 Allow: /favicon-48x48.png
@@ -16,12 +19,13 @@ Allow: /og-image.png
 Allow: /site.webmanifest
 Allow: /sitemap.xml
 
-# Disallow authenticated/private user routes
+# Disallow authenticated/private and administrative routes
 Disallow: /ai
 Disallow: /chat
 Disallow: /library
 Disallow: /settings
 Disallow: /social-connections
+Disallow: /admin
 
 # Sitemaps
 Sitemap: https://parsuai.vercel.app/sitemap.xml

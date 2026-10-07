@@ -4,16 +4,21 @@
  * periodic device heartbeat, cross-device relay queue
  * ============================================================ */
 
-const CACHE_NAME = 'parsu-v3';
+const CACHE_NAME = 'parsu-v4';
 const OFFLINE_PAGE = '/offline.html';
 
-// Assets to pre-cache for offline support
+// Assets to pre-cache for offline & slow-connection instant load
 const STATIC_ASSETS = [
     '/',
-    '/manifest.json',
+    '/offline.html',
+    '/site.webmanifest',
     '/favicon.ico',
+    '/favicon-16x16.png',
+    '/favicon-32x32.png',
+    '/favicon-48x48.png',
     '/android-chrome-192x192.png',
     '/android-chrome-512x512.png',
+    '/apple-touch-icon.png',
     '/parsu.svg'
 ];
 
@@ -35,23 +40,71 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// ─── Fetch — Network-first with offline fallback ──────────────────────────────
+// ─── Fetch — Cache-First for static assets, Fast fallback for documents ───────
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Skip non-GET, browser-extension, and API requests (API must always be live)
+    // Skip non-GET, browser-extension, and real-time backend endpoints
     if (
         request.method !== 'GET' ||
         url.origin !== self.location.origin ||
-        url.pathname.startsWith('/api/')
+        url.pathname.startsWith('/api/') ||
+        url.pathname.startsWith('/socket.io/')
     ) return;
 
+    // Static immutable assets (/assets/*) or static images: Cache-First with background revalidation
+    if (url.pathname.startsWith('/assets/') || ['image', 'font'].includes(request.destination)) {
+        event.respondWith(
+            caches.match(request).then(cached => {
+                if (cached) {
+                    // Revalidate in background without blocking slow connection
+                    fetch(request).then(networkResponse => {
+                        if (networkResponse && networkResponse.ok) {
+                            caches.open(CACHE_NAME).then(cache => cache.put(request, networkResponse));
+                        }
+                    }).catch(() => {});
+                    return cached;
+                }
+                return fetch(request).then(networkResponse => {
+                    if (networkResponse && networkResponse.ok) {
+                        const cloned = networkResponse.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(request, cloned));
+                    }
+                    return networkResponse;
+                });
+            })
+        );
+        return;
+    }
+
+    // HTML Documents / Navigation: Network-First with offline/cached shell fallback
+    if (request.mode === 'navigate' || request.destination === 'document') {
+        event.respondWith(
+            fetch(request)
+                .then(response => {
+                    if (response && response.ok) {
+                        const cloned = response.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(request, cloned));
+                    }
+                    return response;
+                })
+                .catch(async () => {
+                    const cached = await caches.match(request);
+                    if (cached) return cached;
+                    const cachedRoot = await caches.match('/');
+                    if (cachedRoot) return cachedRoot;
+                    return caches.match(OFFLINE_PAGE);
+                })
+        );
+        return;
+    }
+
+    // Scripts & Styles: Network with instant cached fallback
     event.respondWith(
         fetch(request)
             .then(response => {
-                // Cache successful HTML/JS/CSS responses
-                if (response.ok && ['document', 'script', 'style'].includes(request.destination)) {
+                if (response.ok && ['script', 'style'].includes(request.destination)) {
                     const cloned = response.clone();
                     caches.open(CACHE_NAME).then(cache => cache.put(request, cloned));
                 }

@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { LiquidGlassNav } from '../Components/LiquidGlassNav';
 import Footer from '../Components/Footer';
 import { RiSparklingFill } from '@remixicon/react';
+import useSEO from '../../utils/useSEO';
 
 /**
  * InfoPageLayout — Standalone Public Page Shell
@@ -19,6 +20,13 @@ export default function InfoPageLayout({
   const location = useLocation();
   const heroRef = useRef(null);
   const contentRef = useRef(null);
+
+  // Dynamic SEO title, description, and canonical link
+  useSEO({
+    title: title ? `${title} — Parsu AI` : undefined,
+    description: subtitle || undefined,
+    canonical: location.pathname
+  });
 
   // Theme synced with localStorage
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');

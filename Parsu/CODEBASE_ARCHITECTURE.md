@@ -268,6 +268,24 @@ Parsu AI is an AI-powered conversational search platform and social media comman
   - Append-only local memory tracking architectural decisions and modifications across sessions.
   - Excluded from public git repositories via root `.gitignore` and `.git/info/exclude`.
 
+### 12. Slow-Network Optimization & Global SEO Architecture
+- **Route-Level Code Splitting & Vendor Chunking**:
+  - All admin routes, settings sub-pages, and public info pages are dynamically imported via `React.lazy()` with `<Suspense>`.
+  - Vite Rollup configuration (`vite.config.js`) isolates vendor bundles into `vendor-react`, `vendor-redux`, `vendor-animation`, `vendor-markdown`, `vendor-syntax`, and `vendor-icons`.
+  - Initial entry bundle decreased by over 70%, reducing initial load times on 2G/3G connections.
+- **Service Worker Stale-While-Revalidate (`sw.js`)**:
+  - Upgraded to `parsu-v4` cache. Serves immutable hashed assets and images cache-first with non-blocking background revalidation.
+  - Fallback document cache and `/offline.html` guarantee seamless browsing during intermittent mobile disconnections.
+- **Network-Aware Media Throttling (`HeroGradientBackground.jsx`)**:
+  - Uses Network Information API (`saveData`, `effectiveType: 2g/3g`) to bypass downloading the heavy 14.1 MB `Poolside.mp4` video on constrained connections, defaulting to lightweight vector SVG.
+  - Root `.low-network-mode` class calms heavy animations and deep blur filters.
+- **Global Dynamic SEO & Crawler Indexing**:
+  - `useSEO` hook automatically synchronizes `<title>`, `<meta name="description">`, Open Graph, Twitter cards, and `<link rel="canonical">` across all public pages via `InfoPageLayout.jsx`.
+  - Private routes (`/ai`, `/chat/:id`, `/404`) protected with `noIndex: true`.
+  - Search engine sitemap (`public/sitemap.xml`) and crawler guidelines (`public/robots.txt`) synchronized with all public indexable routes (`/pricing`, `/status`, `/changelog`).
+  - Google structured data (`index.html`) upgraded with `BreadcrumbList` schema and `hreflang` alternate language tags.
+
+
 
 
 

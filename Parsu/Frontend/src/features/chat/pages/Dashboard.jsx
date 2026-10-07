@@ -8,8 +8,15 @@ import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router'
 import { addToast } from '../../../utils/toast.slice'
 import ChatNavbar from '../components/ChatNavbar'
+import useSEO from '../../../utils/useSEO'
 
 const Dashboard = () => {
+    useSEO({
+        title: "AI Studio & Search — Parsu AI",
+        description: "Explore real-time web search, multi-model reasoning, and cross-platform publishing.",
+        noIndex: true
+    });
+
     const { user } = useSelector(state => state.auth)
     const error = useSelector(state => state.chat.error)
     const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed)

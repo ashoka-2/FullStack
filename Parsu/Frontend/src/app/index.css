@@ -853,3 +853,22 @@ html, body {
   backface-visibility: hidden;
   will-change: transform, opacity;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════════
+   LOW-NETWORK / DATA-SAVER AUTO-THROTTLING
+   Preserves cellular data & cuts rendering latency on 2G/3G connections
+   ══════════════════════════════════════════════════════════════════════════════════ */
+.low-network-mode {
+  & .animate-shimmer,
+  & .animate-wave-flow,
+  & .animate-wave-flow-slow,
+  & .animate-pulse,
+  & .animate-float {
+    animation: none !important;
+  }
+  & .backdrop-blur-xl,
+  & .backdrop-blur-2xl,
+  & .backdrop-blur-3xl {
+    backdrop-filter: blur(4px) !important;
+  }
+}
