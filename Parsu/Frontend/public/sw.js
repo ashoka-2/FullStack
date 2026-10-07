@@ -4,7 +4,7 @@
  * periodic device heartbeat, cross-device relay queue
  * ============================================================ */
 
-const CACHE_NAME = 'parsu-v4';
+const CACHE_NAME = 'parsu-v5';
 const OFFLINE_PAGE = '/offline.html';
 
 // Assets to pre-cache for offline & slow-connection instant load
@@ -18,6 +18,8 @@ const STATIC_ASSETS = [
     '/favicon-48x48.png',
     '/android-chrome-192x192.png',
     '/android-chrome-512x512.png',
+    '/maskable-icon-192x192.png',
+    '/maskable-icon-512x512.png',
     '/apple-touch-icon.png',
     '/parsu.svg'
 ];

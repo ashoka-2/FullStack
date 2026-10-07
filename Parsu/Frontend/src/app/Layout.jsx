@@ -22,8 +22,20 @@ const Layout = () => {
     useGuideEngine();
     const authLoading = useSelector(state => state.auth.loading);
     
-    // Check if the user has already seen the initial loader in this browser session
-    const hasLoadedThisSession = typeof window !== 'undefined' && sessionStorage.getItem('parsu_session_initialized') === 'true';
+    // Detect standalone PWA mode (installed mobile or desktop web application)
+    const isStandalonePWA = typeof window !== 'undefined' && (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+        window.matchMedia('(display-mode: minimal-ui)').matches ||
+        window.navigator.standalone === true ||
+        (typeof document !== 'undefined' && document.referrer.includes('android-app://'))
+    );
+
+    // Check if the user has already seen the initial loader in this browser session, or running as installed PWA
+    const hasLoadedThisSession = typeof window !== 'undefined' && (
+        isStandalonePWA ||
+        sessionStorage.getItem('parsu_session_initialized') === 'true'
+    );
 
     // Track if the preloader has finished its animation sequence
     const [loaderFinished, setLoaderFinished] = useState(hasLoadedThisSession);
@@ -74,11 +86,18 @@ const Layout = () => {
         }
         localStorage.setItem('theme', theme);
 
-       
-    }, [authLoading]);
+        if (isStandalonePWA) {
+            try {
+                sessionStorage.setItem('parsu_session_initialized', 'true');
+            } catch (e) {
+                // Ignore storage access error
+            }
+        }
+    }, [authLoading, isStandalonePWA]);
 
-    // When loader has already finished this session, NEVER show overlay on reload
-    const isOverlayActive = !hasLoadedThisSession && (!loaderFinished || !authWaitDone);
+    // When running as an installed PWA, the mobile OS splash screen already performs the native brand launch.
+    // Bypassing the heavy 2.4s preloader eliminates the double loading screen, delivering an instant native-like launch.
+    const isOverlayActive = !isStandalonePWA && !hasLoadedThisSession && (!loaderFinished || !authWaitDone);
 
     const handleLoaderFinished = () => {
         setLoaderFinished(true);
