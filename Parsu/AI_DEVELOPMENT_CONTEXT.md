@@ -267,5 +267,25 @@
 - Features a floating Parsu insignia with subtle GSAP breathing motion, a high-precision numeric percentage counter (0% to 100%), a hairline cyan progress bar, and real-time telemetry status logs.
 - Cinematic exit animation using `gsap.timeline()` with smooth scale, blur, and opacity fade.
 
+---
+
+## 13. Design Tokens, Continuous Squircles & AI Change Log Protocol
+
+### 1. Continuous Apple Squircle Corners (`corner-shape: squircle`)
+- Configured globally via `@supports (corner-shape: squircle)` in `index.css`.
+- Applies to all cards, modals, sheets, inputs, and buttons automatically.
+- Elements with `.rounded-full`, `.pill`, `.icon-btn`, `.avatar-round`, or `[data-corner="round"]` are protected with `corner-shape: round` to stay perfectly circular.
+
+### 2. Design Tokens Single Source of Truth
+- Unified single-accent cyan palette (`--accent-cyan: #20b8cd`).
+- Spacing scale on 4px grid (`--space-1` to `--space-24`), container max (`--container-max: 1280px`), and `--touch-min: 44px`.
+- High-precision typography with `text-wrap: balance` on headings, `text-wrap: pretty` on prose, and `tabular-nums` for data.
+- Instant pre-paint theme script in `index.html` eliminating white flashes on initial paint.
+
+### 3. Private AI Change Log Protocol (`.ai-logs/`)
+- Always append changes to `.ai-logs/AI_CHANGE_LOG.md` after every task.
+- Strictly excluded from public version control via root `.gitignore` and `.git/info/exclude`. Never expose `.env` values or tokens in log entries.
+
+
 
 

@@ -256,5 +256,18 @@ Parsu AI is an AI-powered conversational search platform and social media comman
 - **Ultra-Luxury OLED GSAP Preloader**:
   - Replaced SVG wave animations with an OLED dark HUD (`#050505`), floating glowing Parsu logo mark, precision numeric counter (0% to 100%), hairline neon progress bar, and buttery smooth GSAP timeline exit.
 
+### 11. Design Tokens, Continuous Squircles & Master Logging Protocol
+- **Continuous Apple Squircles (`corner-shape: squircle`)**:
+  - Globally configured via `@supports (corner-shape: squircle)` in `Frontend/src/app/index.css` for cards, buttons, modals, and sheets, with `.rounded-full` preserved for round icons and pills.
+- **Master Design Tokens & Typography Balance**:
+  - Centralized 4px-base spacing tokens (`--space-1` to `--space-24`), container max-widths, and minimum touch target size (`--touch-min: 44px`).
+  - Machined elevation highlight tokens (`--highlight-top`, `--inner-edge`).
+  - Balanced headline wrapping (`text-wrap: balance`), readable paragraph wrapping (`text-wrap: pretty`), and `tabular-nums` for numeric & code data.
+  - Pre-paint inline script in `Frontend/index.html` preventing theme flash on first load.
+- **Private AI Change Log (`.ai-logs/AI_CHANGE_LOG.md`)**:
+  - Append-only local memory tracking architectural decisions and modifications across sessions.
+  - Excluded from public git repositories via root `.gitignore` and `.git/info/exclude`.
+
+
 
 
