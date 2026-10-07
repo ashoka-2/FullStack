@@ -3,6 +3,7 @@ import multer from "multer";
 import { authUser } from "../middlewares/auth.middleware.js";
 import {
     getConnectedAccounts,
+    getConnectorStatuses,
     startOAuthFlow,
     handleOAuthCallback,
     disconnectAccount,
@@ -19,7 +20,10 @@ const upload = multer({
 
 const socialRouter = Router();
 
-// All routes except callbacks require auth
+// Public connector statuses (open to all so UI can display locked / coming soon states)
+socialRouter.get("/connectors", getConnectorStatuses);
+
+// All routes below require auth
 socialRouter.get("/accounts", authUser, getConnectedAccounts);
 socialRouter.delete("/accounts/:platform", authUser, disconnectAccount);
 socialRouter.get("/connect/:platform", authUser, startOAuthFlow);

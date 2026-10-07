@@ -167,6 +167,7 @@ const PLATFORMS = [
 
 const SocialConnections = () => {
     const [accounts, setAccounts] = useState([]);
+    const [connectors, setConnectors] = useState({});
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(null);
     const [manualModal, setManualModal] = useState(null);
@@ -205,12 +206,23 @@ const SocialConnections = () => {
             const data = await getConnectedAccounts();
             if (data.success) {
                 setAccounts(data.accounts || []);
+                if (data.connectors) {
+                    setConnectors(data.connectors);
+                }
             }
         } catch (error) {
             console.error('Failed to fetch accounts:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleLockedClick = (platform) => {
+        dispatch(addToast({
+            type: 'info',
+            title: 'Locked by Admin',
+            message: `${platform.name} is currently locked by administrator.`
+        }));
     };
 
     useEffect(() => {
@@ -226,6 +238,12 @@ const SocialConnections = () => {
     }, [loading]);
 
     const handleConnect = async (platform) => {
+        const connector = connectors[platform.id.toLowerCase()];
+        if (connector?.isLocked || (connector?.status && connector.status !== 'active')) {
+            handleLockedClick(platform, connector);
+            return;
+        }
+
         setActionLoading(platform.id);
         try {
             const data = await getOAuthUrl(platform.id);
@@ -238,7 +256,9 @@ const SocialConnections = () => {
             }
         } catch (err) {
             const msg = err.response?.data?.message || 'Connection failed';
-            if (msg.includes('not configured')) {
+            if (err.response?.status === 423 || err.response?.data?.isLocked) {
+                handleLockedClick(platform, connector || { lockReason: msg });
+            } else if (msg.includes('not configured')) {
                 setManualModal(platform);
             } else {
                 dispatch(addToast({ type: 'error', message: msg }));
@@ -386,6 +406,7 @@ const SocialConnections = () => {
                                             key={platform.id}
                                             platform={platform}
                                             connection={isConnected(platform.id)}
+                                            connector={connectors[platform.id.toLowerCase()]}
                                             isLoading={actionLoading === platform.id}
                                             onConnect={handleConnect}
                                             onDisconnect={handleDisconnect}

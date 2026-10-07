@@ -1,4 +1,5 @@
 import SocialConnection from "../models/social.model.js";
+import AppConnector from "../models/appConnector.model.js";
 import messageModel from "../models/message.model.js";
 import { postMediaToInstagram } from "../services/instagram.service.js";
 import { publishToSocialPlatforms } from "../services/socialPublisher.service.js";
@@ -213,12 +214,44 @@ function getClientCredentials(platform, req) {
 // ============================================================
 
 /**
+ * GET /api/social/connectors
+ * Returns all app connectors with their active lock status, badge, and reason.
+ */
+export async function getConnectorStatuses(req, res) {
+    try {
+        await AppConnector.syncDeveloperApps();
+        const connectors = await AppConnector.find().lean();
+        const connectorMap = {};
+        connectors.forEach(c => {
+            connectorMap[c.appId.toLowerCase()] = {
+                appId: c.appId,
+                name: c.name,
+                category: c.category,
+                description: c.description,
+                developer: c.developer,
+                status: c.status,
+                isLocked: c.isLocked,
+                lockReason: c.lockReason,
+                badgeText: c.badgeText
+            };
+        });
+        res.status(200).json({ success: true, connectors: connectorMap });
+    } catch (error) {
+        console.error("Get Connector Statuses Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch connector statuses" });
+    }
+}
+
+/**
  * GET /api/social/accounts
- * List all connected social accounts for the logged-in user
+ * List all connected social accounts for the logged-in user and include app lock statuses
  */
 export async function getConnectedAccounts(req, res) {
     try {
-        const connections = await SocialConnection.find({ user: req.user.id, isConnected: true });
+        const [connections, connectors] = await Promise.all([
+            SocialConnection.find({ user: req.user.id, isConnected: true }),
+            AppConnector.find().lean()
+        ]);
         const accounts = connections.map(c => ({
             platform: c.platform,
             platformUserId: c.platformUserId,
@@ -227,7 +260,23 @@ export async function getConnectedAccounts(req, res) {
             isConnected: c.isConnected,
             connectedAt: c.createdAt
         }));
-        res.status(200).json({ success: true, accounts });
+
+        const connectorMap = {};
+        connectors.forEach(c => {
+            connectorMap[c.appId.toLowerCase()] = {
+                appId: c.appId,
+                name: c.name,
+                category: c.category,
+                description: c.description,
+                developer: c.developer,
+                status: c.status,
+                isLocked: c.isLocked,
+                lockReason: c.lockReason,
+                badgeText: c.badgeText
+            };
+        });
+
+        res.status(200).json({ success: true, accounts, connectors: connectorMap });
     } catch (error) {
         console.error("Get Connected Accounts Error:", error);
         res.status(500).json({ success: false, message: "Failed to fetch connected accounts" });
@@ -241,6 +290,18 @@ export async function getConnectedAccounts(req, res) {
 export async function startOAuthFlow(req, res) {
     try {
         const { platform } = req.params;
+
+        // Check if the administrator has locked this app
+        const connector = await AppConnector.findOne({ appId: platform.toLowerCase() });
+        if (connector && connector.isLocked) {
+            return res.status(423).json({
+                success: false,
+                isLocked: true,
+                status: connector.status,
+                message: connector.lockReason || `${connector.name} is currently locked by the administrator.`
+            });
+        }
+
         const config = PLATFORMS[platform];
         if (!config) return res.status(400).json({ success: false, message: `Unsupported platform: ${platform}` });
 
@@ -387,6 +448,17 @@ export async function connectManual(req, res) {
             return res.status(400).json({ success: false, message: "platform, accessToken, and userId are required" });
         }
 
+        // Check if the administrator has locked this app
+        const connector = await AppConnector.findOne({ appId: platform.toLowerCase() });
+        if (connector && connector.isLocked) {
+            return res.status(423).json({
+                success: false,
+                isLocked: true,
+                status: connector.status,
+                message: connector.lockReason || `${connector.name} is currently locked by the administrator.`
+            });
+        }
+
         if (!PLATFORMS[platform]) {
             return res.status(400).json({ success: false, message: `Unsupported platform: ${platform}` });
         }
@@ -511,6 +583,20 @@ export async function publishContent(req, res) {
         }
 
         const targetPlatforms = platforms || (platform ? [platform] : ["instagram"]);
+
+        // Guard: Check if any requested platform is locked by admin
+        const lockedConnectors = await AppConnector.find({
+            appId: { $in: targetPlatforms.map(p => p.toLowerCase()) },
+            isLocked: true
+        });
+        if (lockedConnectors.length > 0) {
+            const lockedNames = lockedConnectors.map(c => c.name).join(", ");
+            return res.status(423).json({
+                success: false,
+                isLocked: true,
+                message: `Cannot publish: ${lockedNames} is currently locked by the administrator.`
+            });
+        }
 
         const results = await publishToSocialPlatforms({
             platforms: targetPlatforms,

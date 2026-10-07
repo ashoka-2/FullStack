@@ -6,6 +6,7 @@ import SocialConnection from "../models/social.model.js";
 import ContactMessage from "../models/contact.model.js";
 import NewsletterSubscriber from "../models/newsletter.model.js";
 import PlatformSettings from "../models/platformSettings.model.js";
+import AppConnector from "../models/appConnector.model.js";
 import { deleteFile } from "../services/imagekit.service.js";
 import { executeModelChatStream } from "../services/model.service.js";
 
@@ -1131,5 +1132,155 @@ export async function updateAdminPlatformSettings(req, res) {
         return res.status(200).json({ success: true, message: "Platform settings updated successfully.", data: settings });
     } catch (err) {
         return res.status(500).json({ success: false, message: err.message });
+    }
+}
+
+/**
+ * GET /api/admin/connectors
+ * Returns all developer-registered connectors and their live admin lock states,
+ * auto-syncing any new developer apps and aggregating active connection counts.
+ */
+export async function getAdminConnectors(req, res) {
+    try {
+        await AppConnector.syncDeveloperApps();
+
+        const activeConnections = await SocialConnection.aggregate([
+            { $match: { isConnected: true } },
+            { $group: { _id: "$platform", count: { $sum: 1 } } }
+        ]);
+
+        const countMap = {};
+        activeConnections.forEach(item => {
+            if (item._id) countMap[item._id.toLowerCase()] = item.count;
+        });
+
+        const connectors = await AppConnector.find()
+            .populate("lockedBy", "username email")
+            .sort({ category: 1, name: 1 })
+            .lean();
+
+        const data = connectors.map(c => ({
+            ...c,
+            connectedUsersCount: countMap[c.appId.toLowerCase()] || 0
+        }));
+
+        return res.status(200).json({
+            success: true,
+            totalApps: data.length,
+            activeCount: data.filter(c => c.status === "active").length,
+            lockedCount: data.filter(c => c.isLocked).length,
+            data
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Failed to retrieve connectors", error: err.message });
+    }
+}
+
+/**
+ * PATCH /api/admin/connectors/:appId/toggle
+ * Fast 1-click lock / unlock toggle for an app connector
+ */
+export async function toggleAdminConnectorLock(req, res) {
+    try {
+        const { appId } = req.params;
+        const { reason } = req.body || {};
+
+        let connector = await AppConnector.findOne({ appId: appId.toLowerCase() });
+        if (!connector) {
+            await AppConnector.syncDeveloperApps();
+            connector = await AppConnector.findOne({ appId: appId.toLowerCase() });
+        }
+
+        if (!connector) {
+            return res.status(404).json({ success: false, message: `App connector '${appId}' not found.` });
+        }
+
+        const willLock = !connector.isLocked;
+        connector.isLocked = willLock;
+        connector.status = willLock ? "locked" : "active";
+        connector.lockedBy = willLock ? req.user._id : null;
+        connector.lockedAt = willLock ? new Date() : null;
+        if (willLock) {
+            connector.lockReason = reason || connector.lockReason || "Temporarily locked by administrator.";
+            connector.badgeText = "Locked by Admin";
+        } else {
+            connector.lockReason = "";
+            connector.badgeText = "";
+        }
+
+        await connector.save();
+        await connector.populate("lockedBy", "username email");
+
+        return res.status(200).json({
+            success: true,
+            message: willLock 
+                ? `${connector.name} is now locked. Users will see it as locked.` 
+                : `${connector.name} is now unlocked and live for all users.`,
+            data: connector
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Failed to toggle lock status", error: err.message });
+    }
+}
+
+/**
+ * PUT /api/admin/connectors/:appId
+ * Full update for an app connector (status, custom notice reason, badge text)
+ */
+export async function updateAdminConnector(req, res) {
+    try {
+        const { appId } = req.params;
+        const { status, lockReason, badgeText } = req.body;
+
+        let connector = await AppConnector.findOne({ appId: appId.toLowerCase() });
+        if (!connector) {
+            await AppConnector.syncDeveloperApps();
+            connector = await AppConnector.findOne({ appId: appId.toLowerCase() });
+        }
+
+        if (!connector) {
+            return res.status(404).json({ success: false, message: `App connector '${appId}' not found.` });
+        }
+
+        if (status) {
+            const validStatuses = ["active", "locked", "coming_soon", "maintenance"];
+            if (!validStatuses.includes(status)) {
+                return res.status(400).json({ success: false, message: `Invalid status. Must be one of: ${validStatuses.join(", ")}` });
+            }
+            connector.status = status;
+            connector.isLocked = status !== "active";
+            if (connector.isLocked) {
+                connector.lockedBy = req.user._id;
+                connector.lockedAt = new Date();
+            } else {
+                connector.lockedBy = null;
+                connector.lockedAt = null;
+            }
+        }
+
+        if (lockReason !== undefined) {
+            connector.lockReason = lockReason;
+        }
+
+        if (badgeText !== undefined) {
+            connector.badgeText = badgeText;
+        } else if (connector.status === "coming_soon" && !connector.badgeText) {
+            connector.badgeText = "Coming Soon";
+        } else if (connector.status === "locked" && !connector.badgeText) {
+            connector.badgeText = "Locked by Admin";
+        } else if (connector.status === "maintenance" && !connector.badgeText) {
+            connector.badgeText = "Maintenance";
+        }
+
+        await connector.save();
+        await connector.populate("lockedBy", "username email");
+
+        return res.status(200).json({
+            success: true,
+            message: `Settings for ${connector.name} updated successfully.`,
+            data: connector
+        });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Failed to update connector settings", error: err.message });
     }
 }

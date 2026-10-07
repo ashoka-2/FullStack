@@ -3,26 +3,29 @@ import {
     RiCheckLine, 
     RiLoader4Line, 
     RiLinkUnlinkM,
-    RiArrowRightUpLine
+    RiArrowRightUpLine,
+    RiLock2Line
 } from '@remixicon/react';
 import { triggerBlobSocialHover } from '../../../utils/blobReactions';
 
 /**
  * SocialPlatformCard — Apple & AI Design System
  * Features:
- * - Apple-style frosted glass tile with continuous corner radius
- * - Specular micro-borders with subtle ambient glow
- * - Tactile status badges & supported format chips
+ * - Clean original Apple-style glass tile layout
+ * - When locked by admin: disabled button with 'Locked by Admin'
+ * - Supported format chips & live status badge
  * - High-polish connect / disconnect controls
  */
 export default function SocialPlatformCard({
     platform,
     connection,
+    connector,
     isLoading = false,
     onConnect,
     onDisconnect
 }) {
     const Icon = platform.icon;
+    const isLocked = Boolean(connector?.isLocked || (connector?.status && connector.status !== 'active'));
 
     return (
         <div
@@ -35,7 +38,7 @@ export default function SocialPlatformCard({
         >
             {/* Top ambient color reflection */}
             <div
-                className="absolute top-0 right-0 w-36 h-36 rounded-full blur-3xl opacity-20 pointer-events-none transition-opacity duration-300 group-hover:opacity-30"
+                className="absolute top-0 right-0 w-36 h-36 rounded-full blur-3xl pointer-events-none opacity-20 group-hover:opacity-30 transition-opacity duration-300"
                 style={{ backgroundColor: platform.color }}
             />
 
@@ -44,7 +47,7 @@ export default function SocialPlatformCard({
                 <div className="flex items-start justify-between gap-3 mb-4">
                     <div className="flex items-center gap-3.5 min-w-0">
                         <div
-                            className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-white/[0.06] flex items-center justify-center border border-zinc-200/80 dark:border-white/10 shadow-xs transition-transform duration-300 group-hover:scale-105 shrink-0"
+                            className="w-12 h-12 rounded-2xl flex items-center justify-center bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200/80 dark:border-white/10 shadow-xs transition-transform duration-300 shrink-0 group-hover:scale-105"
                             style={{ boxShadow: connection ? `0 4px 20px ${platform.bgGlow}` : undefined }}
                         >
                             <Icon size={24} style={{ color: platform.color }} />
@@ -59,16 +62,12 @@ export default function SocialPlatformCard({
                         </div>
                     </div>
 
-                    {/* Apple-style status capsule */}
-                    {connection ? (
+                    {/* Live status badge when connected */}
+                    {connection && (
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-[10px] font-bold tracking-wider uppercase shrink-0">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             <span>Live</span>
                         </div>
-                    ) : (
-                        <span className="text-[11px] text-zinc-400 font-medium hidden sm:inline shrink-0">
-                            Ready
-                        </span>
                     )}
                 </div>
 
@@ -121,6 +120,15 @@ export default function SocialPlatformCard({
                             <RiLinkUnlinkM size={15} />
                         )}
                         <span>Disconnect Channel</span>
+                    </button>
+                ) : isLocked ? (
+                    <button
+                        type="button"
+                        disabled
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/80 dark:border-white/10 text-zinc-400 dark:text-zinc-500 font-semibold text-xs cursor-not-allowed select-none"
+                    >
+                        <RiLock2Line size={14} className="text-zinc-400 dark:text-zinc-500 shrink-0" />
+                        <span>Locked by Admin</span>
                     </button>
                 ) : (
                     <button

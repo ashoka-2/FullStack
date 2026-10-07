@@ -5,6 +5,11 @@ export async function getConnectedAccounts() {
     return response.data;
 }
 
+export async function getConnectorStatuses() {
+    const response = await api.get("/api/social/connectors");
+    return response.data;
+}
+
 export async function disconnectAccount(platform) {
     const response = await api.delete(`/api/social/accounts/${platform}`);
     return response.data;

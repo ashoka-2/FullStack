@@ -20,7 +20,10 @@ import {
     deleteAdminMediaAsset,
     testAdminAiPrompt,
     getAdminPlatformSettings,
-    updateAdminPlatformSettings
+    updateAdminPlatformSettings,
+    getAdminConnectors,
+    toggleAdminConnectorLock,
+    updateAdminConnector
 } from "../controllers/admin.controller.js";
 import {
     getAdminBugReports,
@@ -58,6 +61,11 @@ adminRouter.get("/api-usage", getAdminApiUsage);
 // Social connections across all users
 adminRouter.get("/social-connections", getAdminSocialConnections);
 adminRouter.delete("/social-connections/:id", disconnectAdminSocialConnection);
+
+// App Connectors & Social Integrations locking governance
+adminRouter.get("/connectors", getAdminConnectors);
+adminRouter.patch("/connectors/:appId/toggle", toggleAdminConnectorLock);
+adminRouter.put("/connectors/:appId", updateAdminConnector);
 
 // User-uploaded & generated media assets vault (for review and moderation)
 adminRouter.get("/media-assets", getAdminMediaAssets);

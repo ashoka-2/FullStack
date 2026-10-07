@@ -203,3 +203,21 @@ export async function deleteAdminBugReport(id) {
     const res = await customAxios.delete(`/api/admin/bug-reports/${id}`);
     return res.data;
 }
+
+/**
+ * App Connectors & Social Integrations locking governance
+ */
+export async function getAdminConnectors() {
+    const res = await customAxios.get("/api/admin/connectors");
+    return res.data;
+}
+
+export async function toggleAdminConnectorLock(appId, reason = "") {
+    const res = await customAxios.patch(`/api/admin/connectors/${appId}/toggle`, { reason });
+    return res.data;
+}
+
+export async function updateAdminConnector(appId, { status, lockReason, badgeText }) {
+    const res = await customAxios.put(`/api/admin/connectors/${appId}`, { status, lockReason, badgeText });
+    return res.data;
+}
