@@ -40,6 +40,10 @@ const messageSchema = new mongoose.Schema({
         enum: ['like', 'dislike', null],
         default: null
     },
+    usedMemory: {
+        type: Boolean,
+        default: false
+    },
     // Vector embedding for semantic search (RAG)
     embedding: {
         type: [Number],

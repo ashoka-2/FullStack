@@ -901,6 +901,14 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                 </div>
                             )}
 
+                            {/* Used memory from previous chats chip */}
+                            {Boolean(msg.usedMemory) && (
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 text-[11px] font-semibold w-fit my-1">
+                                    <RiSparklingLine size={12} className="text-purple-400 shrink-0" />
+                                    <span>Used memory from previous chats</span>
+                                </div>
+                            )}
+
                             <div className="prose prose-emerald dark:prose-invert max-w-none text-zinc-950 dark:text-zinc-200 leading-[1.7] md:leading-[1.8] text-[15px] md:text-[17px] font-medium tracking-tight">
                                 <ReactMarkdown 
                                     remarkPlugins={[remarkGfm]}

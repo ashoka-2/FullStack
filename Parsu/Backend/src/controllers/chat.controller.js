@@ -437,6 +437,11 @@ export async function sendMessage(req, res) {
         const autoTriggerWebSearch = autoTriggerKeywords.some(kw => promptRaw.includes(kw)) || newsLikePattern.test(promptRaw);
         const shouldExecuteWebSearch = explicitWebSearch || autoTriggerWebSearch;
 
+        // Small talk detection: avoid web search, RAG, and memory recall for greetings / short chat
+        const isSmallTalk = (t) => /^\s*((hi+|hello+|hey+|heya|hola)(\s+(there|parsu|bro|buddy|everyone|friend|ai))?|yo|sup|namaste|good\s*(morning|afternoon|evening|night)|thanks?( you)?|thx|ok(ay)?|cool|nice|bye|how are you( doing)?|what'?s up|who are you|what can you do)\s*[!.?]*\s*$/i.test(t || "");
+        const smallTalk = isSmallTalk((message || "").trim()) && uploadedFiles.length === 0;
+        const wordCount = (message || "").trim().split(/\s+/).filter(Boolean).length;
+
         // Uploaded media & social media link context
         let uploadedMediaContext = "";
         if (uploadedFiles && uploadedFiles.length > 0) {
@@ -464,7 +469,7 @@ export async function sendMessage(req, res) {
 
         // ── Parallel Retrieval: Tavily Search, Cross-Chat Memory, and Document RAG ──
         const fetchWebSearchContext = async () => {
-            if (!shouldExecuteWebSearch || !(message || userMessage.content)) return "";
+            if (smallTalk || !shouldExecuteWebSearch || !(message || userMessage.content)) return "";
             try {
                 const { tavily } = await import("@tavily/core");
                 const tvly = new tavily(process.env.TAVILY_API_KEY);
@@ -485,7 +490,7 @@ export async function sendMessage(req, res) {
         };
 
         const fetchMemoryContext = async () => {
-            if (!isMemoryEnabled || !currentUserId) return "";
+            if (!isMemoryEnabled || !currentUserId || smallTalk || wordCount < 4) return "";
             try {
                 const currentChatId = chatId || chat._id;
                 const otherChats = await chatModel.find({
@@ -496,7 +501,8 @@ export async function sendMessage(req, res) {
                 if (otherChats.length > 0) {
                     const otherChatIds = otherChats.map(c => c._id);
                     const pastMessages = await messageModel.find({
-                        chat: { $in: otherChatIds }
+                        chat: { $in: otherChatIds },
+                        role: "user"
                     })
                     .select('+embedding content role chat createdAt')
                     .sort({ createdAt: -1 })
@@ -508,7 +514,7 @@ export async function sendMessage(req, res) {
 
                         let scored = [];
                         for (const pm of pastMessages) {
-                            if (!pm.content || pm.content.length < 5) continue;
+                            if (!pm.content || pm.content.trim().length < 20 || pm.role !== "user") continue;
                             let score = 0;
                             if (promptVector && pm.embedding && pm.embedding.length > 0) {
                                 score = cosineSimilarity(promptVector, pm.embedding);
@@ -525,7 +531,7 @@ export async function sendMessage(req, res) {
                         }
 
                         scored.sort((a, b) => b.score - a.score);
-                        const topMemories = scored.filter(item => item.score > 0.4).slice(0, 3);
+                        const topMemories = scored.filter(item => item.score > 0.55).slice(0, 2);
 
                         if (topMemories.length > 0) {
                             const chatTitleMap = new Map(otherChats.map(c => [c._id.toString(), c.title || 'Previous Chat']));
@@ -536,7 +542,7 @@ export async function sendMessage(req, res) {
                                     const excerpt = pm.content.length > 180 ? pm.content.slice(0, 177) + '...' : pm.content;
                                     return `• [Chat: "${title}"]: ${excerpt}`;
                                 }).join("\n") +
-                                `\n--------------------------------------------------------------\nUse this context naturally to answer smartly without explicitly saying "According to your other chat" unless asked.`;
+                                `\n--------------------------------------------------------------\nBACKGROUND ONLY. Use this silently and only if it directly helps answer the user's current message. Never greet with it, list it, summarize it, or say you remember past chats unless the user asks.`;
                         }
                     }
                 }
@@ -547,6 +553,7 @@ export async function sendMessage(req, res) {
         };
 
         const fetchDocumentRagContext = async () => {
+            if (smallTalk) return "";
             const targetDoc = newlyIndexedDocument || (chatId ? await documentModel.findOne({ chat: chatId }).sort({ createdAt: -1 }) : null);
             if (!targetDoc || !targetDoc.chunks || targetDoc.chunks.length === 0) return "";
 
@@ -615,6 +622,8 @@ export async function sendMessage(req, res) {
         const promptForAction = (message || userMessage?.content || "").toLowerCase();
         const isActionIntent = /\b(upload|post|publish|share|tweet|schedule)\b.{0,80}\b(youtube|instagram|facebook|twitter|linkedin|pinterest|tiktok|all|everywhere)\b|\b(email|calendar)\b/i.test(promptForAction);
 
+        const usedMemory = Boolean(!smallTalk && memoryContext && memoryContext.trim());
+
         const userContextWithSearch = {
             _id: fullUser._id,
             id: fullUser._id?.toString() || req.user.id,
@@ -627,17 +636,18 @@ export async function sendMessage(req, res) {
             files: uploadedFiles,
             isActionIntent,
             webSearch: shouldExecuteWebSearch,
-            webSearchContext,
+            webSearchContext: smallTalk ? "" : webSearchContext,
             uploadedMediaContext,
-            feedbackInstruction,
-            memoryContext,
+            feedbackInstruction: smallTalk ? "" : feedbackInstruction,
+            memoryContext: smallTalk ? "" : memoryContext,
             customInstructions,
             userNickname,
             userOccupation,
             thinkingLevel,
             memorySummary,
             memoryFacts,
-            documentRagContext
+            documentRagContext: smallTalk ? "" : documentRagContext,
+            usedMemory
         };
 
         // ── Multi-Model Execution & Automatic Limit Failover Cascade ──
@@ -696,11 +706,13 @@ export async function sendMessage(req, res) {
 
         // Prepare message payload: inject real-time Tavily search context, media links, and feedback instruction
         const chatHistoryForModel = messages.map(m => ({ role: m.role, content: m.content }));
-        const extraContext = (webSearchContext ? webSearchContext : "") + 
-            (uploadedMediaContext ? uploadedMediaContext : "") +
-            (feedbackInstruction ? feedbackInstruction : "") + 
-            (memoryContext ? memoryContext : "") +
-            (documentRagContext ? `\n\n--- DOCUMENT CONTEXT ---\n${documentRagContext}` : "");
+        const extraContext = smallTalk
+            ? (uploadedMediaContext || "")
+            : ((webSearchContext ? webSearchContext : "") + 
+               (uploadedMediaContext ? uploadedMediaContext : "") +
+               (feedbackInstruction ? feedbackInstruction : "") + 
+               (memoryContext ? memoryContext : "") +
+               (documentRagContext ? `\n\n--- DOCUMENT CONTEXT ---\n${documentRagContext}` : ""));
         if (extraContext && chatHistoryForModel.length > 0) {
             const lastUserIndex = chatHistoryForModel.map(m => m.role).lastIndexOf("user");
             if (lastUserIndex !== -1) {
@@ -840,7 +852,8 @@ export async function sendMessage(req, res) {
         const aiMessage = await messageModel.create({
             chat: chatId || chat._id,
             content: result,
-            role: "ai"
+            role: "ai",
+            usedMemory
         });
 
         const chosenModelId = activeSwitchedModel?.modelId || targetModelId;
@@ -852,6 +865,7 @@ export async function sendMessage(req, res) {
             chat: chat || await chatModel.findById(chatId),
             userMessage,
             aiMessage,
+            usedMemory,
             switchedModel: activeSwitchedModel,
             modelUsed: {
                 modelId: chosenModelId,
@@ -873,7 +887,7 @@ export async function sendMessage(req, res) {
         res.status(201).json(responsePayload);
 
         // Fire-and-forget: Generate embeddings for both messages and learn user facts into memory
-        if (!isIncognito) {
+        if (!isIncognito && !smallTalk) {
             (async () => {
                 try {
                     // 1. User memory and persona extractor (learn facts like "remember my friend name is Tez")
