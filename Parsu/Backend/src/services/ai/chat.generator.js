@@ -168,6 +168,7 @@ const MAP_OFFER_RX = /(show|see|view|open|display).{0,40}\bmap\b|\bmap\b.{0,40}(
 const TRIP_RX = /\b(trip|itinerary|road ?trip|tour|travel plan|plan.{0,20}(visit|travel|journey)|places to (visit|see)|weekend (getaway|plan)|vacation|holiday)\b/i;
 const VISUAL_RX = /\b(show|see|display|give|send)\b.{0,40}\b(images?|photos?|pictures?|pics?)\b|\b(images?|photos?|pictures?|pics?) of\b|\bwith (its |their |the )?(details|uses|photos?|images?)\b/i;
 const APP_RX = /\b(parsu|settings?|connect|api key|byok|memory|mascot|voice|model|library|social hub|account)\b/i;
+const SMALLTALK_RX = /^\s*((hi+|hii+|hello+|hey+|heya|hola)(\s+(there|parsu|bro|buddy|everyone|friend|ai))?|yo|sup|namaste|vanakkam|good\s*(morning|afternoon|evening|night)|gm|gn|thanks?( you)?|thx|ty|ok(ay)?|cool|nice|great|bye|see you|how are you( doing)?|what'?s up|wassup|who are you|what can you do)\s*[!.?😊🙂👋]*\s*$/i;
 const FRESH_RX = /\b(latest|today|tonight|yesterday|news|current|right now|price|stock|score|weather|live|who is|who won|release date|202\d)\b/i;
 
 function normPlatforms(list) {
@@ -205,6 +206,7 @@ function detectIntent(messages, userContext) {
     visual: VISUAL_RX.test(text) && !post,
     appHelp: asksHowTo && APP_RX.test(text) && !post ? true : (/where (can|do) i (find|change)|how do i (connect|add|change|set)/i.test(text) && APP_RX.test(text)),
     fresh: FRESH_RX.test(text),
+    smallTalk: SMALLTALK_RX.test(text) && !hasMedia,
   };
 }
 
@@ -240,6 +242,7 @@ function notConnectedReply(names, { wantsSteps }) {
 
 /* ───────────────────────────── tools ───────────────────────────── */
 function getTools(userContext, intent) {
+  if (intent.smallTalk) return { tools: [], map: {} };
   const social = postToSocialMediaTool(userContext);
   const map = { post_to_social_media: social, post_to_instagram: social };
 
@@ -325,15 +328,20 @@ Core rules: act immediately when intent is clear; never ask permission for somet
   if (name || role) parts.push(`User: ${[name && `name ${name}`, role && `role ${role}`].filter(Boolean).join(", ")}.`);
   if (userContext?.customInstructions?.trim()) parts.push(`USER'S MANDATORY CUSTOM INSTRUCTIONS (always follow):\n"${userContext.customInstructions.trim()}"`);
   if (userContext?.feedbackInstruction) parts.push(userContext.feedbackInstruction);
-  if (userContext?.memoryContext) parts.push(userContext.memoryContext);
+  if (userContext?.memoryContext && !intent.smallTalk) {
+    parts.push("BACKGROUND MEMORY from the user's other chats. Use it silently and only when it directly helps answer the current message. Never greet with it, list it, summarize it, or say you remember past chats unless the user asks.\n" + userContext.memoryContext);
+  }
 
   const facts = (userContext?.memoryFacts || []).slice(0, CFG.memoryFacts);
   if (userContext?.memorySummary || facts.length) {
     parts.push(`USER MEMORY (recall naturally when relevant):\n${userContext.memorySummary ? `Summary: ${userContext.memorySummary}\n` : ""}${facts.map((f) => `• ${f}`).join("\n")}`);
   }
-  if (userContext?.documentRagContext) parts.push(`ATTACHED DOCUMENT CONTEXT:\n${String(userContext.documentRagContext).slice(0, CFG.docChars)}`);
+  if (userContext?.documentRagContext && !intent.smallTalk) parts.push(`ATTACHED DOCUMENT CONTEXT:\n${String(userContext.documentRagContext).slice(0, CFG.docChars)}`);
 
-  parts.push(userContext?.webSearchContext
+  if (intent.smallTalk) {
+    parts.push("SMALL TALK: the user sent a greeting or a short pleasantry. Reply in ONE or TWO short, warm sentences (use their name if known) and offer help. No headings, no bullet lists, no definitions, no sources, no citations.");
+  }
+  if (!intent.smallTalk) parts.push(userContext?.webSearchContext
     ? "Live web search results are attached to the user's last message. Answer from them, do not search again, and end with a '### Sources & Citations' list of [Title](URL) links."
     : userContext?.webSearch !== false
       ? "Web search is ON: for news, prices, scores, weather or anything time-sensitive call 'searchInternet' once, then answer from the results and cite sources."
@@ -619,7 +627,7 @@ export async function generateResponse(messages, onChunk, userContext = {}) {
   const { history, hasImage } = await buildHistory(messages);
 
   // Prefetched Tavily results go to the last user message (v1 behaviour, was missing in v2.0/2.1)
-  if (userContext?.webSearchContext && history.length) {
+  if (userContext?.webSearchContext && history.length && !intent.smallTalk) {
     const last = history[history.length - 1];
     if (last instanceof HumanMessage) {
       const extra = String(userContext.webSearchContext).slice(0, CFG.searchCtxChars);
