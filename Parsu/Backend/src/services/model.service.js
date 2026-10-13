@@ -400,21 +400,16 @@ export async function executeModelChatStream({
 CRITICAL CITATION & LINK RULES:
 1. When real-time web search findings are provided, cite facts clearly and ALWAYS provide a dedicated '### Sources & Citations' section with clickable markdown links [Source Title](URL) at the end of your response.
 2. Whenever user uploaded files, attachments, or published social media links are provided in context, always prominently provide the direct clickable markdown link [Platform Post / File Name](URL) so the user can immediately click and view it.
-3. CRITICAL AUTOMATIC ROAD TRIP & MULTI-STOP MAP EXTRACTION:
-When the user asks for a map, directions, routes, trip plans, road trip itineraries, or minimum distance from one place to another (even with casual language or typos like "going to RJ by car through malabar visiting kasargod, manguluru, goa like conacona, baga, ratanagiri, mumbai, navi mumbai, gurjat surat, vapi, ahmedabad, sabrmati, palanpur then marvad bhinmal"):
-- AUTOMATICALLY EXTRACT ALL LOCATIONS:
-  1. from (Origin / Starting City): Identify starting place (e.g. "Malabar, Kerala" or "Thalassery, Kerala" or "My Location").
-  2. to (Final Destination): Identify the user's final destination (e.g. "Bhinmal, Rajasthan").
-  3. stops (Intermediate Waypoints): Extract and clean EVERY SINGLE city, beach, town, landmark, highway stop, or detour mentioned by the user or along the optimal route. Fix typos and add state/region context automatically:
-     (e.g., "kasargod" -> "Kasaragod", "manguluru" -> "Mangaluru", "conacona" -> "Canacona Goa", "baga" -> "Baga Beach Goa", "ratanagiri" -> "Ratnagiri", "mumbai" -> "Mumbai", "navi mumbai" -> "Navi Mumbai", "vapi" -> "Vapi", "gurjat surat" -> "Surat", "ahmedabad" -> "Ahmedabad", "sabrmati" -> "Sabarmati Ahmedabad", "palanpur" -> "Palanpur", "marvad bhinmal" -> "Bhinmal Rajasthan").
-- ALWAYS OUTPUT THE FULL MULTI-STOP MAP CODEBLOCK:
+3. MAP & NAVIGATION CODEBLOCK (ONLY WHEN EXPLICITLY REQUESTED):
+- STRICT RULE: ONLY output a \`\`\`map codeblock IF the user explicitly asks for a map, directions, driving routes, trips, navigation, or geographical coordinates (e.g. 'show map', 'directions to', 'route to X').
+- NEVER output a \`\`\`map codeblock for regular queries, chatting, uploading videos, publishing to social media, or topics where the user did not explicitly request a map.
+- When explicitly requested:
 \`\`\`map
 from: Starting City / Location
-stops: First Stop, Second Stop, Third Stop, Fourth Stop, ...
+stops: First Stop, Second Stop, ...
 to: Final Destination Place
 mode: driving
 \`\`\`
-- NEVER truncate or skip intermediate stops! Every single stop requested by the user MUST be placed in \`stops:\` so the interactive map plots them sequentially on the screen.
 - For direct 2-point routes without intermediate stops:
 \`\`\`map
 from: Starting Point / My Location
@@ -425,7 +420,10 @@ mode: driving
 \`\`\`map
 Place Name, City, Country
 \`\`\`
-The frontend will automatically render an interactive, pannable and zoomable Google Map card with ALL intermediate stops pinned along the road, turn-by-turn navigation, and GPS detection directly in chat! In your text, mention distance (km/miles) and travel advice.`;
+The frontend will automatically render an interactive, pannable and zoomable Google Map card with turn-by-turn navigation.
+
+4. AUTONOMOUS ACTIONS & SOCIAL MEDIA UPLOADS:
+- When the user asks to upload or publish a video/image to YouTube or social media, do NOT output generic manual step-by-step instructions on how to manually open YouTube Studio in a browser. The AI tool engine will autonomously publish the post using the connected account.`;
 
   // Thinking level directives
   const tLevel = (thinkingLevel || "low").toLowerCase();
@@ -519,13 +517,7 @@ The frontend will automatically render an interactive, pannable and zoomable Goo
       }
       return fullText;
     } catch (geminiErr) {
-      const errMsg = geminiErr?.message || String(geminiErr);
-      const isOverloaded = /overload|429|503|quota|resource.*exhaust|high traffic|rate limit|failed to parse stream|capacity|temporarily unavailable/i.test(errMsg);
-      if (isOverloaded) {
-        const friendlyNotice = "Gemini is experiencing high traffic right now and may take a moment to respond. Please try again in a few moments, or select another model from the dropdown.";
-        if (onChunk) onChunk(friendlyNotice);
-        return friendlyNotice;
-      }
+      // Re-throw to allow caller failover loop to immediately try user's other working custom API keys or fallback models
       throw geminiErr;
     }
   }

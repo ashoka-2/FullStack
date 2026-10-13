@@ -5,6 +5,9 @@ import { postMediaToInstagram } from "../services/instagram.service.js";
 import { publishToSocialPlatforms } from "../services/socialPublisher.service.js";
 import { geminiChatPrimary } from "../services/ai/models.js";
 import { uploadFile } from "../services/imagekit.service.js";
+import userModel from "../models/user.model.js";
+import { decryptKey } from "../utils/encryption.utils.js";
+import { executeModelChatStream, getModelDisplayName } from "../services/model.service.js";
 import axios from "axios";
 
 // ============================================================
@@ -379,10 +382,27 @@ export async function handleOAuthCallback(req, res) {
         // Exchange code for token
         let tokenData;
         try {
-            tokenData = await exchangeCodeForToken(platform, code, creds, config);
+            tokenData = await exchangeCodeForToken(platform, code, creds, config, state);
         } catch (err) {
             console.error(`Token exchange failed for ${platform}:`, err.response?.data || err.message);
             return res.redirect(`${frontendUrl}/social-connections?error=token_exchange_failed`);
+        }
+
+        // Facebook Page token exchange (A5)
+        if (platform === "facebook") {
+            try {
+                const pagesRes = await axios.get(`https://graph.facebook.com/v21.0/me/accounts?access_token=${tokenData.accessToken}`);
+                const pages = pagesRes.data?.data || [];
+                if (pages.length === 0) {
+                    return res.redirect(`${frontendUrl}/social-connections?error=no_facebook_page`);
+                }
+                const firstPage = pages[0];
+                tokenData.meta = { ...tokenData.meta, pageId: firstPage.id, pageName: firstPage.name };
+                tokenData.accessToken = firstPage.access_token;
+            } catch (fbPageErr) {
+                console.error("Facebook page fetch failed:", fbPageErr.response?.data || fbPageErr.message);
+                return res.redirect(`${frontendUrl}/social-connections?error=no_facebook_page`);
+            }
         }
 
         // Get profile info
@@ -484,7 +504,7 @@ export async function connectManual(req, res) {
 // ============================================================
 // TOKEN EXCHANGE HELPERS (platform-specific)
 // ============================================================
-async function exchangeCodeForToken(platform, code, creds, config) {
+async function exchangeCodeForToken(platform, code, creds, config, state = "") {
     let accessToken, refreshToken, expiresIn, meta = {};
 
     if (platform === "instagram") {
@@ -521,7 +541,7 @@ async function exchangeCodeForToken(platform, code, creds, config) {
             grant_type: "authorization_code",
             code,
             redirect_uri: creds.redirectUri,
-            code_verifier: req?.query?.state || "challenge" // PKCE
+            code_verifier: state || "challenge" // PKCE
         });
         const res = await axios.post(config.tokenUrl, formData.toString(), {
             headers: { Authorization: `Basic ${authHeader}`, "Content-Type": "application/x-www-form-urlencoded" }
@@ -640,7 +660,15 @@ export async function publishContent(req, res) {
  */
 export async function generateCaption(req, res) {
     try {
-        const { mediaUrl, mediaUrls, context, platform = "social media", tone = "engaging" } = req.body;
+        const {
+            mediaUrl,
+            mediaUrls,
+            context,
+            platform = "social media",
+            tone = "engaging",
+            modelId: requestedModelId,
+            provider: requestedProvider
+        } = req.body;
         
         const mediaList = mediaUrls && mediaUrls.length > 0 ? mediaUrls.join(", ") : (mediaUrl || "");
 
@@ -654,12 +682,82 @@ ${context ? `Post context / user idea: "${context}"` : ""}
 ${mediaList ? `Media attached: ${mediaList}` : ""}
 Return ONLY the ready-to-post caption text, without any quotes, markdown headers, or surrounding text.`;
 
+        // 1. Resolve user and their custom API keys + selected model
+        const userId = req.user?.id || req.user?._id;
+        const fullUser = userId ? await userModel.findById(userId) : null;
+
+        const targetProvider = requestedProvider || fullUser?.selectedModel?.provider || "gemini";
+        const targetModelId = requestedModelId || fullUser?.selectedModel?.modelId || "gemini-3.6-flash";
+
+        // Build candidate list with selected model, custom keys, and system fallbacks
+        const candidates = [];
+        let primaryKeyEntry = null;
+        if (fullUser?.customApiKeys?.length > 0) {
+            primaryKeyEntry = fullUser.customApiKeys.find(k => k.isActive !== false && (k.provider === targetProvider || (k.models || []).some(m => m.id === targetModelId)));
+        }
+
+        candidates.push({
+            provider: targetProvider,
+            modelId: targetModelId,
+            keyEntry: primaryKeyEntry,
+            isCustom: Boolean(primaryKeyEntry?.apiKey)
+        });
+
+        // Add other active custom keys
+        if (fullUser?.customApiKeys?.length > 0) {
+            for (const key of fullUser.customApiKeys) {
+                if (!key.apiKey || key.isActive === false) continue;
+                if (primaryKeyEntry && key._id.toString() === primaryKeyEntry._id.toString()) continue;
+                const chosenModel = key.models?.[0]?.id || (key.provider === "gemini" ? "gemini-3.6-flash" : key.provider === "mistral" ? "open-mistral-nemo" : "gpt-4o");
+                candidates.push({
+                    provider: key.provider,
+                    modelId: chosenModel,
+                    keyEntry: key,
+                    isCustom: true
+                });
+            }
+        }
+
+        // Add system fallback models
+        const systemFallbacks = [
+            { provider: "gemini", modelId: "gemini-3.6-flash", isCustom: false },
+            { provider: "groq", modelId: "llama-3.3-70b-versatile", isCustom: false },
+            { provider: "mistral", modelId: "open-mistral-nemo", isCustom: false }
+        ];
+        for (const sys of systemFallbacks) {
+            if (!candidates.some(c => c.provider === sys.provider && c.modelId === sys.modelId)) {
+                candidates.push({ ...sys, keyEntry: null });
+            }
+        }
+
         let caption = "";
-        try {
-            const response = await geminiChatPrimary.invoke(prompt);
-            caption = response?.content ? response.content.trim() : "";
-        } catch (geminiErr) {
-            console.warn("Gemini caption invoke fallback:", geminiErr.message);
+        let usedModelName = "";
+
+        for (const candidate of candidates) {
+            try {
+                let decryptedApiKey = "";
+                let targetBaseUrl = "";
+                if (candidate.keyEntry?.apiKey) {
+                    decryptedApiKey = decryptKey(candidate.keyEntry.apiKey);
+                    targetBaseUrl = candidate.keyEntry.baseUrl;
+                }
+
+                const result = await executeModelChatStream({
+                    provider: candidate.provider,
+                    modelId: candidate.modelId,
+                    apiKey: decryptedApiKey,
+                    baseUrl: targetBaseUrl,
+                    messages: [{ role: "user", content: prompt }]
+                });
+
+                if (result && result.trim()) {
+                    caption = result.trim().replace(/^["']|["']$/g, '');
+                    usedModelName = getModelDisplayName(candidate.modelId, candidate.provider);
+                    break;
+                }
+            } catch (candErr) {
+                console.warn(`⚠️ Caption generator candidate [${candidate.provider} - ${candidate.modelId}] failed, cascading:`, candErr.message);
+            }
         }
 
         if (!caption) {
@@ -668,7 +766,7 @@ Return ONLY the ready-to-post caption text, without any quotes, markdown headers
                 : "Excited to share this with everyone! ✨🚀 Let me know what you think in the comments! #trending #viral #fyp";
         }
 
-        return res.json({ success: true, caption });
+        return res.json({ success: true, caption, modelUsed: usedModelName });
     } catch (err) {
         console.error("Caption generation error:", err);
         return res.status(500).json({ success: false, message: err.message || "Failed to generate caption" });

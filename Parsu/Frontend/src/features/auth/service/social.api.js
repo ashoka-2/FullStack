@@ -40,13 +40,15 @@ export async function publishMedia({ platform, platforms, mediaUrl, mediaUrls, c
     return response.data;
 }
 
-export async function generateCaption({ mediaUrl, mediaUrls, context, platform, tone }) {
+export async function generateCaption({ mediaUrl, mediaUrls, context, platform, tone, modelId, provider }) {
     const response = await api.post("/api/social/generate-caption", {
         mediaUrl,
         mediaUrls,
         context,
         platform,
-        tone
+        tone,
+        modelId,
+        provider
     });
     return response.data;
 }

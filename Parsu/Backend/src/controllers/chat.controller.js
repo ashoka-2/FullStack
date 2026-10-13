@@ -107,16 +107,16 @@ export async function sendMessage(req, res) {
                 });
             }
 
-            await userModel.updateOne(
+            userModel.updateOne(
                 { _id: fullUser._id },
                 { $inc: { "usageQuotas.queriesToday": 1 } }
-            );
+            ).catch(() => {});
         } else {
             // User is using custom API keys or paid plan: track queries for analytics without blocking
-            await userModel.updateOne(
+            userModel.updateOne(
                 { _id: fullUser._id },
                 { $inc: { "usageQuotas.queriesToday": 1 } }
-            );
+            ).catch(() => {});
         }
 
         // Support both req.files (array) and req.file (single)
@@ -295,7 +295,10 @@ export async function sendMessage(req, res) {
             files: uploadedFiles
         });
 
-        const messages = await messageModel.find({ chat: chatId || chat._id });
+        const recentMessages = await messageModel.find({ chat: chatId || chat._id })
+            .sort({ createdAt: -1 })
+            .limit(20);
+        const messages = recentMessages.reverse();
         
         // Collect multimodal images for model execution (from current upload or attachments)
         const imagesForModel = [];
@@ -429,30 +432,10 @@ export async function sendMessage(req, res) {
         // Web Search evaluation (Tavily live search vs pure AI model knowledge)
         const explicitWebSearch = req.body.webSearch === 'true' || req.body.webSearch === true;
         const promptRaw = (message || userMessage.content || "").toLowerCase();
-        const autoTriggerKeywords = ["latest", "recent", "news", "today", "current", "latest info", "update", "right now", "live score"];
-        const autoTriggerWebSearch = autoTriggerKeywords.some(kw => promptRaw.includes(kw));
+        const newsLikePattern = /\b(today|current|update)\b.{0,30}\b(news|weather|price|stock|score|headline|info|rate|event|report)\b|\b(news|weather|price|stock|score|headline|info|rate|event|report)\b.{0,30}\b(today|current|update)\b/i;
+        const autoTriggerKeywords = ["latest", "recent", "news", "latest info", "right now", "live score"];
+        const autoTriggerWebSearch = autoTriggerKeywords.some(kw => promptRaw.includes(kw)) || newsLikePattern.test(promptRaw);
         const shouldExecuteWebSearch = explicitWebSearch || autoTriggerWebSearch;
-
-        let webSearchContext = "";
-
-        if (shouldExecuteWebSearch && (message || userMessage.content)) {
-            try {
-                const { tavily } = await import("@tavily/core");
-                const tvly = new tavily(process.env.TAVILY_API_KEY);
-                const query = message || userMessage.content;
-                const searchResults = await tvly.search(query, { searchDepth: "basic", maxResults: 5 });
-                if (searchResults?.results?.length > 0) {
-                    webSearchContext = `\n\n--- REAL-TIME INTERNET SEARCH RESULTS (via Tavily) ---\n` +
-                        searchResults.results.map((r, i) => `[${i + 1}] Title: ${r.title}\n    URL: ${r.url}\n    Content: ${r.content}`).join("\n\n") +
-                        `\n------------------------------------------------------\n` +
-                        `INSTRUCTIONS FOR CITATIONS & ACCURACY:\n` +
-                        `1. Use these live internet findings to deliver a comprehensive, up-to-date response.\n` +
-                        `2. You MUST cite your sources! At the end of your answer, provide a dedicated '### Sources & Citations' section listing the clickable markdown links: [Title](URL) for every article or website you gathered facts from.\n`;
-                }
-            } catch (tavilyErr) {
-                console.warn("⚠️ Tavily web search error in chat.controller:", tavilyErr.message);
-            }
-        }
 
         // Uploaded media & social media link context
         let uploadedMediaContext = "";
@@ -476,12 +459,33 @@ export async function sendMessage(req, res) {
             feedbackInstruction += `\n\n[USER PREFERENCE - LIKED PRIOR RESPONSE]: The user liked previous response(s) in this chat. Maintain this clear, engaging, well-structured, and high-quality tone.`;
         }
 
-        // ── Cross-Chat Memory (Vector Semantic Retrieval) ─────────────────────
         const isMemoryEnabled = !isIncognito && req.body.memory !== 'false' && req.body.memory !== false;
-        let memoryContext = "";
-
         const currentUserId = req.user?.id || req.user?._id;
-        if (isMemoryEnabled && currentUserId) {
+
+        // ── Parallel Retrieval: Tavily Search, Cross-Chat Memory, and Document RAG ──
+        const fetchWebSearchContext = async () => {
+            if (!shouldExecuteWebSearch || !(message || userMessage.content)) return "";
+            try {
+                const { tavily } = await import("@tavily/core");
+                const tvly = new tavily(process.env.TAVILY_API_KEY);
+                const query = message || userMessage.content;
+                const searchResults = await tvly.search(query, { searchDepth: "basic", maxResults: 5 });
+                if (searchResults?.results?.length > 0) {
+                    return `\n\n--- REAL-TIME INTERNET SEARCH RESULTS (via Tavily) ---\n` +
+                        searchResults.results.map((r, i) => `[${i + 1}] Title: ${r.title}\n    URL: ${r.url}\n    Content: ${r.content}`).join("\n\n") +
+                        `\n------------------------------------------------------\n` +
+                        `INSTRUCTIONS FOR CITATIONS & ACCURACY:\n` +
+                        `1. Use these live internet findings to deliver a comprehensive, up-to-date response.\n` +
+                        `2. You MUST cite your sources! At the end of your answer, provide a dedicated '### Sources & Citations' section listing the clickable markdown links: [Title](URL) for every article or website you gathered facts from.\n`;
+                }
+            } catch (tavilyErr) {
+                console.warn("⚠️ Tavily web search error in chat.controller:", tavilyErr.message);
+            }
+            return "";
+        };
+
+        const fetchMemoryContext = async () => {
+            if (!isMemoryEnabled || !currentUserId) return "";
             try {
                 const currentChatId = chatId || chat._id;
                 const otherChats = await chatModel.find({
@@ -509,7 +513,6 @@ export async function sendMessage(req, res) {
                             if (promptVector && pm.embedding && pm.embedding.length > 0) {
                                 score = cosineSimilarity(promptVector, pm.embedding);
                             } else {
-                                // Fast keyword fallback if embedding not yet generated
                                 const words = promptText.toLowerCase().split(/\s+/).filter(w => w.length > 3);
                                 let matches = 0;
                                 const contentLower = pm.content.toLowerCase();
@@ -526,7 +529,7 @@ export async function sendMessage(req, res) {
 
                         if (topMemories.length > 0) {
                             const chatTitleMap = new Map(otherChats.map(c => [c._id.toString(), c.title || 'Previous Chat']));
-                            memoryContext = `\n\n--- RECALLED CROSS-CHAT MEMORY (Across User's Other Chats) ---\n` +
+                            return `\n\n--- RECALLED CROSS-CHAT MEMORY (Across User's Other Chats) ---\n` +
                                 `The user has enabled memory across chats. Relevant context and facts recalled from their previous conversations:\n` +
                                 topMemories.map(({ message: pm }) => {
                                     const title = chatTitleMap.get(pm.chat.toString()) || 'Other Chat';
@@ -540,26 +543,23 @@ export async function sendMessage(req, res) {
             } catch (memErr) {
                 console.warn("⚠️ Cross-chat memory retrieval warning:", memErr.message);
             }
-        }
+            return "";
+        };
 
-        // ── PDF & Document RAG Vector Retrieval ─────────────────────────────
-        let documentRagContext = "";
-        const targetDoc = newlyIndexedDocument || (chatId ? await documentModel.findOne({ chat: chatId }).sort({ createdAt: -1 }) : null);
+        const fetchDocumentRagContext = async () => {
+            const targetDoc = newlyIndexedDocument || (chatId ? await documentModel.findOne({ chat: chatId }).sort({ createdAt: -1 }) : null);
+            if (!targetDoc || !targetDoc.chunks || targetDoc.chunks.length === 0) return "";
 
-        if (targetDoc && targetDoc.chunks && targetDoc.chunks.length > 0) {
             const userPrompt = (message || "").trim();
             if (!userPrompt) {
-                // User uploaded document without any question!
-                // As requested: summarize core takeaways and ask what more they would like to know
                 const previewChunks = targetDoc.chunks.slice(0, 4).map(c => c.text).join("\n\n---\n\n");
-                documentRagContext = `The user uploaded the PDF document "${targetDoc.filename}" (View URL: ${targetDoc.file?.url || ''}) without asking any specific question.\n\n` +
+                return `The user uploaded the PDF document "${targetDoc.filename}" (View URL: ${targetDoc.file?.url || ''}) without asking any specific question.\n\n` +
                     `PDF Content Excerpts:\n${previewChunks}\n\n` +
                     `TASK INSTRUCTIONS:\n` +
                     `1. Provide an executive summary of this document, mentioning key insights, topics, and important facts extracted from it.\n` +
                     `2. Provide a clickable link to view the document: [📄 View PDF: ${targetDoc.filename}](${targetDoc.file?.url || ''})\n` +
                     `3. Conclude by proactively asking the user: "What more would you like to know or explore about this document?" and suggest 3-4 specific follow-up questions they can ask based on its contents.\n`;
             } else {
-                // User asked a question about the document
                 try {
                     const queryVector = await generateEmbedding(userPrompt);
                     let scoredChunks = [];
@@ -583,7 +583,7 @@ export async function sendMessage(req, res) {
                     scoredChunks.sort((a, b) => b.score - a.score);
                     const topChunks = scoredChunks.slice(0, 4);
 
-                    documentRagContext = `Document: "${targetDoc.filename}" (View URL: ${targetDoc.file?.url || ''})\n\n` +
+                    return `Document: "${targetDoc.filename}" (View URL: ${targetDoc.file?.url || ''})\n\n` +
                         `Relevant Excerpts Retrieved via Vector Cosine Similarity Search in MongoDB:\n` +
                         topChunks.map((c, i) => `[Excerpt ${i + 1} - Relevance Score: ${(c.score * 100).toFixed(1)}%]:\n${c.text}`).join("\n\n") +
                         `\n\nINSTRUCTION: Ground your answer strictly and accurately in the retrieved document context above. If referencing the document, include the direct link [${targetDoc.filename}](${targetDoc.file?.url || ''}).\n`;
@@ -591,7 +591,14 @@ export async function sendMessage(req, res) {
                     console.warn("⚠️ Document RAG query error:", ragErr.message);
                 }
             }
-        }
+            return "";
+        };
+
+        const [webSearchContext, memoryContext, documentRagContext] = await Promise.all([
+            fetchWebSearchContext(),
+            fetchMemoryContext(),
+            fetchDocumentRagContext()
+        ]);
 
         // ── Thinking Level & Reasoning Budget (Default: low for fastest results) ──
         const rawThinking = req.body.thinkingLevel || fullUser?.preferences?.thinkingLevel || 'low';
@@ -605,8 +612,20 @@ export async function sendMessage(req, res) {
         const memorySummary = fullUser?.memory?.summary || "";
         const memoryFacts = Array.isArray(fullUser?.memory?.facts) ? fullUser.memory.facts : [];
 
+        const promptForAction = (message || userMessage?.content || "").toLowerCase();
+        const isActionIntent = /\b(upload|post|publish|share|tweet|schedule)\b.{0,80}\b(youtube|instagram|facebook|twitter|linkedin|pinterest|tiktok|all|everywhere)\b|\b(email|calendar)\b/i.test(promptForAction);
+
         const userContextWithSearch = {
-            ...(fullUser?.toObject ? fullUser.toObject() : fullUser),
+            _id: fullUser._id,
+            id: fullUser._id?.toString() || req.user.id,
+            role: fullUser.role,
+            subscription: fullUser.subscription,
+            preferences: fullUser.preferences,
+            memory: fullUser.memory,
+            chatId: String(chatId || chat._id),
+            uploadedFiles,
+            files: uploadedFiles,
+            isActionIntent,
             webSearch: shouldExecuteWebSearch,
             webSearchContext,
             uploadedMediaContext,
@@ -706,13 +725,22 @@ export async function sendMessage(req, res) {
 
                 const execStartTime = Date.now();
 
-                // If candidate is default built-in Gemini without custom key, execute standard Gemini pipeline
-                if (candidate.provider === "gemini" && !decryptedApiKey) {
+                // If candidate is Gemini OR if user requested an autonomous action (YouTube/social media upload, email):
+                // execute the tools pipeline so post_to_social_media/email can actually execute!
+                if (candidate.provider === "gemini" || isActionIntent) {
+                    const ctx = {
+                        ...userContextWithSearch,
+                        chatId: String(chatId || chat._id),
+                        modelId: candidate.modelId,
+                        apiKey: (candidate.provider === "gemini" && decryptedApiKey) ? decryptedApiKey : undefined,
+                        throwOnError: candidates.length > 1 && idx < candidates.length - 1,
+                        onEvent: (e) => socketId && io.to(socketId).emit("tool:event", e)
+                    };
                     result = await generateResponse(messages, (chunk) => {
                         if (socketId) {
                             io.to(socketId).emit("chunk", chunk);
                         }
-                    }, userContextWithSearch);
+                    }, ctx);
                 } else {
                     result = await executeModelChatStream({
                         provider: candidate.provider,
@@ -771,6 +799,9 @@ export async function sendMessage(req, res) {
 
                 // If another candidate is available, notify client of failover and switch
                 if (idx < candidates.length - 1) {
+                    if (socketId) {
+                        io.to(socketId).emit("chunk:reset");
+                    }
                     const nextCandidate = candidates[idx + 1];
                     const nextDisplayName = getModelDisplayName(nextCandidate.modelId, nextCandidate.provider);
 
@@ -790,11 +821,20 @@ export async function sendMessage(req, res) {
         // Final safety net if all candidates encountered issues
         if (!executedSuccessfully) {
             console.warn("⚠️ All candidates failed. Invoking primary Gemini fallback pipeline...");
+            if (socketId) {
+                io.to(socketId).emit("chunk:reset");
+            }
+            const fallbackCtx = {
+                ...userContextWithSearch,
+                chatId: String(chatId || chat._id),
+                modelId: targetModelId,
+                onEvent: (e) => socketId && io.to(socketId).emit("tool:event", e)
+            };
             result = await generateResponse(messages, (chunk) => {
                 if (socketId) {
                     io.to(socketId).emit("chunk", chunk);
                 }
-            }, userContextWithSearch);
+            }, fallbackCtx);
         }
 
         const aiMessage = await messageModel.create({

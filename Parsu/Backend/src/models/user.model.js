@@ -82,7 +82,8 @@ const userSchema = new mongoose.Schema({
         documentUploadsToday: { type: Number, default: 0 },
         documentUploadsLimit: { type: Number, default: 2 }, // 2 for free, 50 for pro, -1 for enterprise
         socialPostsThisMonth: { type: Number, default: 0 },
-        socialPostsLimit: { type: Number, default: 10 } // 10 for free, -1 for pro
+        socialPostsLimit: { type: Number, default: 10 }, // 10 for free, -1 for pro
+        socialPostsResetAt: { type: Date, default: Date.now }
     },
     resetPasswordOtp: {
         type: String,

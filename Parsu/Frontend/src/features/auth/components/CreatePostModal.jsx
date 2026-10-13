@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import {
   RiCloseLine,
   RiSparklingFill,
@@ -32,6 +33,16 @@ const PLATFORM_ICONS = {
 };
 
 export default function CreatePostModal({ connectedAccounts = [], onClose, onSuccess }) {
+  const authUser = useSelector(state => state.auth?.user);
+  const selectedModel = useMemo(() => {
+    try {
+      const saved = localStorage.getItem('parsu_selected_model');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return authUser?.selectedModel || null;
+  }, [authUser]);
+  const activeModelName = selectedModel?.name || selectedModel?.modelName || 'Parsu AI';
+
   const [selectedPlatforms, setSelectedPlatforms] = useState(
     connectedAccounts.map(a => a.platform)
   );
@@ -107,7 +118,9 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
         context: aiTopic || caption,
         platform: primaryPlatform,
         mediaUrls,
-        tone: 'engaging'
+        tone: 'engaging',
+        modelId: selectedModel?.id || selectedModel?.modelId,
+        provider: selectedModel?.provider
       });
 
       if (res?.caption) {
@@ -170,7 +183,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden min-h-0">
         
         {/* Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-zinc-200 dark:border-white/10 shrink-0">
@@ -193,8 +206,11 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
           </button>
         </div>
 
-        {/* Scrollable Form Body */}
-        <form onSubmit={handlePublish} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 custom-scrollbar">
+        {/* Form Container with Flex-1, Min-H-0, Overflow-Hidden */}
+        <form onSubmit={handlePublish} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          
+          {/* Scrollable Form Body */}
+          <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 custom-scrollbar min-h-0">
           
           {/* Target Platforms Selector */}
           <div>
@@ -248,7 +264,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
                 className="flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-cyan)] hover:underline cursor-pointer"
               >
                 <RiSparklingFill size={13} />
-                <span>{showAiInput ? "Close AI Copilot" : "✨ Write with AI"}</span>
+                <span>{showAiInput ? "Close AI Copilot" : `✨ Write with AI (${activeModelName})`}</span>
               </button>
             </div>
 
@@ -273,7 +289,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
                   ) : (
                     <RiSparklingFill size={13} />
                   )}
-                  <span>Generate</span>
+                  <span>{isGeneratingCaption ? "Generating..." : "Generate"}</span>
                 </button>
               </div>
             )}
@@ -453,29 +469,38 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
             </div>
           )}
 
-          {/* Footer Submit Buttons */}
-          <div className="pt-2 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/5 transition-all cursor-pointer"
-            >
-              Cancel
-            </button>
+          </div>
 
-            <PrimaryButton
-              type="submit"
-              disabled={isPublishing || connectedAccounts.length === 0}
-              loading={isPublishing}
-              icon={RiSendPlaneFill}
-              iconPosition="left"
-              size="md"
-            >
-              {isPublishing
-                ? 'Publishing Across Channels...'
-                : `Publish to ${selectedPlatforms.length} Channel${selectedPlatforms.length !== 1 ? 's' : ''}`
-              }
-            </PrimaryButton>
+          {/* Fixed Pinned Footer Submit Bar - Always visible, never hidden by scrolls */}
+          <div className="shrink-0 px-5 sm:px-6 py-4 border-t border-zinc-200 dark:border-white/10 bg-zinc-50/90 dark:bg-white/[0.03] backdrop-blur-md flex items-center justify-between gap-3">
+            <div className="text-xs text-zinc-500 truncate">
+              {selectedPlatforms.length} platform{selectedPlatforms.length !== 1 ? 's' : ''} chosen
+              {mediaFiles.length > 0 && ` • ${mediaFiles.length} media`}
+            </div>
+
+            <div className="flex items-center gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/5 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <PrimaryButton
+                type="submit"
+                disabled={isPublishing || connectedAccounts.length === 0}
+                loading={isPublishing}
+                icon={RiSendPlaneFill}
+                iconPosition="left"
+                size="md"
+              >
+                {isPublishing
+                  ? 'Publishing Across Channels...'
+                  : `Publish to ${selectedPlatforms.length} Channel${selectedPlatforms.length !== 1 ? 's' : ''}`
+                }
+              </PrimaryButton>
+            </div>
           </div>
         </form>
       </div>

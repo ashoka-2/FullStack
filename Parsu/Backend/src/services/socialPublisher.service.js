@@ -291,7 +291,7 @@ async function publishToTwitter(mediaItems, caption, connection, postMode = "tog
         }
     });
 
-    return { mediaId: res.data?.data?.id || "tweet_live", postType: "tweet" };
+    return { mediaId: res.data?.data?.id || "tweet_live", postType: "tweet", note: "caption only, media not uploaded" };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -324,7 +324,7 @@ async function publishToLinkedIn(mediaItems, caption, connection) {
         }
     });
 
-    return { mediaId: res.data?.id || "linkedin_post", postType: "post" };
+    return { mediaId: res.data?.id || "linkedin_post", postType: "post", note: "caption only, media not uploaded" };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -365,17 +365,17 @@ async function publishToYouTube(mediaItems, caption, connection, scheduledTime =
     const accessToken = connection.accessToken?.trim();
     if (!accessToken) throw new Error("YouTube access token missing.");
 
-    // Find first video item
+    // Strict video item check
     const videoItem = mediaItems.find(item => isVideoUrl(item.url, item));
     if (!videoItem || !videoItem.url) {
-        throw new Error("YouTube only supports video uploads (Shorts or Videos). Please attach an MP4/MOV/WebM video file for YouTube.");
+        throw new Error("YouTube needs a video file (MP4, MOV or WebM)");
     }
 
     const videoUrl = cleanMediaUrl(videoItem.url, true);
 
-    // Fetch video stream/buffer
-    const videoResponse = await axios.get(videoUrl, { responseType: "arraybuffer", timeout: 60000 });
-    const videoBuffer = Buffer.from(videoResponse.data);
+    // Extract content length via HEAD request to pass to YouTube resumable session
+    const headRes = await axios.head(videoUrl).catch(() => null);
+    const contentLength = headRes?.headers?.["content-length"];
 
     // Extract title (first line up to 90 chars) and tags
     const lines = caption.split("\n").filter(l => l.trim().length > 0);
@@ -392,6 +392,15 @@ async function publishToYouTube(mediaItems, caption, connection, scheduledTime =
     }
 
     // Step 1: Initiate Resumable Upload Session
+    const initHeaders = {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "X-Upload-Content-Type": "video/mp4"
+    };
+    if (contentLength) {
+        initHeaders["X-Upload-Content-Length"] = contentLength;
+    }
+
     const initRes = await axios.post(
         "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
         {
@@ -407,25 +416,25 @@ async function publishToYouTube(mediaItems, caption, connection, scheduledTime =
                 selfDeclaredMadeForKids: false
             }
         },
-        {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-                "X-Upload-Content-Length": videoBuffer.length,
-                "X-Upload-Content-Type": "video/mp4"
-            }
-        }
+        { headers: initHeaders }
     );
 
     const uploadUrl = initRes.headers.location;
     if (!uploadUrl) throw new Error("Failed to initialize YouTube video upload.");
 
-    // Step 2: Stream Video Buffer to Resumable URL
-    const uploadRes = await axios.put(uploadUrl, videoBuffer, {
-        headers: {
-            "Content-Type": "video/mp4",
-            "Content-Length": videoBuffer.length
-        }
+    // Step 2: Stream Video stream directly to Resumable URL without loading into Buffer memory
+    const videoStreamRes = await axios.get(videoUrl, { responseType: "stream", timeout: 300000 });
+    const putHeaders = {
+        "Content-Type": "video/mp4"
+    };
+    if (contentLength) {
+        putHeaders["Content-Length"] = contentLength;
+    }
+
+    const uploadRes = await axios.put(uploadUrl, videoStreamRes.data, {
+        headers: putHeaders,
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity
     });
 
     const videoId = uploadRes.data?.id;
@@ -435,6 +444,128 @@ async function publishToYouTube(mediaItems, caption, connection, scheduledTime =
         url: videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined,
         scheduledAt: isoScheduledTime
     };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TOKEN REFRESH HELPER FOR ALL PLATFORMS
+// ─────────────────────────────────────────────────────────────────────────────
+async function ensureFreshToken(platform, connection) {
+    if (!connection) return connection;
+    const isExpired = connection.tokenExpiresAt && (new Date(connection.tokenExpiresAt).getTime() <= Date.now() + 60000);
+    if (!isExpired) return connection;
+
+    if (!connection.refreshToken) {
+        throw new Error("connection expired, reconnect in Social Hub");
+    }
+
+    try {
+        if (platform === "youtube" || connection.platform === "google") {
+            const clientId = process.env.YOUTUBE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+            const clientSecret = process.env.YOUTUBE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
+            if (!clientId || !clientSecret) return connection;
+            const refreshRes = await axios.post("https://oauth2.googleapis.com/token", {
+                client_id: clientId,
+                client_secret: clientSecret,
+                refresh_token: connection.refreshToken,
+                grant_type: "refresh_token"
+            });
+            if (refreshRes.data?.access_token) {
+                connection.accessToken = refreshRes.data.access_token;
+                connection.tokenExpiresAt = new Date(Date.now() + (refreshRes.data.expires_in || 3600) * 1000);
+                await SocialConnection.updateOne(
+                    { _id: connection._id },
+                    { $set: { accessToken: connection.accessToken, tokenExpiresAt: connection.tokenExpiresAt } }
+                );
+            }
+        } else if (platform === "twitter") {
+            const clientId = process.env.TWITTER_CLIENT_ID;
+            const clientSecret = process.env.TWITTER_CLIENT_SECRET;
+            if (!clientId) return connection;
+            const headers = { "Content-Type": "application/x-www-form-urlencoded" };
+            if (clientSecret) {
+                headers["Authorization"] = `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`;
+            }
+            const params = new URLSearchParams({
+                grant_type: "refresh_token",
+                refresh_token: connection.refreshToken,
+                client_id: clientId
+            });
+            const refreshRes = await axios.post("https://api.twitter.com/2/oauth2/token", params.toString(), { headers });
+            if (refreshRes.data?.access_token) {
+                connection.accessToken = refreshRes.data.access_token;
+                if (refreshRes.data.refresh_token) connection.refreshToken = refreshRes.data.refresh_token;
+                connection.tokenExpiresAt = new Date(Date.now() + (refreshRes.data.expires_in || 7200) * 1000);
+                await SocialConnection.updateOne(
+                    { _id: connection._id },
+                    { $set: { accessToken: connection.accessToken, refreshToken: connection.refreshToken, tokenExpiresAt: connection.tokenExpiresAt } }
+                );
+            }
+        } else if (platform === "pinterest") {
+            const clientId = process.env.PINTEREST_CLIENT_ID;
+            const clientSecret = process.env.PINTEREST_CLIENT_SECRET;
+            if (!clientId || !clientSecret) return connection;
+            const authHeader = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+            const refreshRes = await axios.post("https://api.pinterest.com/v5/oauth/token", {
+                grant_type: "refresh_token",
+                refresh_token: connection.refreshToken
+            }, { headers: { Authorization: `Basic ${authHeader}`, "Content-Type": "application/json" } });
+            if (refreshRes.data?.access_token) {
+                connection.accessToken = refreshRes.data.access_token;
+                if (refreshRes.data.refresh_token) connection.refreshToken = refreshRes.data.refresh_token;
+                connection.tokenExpiresAt = new Date(Date.now() + (refreshRes.data.expires_in || 2592000) * 1000);
+                await SocialConnection.updateOne(
+                    { _id: connection._id },
+                    { $set: { accessToken: connection.accessToken, refreshToken: connection.refreshToken, tokenExpiresAt: connection.tokenExpiresAt } }
+                );
+            }
+        } else if (platform === "linkedin") {
+            const clientId = process.env.LINKEDIN_CLIENT_ID;
+            const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
+            if (!clientId || !clientSecret) return connection;
+            const params = new URLSearchParams({
+                grant_type: "refresh_token",
+                refresh_token: connection.refreshToken,
+                client_id: clientId,
+                client_secret: clientSecret
+            });
+            const refreshRes = await axios.post("https://www.linkedin.com/oauth/v2/accessToken", params.toString(), {
+                headers: { "Content-Type": "application/x-www-form-urlencoded" }
+            });
+            if (refreshRes.data?.access_token) {
+                connection.accessToken = refreshRes.data.access_token;
+                if (refreshRes.data.refresh_token) connection.refreshToken = refreshRes.data.refresh_token;
+                connection.tokenExpiresAt = new Date(Date.now() + (refreshRes.data.expires_in || 5184000) * 1000);
+                await SocialConnection.updateOne(
+                    { _id: connection._id },
+                    { $set: { accessToken: connection.accessToken, refreshToken: connection.refreshToken, tokenExpiresAt: connection.tokenExpiresAt } }
+                );
+            }
+        } else if (platform === "tiktok") {
+            const clientId = process.env.TIKTOK_CLIENT_KEY;
+            const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
+            if (!clientId || !clientSecret) return connection;
+            const refreshRes = await axios.post("https://open.tiktokapis.com/v2/oauth/token/", {
+                client_key: clientId,
+                client_secret: clientSecret,
+                grant_type: "refresh_token",
+                refresh_token: connection.refreshToken
+            }, { headers: { "Content-Type": "application/json" } });
+            if (refreshRes.data?.data?.access_token) {
+                connection.accessToken = refreshRes.data.data.access_token;
+                if (refreshRes.data.data.refresh_token) connection.refreshToken = refreshRes.data.data.refresh_token;
+                connection.tokenExpiresAt = new Date(Date.now() + (refreshRes.data.data.expires_in || 86400) * 1000);
+                await SocialConnection.updateOne(
+                    { _id: connection._id },
+                    { $set: { accessToken: connection.accessToken, refreshToken: connection.refreshToken, tokenExpiresAt: connection.tokenExpiresAt } }
+                );
+            }
+        }
+    } catch (refreshErr) {
+        console.warn(`[Token Refresh Failed for ${platform}]:`, refreshErr.message);
+        throw new Error("connection expired, reconnect in Social Hub");
+    }
+
+    return connection;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -467,11 +598,12 @@ export async function publishToSocialPlatforms({
     const plan = user?.subscription?.plan || 'free';
     const isUltra = plan === 'ultra' || user?.role === 'admin';
     const isPro = plan === 'pro';
+    const isFreeTier = !isUltra && !isPro;
     const hasCustomKey = Boolean(user?.customApiKeys && user.customApiKeys.some(k => k.isActive !== false && k.apiKey)) || Boolean(user?.geminiApiKey);
 
-    if (!isUltra) {
+    if (!isUltra && user) {
         const now = new Date();
-        const lastReset = user.usageQuotas?.lastQueryReset ? new Date(user.usageQuotas.lastQueryReset) : new Date(0);
+        const lastReset = user.usageQuotas?.socialPostsResetAt ? new Date(user.usageQuotas.socialPostsResetAt) : new Date(0);
         const isDifferentDay = now.toDateString() !== lastReset.toDateString();
         
         let postsToday = user.usageQuotas?.socialPostsThisMonth || 0;
@@ -479,7 +611,7 @@ export async function publishToSocialPlatforms({
             postsToday = 0;
             await userModel.updateOne(
                 { _id: userId },
-                { $set: { "usageQuotas.socialPostsThisMonth": 0, "usageQuotas.lastQueryReset": now } }
+                { $set: { "usageQuotas.socialPostsThisMonth": 0, "usageQuotas.socialPostsResetAt": now } }
             );
         }
         
@@ -506,7 +638,7 @@ export async function publishToSocialPlatforms({
     const userConnections = await SocialConnection.find({
         user: userId,
         isConnected: true
-    }).select("+accessToken");
+    }).select("+accessToken +refreshToken");
 
     const connectedMap = new Map();
     userConnections.forEach(conn => connectedMap.set(conn.platform.toLowerCase(), conn));
@@ -532,11 +664,35 @@ export async function publishToSocialPlatforms({
     };
 
     for (const platform of targetPlatforms) {
-        const connection = connectedMap.get(platform);
+        if (platform === "tiktok") {
+            results.failed.push({
+                platform: "tiktok",
+                error: "TikTok publishing is not supported yet"
+            });
+            continue;
+        }
+
+        let connection = connectedMap.get(platform);
+        if (!connection && platform === "youtube") {
+            // Also check if user connected Google account or has youtube scope
+            connection = connectedMap.get("google") ||
+                userConnections.find(c => c.scopes?.some(s => s.toLowerCase().includes("youtube")));
+        }
+
         if (!connection || !connection.accessToken) {
             results.notConnected.push({
                 platform,
                 message: `The ${platform} account is not connected, so couldn't post to it. Please connect your ${platform} account in Social Hub (/social-connections).`
+            });
+            continue;
+        }
+
+        try {
+            await ensureFreshToken(platform, connection);
+        } catch (tokErr) {
+            results.failed.push({
+                platform,
+                error: tokErr.message
             });
             continue;
         }
@@ -574,6 +730,7 @@ export async function publishToSocialPlatforms({
                 postType: resData.postType || postMode,
                 url: liveUrl,
                 scheduledAt: resData.scheduledAt || null,
+                note: resData.note || undefined,
                 message: `Successfully posted to ${platform}!`
             });
 
@@ -597,9 +754,10 @@ export async function publishToSocialPlatforms({
             }
         } catch (err) {
             console.error(`❌ Failed publishing to ${platform}:`, err.message);
+            const errMsg = err.response?.data?.error?.message || err.response?.data?.message || err.message;
             results.failed.push({
                 platform,
-                error: err.message
+                error: errMsg
             });
         }
     }

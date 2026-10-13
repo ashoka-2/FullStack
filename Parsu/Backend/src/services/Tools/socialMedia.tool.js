@@ -22,17 +22,35 @@ export const postToSocialMediaTool = (userContext) => tool(
         targetPlatforms = ["instagram"];
       }
 
-      // Anti-hallucination & multi-image extraction:
-      // Fetch latest messages from DB to get the real uploaded images/videos
+      // Anti-hallucination & multi-image/video extraction:
       let resolvedMediaItems = [];
 
       if (mediaUrls && mediaUrls.length > 0) {
         resolvedMediaItems = mediaUrls.map(url => ({ url }));
+      } else if (userContext?.uploadedFiles && userContext.uploadedFiles.length > 0) {
+        resolvedMediaItems = userContext.uploadedFiles.filter(f => f.url).map(f => ({
+          url: f.url,
+          name: f.name,
+          fileType: f.fileType,
+          mimetype: f.mimetype
+        }));
+      } else if (userContext?.files && userContext.files.length > 0) {
+        resolvedMediaItems = userContext.files.filter(f => f.url).map(f => ({
+          url: f.url,
+          name: f.name,
+          fileType: f.fileType,
+          mimetype: f.mimetype
+        }));
       } else {
+        if (!userContext?.chatId) {
+          return "ERROR: Chat context missing. Cannot retrieve media for publishing.";
+        }
+
         const lastMsg = await messageModel.findOne({
+          chat: userContext.chatId,
           $or: [
-            { "file.url": { $regex: "ik.imagekit.io" } },
-            { "files.url": { $regex: "ik.imagekit.io" } }
+            { "file.url": { $exists: true, $ne: "" } },
+            { "files.0.url": { $exists: true, $ne: "" } }
           ]
         }).sort({ createdAt: -1 });
 
@@ -52,6 +70,11 @@ export const postToSocialMediaTool = (userContext) => tool(
               mimetype: lastMsg.file.mimetype
             }];
           }
+        }
+
+        const isTextOnlyAllowed = targetPlatforms.length > 0 && targetPlatforms.every(p => p === "twitter" || p === "linkedin");
+        if (resolvedMediaItems.length === 0 && !isTextOnlyAllowed) {
+          return "ERROR: No media found in this chat to publish. Please upload an image or video first.";
         }
       }
 
