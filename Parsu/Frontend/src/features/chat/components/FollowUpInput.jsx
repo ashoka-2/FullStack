@@ -291,7 +291,7 @@ const FollowUpInput = ({
                 <div className="w-full bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-[var(--border-secondary)] focus-within:border-zinc-300 dark:focus-within:border-zinc-700 rounded-[20px] sm:rounded-[24px] px-3 sm:px-4.5 py-1.5 sm:py-2 transition-all duration-500 shadow-[0_8px_25px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.85)]">
                     
                     {/* Rich Attachment Preview Strip */}
-                    <AttachmentPreviewStrip files={files} onRemove={removeFile} />
+                    <AttachmentPreviewStrip files={files} onRemove={removeFile} inputText={input} />
 
                     {/* Live Voice Captioning Stream */}
                     {isListening && (
@@ -666,7 +666,7 @@ const FollowUpInput = ({
                     {/* Rich Bottom Toolbar Options (Attach, Web Search, Models, Mic, Queue/Send) */}
                     <div className="border-t border-zinc-800/80 bg-[var(--bg-secondary)] px-4 sm:px-6 py-3 shrink-0 flex flex-col gap-2.5">
                         {/* Attachments Preview Strip */}
-                        <AttachmentPreviewStrip files={files} onRemove={removeFile} />
+                        <AttachmentPreviewStrip files={files} onRemove={removeFile} inputText={input} />
 
                         <div className="flex items-center justify-between gap-2">
                             {/* Left Side Actions */}

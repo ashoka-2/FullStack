@@ -261,7 +261,9 @@ export async function getConnectedAccounts(req, res) {
             platformUsername: c.platformUsername,
             profilePicUrl: c.profilePicUrl,
             isConnected: c.isConnected,
-            connectedAt: c.createdAt
+            connectedAt: c.createdAt,
+            tokenExpiresAt: c.tokenExpiresAt,
+            isExpired: c.tokenExpiresAt ? new Date(c.tokenExpiresAt) < new Date() : false
         }));
 
         const connectorMap = {};
@@ -684,7 +686,7 @@ Return ONLY the ready-to-post caption text, without any quotes, markdown headers
 
         // 1. Resolve user and their custom API keys + selected model
         const userId = req.user?.id || req.user?._id;
-        const fullUser = userId ? await userModel.findById(userId) : null;
+        const fullUser = userId ? await userModel.findById(userId).select("+customApiKeys.apiKey") : null;
 
         const targetProvider = requestedProvider || fullUser?.selectedModel?.provider || "gemini";
         const targetModelId = requestedModelId || fullUser?.selectedModel?.modelId || "gemini-3.6-flash";

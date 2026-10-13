@@ -71,6 +71,7 @@ const chatSlice = createSlice({
             state.hasMoreMessages = false;
             state.messagesPage = 1;
             state.totalMessages = 0;
+            state.activeToolEvent = null;
         },
         appendChunk: (state, action) => {
             const lastMessage = state.messages[state.messages.length - 1];
@@ -78,9 +79,19 @@ const chatSlice = createSlice({
                 lastMessage.content += action.payload;
             }
         },
+        resetStreamingChunk: (state) => {
+            const lastMessage = state.messages[state.messages.length - 1];
+            if (lastMessage && lastMessage.role === "ai") {
+                lastMessage.content = "";
+            }
+        },
+        setActiveToolEvent: (state, action) => {
+            state.activeToolEvent = action.payload;
+        },
         stopStreaming: (state) => {
             state.isGenerating = false;
             state.loading = false;
+            state.activeToolEvent = null;
             const lastMessage = state.messages[state.messages.length - 1];
             if (lastMessage && lastMessage.isStreaming) {
                 lastMessage.isStreaming = false;
@@ -104,7 +115,7 @@ const chatSlice = createSlice({
 
 export const { 
     setChats, prependChat, setMessages, addMessage, setCurrentChatId, 
-    setLoading, setIsGenerating, setError, setIsCreating, clearChat, appendChunk, stopStreaming,
+    setLoading, setIsGenerating, setError, setIsCreating, clearChat, appendChunk, resetStreamingChunk, setActiveToolEvent, stopStreaming,
     prependMessages, setHasMoreMessages, setMessagesPage, setTotalMessages, setIsLoadingMore,
     toggleSidebarCollapse, setSidebarCollapse
 } = chatSlice.actions;

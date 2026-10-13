@@ -195,7 +195,13 @@ const SocialConnections = () => {
             setSearchParams(searchParams, { replace: true });
         }
         if (error) {
-            dispatch(addToast({ type: 'error', message: `Failed to connect: ${error}` }));
+            let errorMsg = `Failed to connect: ${error}`;
+            if (error === 'no_facebook_page') {
+                errorMsg = 'No Facebook Page found. A Facebook Page is required for publishing. Please create a Page or grant Page permissions.';
+            } else if (error === 'token_exchange_failed') {
+                errorMsg = 'OAuth token exchange failed. Please verify your credentials and try reconnecting.';
+            }
+            dispatch(addToast({ type: 'error', message: errorMsg }));
             searchParams.delete('error');
             setSearchParams(searchParams, { replace: true });
         }

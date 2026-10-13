@@ -4,7 +4,7 @@ import { router } from './app.routes';
 import { useAuth } from '../features/auth/hook/useAuth';
 import { initializeSocketConnection } from '../features/chat/service/chat.socket';
 import { useDispatch } from 'react-redux';
-import { appendChunk } from '../features/chat/chat.slice';
+import { appendChunk, resetStreamingChunk, setActiveToolEvent } from '../features/chat/chat.slice';
 import { isMaintenanceModeActive } from '../utils/maintenance';
 import MaintenanceMode from '../features/pages/MaintenanceMode';
 
@@ -22,9 +22,51 @@ const App = () => {
     // Initialize global socket and chunk listener
     const socket = initializeSocketConnection();
 
+    let chunkBuffer = "";
+    let rafId = null;
+
+    const flushChunks = () => {
+      if (chunkBuffer) {
+        dispatch(appendChunk(chunkBuffer));
+        window.dispatchEvent(new CustomEvent("ai_stream_chunk", { detail: chunkBuffer }));
+        chunkBuffer = "";
+      }
+      rafId = null;
+    };
+
     const handleChunk = (chunk) => {
-      dispatch(appendChunk(chunk));
-      window.dispatchEvent(new CustomEvent("ai_stream_chunk", { detail: chunk }));
+      chunkBuffer += chunk;
+      if (!rafId) {
+        rafId = requestAnimationFrame(flushChunks);
+      }
+    };
+
+    const handleChunkReset = () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      chunkBuffer = "";
+      dispatch(resetStreamingChunk());
+      window.dispatchEvent(new CustomEvent("ai_stream_chunk_reset"));
+    };
+
+    const handleToolEvent = (event) => {
+      if (event?.type === "tool_start") {
+        let label = "Working...";
+        if (event.name === "post_to_social_media" || event.name === "postToSocialMedia") {
+          const platforms = event.args?.platforms || [];
+          const platformStr = Array.isArray(platforms) ? platforms.join(", ") : String(platforms || "");
+          label = platformStr ? `Publishing to ${platformStr}...` : "Publishing to social media...";
+        } else if (event.name === "search_web" || event.name === "tavilySearch") {
+          label = "Searching the web...";
+        } else if (event.name) {
+          label = `Executing ${event.name}...`;
+        }
+        dispatch(setActiveToolEvent({ ...event, label }));
+      } else if (event?.type === "tool_end") {
+        dispatch(setActiveToolEvent(null));
+      }
     };
 
     const handleRelay = ({ action, params, senderDeviceName }) => {
@@ -38,10 +80,15 @@ const App = () => {
     };
 
     socket.on("chunk", handleChunk);
+    socket.on("chunk:reset", handleChunkReset);
+    socket.on("tool:event", handleToolEvent);
     socket.on("device:incoming_relay", handleRelay);
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
       socket.off("chunk", handleChunk);
+      socket.off("chunk:reset", handleChunkReset);
+      socket.off("tool:event", handleToolEvent);
       socket.off("device:incoming_relay", handleRelay);
     };
   }, [isMaintenance]);

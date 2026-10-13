@@ -36,7 +36,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import { publishMedia, generateCaption } from '../../auth/service/social.api';
 import { sendFeedback } from '../service/chat.api';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { addToast } from '../../../utils/toast.slice';
 import { EmbeddedMapCard } from './EmbeddedMapCard';
 import { ImageGalleryBlock } from './ImageGalleryBlock';
@@ -156,6 +156,7 @@ const isRawCodeBlock = (text) => {
 const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
     const isUser = msg.role === 'user' || (msg.role !== 'assistant' && msg.role !== 'ai');
     const dispatch = useDispatch();
+    const activeToolEvent = useSelector(state => state.chat.activeToolEvent);
     const { launchGuide } = useGuideEngine();
     const [copied, setCopied] = useState(false);
 
@@ -504,51 +505,8 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
 
     const contentToRender = msg.content;
 
-    // Check if content already contains a markdown map block or inline map code
-    const hasMapCodeBlock = typeof contentToRender === 'string' && (
-        /```(?:map|maps|googlemap)/i.test(contentToRender) ||
-        /`\s*(?:map|route|directions?)\s+[^`]+`/i.test(contentToRender)
-    );
-
-    // Auto-detect map location from directives, google maps URLs, or "Map of [Location]"
-    const detectedMapLocation = React.useMemo(() => {
-        if (hasMapCodeBlock || typeof contentToRender !== 'string' || isUser) return null;
-
-        // 1. Directives: :::map{location="Central Park"} or :::map Central Park:::
-        const directiveMatch = contentToRender.match(/:::map\s*\{?\s*(?:location=)?["']?([^"'}]+)["']?\s*\}?:::/i) ||
-                               contentToRender.match(/:::map\s*\{?\s*location=["']([^"']+)["']\s*\}?/i);
-        if (directiveMatch && directiveMatch[1]) return directiveMatch[1].trim();
-
-        // 2. Google Maps Directions URLs in text or markdown links
-        const dirUrlMatch = contentToRender.match(/https?:\/\/(?:www\.)?(?:google\.[a-z.]+\/maps\/dir|maps\.google\.[a-z.]+\/maps)\?[^\s\)]*(?:origin=([^&]+)&destination=([^&\s\)]+)|saddr=([^&]+)&daddr=([^&\s\)]+))/i);
-        if (dirUrlMatch) {
-            try {
-                const orig = decodeURIComponent((dirUrlMatch[1] || dirUrlMatch[3]).replace(/\+/g, ' '));
-                const dest = decodeURIComponent((dirUrlMatch[2] || dirUrlMatch[4]).replace(/\+/g, ' '));
-                return `from: ${orig}\nto: ${dest}`;
-            } catch {
-                // ignore
-            }
-        }
-
-        // 3. Google Maps Search / Place URLs
-        const gmapsMatch = contentToRender.match(/https?:\/\/(?:www\.)?(?:google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)\/(?:search\/|\?)[^\s\)]*q=([^&\s\)]+)/i);
-        if (gmapsMatch && gmapsMatch[1]) {
-            try {
-                return decodeURIComponent(gmapsMatch[1].replace(/\+/g, ' '));
-            } catch {
-                return gmapsMatch[1];
-            }
-        }
-
-        // 4. Markdown explicit map links: [Map: Tokyo](...)
-        const mdMapMatch = contentToRender.match(/\[(?:Google\s+)?Map(?:\s+of)?:\s*([^\]]+)\]\([^\)]+\)/i);
-        if (mdMapMatch && mdMapMatch[1]) {
-            return mdMapMatch[1].trim();
-        }
-
-        return null;
-    }, [contentToRender, hasMapCodeBlock, isUser]);
+    // A map block must appear ONLY when the AI sends one. Do not auto-inject maps.
+    const detectedMapLocation = null;
 
     // Successful posted platforms from DB or recent action
     const existingPosts = msg.socialPosts || [];
@@ -927,6 +885,22 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                 </div>
                             )}
 
+                            {/* Active Tool Execution Status Chip (B2) */}
+                            {msg.isStreaming && activeToolEvent && activeToolEvent.type === 'tool_start' && (
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/30 text-xs font-semibold text-[var(--accent-cyan)] animate-pulse w-fit my-1">
+                                    <span className="w-2 h-2 rounded-full bg-[var(--accent-cyan)] animate-ping" />
+                                    <span>
+                                        {activeToolEvent.name === 'post_to_social_media' 
+                                            ? `Publishing to ${activeToolEvent.args?.platform ? (activeToolEvent.args.platform.charAt(0).toUpperCase() + activeToolEvent.args.platform.slice(1)) : 'Social Media'}…` 
+                                            : activeToolEvent.name === 'tavilySearch' 
+                                            ? 'Searching the web…' 
+                                            : activeToolEvent.name === 'googleCalendar' 
+                                            ? 'Updating Google Calendar…' 
+                                            : `Running ${activeToolEvent.name}…`}
+                                    </span>
+                                </div>
+                            )}
+
                             <div className="prose prose-emerald dark:prose-invert max-w-none text-zinc-950 dark:text-zinc-200 leading-[1.7] md:leading-[1.8] text-[15px] md:text-[17px] font-medium tracking-tight">
                                 <ReactMarkdown 
                                     remarkPlugins={[remarkGfm]}
@@ -936,19 +910,10 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                             const codeString = String(children).replace(/\n$/, '');
                                             const trimmedCode = codeString.trim();
                                             
-                                            // Embedded Interactive Google Map:
-                                            // 1) Explicit ```map ... ``` codeblock
-                                            // 2) Inline code tag or block starting with `map `, `route `, `from: ...`
-                                            // Embedded Interactive Google Map:
-                                            // 1) Explicit ```map ... ``` codeblock
-                                            // 2) Inline code tag or block starting with `map `, `route `, `from: ...`
-                                            // 3) Code containing "origin to destination"
-                                            const isExplicitMap = match?.[1] && /^(map|maps|googlemap|googlemaps|route|directions)$/i.test(match[1]);
-                                            const isMapDirective = /^(?:map|maps|googlemap|googlemaps|route|directions?)\s+/i.test(trimmedCode) ||
-                                                                   /^(?:from|origin):\s*.+/i.test(trimmedCode) ||
-                                                                   (/^[A-Za-z0-9\s,.-]+?\s+(?:to|->|→)\s+[A-Za-z0-9\s,.-]+$/i.test(trimmedCode) && trimmedCode.length > 5 && trimmedCode.length < 150);
+                                            // Embedded Interactive Google Map: ONLY explicit ```map codeblock
+                                            const isExplicitMap = !inline && match?.[1] && /^(map|maps|googlemap|googlemaps)$/i.test(match[1]);
 
-                                            if (isExplicitMap || isMapDirective) {
+                                            if (isExplicitMap) {
                                                 return (
                                                     <div className="my-3 not-prose">
                                                         <EmbeddedMapCard 
@@ -1029,7 +994,14 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                         },
                                         p: ({children}) => <div className="text-zinc-800 dark:text-zinc-300 leading-relaxed mb-6 last:mb-0">{children}</div>,
                                         ul: ({children}) => <ul className="list-disc pl-5 space-y-3 mb-6 last:mb-0">{children}</ul>,
+                                        ol: ({children}) => <ol className="list-decimal pl-5 space-y-2 mb-6 last:mb-0 text-zinc-800 dark:text-zinc-300 leading-relaxed">{children}</ol>,
                                         li: ({children}) => <li className="text-zinc-800 dark:text-zinc-300 leading-relaxed pl-1">{children}</li>,
+                                        strong: ({children}) => <strong className="font-bold text-zinc-950 dark:text-white">{children}</strong>,
+                                        blockquote: ({children}) => (
+                                            <blockquote className="border-l-4 border-[var(--accent-cyan)]/70 bg-zinc-100/70 dark:bg-zinc-800/40 rounded-r-xl px-4 py-2.5 my-4 italic text-zinc-700 dark:text-zinc-300">
+                                                {children}
+                                            </blockquote>
+                                        ),
                                         h1: ({children}) => <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white mt-10 mb-6 tracking-tight">{children}</h1>,
                                         h2: ({children}) => <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-white mt-8 mb-4 tracking-tight">{children}</h2>,
                                         h3: ({children}) => <h3 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white mt-6 mb-3 tracking-tight">{children}</h3>,

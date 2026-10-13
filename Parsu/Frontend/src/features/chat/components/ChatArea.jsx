@@ -467,7 +467,7 @@ const ChatArea = () => {
         <div className={`fixed bottom-0 right-0 z-[60] p-2.5 pb-5 sm:p-4 sm:pb-8 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/95 to-transparent backdrop-blur-[2px] transition-[left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'left-0 lg:left-16' : 'left-0 lg:left-56'}`}>
           <div className={`w-full ${isVoiceModeOpen ? 'max-w-[500px]' : 'max-w-[800px]'} mx-auto bg-white dark:bg-[var(--bg-surface)] border ${isDragging ? 'border-[var(--color-clear-hanada)]' : 'border-zinc-200/90 dark:border-[var(--border-secondary)]'} focus-within:border-[var(--color-clear-hanada)]/60 focus-within:ring-2 focus-within:ring-[var(--accent-cyan)]/20 rounded-[22px] sm:rounded-[28px] px-3.5 sm:px-6 py-3 sm:py-5 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]`}>
 
-            <AttachmentPreviewStrip files={files} onRemove={removeFile} />
+            <AttachmentPreviewStrip files={files} onRemove={removeFile} inputText={input} />
 
             {isListening && <LiveCaption caption={liveCaption} onStop={handleToggleVoiceInput} className="mb-2" />}
 
@@ -731,7 +731,7 @@ const ChatArea = () => {
           {isListening && <LiveCaption caption={liveCaption} onStop={handleToggleVoiceInput} className="mx-4 sm:mx-6 mb-2" />}
 
           <div className="border-t border-zinc-800/80 bg-[var(--bg-secondary)] px-4 sm:px-6 py-3 shrink-0 flex flex-col gap-2.5">
-            <AttachmentPreviewStrip files={files} onRemove={removeFile} />
+            <AttachmentPreviewStrip files={files} onRemove={removeFile} inputText={input} />
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0 overflow-x-auto no-scrollbar py-0.5">
                 <CircleButton onClick={() => setIsUploadMenuOpen(true)} title="Add to chat (Photos, Videos, Files, Memory)" ariaLabel="Add to chat">

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'react-router';
 import {
     RiArrowDownLine,
-    RiSpyLine
+    RiSpyLine,
+    RiAlertLine
 } from '@remixicon/react';
 import Sidebar from '../../Components/Sidebar';
 import ChatMessage from '../components/ChatMessage';
@@ -39,6 +40,7 @@ const ChatPage2 = () => {
     const [selectedModel, setSelectedModel] = useState(null); // Active AI model for chat
     const [thinkingLevel, setThinkingLevel] = useState(getStoredThinkingLevel); // AI Thinking Mode
     const [messageQueue, setMessageQueue] = useState([]); // Queued messages waiting for current response
+    const [lastFailedSend, setLastFailedSend] = useState(null); // Friendly retry state for 429/failures
     
     // References & Elements
     const scrollerRef = useRef(null); // Chat message history container scroll reference
@@ -412,6 +414,7 @@ const ChatPage2 = () => {
         setFiles([]);
 
         try {
+            setLastFailedSend(null);
             const response = await handleSendMessage(currentInput, cleanChatId, filesToSend, effectiveSendModel, webSearch, memoryEnabled, incognito, thinkingLevel);
             if (response && response.aiMessage) {
                 setLatestMessageId(response.aiMessage._id);
@@ -423,6 +426,7 @@ const ChatPage2 = () => {
             return response;
         } catch (error) {
             console.error("Failed to send follow-up:", error);
+            setLastFailedSend({ text: currentInput, files: [...files] });
             if (textOverride === null) setInput(currentInput); // Restore on error
             return null;
         } finally {
@@ -581,12 +585,40 @@ const ChatPage2 = () => {
                                         isNewMessage={msg._id === latestMessageId}
                                     />
                                 ))}
-                                {loading && (
+                                {(loading || isGenerating) && (
                                     messages.length === 0 || 
                                     messages[messages.length - 1].role !== 'ai' || 
-                                    !messages[messages.length - 1].content
+                                    !messages[messages.length - 1].content?.trim()
                                 ) && (
                                     <ThinkingSkeleton />
+                                )}
+                                {lastFailedSend && (
+                                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3 text-xs text-amber-700 dark:text-amber-300 animate-in fade-in duration-200">
+                                        <div className="flex items-center gap-2">
+                                            <RiAlertLine size={16} className="text-amber-500 shrink-0" />
+                                            <span>AI model is experiencing high load or rate limit. Would you like to retry?</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <button
+                                                type="button"
+                                                onClick={() => setLastFailedSend(null)}
+                                                className="px-2.5 py-1 rounded-lg text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 cursor-pointer"
+                                            >
+                                                Dismiss
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={async () => {
+                                                    const toRetry = lastFailedSend;
+                                                    setLastFailedSend(null);
+                                                    await handleSendFollowUp(null, toRetry.text);
+                                                }}
+                                                className="px-3.5 py-1.5 rounded-xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+                                            >
+                                                Retry
+                                            </button>
+                                        </div>
+                                    </div>
                                 )}
                             </>
                         )}

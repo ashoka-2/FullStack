@@ -145,6 +145,11 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
       return;
     }
 
+    if (selectedPlatforms.includes('youtube') && mediaFiles.length > 0 && !mediaFiles.some(m => m.isVideo)) {
+      setErrorMessage("YouTube needs a video file (MP4, MOV or WebM). Images cannot be published to YouTube.");
+      return;
+    }
+
     if (isScheduleEnabled && scheduledDateTime) {
       const scheduledMs = new Date(scheduledDateTime).getTime();
       if (isNaN(scheduledMs) || scheduledMs <= Date.now()) {
@@ -183,7 +188,7 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden min-h-0">
+      <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 rounded-3xl w-full max-w-2xl h-[88vh] max-h-[850px] flex flex-col shadow-2xl overflow-hidden min-h-0">
         
         {/* Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-zinc-200 dark:border-white/10 shrink-0">
@@ -362,6 +367,14 @@ export default function CreatePostModal({ connectedAccounts = [], onClose, onSuc
                     </button>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* YouTube video warning */}
+            {selectedPlatforms.includes('youtube') && mediaFiles.length > 0 && !mediaFiles.some(m => m.isVideo) && (
+              <div className="mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                <RiAlertLine size={16} className="shrink-0" />
+                <span>YouTube needs a video file (MP4, MOV or WebM). Photos cannot be published to YouTube.</span>
               </div>
             )}
           </div>

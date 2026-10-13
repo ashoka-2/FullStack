@@ -25,11 +25,28 @@ function formatBytes(bytes) {
  * AttachmentPreviewStrip
  * Renders small preview cards above the chat input field for images, videos, documents, and code.
  */
-export default function AttachmentPreviewStrip({ files = [], onRemove }) {
+export default function AttachmentPreviewStrip({ files = [], onRemove, inputText = '' }) {
     if (!files || files.length === 0) return null;
 
+    const hasVideo = files.some(file => {
+        const lower = (file.name || '').toLowerCase();
+        return lower.match(/\.(mp4|webm|mov|avi|mkv)$/) || file.type?.startsWith('video/');
+    });
+    const hasImage = files.some(file => {
+        const lower = (file.name || '').toLowerCase();
+        return lower.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp|avif)$/) || file.type?.startsWith('image/');
+    });
+    const mentionsYouTube = typeof inputText === 'string' && /\byoutube\b/i.test(inputText);
+    const showYouTubeWarning = hasImage && !hasVideo && mentionsYouTube;
+
     return (
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-3 pt-1 custom-scrollbar animate-in slide-in-from-bottom-2 duration-200">
+        <div className="flex flex-col gap-1.5 animate-in slide-in-from-bottom-2 duration-200">
+            {showYouTubeWarning && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-semibold">
+                    <span>⚠️ YouTube needs a video (MP4, MOV or WebM). Photos cannot be posted to YouTube.</span>
+                </div>
+            )}
+            <div className="flex items-center gap-2.5 overflow-x-auto pb-2 pt-0.5 custom-scrollbar">
             {files.map((file, index) => {
                 const name = file.name || 'File';
                 const lower = name.toLowerCase();
@@ -62,6 +79,10 @@ export default function AttachmentPreviewStrip({ files = [], onRemove }) {
                                     alt={name} 
                                     className="w-full h-full object-cover"
                                 />
+                                <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-black/70 text-[9px] font-bold text-emerald-400 uppercase flex items-center gap-0.5 backdrop-blur-xs">
+                                    <RiImageLine size={10} />
+                                    <span>Photo</span>
+                                </div>
                                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <span className="absolute bottom-1 left-1 right-1 text-[9px] font-bold text-white bg-black/60 px-1 py-0.5 rounded truncate backdrop-blur-xs text-center">
                                     {name}
@@ -158,6 +179,7 @@ export default function AttachmentPreviewStrip({ files = [], onRemove }) {
                     </div>
                 );
             })}
+            </div>
         </div>
     );
 }
