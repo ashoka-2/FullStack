@@ -41,7 +41,13 @@ export function useGuideEngine() {
         return;
       }
 
-      const needsNavigation = guide.route && location.pathname !== guide.route;
+      const isChatRoute = (pathname) => pathname === "/ai" || pathname?.startsWith("/chat/");
+      // If target guide route is /ai, and current location is already in a chat route (/ai or /chat/:id), no navigation needed
+      const needsNavigation = guide.route && (
+        guide.route === "/ai"
+          ? !isChatRoute(location.pathname)
+          : location.pathname !== guide.route
+      );
 
       if (needsNavigation) {
         // Activate smooth transition veil
@@ -74,9 +80,17 @@ export function useGuideEngine() {
 
         if (typeof document !== "undefined" && document.startViewTransition) {
           try {
-            document.startViewTransition(() => {
+            const vt = document.startViewTransition(() => {
               doNavigate();
             });
+            if (vt && vt.finished) {
+              vt.finished.catch((err) => {
+                // AbortError is normal when another transition supersedes the current one
+                if (err?.name !== "AbortError") {
+                  console.warn("[GuideEngine] ViewTransition warning:", err);
+                }
+              });
+            }
           } catch (e) {
             doNavigate();
           }
@@ -110,11 +124,41 @@ export function useGuideEngine() {
     [dispatch, navigate, location.pathname, user]
   );
 
-  // ─── Watch for AI Message Triggers ─────────────────────────
+  // ─── Track Path & Hydrate Historical Messages ───────────────
+  const currentPathRef = useRef(location.pathname);
+
+  // When switching chats or routes, mark current latest message as already processed
+  useEffect(() => {
+    if (location.pathname !== currentPathRef.current) {
+      currentPathRef.current = location.pathname;
+      if (messages && messages.length > 0) {
+        const lastAi = [...messages].reverse().find((m) => m.role === "ai");
+        if (lastAi) {
+          lastProcessedIdRef.current = lastAi._id;
+        }
+      }
+    }
+  }, [location.pathname, messages]);
+
+  // On initial mount or first message hydration, treat existing history as already processed
+  useEffect(() => {
+    if (!messages || messages.length === 0) return;
+    if (lastProcessedIdRef.current === null) {
+      const lastAi = [...messages].reverse().find((m) => m.role === "ai");
+      if (lastAi) {
+        lastProcessedIdRef.current = lastAi._id;
+      }
+    }
+  }, [messages]);
+
+  // ─── Watch for AI Message Triggers (Live Messages Only) ─────
   useEffect(() => {
     if (!user) return;
     if (guideActive) return;
     if (!messages || messages.length === 0) return;
+
+    // Do NOT auto-navigate user away from an active chat route
+    if (location.pathname.startsWith("/chat/")) return;
 
     // Find the latest AI message
     const lastAi = [...messages].reverse().find((m) => m.role === "ai");
@@ -134,7 +178,7 @@ export function useGuideEngine() {
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [messages, guideActive, launchGuide, user]);
+  }, [messages, guideActive, launchGuide, user, location.pathname]);
 
   return { launchGuide };
 }

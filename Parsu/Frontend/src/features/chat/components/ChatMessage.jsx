@@ -41,6 +41,8 @@ import { addToast } from '../../../utils/toast.slice';
 import { EmbeddedMapCard } from './EmbeddedMapCard';
 import { ImageGalleryBlock } from './ImageGalleryBlock';
 import { ProductCardsBlock } from './ProductCardsBlock';
+import GUIDES from '../../guide/guides.registry';
+import { useGuideEngine } from '../../guide/useGuideEngine';
 
 const CodeBlock = React.memo(({ code, language, ...props }) => {
     const [copied, setCopied] = useState(false);
@@ -154,6 +156,7 @@ const isRawCodeBlock = (text) => {
 const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
     const isUser = msg.role === 'user' || (msg.role !== 'assistant' && msg.role !== 'ai');
     const dispatch = useDispatch();
+    const { launchGuide } = useGuideEngine();
     const [copied, setCopied] = useState(false);
 
     // Feedback State ('like' | 'dislike' | null)
@@ -965,6 +968,36 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                             // Product Cards with Details & Uses: ```cards ... ``` or ```product_cards ... ```
                                             if (match?.[1] && /^(cards|product_cards|products)$/i.test(match[1])) {
                                                 return <ProductCardsBlock code={trimmedCode} />;
+                                            }
+
+                                            // Interactive AI Guided Walkthrough Card: ```guide ... ```
+                                            if (match?.[1] && /^guide$/i.test(match[1])) {
+                                                const guide = GUIDES[trimmedCode];
+                                                if (!guide) return null;
+                                                return (
+                                                    <div className="my-4 p-4 rounded-2xl bg-gradient-to-r from-sky-500/10 via-cyan-500/10 to-indigo-500/10 border border-cyan-500/30 backdrop-blur-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg not-prose">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 shadow-inner">
+                                                                <RiCompass3Line size={22} className="animate-pulse" />
+                                                            </div>
+                                                            <div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-400">Interactive Walkthrough</span>
+                                                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-semibold">{guide.pageTitle || 'Live Tour'}</span>
+                                                                </div>
+                                                                <h4 className="text-sm font-bold text-zinc-900 dark:text-white mt-0.5">{guide.title}</h4>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => launchGuide(guide.id)}
+                                                            className="px-4 py-2 rounded-xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 font-bold text-xs flex items-center gap-1.5 shadow-md hover:shadow-cyan-500/20 transition-all cursor-pointer shrink-0"
+                                                        >
+                                                            <span>Take Live Tour</span>
+                                                            <RiSparklingLine size={14} />
+                                                        </button>
+                                                    </div>
+                                                );
                                             }
 
                                             return !inline && match ? (
