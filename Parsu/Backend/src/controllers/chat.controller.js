@@ -11,6 +11,106 @@ import { decryptKey } from "../utils/encryption.utils.js";
 import { generateEmbedding, generateEmbeddings, chunkText, cosineSimilarity } from "../services/embedding.service.js";
 import { extractTextFromPdf } from "../services/pdf.service.js";
 import { extractAndStoreMemory } from "../services/memory.service.js";
+import fs from "fs";
+import path from "path";
+
+// Cached workspace skills from .agents/skills
+let cachedWorkspaceSkills = null;
+let lastSkillsReadTime = 0;
+
+function getWorkspaceSkills() {
+    const now = Date.now();
+    if (cachedWorkspaceSkills && (now - lastSkillsReadTime < 60000)) {
+        return cachedWorkspaceSkills;
+    }
+
+    const candidateDirs = [
+        path.resolve(process.cwd(), ".agents/skills"),
+        path.resolve(process.cwd(), "../.agents/skills"),
+        "d:/FullStack/Parsu/.agents/skills"
+    ];
+
+    let skillsDir = null;
+    for (const dir of candidateDirs) {
+        try {
+            if (fs.existsSync(dir) && fs.statSync(dir).isDirectory()) {
+                skillsDir = dir;
+                break;
+            }
+        } catch (e) {}
+    }
+
+    if (!skillsDir) {
+        cachedWorkspaceSkills = [];
+        return [];
+    }
+
+    try {
+        const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
+        const skills = [];
+
+        for (const entry of entries) {
+            if (!entry.isDirectory()) continue;
+            const skillPath = path.join(skillsDir, entry.name);
+            const skillMdPath = path.join(skillPath, "SKILL.md");
+
+            if (fs.existsSync(skillMdPath)) {
+                try {
+                    const content = fs.readFileSync(skillMdPath, "utf-8");
+                    let name = entry.name;
+                    let description = "";
+                    let triggers = [entry.name, entry.name.replace(/[-_]/g, " ")];
+                    let instructions = content;
+
+                    if (content.startsWith("---")) {
+                        const parts = content.split("---");
+                        if (parts.length >= 3) {
+                            const frontmatter = parts[1];
+                            instructions = parts.slice(2).join("---").trim();
+                            const nameMatch = frontmatter.match(/name:\s*([^\n]+)/);
+                            if (nameMatch) name = nameMatch[1].trim();
+                            const descMatch = frontmatter.match(/description:\s*([^\n]+)/);
+                            if (descMatch) description = descMatch[1].trim();
+                        }
+                    }
+
+                    const files = [];
+                    try {
+                        const subFiles = fs.readdirSync(skillPath, { withFileTypes: true });
+                        for (const sf of subFiles) {
+                            if (sf.isFile() && sf.name !== "SKILL.md") {
+                                const fileText = fs.readFileSync(path.join(skillPath, sf.name), "utf-8");
+                                if (fileText.length < 50000) {
+                                    files.push({ name: sf.name, path: sf.name, content: fileText, size: fileText.length });
+                                }
+                            }
+                        }
+                    } catch (e) {}
+
+                    skills.push({
+                        _id: `ws-${name}`,
+                        name,
+                        description: description || `Built-in skill: ${name}`,
+                        triggers,
+                        instructions: instructions.slice(0, 20000),
+                        files,
+                        enabled: true,
+                        isWorkspaceSkill: true
+                    });
+                } catch (e) {
+                    console.warn(`[Skills] Error reading SKILL.md in ${entry.name}:`, e.message);
+                }
+            }
+        }
+
+        cachedWorkspaceSkills = skills;
+        lastSkillsReadTime = now;
+        return skills;
+    } catch (err) {
+        console.warn("[Skills] Error scanning workspace skills directory:", err.message);
+        return [];
+    }
+}
 
 // Global deduplication registry to prevent duplicate chats/messages from rapid multi-clicks or network retries
 const inFlightRequests = new Map();
@@ -463,7 +563,8 @@ export async function sendMessage(req, res) {
         sendActivityStep('request', 'Understanding your request', 'active');
 
         // Small talk detection: avoid web search, RAG, and memory recall for greetings / short chat
-        const isSmallTalk = (t) => /^\s*((hi+|hello+|hey+|heya|hola)(\s+(there|parsu|bro|buddy|everyone|friend|ai))?|yo|sup|namaste|good\s*(morning|afternoon|evening|night)|thanks?( you)?|thx|ok(ay)?|cool|nice|bye|how are you( doing)?|what'?s up|who are you|what can you do)\s*[!.?]*\s*$/i.test(t || "");
+        const isCapabilityInquiry = /\b(what (can|do) you do|what are your (skills|capabilities|features|tools)|do you have (any )?skills?|list (your )?skills?|tell me (about )?your skills?|show (me )?skills?|who are you)\b/i.test(message || "");
+        const isSmallTalk = (t) => !isCapabilityInquiry && /^\s*((hi+|hello+|hey+|heya|hola)(\s+(there|parsu|bro|buddy|everyone|friend|ai))?|yo|sup|namaste|good\s*(morning|afternoon|evening|night)|thanks?( you)?|thx|ok(ay)?|cool|nice|bye|how are you( doing)?|what'?s up)\s*[!.?]*\s*$/i.test(t || "");
         const smallTalk = isSmallTalk((message || "").trim()) && uploadedFiles.length === 0;
         const wordCount = (message || "").trim().split(/\s+/).filter(Boolean).length;
         const imageSearchRequest = /\b(show|see|display|give|send|find|look for)\b.{0,50}\b(images?|photos?|pictures?|pics?)\b|\b(images?|photos?|pictures?|pics?)\s+of\b/i.test(message || "")
@@ -666,33 +767,112 @@ export async function sendMessage(req, res) {
             : rawThinking;
 
         const customInstructions = (fullUser?.memory?.customInstructions || fullUser?.customInstructions || "").trim();
-        const skillPrompt = String(message || userMessage?.content || "").toLowerCase();
+        const normalizeText = (t) => String(t || "").toLowerCase().replace(/[-_./\\,:;]/g, " ").replace(/\s+/g, " ").trim();
+        const rawSkillPrompt = String(message || userMessage?.content || "");
+        const skillPrompt = rawSkillPrompt.toLowerCase();
+        const normalizedSkillPrompt = normalizeText(rawSkillPrompt);
         const explicitSkillId = req.body?.selectedSkillId || req.body?.skillId;
-        const matchedSkills = (fullUser?.skills || []).filter(skill => {
+
+        // Combine user's saved DB skills with workspace skills from .agents/skills
+        const combinedSkills = [...(fullUser?.skills || [])];
+        const existingNames = new Set(combinedSkills.map(s => normalizeText(s.name)));
+
+        const workspaceSkills = getWorkspaceSkills();
+        for (const ws of workspaceSkills) {
+            if (!existingNames.has(normalizeText(ws.name))) {
+                combinedSkills.push(ws);
+                existingNames.add(normalizeText(ws.name));
+            }
+        }
+
+        // Match skills using direct, normalized, and token-level intersection
+        const matchedSkills = combinedSkills.filter(skill => {
             if (skill.enabled === false) return false;
             if (explicitSkillId && skill._id?.toString() === explicitSkillId.toString()) return true;
-            const terms = [...(skill.triggers || []), ...(skill.triggers?.length ? [] : [skill.name]), skill.name]
-                .map(term => String(term).trim().toLowerCase()).filter(term => term.length >= 3);
-            return terms.some(term => skillPrompt.includes(term));
-        }).slice(0, 4);
+
+            const triggersList = Array.isArray(skill.triggers) 
+                ? skill.triggers 
+                : (typeof skill.triggers === 'string' ? skill.triggers.split(',') : []);
+
+            const allTerms = [skill.name, ...triggersList]
+                .map(t => String(t).trim())
+                .filter(Boolean);
+
+            return allTerms.some(term => {
+                const termLower = term.toLowerCase();
+                const termNorm = normalizeText(term);
+                if (termLower.length < 2) return false;
+
+                // 1. Direct or normalized substring match
+                if (skillPrompt.includes(termLower) || normalizedSkillPrompt.includes(termNorm)) {
+                    return true;
+                }
+
+                // 2. Word-level intersection (e.g. "minimal ai ui" matching "minimal-ai-ui")
+                const termWords = termNorm.split(" ").filter(w => w.length >= 2);
+                if (termWords.length >= 2) {
+                    const allWordsPresent = termWords.every(w => normalizedSkillPrompt.includes(w));
+                    if (allWordsPresent) return true;
+                }
+
+                return false;
+            });
+        }).slice(0, 5);
 
         if (matchedSkills.length > 0) {
             const skillNames = matchedSkills.map(s => s.name).join(", ");
             sendActivityStep('skill', `Applied skill: ${skillNames}`, 'done');
         }
 
+        // Build active skill blocks
         const skillBlocks = matchedSkills.map(skill => {
-            let block = `=== APPLIED USER SKILL: ${skill.name} ===\n${skill.description ? `Description: ${skill.description}\n` : ''}Instructions:\n${skill.instructions}`;
+            let block = `=== ACTIVE SKILL LOADED: ${skill.name} ===\n${skill.description ? `Description: ${skill.description}\n` : ''}Instructions:\n${skill.instructions}`;
             if (Array.isArray(skill.files) && skill.files.length > 0) {
                 block += `\n\nBundled Skill Files:\n` + skill.files.map(f => `--- File: ${f.path || f.name} ---\n${f.content}`).join("\n\n");
             }
             return block;
         });
 
-        const effectiveInstructions = [
-            customInstructions,
-            ...skillBlocks
-        ].filter(Boolean).join("\n\n");
+        // Build skills manifest listing all available skills
+        const activeSkillsList = combinedSkills.filter(s => s.enabled !== false);
+        const skillsManifest = activeSkillsList.length > 0
+            ? "--- AVAILABLE & INSTALLED SKILLS IN PARSU AI ---\n" +
+              activeSkillsList.slice(0, 20).map((s, idx) => {
+                  const triggers = Array.isArray(s.triggers) ? s.triggers.join(", ") : (s.triggers || "");
+                  return `${idx + 1}. Skill: "${s.name}"\n` +
+                      (s.description ? `   Description: ${s.description}\n` : "") +
+                      (triggers ? `   Triggers: ${triggers}\n` : "") +
+                      (s.files?.length ? `   Files: ${s.files.length} bundled file(s)\n` : "");
+              }).join("\n") +
+              "\nCRITICAL DIRECTIVE ON SKILLS:\n" +
+              "- When the user asks what skills you have or asks if you have a specific skill (e.g. 'minimal-ai-ui', 'apple-design', etc.), confirm that you have it installed and ready to use in Parsu AI, describe what it does, and offer to apply it!\n" +
+              "- Never say you do not have or don't know a skill that is listed in your available skills above."
+            : "--- AVAILABLE SKILLS ---\nNo custom skills installed yet. The user can add skills in Settings -> Custom Skills.";
+
+        // Build MCP manifest
+        const allMcpServers = (fullUser?.mcpServers || []).filter(m => m.enabled !== false);
+        const mcpManifest = allMcpServers.length > 0
+            ? "--- USER'S CONNECTED MCP SERVERS (MODEL CONTEXT PROTOCOL) ---\n" +
+              allMcpServers.map((m, idx) => `${idx + 1}. Server: "${m.name}" (${m.transport}) - ${m.description || "Active"}`).join("\n") +
+              "\nWhen asked about MCP capabilities, you can interface with these connected MCP servers."
+            : "";
+
+        const platformCapabilitiesDoc = 
+`--- PARSU AI BUILT-IN CAPABILITIES & PLATFORM TOOLS ---
+You are Parsu AI. When the user asks what you can do, what your capabilities are, what tools you have, or whether you support specific tasks, you MUST answer accurately based on your actual capabilities:
+1. 🗺️ Interactive Maps & Navigation: Live Google Maps with driving/transit/walking routes, intermediate stops, and location pins using \`\`\`map ... \`\`\` codeblocks.
+2. ✈️ Trip & Itinerary Planning: Full day-wise trip itineraries with stops, distances, costs, and destination photo galleries (\`\`\`gallery query: Place Name\`\`\`).
+3. 📸 Real Photo Search & Visual Galleries: Live web photo grids for any place, topic, animal, or product (\`\`\`gallery query: ... \`\`\`) and visual product cards (\`\`\`cards [...] \`\`\`).
+4. 🎨 AI Image Generation: Creating original images from text descriptions (\`\`\`imagegen prompt: ... \`\`\`).
+5. 📢 Autonomous Social Media Publishing: Publishing and scheduling directly to connected accounts (YouTube videos/Shorts, Instagram photos/Reels/carousels, Facebook Pages, Pinterest Pins, X/Twitter, and LinkedIn).
+6. 🧩 Custom Skills System: Users can add, edit, or upload custom skills (ZIP, Markdown, multi-file code folders). You read, execute, follow, and list all installed skills!
+7. 🔌 Model Context Protocol (MCP): Connect to external MCP servers (SSE, STDIO, HTTP, local) to interface with third-party tools (Blender 3D, Figma, Local Filesystem, DBs, etc.).
+8. 💻 Connected Devices: Cross-device control agent for Windows, macOS, Android.
+9. 🧠 Long-Term Memory: Remembering facts, preferences, nickname, and custom instructions across chats.
+10. 📄 Document PDF RAG: Uploading and analyzing documents, PDFs, images, and code with semantic search.
+11. 🌐 Real-Time Web Search: Live internet fact-checking and news with clickable source citations.
+12. 🎙️ Live Voice Talk: Hands-free voice chat with real-time speech captions.`;
+
         const fileRequestPrompt = String(message || userMessage?.content || "");
         const requestedDocumentFormat = /\b(pdf|markdown|md)\b|\.md\b/i.test(fileRequestPrompt)
             && /\b(create|generate|make|write|export|save|prepare|turn this into)\b/i.test(fileRequestPrompt)
@@ -701,7 +881,17 @@ export async function sendMessage(req, res) {
         const documentCreationInstruction = requestedDocumentFormat
             ? `The user asked you to create a ${requestedDocumentFormat} document. Write the complete document body and wrap it in exactly one fenced Markdown block (\`\`\`markdown ... \`\`\`). Do not return HTML or source code for document content. The app provides a Markdown download and a browser Print / Save as PDF action; do not claim a PDF file is attached unless you actually have a file URL.`
             : "";
-        const responseInstructions = [effectiveInstructions, documentCreationInstruction].filter(Boolean).join("\n\n");
+
+        const effectiveInstructions = [
+            customInstructions,
+            platformCapabilitiesDoc,
+            skillsManifest,
+            mcpManifest,
+            ...skillBlocks,
+            documentCreationInstruction
+        ].filter(Boolean).join("\n\n");
+
+        const responseInstructions = effectiveInstructions;
         const userNickname = fullUser?.memory?.nickname || "";
         const userOccupation = fullUser?.memory?.occupation || "";
         const memorySummary = fullUser?.memory?.summary || "";
@@ -728,7 +918,12 @@ export async function sendMessage(req, res) {
             uploadedMediaContext,
             feedbackInstruction: smallTalk ? "" : feedbackInstruction,
             memoryContext: smallTalk ? "" : memoryContext,
-            customInstructions: smallTalk ? "" : responseInstructions,
+            customInstructions: (smallTalk && !isCapabilityInquiry) ? "" : responseInstructions,
+            skillsManifest,
+            mcpManifest,
+            platformCapabilitiesDoc,
+            allUserSkills: combinedSkills,
+            matchedSkills,
             userNickname,
             userOccupation,
             thinkingLevel,
@@ -855,7 +1050,7 @@ export async function sendMessage(req, res) {
                         baseUrl: targetBaseUrl,
                         messages: chatHistoryForModel,
                         images: imagesForModel,
-                        customInstructions: smallTalk ? "" : responseInstructions,
+                        customInstructions: (smallTalk && !isCapabilityInquiry) ? "" : responseInstructions,
                         thinkingLevel,
                         memorySummary,
                         memoryFacts,

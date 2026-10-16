@@ -169,7 +169,8 @@ const TRIP_RX = /\b(trip|itinerary|road ?trip|tour|travel plan|plan.{0,20}(visit
 const VISUAL_RX = /\b(show|see|display|give|send)\b.{0,40}\b(images?|photos?|pictures?|pics?)\b|\b(images?|photos?|pictures?|pics?) of\b|\bwith (its |their |the )?(details|uses|photos?|images?)\b/i;
 const IMAGE_GENERATION_RX = /\b(create|make|generate|draw|design|illustrate)\b.{0,50}\b(image|picture|photo|artwork|illustration|poster|thumbnail|graphic|logo|banner|cover|infographic)\b|\b(image|picture|photo|artwork|illustration|poster|thumbnail|graphic|logo|banner|cover|infographic)\b.{0,40}\b(create|make|generate|draw|design)\b/i;
 const APP_RX = /\b(parsu|settings?|connect|api key|byok|memory|mascot|voice|model|library|social hub|account)\b/i;
-const SMALLTALK_RX = /^\s*((hi+|hii+|hello+|hey+|heya|hola)(\s+(there|parsu|bro|buddy|everyone|friend|ai))?|yo|sup|namaste|vanakkam|good\s*(morning|afternoon|evening|night)|gm|gn|thanks?( you)?|thx|ty|ok(ay)?|cool|nice|great|bye|see you|how are you( doing)?|what'?s up|wassup|who are you|what can you do)\s*[!.?😊🙂👋]*\s*$/i;
+const CAPABILITY_RX = /\b(what (can|do) you do|what are your (skills|capabilities|features|tools)|do you have (any )?skills?|list (your )?skills?|tell me (about )?your skills?|show (me )?skills?|who are you)\b/i;
+const SMALLTALK_RX = /^\s*((hi+|hii+|hello+|hey+|heya|hola)(\s+(there|parsu|bro|buddy|everyone|friend|ai))?|yo|sup|namaste|vanakkam|good\s*(morning|afternoon|evening|night)|gm|gn|thanks?( you)?|thx|ty|ok(ay)?|cool|nice|great|bye|see you|how are you( doing)?|what'?s up|wassup)\s*[!.?😊🙂👋]*\s*$/i;
 const FRESH_RX = /\b(latest|today|tonight|yesterday|news|current|right now|price|stock|score|weather|live|who is|who won|release date|202\d)\b/i;
 
 function normPlatforms(list) {
@@ -200,6 +201,7 @@ function detectIntent(messages, userContext) {
   const mapFollowUp = !!prevAi && MAP_OFFER_RX.test(String(prevAi.content || "")) && YES_RX.test(text);
   const wantsMap = (mapAsked || mapFollowUp) && !post;
   const trip = TRIP_RX.test(text) || (mapFollowUp && !TRIP_RX.test(text) && /trip|itinerary|route/i.test(String(prevAi?.content || "")));
+  const capabilityInquiry = CAPABILITY_RX.test(text);
 
   return {
     text, post, platforms, wantsAll, hasMedia, asksHowTo,
@@ -208,7 +210,8 @@ function detectIntent(messages, userContext) {
     generateImage: IMAGE_GENERATION_RX.test(text) && !post,
     appHelp: asksHowTo && APP_RX.test(text) && !post ? true : (/where (can|do) i (find|change)|how do i (connect|add|change|set)/i.test(text) && APP_RX.test(text)),
     fresh: FRESH_RX.test(text),
-    smallTalk: SMALLTALK_RX.test(text) && !hasMedia,
+    capabilityInquiry,
+    smallTalk: SMALLTALK_RX.test(text) && !capabilityInquiry && !hasMedia,
   };
 }
 
@@ -328,7 +331,24 @@ Core rules: act immediately when intent is clear; never ask permission for somet
 
   const name = userContext?.userNickname, role = userContext?.userOccupation;
   if (name || role) parts.push(`User: ${[name && `name ${name}`, role && `role ${role}`].filter(Boolean).join(", ")}.`);
-  if (userContext?.customInstructions?.trim()) parts.push(`USER'S MANDATORY CUSTOM INSTRUCTIONS (always follow):\n"${userContext.customInstructions.trim()}"`);
+
+  parts.push(
+`--- PARSU AI BUILT-IN CAPABILITIES & PLATFORM TOOLS ---
+You are Parsu AI. When the user asks what you can do, what features/skills/tools you have, or whether you support specific tasks, you MUST answer accurately based on your actual capabilities:
+1. 🗺️ Interactive Maps & Navigation: Live Google Maps with driving/transit/walking routes, intermediate stops, and location pins using \`\`\`map ... \`\`\` codeblocks.
+2. ✈️ Trip & Itinerary Planning: Full day-wise trip itineraries with stops, distances, costs, and destination photo galleries (\`\`\`gallery query: Place Name\`\`\`).
+3. 📸 Real Photo Search & Visual Galleries: Live web photo grids for any place, topic, animal, or product (\`\`\`gallery query: ... \`\`\`) and visual product cards (\`\`\`cards [...] \`\`\`).
+4. 🎨 AI Image Generation: Creating original images from text descriptions (\`\`\`imagegen prompt: ... \`\`\`).
+5. 📢 Autonomous Social Media Publishing: Publishing and scheduling directly to connected accounts (YouTube videos/Shorts, Instagram photos/Reels/carousels, Facebook Pages, Pinterest Pins, X/Twitter, and LinkedIn).
+6. 🧩 Custom Skills System: Users can add, edit, or upload custom skills (ZIP, Markdown, multi-file code folders) in /social-connections or Settings. You can read, execute, follow, and list all installed skills!
+7. 🔌 Model Context Protocol (MCP): Connect to external MCP servers (SSE, STDIO, HTTP, local) to interface with third-party tools (Blender 3D, Figma, Local Filesystem, DBs, etc.).
+8. 💻 Connected Devices: Cross-device control agent for Windows, macOS, Android.
+9. 🧠 Long-Term Memory: Remembering facts, preferences, nickname, and custom instructions across chats.
+10. 📄 Document PDF RAG: Uploading and analyzing documents, PDFs, images, and code with semantic search.
+11. 🌐 Real-Time Web Search: Live internet fact-checking and news with clickable source citations.
+12. 🎙️ Live Voice Talk: Hands-free voice chat with real-time speech captions.`);
+
+  if (userContext?.customInstructions?.trim()) parts.push(`USER'S MANDATORY CUSTOM INSTRUCTIONS & ACTIVE SKILLS (always follow):\n"${userContext.customInstructions.trim()}"`);
   if (userContext?.feedbackInstruction) parts.push(userContext.feedbackInstruction);
   if (userContext?.memoryContext && !intent.smallTalk) {
     parts.push("BACKGROUND MEMORY from the user's other chats. Use it silently and only when it directly helps answer the current message. Never greet with it, list it, summarize it, or say you remember past chats unless the user asks.\n" + userContext.memoryContext);
@@ -425,6 +445,14 @@ Answer in 2-4 friendly lines, then end with a guide trigger so the UI can walk t
 <id>
 \`\`\`
 ids: add_gemini_key, connect_instagram, connect_facebook, view_memory, change_model, mascot_settings, voice_settings, plan_trip, view_library, post_social.`);
+  }
+
+  /* ── capability inquiry ── */
+  if (intent.capabilityInquiry) {
+    parts.push(
+`CAPABILITY INQUIRY (User asked what you can do or what skills you have):
+Give a structured, clear, and friendly breakdown of your platform capabilities (Maps & Navigation, Trip Planning, Live Photo Galleries, AI Image Generation, Autonomous Social Publishing, Custom Skills, MCP Servers, Connected Devices, and Memory).
+IMPORTANT: If the user has installed custom skills (such as "minimal-ai-ui" or other skills listed in custom instructions/manifest), proudly highlight them by name and confirm that you have them active and ready to use!`);
   }
 
   return parts.join("\n\n");
