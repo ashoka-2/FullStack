@@ -88,7 +88,21 @@ const Auth = ({ initialMode }) => {
   useDisplayFont();
   useAuthMotion(rootRef, { mode: c.mode, step: c.forgotStep, done: c.isRegistered, bubble: c.bubbleText, error: c.reduxError || c.localError });
 
-  if (c.user && !c.loading) return <Navigate to={c.destination} replace />;
+  if (c.user) return <Navigate to={c.destination} replace />;
+
+  const hasToken = typeof window !== 'undefined' && Boolean(
+    localStorage.getItem('parsu_auth_token') || 
+    localStorage.getItem('perplexity_auth_token') || 
+    localStorage.getItem('token')
+  );
+
+  if (c.loading && hasToken) {
+    return (
+      <main className="min-h-[100dvh] flex items-center justify-center bg-[var(--bg)]">
+        <div className="w-8 h-8 rounded-full border-2 border-zinc-700 border-t-[var(--accent-cyan)] animate-spin" />
+      </main>
+    );
+  }
 
   const pose = c.isPasswordSleeping
     ? 'rotate(-7deg) translateX(-18px)'

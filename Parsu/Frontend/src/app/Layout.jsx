@@ -13,6 +13,7 @@ import ConnectionMonitor from '../features/Components/ConnectionMonitor';
 import { usePWA } from '../hooks/usePWA';
 import GuideOverlay from '../features/guide/GuideOverlay';
 import useGuideEngine from '../features/guide/useGuideEngine';
+import CookieConsentBanner from '../features/Components/CookieConsentBanner';
 
 const Layout = () => {
     const navigate = useNavigate();
@@ -149,6 +150,7 @@ const Layout = () => {
                     </div>
                     <FloatingBlobMascot />
                     <GuideOverlay />
+                    <CookieConsentBanner />
                     <ToastContainer />
                 </div>
             </ConnectionMonitor>

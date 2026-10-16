@@ -215,7 +215,7 @@ export default function CustomKeyManager({ onNotify }) {
             setIsAdding(!isAdding);
             setTestResult(null);
           }}
-          className="h-10 px-5 rounded-full bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--line)] text-xs font-semibold text-[var(--text)] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          className="h-10 px-5 rounded-full bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--line)] text-xs font-semibold text-[var(--text)] flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0 whitespace-nowrap self-start sm:self-auto shadow-xs"
         >
           <RiAddLine size={16} />
           <span>{isAdding ? "Close Form" : "Add Custom Key"}</span>

@@ -13,6 +13,8 @@ import {
   RiCloseLine,
   RiEyeLine,
   RiImageLine,
+  RiMore2Line,
+  RiPrinterLine,
 } from '@remixicon/react';
 
 const MIME_BY_KIND = {
@@ -23,6 +25,7 @@ const MIME_BY_KIND = {
 
 const ArtifactPane = ({ artifact, mode, onModeChange, fullscreen, onFullscreenChange, width = 660, onResize, onClose }) => {
   const frameRef = useRef(null);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
   const markdownRef = useRef(null);
   const resizeStart = useRef(null);
   const [loadedContent, setLoadedContent] = useState('');
@@ -141,17 +144,143 @@ const ArtifactPane = ({ artifact, mode, onModeChange, fullscreen, onFullscreenCh
             {kind === 'pdf' && <p className="text-xs text-[var(--text-secondary)]">PDF document</p>}
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          {canSwitch && <div role="tablist" aria-label="Artifact view" className="artifact-view-toggle inline-flex rounded-full p-1">
-            <button type="button" role="tab" aria-selected={mode === 'code'} onClick={() => onModeChange('code')} className={`artifact-tab ${mode === 'code' ? 'is-selected' : ''}`}><RiCodeSSlashLine size={14} aria-hidden="true" /><span>Code</span></button>
-            <button type="button" role="tab" aria-selected={mode === 'preview'} onClick={() => onModeChange('preview')} className={`artifact-tab ${mode === 'preview' ? 'is-selected' : ''}`}><RiEyeLine size={14} aria-hidden="true" /><span>Preview</span></button>
-          </div>}
-          {(content || imageUrl) && <button type="button" className="artifact-icon-button" onClick={copy} title={kind === 'image' ? 'Copy image URL' : 'Copy content'} aria-label={kind === 'image' ? 'Copy image URL' : 'Copy content'}><RiFileCopyLine size={17} /></button>}
-          {kind === 'markdown' && <button type="button" className="artifact-icon-button" onClick={makePdf} title="Print or save as PDF" aria-label="Print or save as PDF"><RiFilePdfLine size={17} /></button>}
-          {kind === 'pdf' && <button type="button" className="artifact-icon-button" onClick={makePdf} title="Print PDF" aria-label="Print PDF"><RiFilePdfLine size={17} /></button>}
-          {canDownload && <button type="button" className="artifact-icon-button" onClick={download} title={`Download ${kind}`} aria-label={`Download ${kind}`}><RiDownloadLine size={17} /></button>}
-          <button type="button" className="artifact-icon-button" onClick={() => onFullscreenChange(!fullscreen)} title={fullscreen ? 'Exit full screen' : 'Full screen'} aria-label={fullscreen ? 'Exit full screen' : 'Full screen'}>{fullscreen ? <RiFullscreenExitLine size={17} /> : <RiFullscreenLine size={17} />}</button>
-          <button type="button" className="artifact-icon-button" onClick={onClose} title="Close viewer" aria-label="Close viewer"><RiCloseLine size={18} /></button>
+        <div className="flex shrink-0 items-center gap-1.5 relative">
+          {canSwitch && (
+            <div role="tablist" aria-label="Artifact view" className="inline-flex rounded-full p-0.5 bg-[var(--surface-2)] border border-[var(--border)]">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'code'}
+                onClick={() => onModeChange('code')}
+                title="View Code"
+                className={`p-1.5 rounded-full transition-all cursor-pointer ${mode === 'code' ? 'bg-[var(--surface)] text-[var(--accent)] shadow-xs' : 'text-zinc-400 hover:text-[var(--fg)]'}`}
+              >
+                <RiCodeSSlashLine size={15} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'preview'}
+                onClick={() => onModeChange('preview')}
+                title="Live Preview"
+                className={`p-1.5 rounded-full transition-all cursor-pointer ${mode === 'preview' ? 'bg-[var(--surface)] text-[var(--accent)] shadow-xs' : 'text-zinc-400 hover:text-[var(--fg)]'}`}
+              >
+                <RiEyeLine size={15} aria-hidden="true" />
+              </button>
+            </div>
+          )}
+
+          {/* Desktop full actions */}
+          <div className="hidden sm:flex items-center gap-1">
+            {(content || imageUrl) && (
+              <button
+                type="button"
+                className="p-1.5 rounded-full hover:bg-[var(--surface-2)] text-zinc-400 hover:text-[var(--fg)] transition-colors cursor-pointer"
+                onClick={copy}
+                title={kind === 'image' ? 'Copy image URL' : 'Copy content'}
+                aria-label={kind === 'image' ? 'Copy image URL' : 'Copy content'}
+              >
+                <RiFileCopyLine size={16} />
+              </button>
+            )}
+            {(kind === 'markdown' || kind === 'pdf') && (
+              <button
+                type="button"
+                className="p-1.5 rounded-full hover:bg-[var(--surface-2)] text-zinc-400 hover:text-[var(--fg)] transition-colors cursor-pointer"
+                onClick={makePdf}
+                title={kind === 'pdf' ? 'Print PDF' : 'Print or save as PDF'}
+                aria-label="Print or save as PDF"
+              >
+                <RiPrinterLine size={16} />
+              </button>
+            )}
+            {canDownload && (
+              <button
+                type="button"
+                className="p-1.5 rounded-full hover:bg-[var(--surface-2)] text-zinc-400 hover:text-[var(--fg)] transition-colors cursor-pointer"
+                onClick={download}
+                title={`Download ${kind}`}
+                aria-label={`Download ${kind}`}
+              >
+                <RiDownloadLine size={16} />
+              </button>
+            )}
+            <button
+              type="button"
+              className="p-1.5 rounded-full hover:bg-[var(--surface-2)] text-zinc-400 hover:text-[var(--fg)] transition-colors cursor-pointer"
+              onClick={() => onFullscreenChange(!fullscreen)}
+              title={fullscreen ? 'Exit full screen' : 'Full screen'}
+              aria-label={fullscreen ? 'Exit full screen' : 'Full screen'}
+            >
+              {fullscreen ? <RiFullscreenExitLine size={16} /> : <RiFullscreenLine size={16} />}
+            </button>
+          </div>
+
+          {/* Mobile responsive menu button */}
+          <div className="sm:hidden relative">
+            <button
+              type="button"
+              className="p-1.5 rounded-full hover:bg-[var(--surface-2)] text-zinc-400 hover:text-[var(--fg)] transition-colors cursor-pointer"
+              onClick={() => setShowActionsMenu(!showActionsMenu)}
+              title="More options"
+              aria-label="More options"
+            >
+              <RiMore2Line size={17} />
+            </button>
+
+            {showActionsMenu && (
+              <div className="absolute right-0 top-full mt-1.5 w-48 rounded-[20px] bg-[var(--surface)] border border-[var(--border)] p-1.5 shadow-xl z-50 animate-in fade-in zoom-in-95">
+                {(content || imageUrl) && (
+                  <button
+                    type="button"
+                    onClick={() => { copy(); setShowActionsMenu(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-[12px] hover:bg-[var(--surface-2)] text-[var(--fg)] transition-colors text-left"
+                  >
+                    <RiFileCopyLine size={15} className="text-[var(--accent)]" />
+                    <span>Copy Content</span>
+                  </button>
+                )}
+                {(kind === 'markdown' || kind === 'pdf') && (
+                  <button
+                    type="button"
+                    onClick={() => { makePdf(); setShowActionsMenu(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-[12px] hover:bg-[var(--surface-2)] text-[var(--fg)] transition-colors text-left"
+                  >
+                    <RiPrinterLine size={15} className="text-[var(--accent)]" />
+                    <span>Print / Save PDF</span>
+                  </button>
+                )}
+                {canDownload && (
+                  <button
+                    type="button"
+                    onClick={() => { download(); setShowActionsMenu(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-[12px] hover:bg-[var(--surface-2)] text-[var(--fg)] transition-colors text-left"
+                  >
+                    <RiDownloadLine size={15} className="text-[var(--accent)]" />
+                    <span>Download</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { onFullscreenChange(!fullscreen); setShowActionsMenu(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-[12px] hover:bg-[var(--surface-2)] text-[var(--fg)] transition-colors text-left"
+                >
+                  {fullscreen ? <RiFullscreenExitLine size={15} className="text-[var(--accent)]" /> : <RiFullscreenLine size={15} className="text-[var(--accent)]" />}
+                  <span>{fullscreen ? 'Exit Full Screen' : 'Full Screen'}</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="p-1.5 rounded-full hover:bg-[var(--surface-2)] text-zinc-400 hover:text-[var(--danger)] transition-colors cursor-pointer"
+            onClick={onClose}
+            title="Close viewer"
+            aria-label="Close viewer"
+          >
+            <RiCloseLine size={18} />
+          </button>
         </div>
       </header>
       {kind === 'image' && imageUrl ? (

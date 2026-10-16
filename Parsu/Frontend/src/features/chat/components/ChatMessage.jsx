@@ -117,32 +117,67 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
     }, [safeCode]);
 
     const codeToolbar = (
-        <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2 bg-zinc-100/95 dark:bg-zinc-900/95 backdrop-blur border-b border-zinc-200 dark:border-zinc-800 rounded-t-xl">
-            <div className="flex items-center gap-2"><span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">{language || 'code'}</span><span className="text-[10px] text-zinc-400 font-mono">({totalLines} lines)</span></div>
-            <div className="flex items-center gap-1">
-                {(isHtmlDocument || isMarkdownDocument) && <button type="button" onClick={handlePreview} className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-[var(--accent-cyan)] transition-colors" title={`Preview ${isMarkdownDocument ? 'Markdown' : 'HTML'}`}>{isMarkdownDocument ? <RiFileTextLine size={14} /> : <RiEyeLine size={14} />}<span className="hidden sm:inline text-[11px]">Preview</span></button>}
-                <button type="button" onClick={handleDownload} className="p-1.5 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors" title="Download code"><RiDownloadLine size={14} /></button>
-                <button type="button" onClick={handleCopy} className="flex items-center gap-1.5 p-1.5 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all cursor-pointer" title="Copy full code snippet">{copied ? <><span className="text-[10px] font-bold text-emerald-500">Copied!</span><RiCheckLine size={14} className="text-emerald-500" /></> : <RiFileCopyLine size={14} />}</button>
+        <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#1e1e24] border-b border-zinc-800 text-zinc-200 rounded-t-[20px] select-none">
+            <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-[var(--accent)] uppercase tracking-wider">{language || 'code'}</span>
+                <span className="text-[10px] text-zinc-400 font-mono">({totalLines} lines)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+                {(isHtmlDocument || isMarkdownDocument) && (
+                    <button
+                        type="button"
+                        onClick={handlePreview}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-[var(--accent)] transition-colors text-xs font-medium cursor-pointer"
+                        title={`Preview ${isMarkdownDocument ? 'Markdown' : 'HTML'}`}
+                    >
+                        {isMarkdownDocument ? <RiFileTextLine size={13} /> : <RiEyeLine size={13} />}
+                        <span className="hidden sm:inline text-[11px]">Preview</span>
+                    </button>
+                )}
+                <button
+                    type="button"
+                    onClick={handleDownload}
+                    className="p-1.5 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                    title="Download code"
+                >
+                    <RiDownloadLine size={14} />
+                </button>
+                <button
+                    type="button"
+                    onClick={handleCopy}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white transition-all cursor-pointer text-xs"
+                    title="Copy full code snippet"
+                >
+                    {copied ? (
+                        <>
+                            <span className="text-[10px] font-bold text-emerald-400">Copied!</span>
+                            <RiCheckLine size={14} className="text-emerald-400" />
+                        </>
+                    ) : (
+                        <RiFileCopyLine size={14} />
+                    )}
+                </button>
             </div>
         </div>
     );
 
     return (
-        <div ref={blockRef} className="relative group my-4 sm:my-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-[var(--bg-primary)] max-w-full overflow-visible">
+        <div ref={blockRef} className="relative group my-4 sm:my-6 rounded-[20px] border border-zinc-800 bg-[#121214] text-zinc-100 max-w-full overflow-hidden shadow-md">
             <div className={docked ? 'invisible pointer-events-none' : 'sticky top-0 z-20'}>{codeToolbar}</div>
-            {docked && createPortal(<div style={{ top: docked.top, left: docked.left, width: docked.width }} className="fixed z-[80] shadow-lg">{codeToolbar}</div>, document.body)}
-            <div className="relative overflow-x-auto custom-scrollbar w-full rounded-b-2xl">
+            {docked && createPortal(<div style={{ top: docked.top, left: docked.left, width: docked.width }} className="fixed z-[80] shadow-xl">{codeToolbar}</div>, document.body)}
+            <div className="relative overflow-x-auto overflow-y-auto max-h-[580px] overscroll-contain custom-scrollbar w-full rounded-b-[20px]">
                 <SyntaxHighlighter
                     style={vscDarkPlus}
                     language={language || 'text'}
                     PreTag="div"
                     customStyle={{
                         margin: 0,
-                        padding: '1rem',
+                        padding: '1.25rem',
                         background: 'transparent',
                         fontSize: '12.5px',
-                        lineHeight: '1.6',
-                        borderRadius: '0 0 1rem 1rem'
+                        lineHeight: '1.65',
+                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                        borderRadius: '0 0 1.25rem 1.25rem'
                     }}
                     {...props}
                 >
@@ -150,11 +185,11 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
                 </SyntaxHighlighter>
 
                 {isLarge && !isExpanded && (
-                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/85 to-transparent flex items-end justify-center pb-3 pointer-events-auto">
+                    <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-[#121214] via-[#121214]/90 to-transparent flex items-end justify-center pb-3 pointer-events-auto">
                         <button
                             type="button"
                             onClick={() => setIsExpanded(true)}
-                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 text-xs font-bold shadow-lg transition-transform active:scale-95 cursor-pointer"
+                            className="flex items-center gap-1.5 px-5 py-2 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[#151515] text-xs font-bold shadow-lg transition-transform active:scale-95 cursor-pointer"
                         >
                             <span>Show all {totalLines} lines</span>
                             <span className="text-[10px] opacity-75 font-mono">(+{totalLines - 70} hidden)</span>
@@ -1184,7 +1219,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                                                     {...props} 
                                                 />
                                             ) : (
-                                                <code className={`${className} bg-zinc-100 dark:bg-zinc-800/50 px-1.5 py-0.5 rounded text-sm text-zinc-600 dark:text-zinc-300 font-mono`} {...props}>
+                                                <code className={`${className} bg-zinc-200/70 dark:bg-zinc-800/60 px-1.5 py-0.5 rounded text-sm text-zinc-900 dark:text-zinc-200 font-mono font-medium`} {...props}>
                                                     {children}
                                                 </code>
                                             )
@@ -1201,7 +1236,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                                                     href={href} 
                                                     target="_blank" 
                                                     rel="noopener noreferrer" 
-                                                    className={`underline decoration-[var(--accent-cyan)] decoration-1 underline-offset-2 hover:text-[var(--accent-cyan)] font-medium transition-colors ${isGoogleMaps ? 'inline-flex items-center gap-1 text-[var(--accent-cyan)] font-bold' : 'text-zinc-900 dark:text-zinc-100'}`}
+                                                    className={`underline decoration-[var(--accent)] decoration-1 underline-offset-2 hover:text-[var(--accent)] font-medium transition-colors ${isGoogleMaps ? 'inline-flex items-center gap-1 text-[var(--accent)] font-bold' : 'text-zinc-900 dark:text-zinc-100'}`}
                                                     {...props}
                                                 >
                                                     {children}
@@ -1209,19 +1244,19 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                                                 </a>
                                             );
                                         },
-                                        p: ({children}) => <div className="text-zinc-800 dark:text-zinc-300 leading-relaxed mb-6 last:mb-0">{children}</div>,
-                                        ul: ({children}) => <ul className="list-disc pl-5 space-y-3 mb-6 last:mb-0">{children}</ul>,
-                                        ol: ({children}) => <ol className="list-decimal pl-5 space-y-2 mb-6 last:mb-0 text-zinc-800 dark:text-zinc-300 leading-relaxed">{children}</ol>,
-                                        li: ({children}) => <li className="text-zinc-800 dark:text-zinc-300 leading-relaxed pl-1">{children}</li>,
+                                        p: ({children}) => <div className="text-zinc-900 dark:text-zinc-200 leading-relaxed mb-6 last:mb-0 font-normal">{children}</div>,
+                                        ul: ({children}) => <ul className="list-disc pl-5 space-y-3 mb-6 last:mb-0 text-zinc-900 dark:text-zinc-200 leading-relaxed">{children}</ul>,
+                                        ol: ({children}) => <ol className="list-decimal pl-5 space-y-2 mb-6 last:mb-0 text-zinc-900 dark:text-zinc-200 leading-relaxed">{children}</ol>,
+                                        li: ({children}) => <li className="text-zinc-900 dark:text-zinc-200 leading-relaxed pl-1">{children}</li>,
                                         strong: ({children}) => <strong className="font-bold text-zinc-950 dark:text-white">{children}</strong>,
                                         blockquote: ({children}) => (
-                                            <blockquote className="border-l-4 border-[var(--accent-cyan)]/70 bg-zinc-100/70 dark:bg-zinc-800/40 rounded-r-xl px-4 py-2.5 my-4 italic text-zinc-700 dark:text-zinc-300">
+                                            <blockquote className="border-l-4 border-[var(--accent)]/70 bg-zinc-100 dark:bg-zinc-800/40 rounded-r-xl px-4 py-2.5 my-4 italic text-zinc-800 dark:text-zinc-200">
                                                 {children}
                                             </blockquote>
                                         ),
-                                        h1: ({children}) => <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white mt-10 mb-6 tracking-tight">{children}</h1>,
-                                        h2: ({children}) => <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-white mt-8 mb-4 tracking-tight">{children}</h2>,
-                                        h3: ({children}) => <h3 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white mt-6 mb-3 tracking-tight">{children}</h3>,
+                                        h1: ({children}) => <h1 className="text-2xl md:text-3xl font-bold text-zinc-950 dark:text-white mt-10 mb-6 tracking-tight">{children}</h1>,
+                                        h2: ({children}) => <h2 className="text-xl md:text-2xl font-bold text-zinc-950 dark:text-white mt-8 mb-4 tracking-tight">{children}</h2>,
+                                        h3: ({children}) => <h3 className="text-lg md:text-xl font-bold text-zinc-950 dark:text-white mt-6 mb-3 tracking-tight">{children}</h3>,
                                         table: ({children}) => (
                                             <div className="w-full overflow-x-auto my-6 rounded-xl border border-zinc-200 dark:border-zinc-800 custom-scrollbar">
                                                 <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[360px]">
@@ -1230,12 +1265,12 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                                             </div>
                                         ),
                                         th: ({children}) => (
-                                            <th className="px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-800/80 font-bold text-xs text-zinc-700 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-700">
+                                            <th className="px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-800/80 font-bold text-xs text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
                                                 {children}
                                             </th>
                                         ),
                                         td: ({children}) => (
-                                            <td className="px-3.5 py-2 text-xs border-b border-zinc-100 dark:border-zinc-800/60 text-zinc-600 dark:text-zinc-300">
+                                            <td className="px-3.5 py-2 text-xs border-b border-zinc-100 dark:border-zinc-800/60 text-zinc-800 dark:text-zinc-200">
                                                 {children}
                                             </td>
                                         ),

@@ -9,10 +9,10 @@ export default function DeviceStatsBar({ devices }) {
     const online = devices.filter(d => d.status === 'online').length;
 
     const stats = [
-        { label: 'Total Devices',  value: total,         color: 'text-zinc-100' },
-        { label: 'Online Now',     value: online,        color: 'text-emerald-400', dot: true },
+        { label: 'Total Devices',  value: total,         color: 'text-zinc-900 dark:text-zinc-100' },
+        { label: 'Online Now',     value: online,        color: 'text-emerald-600 dark:text-emerald-400', dot: true },
         { label: 'Avg Latency',    value: '< 350ms',     color: 'text-[var(--accent-cyan)] font-mono text-sm' },
-        { label: 'Security',       value: '3-Tier Guard', color: 'text-emerald-400', icon: RiShieldCheckLine },
+        { label: 'Security',       value: '3-Tier Guard', color: 'text-emerald-600 dark:text-emerald-400', icon: RiShieldCheckLine },
     ];
 
     return (
@@ -20,12 +20,12 @@ export default function DeviceStatsBar({ devices }) {
             {stats.map(({ label, value, color, dot, icon: Icon }) => (
                 <div
                     key={label}
-                    className="p-3.5 rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06]"
+                    className="p-4 rounded-[20px] bg-white dark:bg-zinc-900/40 border border-zinc-200/80 dark:border-white/[0.08] shadow-sm transition-all"
                 >
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">{label}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block mb-1">{label}</span>
                     <div className="flex items-center gap-2">
                         {dot && <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />}
-                        {Icon && <Icon size={13} className={color} />}
+                        {Icon && <Icon size={14} className={color} />}
                         <span className={`text-base font-bold ${color}`}>{value}</span>
                     </div>
                 </div>
@@ -33,3 +33,4 @@ export default function DeviceStatsBar({ devices }) {
         </div>
     );
 }
+

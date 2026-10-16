@@ -90,6 +90,12 @@ const ChatPage2 = () => {
         };
     }, []);
 
+    // Close preview pane when navigating to another chat
+    useEffect(() => {
+        setArtifact(null);
+        setPreviewFullscreen(false);
+    }, [id]);
+
     // Web Search and Cross-Chat Memory feature toggles synced across all pages & settings
     const {
         webSearch,

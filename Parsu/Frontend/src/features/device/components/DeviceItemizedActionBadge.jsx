@@ -88,7 +88,7 @@ export default function DeviceItemizedActionBadge({
     };
 
     return (
-        <div className={`rounded-xl border border-zinc-200/60 dark:border-white/[0.08] bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md ${compact ? 'p-2.5' : 'p-3.5'} transition-all`}>
+        <div className={`rounded-[18px] border border-zinc-200/80 dark:border-white/[0.08] bg-white dark:bg-zinc-950/80 shadow-sm ${compact ? 'p-3' : 'p-4'} transition-all`}>
             <div className="flex items-center justify-between gap-3 flex-wrap">
                 {/* Left: Device badge & Action name */}
                 <div className="flex items-center gap-2 min-w-0">

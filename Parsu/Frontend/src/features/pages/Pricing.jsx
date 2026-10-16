@@ -85,7 +85,7 @@ export default function Pricing() {
     };
   }, []);
 
-  const currencySymbol = currency === 'INR' ? 'â‚¹' : '$';
+  const currencySymbol = currency === 'INR' ? '₹' : '$';
 
   // Pricing tier definitions
   const TIERS = [
@@ -203,7 +203,7 @@ export default function Pricing() {
   const FAQS = [
     {
       q: 'How does India vs International pricing work?',
-      a: 'Parsu AI automatically checks your location. Visitors in India are shown local Indian Rupee (â‚¹) pricing with localized UPI and RuPay card support. International visitors receive standard USD ($) pricing with zero foreign transaction fees.'
+      a: 'Parsu AI automatically checks your location. Visitors in India are shown local Indian Rupee (₹) pricing with localized UPI and RuPay card support. International visitors receive standard USD ($) pricing with zero foreign transaction fees.'
     },
     {
       q: 'Can I start with the Free plan?',
@@ -505,12 +505,12 @@ export default function Pricing() {
           {/* Location & Currency Switcher */}
           <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 dark:bg-zinc-900/70 border border-zinc-200/80 dark:border-white/10 shadow-xs backdrop-blur-md">
             {isIndia ? (
-              <span className="text-sm">ðŸ‡®ðŸ‡³</span>
+              <span className="text-sm">🇮🇳</span>
             ) : (
               <RiGlobalLine size={15} className="text-[var(--accent-cyan)]" />
             )}
             <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-              {currency === 'INR' ? 'India Pricing (â‚¹ INR)' : 'International ($ USD)'}
+              {currency === 'INR' ? 'India Pricing (₹ INR)' : 'International ($ USD)'}
             </span>
             <span className="text-zinc-300 dark:text-zinc-700">|</span>
             <button

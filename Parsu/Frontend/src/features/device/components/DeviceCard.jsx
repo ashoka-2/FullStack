@@ -53,10 +53,10 @@ export default function DeviceCard({ device: dev, isSelected, onSelect, onRename
     return (
         <div
             onClick={() => !isRenaming && onSelect(dev._id)}
-            className={`rounded-2xl p-4 border transition-all cursor-pointer relative group ${
+            className={`rounded-[22px] p-4.5 border transition-all cursor-pointer relative group ${
                 isSelected
-                    ? 'border-[var(--accent-cyan)] bg-[var(--accent-cyan)]/[0.04] shadow-lg shadow-[var(--accent-cyan)]/5'
-                    : 'border-zinc-200/60 dark:border-white/[0.06] hover:border-zinc-300 dark:hover:border-white/[0.12] bg-zinc-50/50 dark:bg-white/[0.02]'
+                    ? 'border-[var(--accent-cyan)] bg-[var(--accent-cyan)]/[0.05] shadow-md shadow-[var(--accent-cyan)]/10'
+                    : 'border-zinc-200/80 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/[0.14] bg-white dark:bg-zinc-900/40 shadow-sm'
             }`}
         >
             {/* Selected dot */}
@@ -170,9 +170,9 @@ export default function DeviceCard({ device: dev, isSelected, onSelect, onRename
                         { Icon: RiRamLine,           label: 'RAM',     value: dev.systemMetrics.ramUsageMb ? `${Math.round(dev.systemMetrics.ramUsageMb / 1024)}GB` : 'N/A' },
                         { Icon: RiBattery2ChargeLine, label: 'Battery', value: `${dev.systemMetrics.batteryPercent ?? 100}%` },
                     ].map(({ Icon, label, value }) => (
-                        <div key={label} className="bg-zinc-100 dark:bg-white/[0.03] p-1.5 rounded-lg">
-                            <div className="flex items-center justify-center gap-1 text-[10px] text-zinc-400 mb-0.5">
-                                <Icon size={10} /> {label}
+                        <div key={label} className="bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200/60 dark:border-white/[0.04] p-2 rounded-[12px]">
+                            <div className="flex items-center justify-center gap-1 text-[10px] text-zinc-500 dark:text-zinc-400 mb-0.5">
+                                <Icon size={11} /> {label}
                             </div>
                             <span className="font-mono text-[11px] font-semibold text-zinc-800 dark:text-zinc-200">{value}</span>
                         </div>

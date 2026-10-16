@@ -179,7 +179,7 @@ const Settings = () => {
                 />
 
                 <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar flex flex-col justify-between">
-                    <div ref={contentRef} className="max-w-[620px] w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-32">
+                    <div ref={contentRef} className="max-w-5xl w-full mx-auto px-4 sm:px-8 py-6 sm:py-10 pb-32">
 
                         {/* Minimal AI-UI Profile Card (Avatar + Identity + Plan Chip) */}
                         {user && (

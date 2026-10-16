@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router';
 import { useDispatch } from 'react-redux';
 import {
@@ -151,6 +151,7 @@ export default function Footer() {
     { to: '/contact', label: 'Contact Team', icon: RiMailLine },
     { to: '/status', label: 'System Health', icon: RiPulseLine },
     { to: '/privacy', label: 'Privacy Policy', icon: RiShieldCheckLine },
+    { to: '/cookies', label: 'Cookie Policy', icon: RiShieldCheckLine },
     { to: '/terms', label: 'Terms of Service', icon: RiFileTextLine }
   ];
 
@@ -339,6 +340,10 @@ export default function Footer() {
           <div className="flex items-center gap-4 text-xs font-medium">
             <Link to="/privacy" className="hover:text-zinc-900 dark:hover:text-white transition-colors">
               Privacy
+            </Link>
+            <span aria-hidden="true" className="text-zinc-300 dark:text-zinc-700">·</span>
+            <Link to="/cookies" className="hover:text-zinc-900 dark:hover:text-white transition-colors">
+              Cookies
             </Link>
             <span aria-hidden="true" className="text-zinc-300 dark:text-zinc-700">·</span>
             <Link to="/terms" className="hover:text-zinc-900 dark:hover:text-white transition-colors">

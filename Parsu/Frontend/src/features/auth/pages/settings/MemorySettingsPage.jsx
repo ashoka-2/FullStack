@@ -152,7 +152,7 @@ const MemorySettingsPage = () => {
                 <div ref={containerRef} className="space-y-7">
 
                     {/* ── Master Memory Toggle ── */}
-                    <div className="settings-group-item">
+                    <div className="settings-group-item" data-guide="memory-enable-toggle">
                         <GroupLabel>Global Memory</GroupLabel>
                         <Group>
                             <Row
@@ -188,7 +188,7 @@ const MemorySettingsPage = () => {
                     <div className="settings-group-item">
                         <GroupLabel>Personal Profile</GroupLabel>
                         <div className="flex flex-col gap-3">
-                            <div className="p-4 rounded-[20px] bg-[var(--surface)] flex flex-col gap-1.5">
+                            <div className="p-4 rounded-[20px] bg-[var(--surface)] border border-[var(--line)] flex flex-col gap-1.5 shadow-xs">
                                 <label className="text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1.5">
                                     <RiUserSmileLine size={15} />
                                     <span>Nickname</span>
@@ -204,7 +204,7 @@ const MemorySettingsPage = () => {
                                 />
                             </div>
 
-                            <div className="p-4 rounded-[20px] bg-[var(--surface)] flex flex-col gap-1.5">
+                            <div className="p-4 rounded-[20px] bg-[var(--surface)] border border-[var(--line)] flex flex-col gap-1.5 shadow-xs">
                                 <label className="text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1.5">
                                     <RiBriefcaseLine size={15} />
                                     <span>Occupation</span>
@@ -225,7 +225,7 @@ const MemorySettingsPage = () => {
                     {/* ── Custom Instructions ── */}
                     <div className="settings-group-item">
                         <GroupLabel>Custom Persona & Instructions</GroupLabel>
-                        <div className="p-4 sm:p-5 rounded-[28px] bg-[var(--surface)] border border-[var(--line)] flex flex-col gap-2">
+                        <div className="p-4 sm:p-5 rounded-[28px] bg-[var(--surface)] border border-[var(--line)] flex flex-col gap-2 shadow-xs">
                             <div className="flex items-center gap-2 mb-1">
                                 <RiFileList2Line size={16} className="text-[var(--accent-text)]" />
                                 <p className="text-xs font-semibold text-[var(--text)]">How Parsu AI should respond</p>
@@ -245,9 +245,9 @@ const MemorySettingsPage = () => {
                     </div>
 
                     {/* ── Memory Summary & Learned Facts ── */}
-                    <div className="settings-group-item">
+                    <div className="settings-group-item" data-guide="memory-facts-list">
                         <GroupLabel>Learned Memory ({memoryFacts.length} Facts)</GroupLabel>
-                        <div className="p-4 sm:p-5 rounded-[28px] bg-[var(--surface)] border border-[var(--line)] space-y-4">
+                        <div className="p-4 sm:p-5 rounded-[28px] bg-[var(--surface)] border border-[var(--line)] space-y-4 shadow-xs">
                             {memorySummary && (
                                 <div className="p-3.5 rounded-[16px] bg-[var(--surface-2)] border border-[var(--line)]">
                                     <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-text)] mb-1">
@@ -261,48 +261,48 @@ const MemorySettingsPage = () => {
                             )}
 
                             {/* Add Fact Inline Form */}
-                            <form onSubmit={handleAddFact} className="flex gap-2">
+                            <form onSubmit={handleAddFact} className="flex flex-col sm:flex-row gap-2">
                                 <input
                                     type="text"
                                     value={newFactText}
                                     onChange={e => setNewFactText(e.target.value)}
                                     placeholder="Add a new fact (e.g. My pet dog is Bruno)..."
                                     disabled={!memoryEnabled || addingFact}
-                                    className="flex-1 h-10 px-4 text-xs rounded-full bg-[var(--surface-2)] border border-[var(--line)] text-[var(--text)] placeholder-[var(--text-subtle)] focus:outline-none focus:border-[var(--accent)] transition-all disabled:opacity-40"
+                                    className="flex-1 h-11 px-4 text-xs sm:text-sm rounded-full bg-[var(--surface-2)] border border-[var(--line)] text-[var(--text)] placeholder-[var(--text-subtle)] focus:outline-none focus:border-[var(--accent)] transition-all disabled:opacity-40"
                                 />
                                 <button
                                     type="submit"
                                     disabled={!newFactText.trim() || addingFact || !memoryEnabled}
-                                    className="h-10 px-4 rounded-full bg-[var(--text)] text-[var(--bg)] text-xs font-semibold flex items-center gap-1.5 transition-opacity hover:opacity-90 disabled:opacity-40 cursor-pointer shrink-0"
+                                    className="h-11 px-5 rounded-full bg-[var(--text)] text-[var(--bg)] text-xs font-semibold flex items-center justify-center gap-1.5 transition-opacity hover:opacity-90 disabled:opacity-40 cursor-pointer shrink-0 shadow-xs"
                                 >
                                     {addingFact ? <RiLoader4Line size={14} className="animate-spin" /> : <RiAddLine size={14} />}
-                                    Remember
+                                    <span>Remember</span>
                                 </button>
                             </form>
 
                             {/* Facts list */}
                             {memoryFacts.length > 0 ? (
-                                <div className="flex flex-col gap-1.5">
+                                <div className="flex flex-col gap-2">
                                     {memoryFacts.map((fact, i) => (
-                                        <div key={i} className="flex items-center justify-between gap-3 p-3 rounded-[12px] bg-[var(--surface-2)] text-xs text-[var(--text)]">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <RiCheckLine size={14} className="text-[var(--accent-text)] shrink-0" />
-                                                <span className="truncate">{fact}</span>
+                                        <div key={i} className="flex items-start sm:items-center justify-between gap-3 p-3.5 rounded-[16px] bg-[var(--surface-2)] border border-[var(--line)] text-xs text-[var(--text)]">
+                                            <div className="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
+                                                <RiCheckLine size={15} className="text-[var(--accent-text)] shrink-0 mt-0.5 sm:mt-0" />
+                                                <span className="break-words leading-relaxed">{fact}</span>
                                             </div>
                                             <button
                                                 type="button"
                                                 onClick={() => handleDeleteFact(i)}
                                                 disabled={deletingIndex === i}
-                                                className="w-6 h-6 rounded-full flex items-center justify-center text-[var(--text-subtle)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-colors shrink-0 cursor-pointer"
+                                                className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--text-subtle)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-colors shrink-0 cursor-pointer"
                                                 title="Forget this fact"
                                             >
-                                                {deletingIndex === i ? <RiLoader4Line size={12} className="animate-spin" /> : <RiCloseLine size={13} />}
+                                                {deletingIndex === i ? <RiLoader4Line size={13} className="animate-spin" /> : <RiCloseLine size={14} />}
                                             </button>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-xs text-[var(--text-muted)] italic py-1 text-center">
+                                <p className="text-xs text-[var(--text-muted)] italic py-2 text-center">
                                     No recorded facts yet. Tell Parsu AI "Remember that..." in chat or add one above.
                                 </p>
                             )}

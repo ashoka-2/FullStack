@@ -7,13 +7,21 @@ const Protected = ({children}) => {
     const loading = useSelector(state => state.auth.loading)
     const location = useLocation()
 
-    // While initial auth is verifying on page refresh/reload, don't redirect away
-    if (loading) {
-        return null;
+    // If user is already available (synchronously cached), proceed immediately
+    if (user) {
+        if (user.role === 'admin') {
+            return <Navigate to="/admin/dashboard" replace />;
+        }
+        return children;
     }
 
-    if (!user) {
-        return <Navigate to="/auth" state={{ from: location }} replace /> 
+    // While initial auth is verifying on page refresh/reload, don't redirect away
+    if (loading) {
+        return (
+            <div className="min-h-screen w-full bg-[var(--bg)] flex items-center justify-center p-6">
+                <div className="w-8 h-8 rounded-full border-2 border-zinc-700 border-t-[var(--accent-cyan)] animate-spin" />
+            </div>
+        );
     }
 
     // Admins should only use the admin console — redirect away from user routes

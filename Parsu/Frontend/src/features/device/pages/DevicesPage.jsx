@@ -230,20 +230,20 @@ export default function DevicesPage() {
                 <DeviceSyncBanner userEmail={user?.email} onlineCount={onlineCount} />
 
                 {/* Device grid */}
-                <div className="rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06] p-5">
-                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div className="rounded-[28px] bg-white dark:bg-zinc-900/40 border border-zinc-200/80 dark:border-white/[0.08] p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
                         <div>
                             <h2 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                                <RiLinksLine size={15} className="text-[var(--accent-cyan)]" />
+                                <RiLinksLine size={16} className="text-[var(--accent-cyan)]" />
                                 Linked Devices
                             </h2>
-                            <p className="text-xs text-zinc-500 mt-0.5">
+                            <p className="text-xs text-zinc-500 mt-1">
                                 Click a device to target it. Hover to rename, star, or unlink.
                             </p>
                         </div>
                         <button
                             onClick={refresh}
-                            className="p-2 text-zinc-400 hover:text-white rounded-xl bg-zinc-100 dark:bg-white/[0.04] hover:bg-zinc-200 dark:hover:bg-white/[0.08] transition-all cursor-pointer"
+                            className="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white rounded-full bg-zinc-100 dark:bg-white/[0.04] hover:bg-zinc-200 dark:hover:bg-white/[0.08] transition-all cursor-pointer"
                             title="Refresh"
                         >
                             <RiRefreshLine size={16} className={refreshing ? 'animate-spin' : ''} />
@@ -256,9 +256,9 @@ export default function DevicesPage() {
                             <span>Discovering linked devices…</span>
                         </div>
                     ) : devices.length === 0 ? (
-                        <div className="py-12 text-center border border-dashed border-zinc-200 dark:border-white/[0.08] rounded-2xl">
-                            <RiWifiLine size={36} className="mx-auto text-zinc-500 mb-3 opacity-40" />
-                            <h3 className="text-sm font-semibold text-zinc-300">No devices linked yet</h3>
+                        <div className="py-12 text-center border border-dashed border-zinc-200 dark:border-white/[0.08] rounded-[20px]">
+                            <RiWifiLine size={36} className="mx-auto text-zinc-400 dark:text-zinc-500 mb-3 opacity-40" />
+                            <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">No devices linked yet</h3>
                             <p className="text-xs text-zinc-500 max-w-xs mx-auto mt-1.5">
                                 Open the Parsu app on any device and log in — it will appear here automatically.
                             </p>
