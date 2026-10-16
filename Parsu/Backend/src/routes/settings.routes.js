@@ -15,6 +15,7 @@ import {
     deleteAdminBugReport,
     getUserSkills,
     createUserSkill,
+    updateUserSkill,
     deleteUserSkill,
     getMcpServers,
     createMcpServer,
@@ -32,6 +33,7 @@ settingsRouter.post('/memory/fact', authUser, addMemoryFact);
 settingsRouter.delete('/memory/fact/:index', authUser, deleteMemoryFact);
 settingsRouter.get('/skills', authUser, getUserSkills);
 settingsRouter.post('/skills', authUser, createUserSkill);
+settingsRouter.put('/skills/:skillId', authUser, updateUserSkill);
 settingsRouter.delete('/skills/:skillId', authUser, deleteUserSkill);
 
 // ── Model Context Protocol (MCP) ──────────────────────────────────────────

@@ -36,6 +36,11 @@ export async function createUserSkill(payload) {
     return res.data;
 }
 
+export async function updateUserSkill(skillId, payload) {
+    const res = await api.put(`/api/settings/skills/${skillId}`, payload);
+    return res.data;
+}
+
 export async function deleteUserSkill(skillId) {
     const res = await api.delete(`/api/settings/skills/${skillId}`);
     return res.data;
