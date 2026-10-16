@@ -316,18 +316,6 @@ const SocialConnections = () => {
                     rightSlot={
                         <div className="flex items-center gap-1.5 sm:gap-2">
                             {activeTab === 'apps' && (
-                                <PrimaryButton
-                                    type="button"
-                                    onClick={() => setCreatePostOpen(true)}
-                                    size="xs"
-                                    icon={RiSendPlaneFill}
-                                    iconPosition="left"
-                                    className="rounded-full px-3 cursor-pointer"
-                                >
-                                    <span className="hidden sm:inline">Create Post</span>
-                                </PrimaryButton>
-                            )}
-                            {activeTab === 'apps' && (
                                 <div className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200/80 dark:border-white/10 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
                                     {loading ? (
                                         <ThemedSkeleton width={75} height={14} borderRadius="0.5rem" />

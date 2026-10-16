@@ -268,7 +268,28 @@ export async function sendMessage(req, res) {
                 const fallbackTitle = primaryFile?.fileType === "video" ? "Video Analysis" 
                     : primaryFile?.fileType === "image" ? (uploadedFiles.length > 1 ? `Album (${uploadedFiles.length} photos)` : "Image Upload")
                     : (primaryFile?.fileType === "document" ? `Doc: ${primaryFile.name}` : "New Chat");
-                title = await generateChatTitle(message || fallbackTitle);
+                let titleApiKey = "";
+                let titleProvider = targetProvider;
+                let titleModelId = targetModelId;
+
+                if (customKeyEntry && customKeyEntry.apiKey) {
+                    titleApiKey = decryptKey(customKeyEntry.apiKey);
+                } else if (targetProvider === "gemini" && fullUser?.geminiApiKey) {
+                    titleApiKey = decryptKey(fullUser.geminiApiKey);
+                } else if (fullUser?.customApiKeys && fullUser.customApiKeys.length > 0) {
+                    const anyActiveKey = fullUser.customApiKeys.find(k => k.isActive !== false && k.apiKey);
+                    if (anyActiveKey) {
+                        titleApiKey = decryptKey(anyActiveKey.apiKey);
+                        titleProvider = anyActiveKey.provider;
+                        titleModelId = anyActiveKey.models?.[0]?.id || (anyActiveKey.provider === "gemini" ? "gemini-3.6-flash" : anyActiveKey.provider === "groq" ? "llama-3.1-8b-instant" : "gpt-4o-mini");
+                    }
+                }
+
+                title = await generateChatTitle(message || fallbackTitle, {
+                    userApiKey: titleApiKey,
+                    provider: titleProvider,
+                    modelId: titleModelId
+                });
                 chat = await chatModel.create({
                     user: req.user.id,
                     title,

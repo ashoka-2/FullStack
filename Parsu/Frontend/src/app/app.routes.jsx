@@ -47,6 +47,7 @@ const SafetySettingsPage = withLazy(() => import("../features/auth/pages/setting
 const StorageSettingsPage = withLazy(() => import("../features/auth/pages/settings/StorageSettingsPage"));
 const ReportBugPage = withLazy(() => import("../features/auth/pages/settings/ReportBugPage"));
 const DevicesPage = withLazy(() => import("../features/device/pages/DevicesPage"));
+const GuideSettingsPage = withLazy(() => import("../features/auth/pages/settings/GuideSettingsPage"));
 
 // Info & Legal Pages (Lazy Loaded)
 const PrivacyPolicy = withLazy(() => import("../features/pages/PrivacyPolicy"));
@@ -212,6 +213,10 @@ export const router = createBrowserRouter([
             {
                 path: "/settings/devices",
                 element: <Protected><DevicesPage /></Protected>
+            },
+            {
+                path: "/settings/guide",
+                element: <Protected><GuideSettingsPage /></Protected>
             },
             // Info / Legal Pages (public)
             {
