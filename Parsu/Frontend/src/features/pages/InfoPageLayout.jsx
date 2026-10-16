@@ -32,6 +32,7 @@ export default function InfoPageLayout({
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
+    document.documentElement.dataset.theme = theme;
     if (theme === 'light') {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
@@ -77,11 +78,7 @@ export default function InfoPageLayout({
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] text-zinc-900 dark:text-zinc-100 flex flex-col font-sans selection:bg-[var(--accent-cyan)]/25 overflow-x-hidden relative transition-colors duration-300">
-      
-      {/* Ambient Diffused Studio Glows (Apple/AI Dark) */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[340px] bg-[var(--accent-cyan)]/[0.04] dark:bg-[var(--accent-cyan)]/[0.06] rounded-full blur-[140px] pointer-events-none z-0" />
-      <div className="fixed bottom-10 right-10 w-[420px] h-[300px] bg-blue-600/[0.02] dark:bg-blue-600/[0.04] rounded-full blur-[130px] pointer-events-none z-0" />
+    <div className="info-page-shell ui-page min-h-screen bg-[var(--bg-primary)] text-zinc-900 dark:text-zinc-100 flex flex-col font-sans selection:bg-[var(--accent-cyan)]/25 overflow-x-hidden relative transition-colors duration-300">
 
       {/* Main Landing Page Sticky LiquidGlassNav */}
       <LiquidGlassNav theme={theme} toggleTheme={toggleTheme} />

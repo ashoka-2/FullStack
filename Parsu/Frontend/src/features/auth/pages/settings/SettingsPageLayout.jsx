@@ -22,7 +22,7 @@ const SettingsPageLayout = ({ title, icon: Icon, description, children }) => {
     });
 
     return (
-        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30">
+        <div className="settings-page-shell ui-page flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             {/* Main column — dynamic padding based on sidebar collapse */}

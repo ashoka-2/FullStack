@@ -115,6 +115,7 @@ const GeneralSettingsPage = () => {
     // Apply theme immediately on change
     useEffect(() => {
         const root = document.documentElement;
+        root.dataset.theme = theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
         if (theme === 'dark') {
             root.classList.add('dark');
         } else if (theme === 'light') {

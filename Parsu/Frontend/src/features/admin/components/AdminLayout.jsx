@@ -77,6 +77,7 @@ export default function AdminLayout() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
+    document.documentElement.dataset.theme = theme;
     if (theme === 'light') {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
@@ -113,7 +114,7 @@ export default function AdminLayout() {
     : 'Admin';
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#0a0b0f] text-zinc-900 dark:text-zinc-100 flex flex-col lg:flex-row font-sans selection:bg-zinc-800 selection:text-white dark:selection:bg-white dark:selection:text-zinc-950 transition-colors duration-300">
+    <div className="admin-shell ui-page min-h-screen bg-zinc-50 dark:bg-[#0a0b0f] text-zinc-900 dark:text-zinc-100 flex flex-col lg:flex-row font-sans selection:bg-zinc-800 selection:text-white dark:selection:bg-white dark:selection:text-zinc-950 transition-colors duration-300">
       
       {/* ── Mobile Top Bar ── */}
       <div className="lg:hidden sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-white/90 dark:bg-[#0c0d12]/90 backdrop-blur-2xl border-b border-zinc-200 dark:border-white/[0.08] transition-colors">

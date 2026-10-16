@@ -202,7 +202,7 @@ const Library = () => {
     };
 
     return (
-        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30 w-full">
+        <div className="library-shell ui-page flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30 w-full">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             <div className={`flex-1 flex flex-col h-full ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} min-w-0 transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] w-full overflow-hidden`}>

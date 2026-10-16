@@ -9,7 +9,8 @@ import {
     RiFullscreenLine,
     RiFullscreenExitLine,
     RiFileCopyLine,
-    RiDownloadLine
+    RiDownloadLine,
+    RiCodeSSlashLine
 } from '@remixicon/react';
 import Sidebar from '../../Components/Sidebar';
 import ChatMessage from '../components/ChatMessage';
@@ -74,12 +75,14 @@ const ChatPage2 = () => {
     const [latestMessageId, setLatestMessageId] = useState(null);
     const [showScrollButton, setShowScrollButton] = useState(false);
     const [codePreview, setCodePreview] = useState(null);
+    const [codePreviewMode, setCodePreviewMode] = useState('preview');
     const [previewFullscreen, setPreviewFullscreen] = useState(false);
 
     useEffect(() => {
         const openPreview = (event) => {
             if (typeof event.detail?.code === 'string') {
                 setCodePreview(event.detail.code);
+                setCodePreviewMode('preview');
                 setPreviewFullscreen(false);
             }
         };
@@ -531,7 +534,7 @@ const ChatPage2 = () => {
 
 
     return (
-        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30">
+        <div className="chat-shell ui-page flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             <div className={`flex-1 flex h-[100dvh] ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} overflow-hidden relative transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
@@ -702,34 +705,41 @@ const ChatPage2 = () => {
               </div>
 
               {codePreview && !previewFullscreen && (
-                <aside className="absolute inset-0 z-50 flex min-w-0 flex-col border-l border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-950 shadow-2xl animate-in fade-in slide-in-from-right-3 duration-200 md:static md:inset-auto md:mt-0 md:h-full md:w-[min(48%,680px)] md:shrink-0">
+                <aside className="artifact-pane absolute inset-0 z-50 flex min-w-0 flex-col border-l border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-950 shadow-2xl animate-in fade-in slide-in-from-right-3 duration-200 md:static md:inset-auto md:mt-0 md:h-full md:w-[min(48%,680px)] md:shrink-0">
                     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 dark:border-white/10 px-4">
                         <div className="min-w-0">
-                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">HTML preview</p>
-                            <p className="text-[11px] text-zinc-500">Sandboxed local preview</p>
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Generated HTML</p>
                         </div>
                         <div className="flex items-center gap-1">
+                            <div role="tablist" aria-label="Artifact view" className="artifact-view-toggle mr-2 inline-flex rounded-full p-1">
+                                <button type="button" role="tab" aria-selected={codePreviewMode === 'code'} onClick={() => setCodePreviewMode('code')} className={`rounded-full px-3 py-1.5 text-xs transition-colors ${codePreviewMode === 'code' ? 'bg-[var(--surface-3)] text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}><RiCodeSSlashLine className="mr-1 inline" size={14} />Code</button>
+                                <button type="button" role="tab" aria-selected={codePreviewMode === 'preview'} onClick={() => setCodePreviewMode('preview')} className={`rounded-full px-3 py-1.5 text-xs transition-colors ${codePreviewMode === 'preview' ? 'bg-[var(--surface-3)] text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>Preview</button>
+                            </div>
                             <button type="button" onClick={() => navigator.clipboard.writeText(codePreview)} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Copy HTML" aria-label="Copy HTML"><RiFileCopyLine size={16} /></button>
                             <button type="button" onClick={() => { const url = URL.createObjectURL(new Blob([codePreview], { type: 'text/html' })); const link = document.createElement('a'); link.href = url; link.download = 'parsu-preview.html'; link.click(); URL.revokeObjectURL(url); }} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Download HTML" aria-label="Download HTML"><RiDownloadLine size={16} /></button>
                             <button type="button" onClick={() => setPreviewFullscreen(v => !v)} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title={previewFullscreen ? 'Exit full screen' : 'Full screen'} aria-label={previewFullscreen ? 'Exit full screen' : 'Full screen'}>{previewFullscreen ? <RiFullscreenExitLine size={16} /> : <RiFullscreenLine size={16} />}</button>
                             <button type="button" onClick={() => { setCodePreview(null); setPreviewFullscreen(false); }} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Close preview" aria-label="Close preview"><RiCloseLine size={17} /></button>
                         </div>
                     </header>
-                    <iframe title="Generated HTML preview" sandbox="allow-scripts" srcDoc={codePreview} className="min-h-0 flex-1 bg-white" />
+                    {codePreviewMode === 'preview' ? <iframe title="Generated HTML preview" sandbox="allow-scripts" srcDoc={codePreview} className="min-h-0 flex-1 bg-white" /> : <pre className="artifact-code min-h-0 flex-1 overflow-auto p-5 text-xs leading-6"><code>{codePreview}</code></pre>}
                 </aside>
               )}
               {codePreview && previewFullscreen && createPortal(
-                <aside className="fixed inset-0 z-[10010] flex min-w-0 flex-col border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-950 shadow-2xl animate-in fade-in duration-200">
+                <aside className="artifact-pane fixed inset-0 z-[10010] flex min-w-0 flex-col border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-950 shadow-2xl animate-in fade-in duration-200">
                     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 dark:border-white/10 px-4">
                         <div className="min-w-0"><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">HTML preview</p><p className="text-[11px] text-zinc-500">Sandboxed local preview</p></div>
                         <div className="flex items-center gap-1">
+                            <div role="tablist" aria-label="Artifact view" className="artifact-view-toggle mr-2 inline-flex rounded-full p-1">
+                                <button type="button" role="tab" aria-selected={codePreviewMode === 'code'} onClick={() => setCodePreviewMode('code')} className={`rounded-full px-3 py-1.5 text-xs transition-colors ${codePreviewMode === 'code' ? 'bg-[var(--surface-3)] text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}><RiCodeSSlashLine className="mr-1 inline" size={14} />Code</button>
+                                <button type="button" role="tab" aria-selected={codePreviewMode === 'preview'} onClick={() => setCodePreviewMode('preview')} className={`rounded-full px-3 py-1.5 text-xs transition-colors ${codePreviewMode === 'preview' ? 'bg-[var(--surface-3)] text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>Preview</button>
+                            </div>
                             <button type="button" onClick={() => navigator.clipboard.writeText(codePreview)} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Copy HTML" aria-label="Copy HTML"><RiFileCopyLine size={16} /></button>
                             <button type="button" onClick={() => { const url = URL.createObjectURL(new Blob([codePreview], { type: 'text/html' })); const link = document.createElement('a'); link.href = url; link.download = 'parsu-preview.html'; link.click(); URL.revokeObjectURL(url); }} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Download HTML" aria-label="Download HTML"><RiDownloadLine size={16} /></button>
                             <button type="button" onClick={() => setPreviewFullscreen(false)} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Exit full screen" aria-label="Exit full screen"><RiFullscreenExitLine size={16} /></button>
                             <button type="button" onClick={() => { setCodePreview(null); setPreviewFullscreen(false); }} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Close preview" aria-label="Close preview"><RiCloseLine size={17} /></button>
                         </div>
                     </header>
-                    <iframe title="Generated HTML preview" sandbox="allow-scripts" srcDoc={codePreview} className="min-h-0 flex-1 bg-white" />
+                    {codePreviewMode === 'preview' ? <iframe title="Generated HTML preview" sandbox="allow-scripts" srcDoc={codePreview} className="min-h-0 flex-1 bg-white" /> : <pre className="artifact-code min-h-0 flex-1 overflow-auto p-5 text-xs leading-6"><code>{codePreview}</code></pre>}
                 </aside>, document.body
               )}
             </div>

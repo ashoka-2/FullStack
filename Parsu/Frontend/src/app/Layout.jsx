@@ -87,6 +87,7 @@ const Layout = () => {
 
         // Sync Initial Theme & User Custom Colors
         const theme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.dataset.theme = theme;
         if (theme === 'dark') {
             document.documentElement.classList.add('dark');
             document.documentElement.classList.remove('light');

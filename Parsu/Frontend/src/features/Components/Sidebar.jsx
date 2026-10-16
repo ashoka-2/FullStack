@@ -142,6 +142,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
+    document.documentElement.dataset.theme = theme;
     if (theme === 'light') {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');

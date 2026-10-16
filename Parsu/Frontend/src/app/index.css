@@ -872,3 +872,128 @@ html, body {
     backdrop-filter: blur(4px) !important;
   }
 }
+
+/* Parsu minimal product system. Scoped to product pages so the public home
+   page keeps its established composition while app shells share one palette. */
+:root {
+  color-scheme: dark;
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #161616;
+  --bg-tertiary: #1c1c1c;
+  --surface-1: #161616;
+  --surface-2: #1c1c1c;
+  --surface-3: #242424;
+  --surface-hover: #2c2c2c;
+  --text-primary: #f5f5f5;
+  --text-secondary: #b5b5b5;
+  --text-tertiary: #858585;
+  --border-subtle: rgba(255, 255, 255, .06);
+  --border-default: rgba(255, 255, 255, .10);
+  --border-hover: rgba(255, 255, 255, .16);
+  --corner-shape: squircle;
+  --corner-shape-pill: round;
+  --radius-card: 24px;
+  --motion-fast: 150ms;
+  --motion-base: 200ms;
+  --motion-slow: 300ms;
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --accent-cyan: #169db4;
+  --color-clear-hanada: #169db4;
+  --btn-primary-bg: #169db4;
+  --btn-primary-shadow: none;
+}
+
+:root.light,
+:root[data-theme="light"],
+.light {
+  color-scheme: light;
+  --bg-primary: #fcfcfc;
+  --bg-secondary: #f1f1f1;
+  --bg-tertiary: #e8e8e8;
+  --surface-1: #f1f1f1;
+  --surface-2: #e8e8e8;
+  --surface-3: #ffffff;
+  --surface-hover: #e8e8e8;
+  --text-primary: #0d0d0d;
+  --text-secondary: #5d5d5d;
+  --text-tertiary: #777777;
+  --border-subtle: rgba(0, 0, 0, .06);
+  --border-default: rgba(0, 0, 0, .10);
+  --border-hover: rgba(0, 0, 0, .16);
+  --accent-cyan: #176b8b;
+  --color-clear-hanada: #176b8b;
+  --btn-primary-bg: #176b8b;
+  --btn-primary-shadow: none;
+}
+
+html:not(.light):not([data-theme="light"]) { color-scheme: dark; }
+
+.ui-page {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary);
+  font-family: Inter, Geist, ui-sans-serif, system-ui, sans-serif;
+}
+
+.ui-page :is(input, textarea, select) {
+  border-radius: 14px;
+  border-color: var(--border-default);
+  transition: border-color var(--motion-base) var(--ease-standard), background-color var(--motion-base) var(--ease-standard), box-shadow var(--motion-base) var(--ease-standard);
+}
+
+.ui-page :is(input, textarea, select):focus-visible,
+.ui-page :is(button, a, [role="button"], [role="tab"]):focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+}
+
+.ui-page :is(button, a, [role="button"]) { transition-duration: var(--motion-fast); }
+.ui-page :is(button, [role="button"]):active { transform: scale(.985); }
+
+.ui-page .ui-surface,
+.ui-page .ui-card,
+.ui-page .surface,
+.ui-page .card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+}
+
+.ui-page :is(
+  [class*="rounded-"][class*="bg-white"],
+  [class*="rounded-"][class*="bg-zinc-50"],
+  [class*="rounded-"][class*="bg-zinc-100"],
+  [class*="rounded-"][class*="dark:bg-zinc-900"],
+  [class*="rounded-"][class*="dark:bg-zinc-950"],
+  [class*="rounded-"][class*="dark:bg-[#0"]
+) {
+  background-color: var(--surface-1) !important;
+  border-color: var(--border-subtle);
+}
+
+.artifact-pane {
+  background: var(--bg-primary) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary);
+  corner-shape: var(--corner-shape);
+}
+
+.artifact-view-toggle { background: var(--surface-1); border: 1px solid var(--border-subtle); }
+.artifact-code { background: var(--bg-primary); color: var(--text-primary); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+@supports (corner-shape: squircle) {
+  :where(.ui-page .ui-surface, .ui-page .ui-card, .ui-page .surface, .ui-page .card,
+    .ui-page input, .ui-page textarea, .ui-page select, .artifact-pane, .artifact-view-toggle) {
+    corner-shape: var(--corner-shape);
+  }
+  :where(.ui-page .rounded-full, .ui-page .pill, .ui-page .icon-btn, .ui-page [data-corner="round"]) {
+    corner-shape: var(--corner-shape-pill);
+  }
+  :root { --radius-card: 28px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ui-page :is(.artifact-pane, [role="dialog"], .sidebar-drawer) {
+    animation-duration: var(--motion-slow);
+    animation-timing-function: var(--ease-standard);
+  }
+}
