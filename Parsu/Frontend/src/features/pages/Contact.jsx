@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   RiMailLine,
   RiSendPlane2Line,
@@ -100,10 +100,10 @@ export default function Contact() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-5xl mx-auto">
         
         {/* Left Column: Direct Inquiries Form */}
-        <div ref={formCardRef} className="lg:col-span-7 bg-white dark:bg-[var(--bg-card)] border border-zinc-200 dark:border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-xl">
+        <div ref={formCardRef} className="lg:col-span-7 bg-white dark:bg-[var(--surface)] border border-zinc-200 dark:border-[var(--border)] rounded-[28px] p-6 sm:p-8 shadow-xs">
           {submitted ? (
             <div className="text-center py-12 space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-[var(--accent-cyan)] mx-auto">
+              <div className="w-16 h-16 rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/25 flex items-center justify-center text-[var(--accent)] mx-auto">
                 <RiCheckboxCircleFill size={36} />
               </div>
               <h2 className="text-xl font-bold text-zinc-900 dark:text-white tracking-tight">Transmission Received</h2>
@@ -116,7 +116,7 @@ export default function Contact() {
                   setSubmitted(false);
                   setFormData({ name: '', email: '', subject: '', message: '' });
                 }}
-                className="mt-4 px-5 py-2.5 rounded-xl bg-zinc-100 dark:bg-white/[0.05] hover:bg-zinc-200 dark:hover:bg-white/[0.1] text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-all cursor-pointer"
+                className="mt-4 px-5 py-2.5 rounded-full bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--border)] text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-all cursor-pointer"
               >
                 Send Another Message
               </button>
@@ -130,7 +130,7 @@ export default function Contact() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                  <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 ml-1">
                     Your Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -139,12 +139,12 @@ export default function Contact() {
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Alex Parker"
-                    className="w-full h-11 px-3.5 bg-zinc-50 dark:bg-white/[0.03] hover:bg-zinc-100/80 dark:hover:bg-white/[0.05] focus:bg-white dark:focus:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.08] focus:border-[var(--accent-cyan)] rounded-xl text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none transition-all"
+                    className="w-full h-11 px-4 bg-zinc-50 dark:bg-[var(--surface-2)] hover:bg-zinc-100/80 dark:hover:bg-[var(--surface-hover)] focus:bg-white dark:focus:bg-[var(--surface-hover)] border border-zinc-200 dark:border-[var(--border)] focus:border-[var(--accent)] rounded-full text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none transition-all"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                  <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 ml-1">
                     Email Address <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -153,13 +153,13 @@ export default function Contact() {
                     value={formData.email}
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                     placeholder="alex@company.com"
-                    className="w-full h-11 px-3.5 bg-zinc-50 dark:bg-white/[0.03] hover:bg-zinc-100/80 dark:hover:bg-white/[0.05] focus:bg-white dark:focus:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.08] focus:border-[var(--accent-cyan)] rounded-xl text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none transition-all"
+                    className="w-full h-11 px-4 bg-zinc-50 dark:bg-[var(--surface-2)] hover:bg-zinc-100/80 dark:hover:bg-[var(--surface-hover)] focus:bg-white dark:focus:bg-[var(--surface-hover)] border border-zinc-200 dark:border-[var(--border)] focus:border-[var(--accent)] rounded-full text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 ml-1">
                   Subject / Topic
                 </label>
                 <input
@@ -167,12 +167,12 @@ export default function Contact() {
                   value={formData.subject}
                   onChange={e => setFormData({ ...formData, subject: e.target.value })}
                   placeholder="e.g. Model integration, custom API quota, or partnership"
-                  className="w-full h-11 px-3.5 bg-zinc-50 dark:bg-white/[0.03] hover:bg-zinc-100/80 dark:hover:bg-white/[0.05] focus:bg-white dark:focus:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.08] focus:border-[var(--accent-cyan)] rounded-xl text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none transition-all"
+                  className="w-full h-11 px-4 bg-zinc-50 dark:bg-[var(--surface-2)] hover:bg-zinc-100/80 dark:hover:bg-[var(--surface-hover)] focus:bg-white dark:focus:bg-[var(--surface-hover)] border border-zinc-200 dark:border-[var(--border)] focus:border-[var(--accent)] rounded-full text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 ml-1">
                   Message <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -181,7 +181,7 @@ export default function Contact() {
                   value={formData.message}
                   onChange={e => setFormData({ ...formData, message: e.target.value })}
                   placeholder="Describe your inquiry in detail..."
-                  className="w-full p-3.5 bg-zinc-50 dark:bg-white/[0.03] hover:bg-zinc-100/80 dark:hover:bg-white/[0.05] focus:bg-white dark:focus:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.08] focus:border-[var(--accent-cyan)] rounded-xl text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none transition-all resize-none"
+                  className="w-full p-4 bg-zinc-50 dark:bg-[var(--surface-2)] hover:bg-zinc-100/80 dark:hover:bg-[var(--surface-hover)] focus:bg-white dark:focus:bg-[var(--surface-hover)] border border-zinc-200 dark:border-[var(--border)] focus:border-[var(--accent)] rounded-[18px] text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none transition-all resize-none"
                 />
               </div>
 
@@ -208,10 +208,10 @@ export default function Contact() {
               <div
                 key={i}
                 ref={el => channelsRef.current[i] = el}
-                className="p-5 rounded-2xl bg-white dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.07] hover:border-zinc-300 dark:hover:border-white/15 transition-all shadow-xs"
+                className="p-5 rounded-[24px] bg-white dark:bg-[var(--surface)] border border-zinc-200 dark:border-[var(--border)] hover:border-zinc-300 dark:hover:border-white/15 transition-all shadow-xs"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-[var(--accent-cyan)]">
+                  <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/10 flex items-center justify-center text-[var(--accent)]">
                     <Icon size={17} />
                   </div>
                   <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-white/[0.04]">
@@ -222,7 +222,7 @@ export default function Contact() {
                 <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed mb-2.5">{ch.desc}</p>
                 <a
                   href={`mailto:${ch.action}`}
-                  className="text-xs font-mono text-[var(--accent-cyan)] hover:underline font-semibold"
+                  className="text-xs font-mono text-[var(--accent)] hover:underline font-semibold"
                 >
                   {ch.action}
                 </a>

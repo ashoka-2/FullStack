@@ -142,6 +142,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
+    document.documentElement.dataset.theme = theme;
     if (theme === 'light') {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
@@ -185,7 +186,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const menuItems = [
     { icon: RiSearchLine, label: 'Search', action: 'search', isProtected: false },
     { icon: RiHistoryLine, label: 'Chats', path: '/library', active: location.pathname === '/library', isProtected: true },
-    { icon: RiApps2Line, label: 'Social Hub', path: '/social-connections', active: location.pathname === '/social-connections', isProtected: true },
+    { icon: RiApps2Line, label: 'Plugins', path: '/social-connections', active: location.pathname === '/social-connections' || location.pathname === '/plugins', isProtected: true },
     { icon: RiSettings4Line, label: 'Settings', path: '/settings', active: location.pathname.startsWith('/settings'), isProtected: true },
   ];
 
@@ -298,7 +299,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       <aside
         ref={drawerRef}
         data-lenis-prevent="true"
-        className={`fixed top-0 left-0 z-[9990] h-[100dvh] flex flex-col bg-white dark:bg-[var(--bg-secondary)] text-zinc-600 dark:text-zinc-400 shrink-0 border-r border-zinc-200/80 dark:border-white/[0.08] shadow-2xl lg:shadow-none
+        className={`ui-sidebar fixed top-0 left-0 z-[9990] h-[100dvh] flex flex-col bg-white dark:bg-[var(--surface)] text-zinc-600 dark:text-zinc-400 shrink-0 border-r border-zinc-200/80 dark:border-[var(--border)] shadow-2xl lg:shadow-none
           transition-[transform,width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
           ${isOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none lg:pointer-events-auto'}
           lg:translate-x-0
@@ -352,15 +353,15 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             </button>
           )}
 
-          {/* Mobile Close Button */}
+          {/* Mobile Close Button (enlarged touch target) */}
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="lg:hidden w-8 h-8 rounded-full flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer shrink-0"
+            className="lg:hidden w-10 h-10 rounded-full flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer shrink-0"
             title="Close navigation"
             aria-label="Close navigation"
           >
-            <RiCloseLine size={20} />
+            <RiCloseLine size={22} />
           </button>
         </div>
 
@@ -414,10 +415,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               navigate('/ai');
             }}
             title="New Chat"
-            className={`${isSidebarCollapsed ? 'flex-1 px-3 py-2 lg:flex-none lg:w-10 lg:h-10 lg:p-0 lg:justify-center' : 'flex-1 px-3 py-2'} flex items-center gap-2 rounded-xl bg-zinc-100 dark:bg-[var(--bg-surface)] hover:bg-zinc-200/70 dark:hover:bg-[var(--bg-surface-hover)] border border-zinc-200/90 dark:border-white/[0.08] text-zinc-900 dark:text-white transition-all group cursor-pointer text-left text-sm font-medium`}
+            className={`${isSidebarCollapsed ? 'flex-1 px-3.5 py-2.5 lg:flex-none lg:w-10 lg:h-10 lg:p-0 lg:justify-center' : 'flex-1 px-3.5 py-2.5'} min-h-11 sm:min-h-10 flex items-center gap-2.5 rounded-[14px] bg-zinc-100 dark:bg-[var(--bg-surface)] hover:bg-zinc-200/70 dark:hover:bg-[var(--bg-surface-hover)] border border-zinc-200/90 dark:border-white/[0.08] text-zinc-900 dark:text-white transition-all group cursor-pointer text-left text-sm font-medium shadow-xs`}
           >
-            <RiAddLine size={19} className="text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white shrink-0" />
-            <span className={`${isSidebarCollapsed ? 'block lg:hidden' : 'block'}`}>New Chat</span>
+            <RiAddLine size={21} className="text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white shrink-0" />
+            <span className={`${isSidebarCollapsed ? 'block lg:hidden' : 'block'} font-semibold`}>New Chat</span>
           </button>
 
           {/* Incognito toggle */}

@@ -239,34 +239,36 @@ const MascotCompanionSettings = ({ previewMood = 'curious', setPreviewMood, cele
   };
 
   return (
-    <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
-      <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold">
+    <div className="bg-[var(--surface)] border border-[var(--line)] rounded-[28px] p-5 sm:p-7 shadow-xs space-y-6 select-none">
+      <div className="flex items-center justify-between pb-4 border-b border-[var(--line)]">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-full bg-[var(--surface-2)] text-[var(--accent-text)] flex items-center justify-center shrink-0">
             <RiSparkling2Line size={20} />
           </div>
           <div>
-            <h2 className="text-base font-bold text-zinc-900 dark:text-white">Floating Mascot Companion</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Configure the interactive mascot, customize its size, colors, eye cursor tracking, and fire flame effect</p>
+            <h2 className="text-base font-semibold text-[var(--text)]">Floating Mascot Companion</h2>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Configure the interactive JellyBlob mascot, size, colors, and physics</p>
           </div>
         </div>
 
         {/* Visibility Switch Toggle */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 hidden sm:inline">
+          <span className="text-xs font-medium text-[var(--text-muted)] hidden sm:inline">
             {blobVisible ? 'Visible' : 'Hidden'}
           </span>
           <button
             type="button"
+            role="switch"
+            aria-checked={blobVisible}
             onClick={() => handleToggleBlobVisibility(!blobVisible)}
-            className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
-              blobVisible ? 'bg-[var(--accent-cyan)]' : 'bg-zinc-300 dark:bg-zinc-700'
+            className={`w-[50px] h-[30px] flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ${
+              blobVisible ? 'bg-[var(--text)] text-[var(--bg)]' : 'bg-[var(--surface-2)] shadow-[inset_0_0_0_2px_var(--line-strong)]'
             }`}
             title={blobVisible ? "Click to hide mascot" : "Click to show mascot"}
           >
             <div
-              className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                blobVisible ? 'translate-x-6' : 'translate-x-0'
+              className={`w-[22px] h-[22px] rounded-full shadow-sm transform transition-transform duration-200 ${
+                blobVisible ? 'translate-x-[20px] bg-[var(--bg)]' : 'translate-x-0 bg-[var(--text-muted)]'
               }`}
             />
           </button>

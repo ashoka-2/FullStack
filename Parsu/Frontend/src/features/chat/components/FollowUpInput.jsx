@@ -277,7 +277,7 @@ const FollowUpInput = ({
     };
 
     return (
-        <div className={`absolute bottom-0 left-0 w-full ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/95 to-transparent z-40 pb-2.5 sm:pb-3.5 md:pb-4 pointer-events-none transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col justify-end`}>
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/95 to-transparent z-40 pb-2.5 sm:pb-3.5 md:pb-4 pointer-events-none flex flex-col justify-end">
             {/* Queued Messages Tray & Stop Generating */}
             <MessageQueueTray 
                 queue={queue}

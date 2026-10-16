@@ -63,7 +63,7 @@ export default function ChatNavbar({
   };
 
   return (
-    <header className="h-14 w-full shrink-0 z-30 px-3.5 sm:px-6 flex items-center justify-between select-none bg-gradient-to-b from-white from-40% via-white/60 to-transparent dark:from-black dark:from-40% dark:via-black/60 dark:to-transparent backdrop-blur-xl">
+    <header className="ui-chat-navbar h-14 w-full shrink-0 z-30 px-3.5 sm:px-6 flex items-center justify-between select-none">
       
       {/* ── Left Section: Mobile Menu Icon / Desktop Brand Pill & Back Link ── */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -73,28 +73,33 @@ export default function ChatNavbar({
           <PillGroup className="lg:hidden">
             <CircleButton
               onClick={onOpenSidebar}
+              size="lg"
+              className="w-10 h-10"
               title="Open menu"
               ariaLabel="Open menu"
             >
-              <RiMenuLine size={17} />
+              <RiMenuLine size={21} />
             </CircleButton>
             <CircleButton
               to={backLink}
+              size="lg"
+              className="w-10 h-10"
               title={backText ? `Back to ${backText}` : 'Back'}
               ariaLabel={backText ? `Back to ${backText}` : 'Back'}
             >
-              <RiArrowLeftLine size={17} />
+              <RiArrowLeftLine size={21} />
             </CircleButton>
           </PillGroup>
         ) : (
-          /* On mobile: Standalone circular menu button */
+          /* On mobile: Standalone circular menu button (enlarged for easy touch) */
           <CircleButton
             onClick={onOpenSidebar}
-            className="lg:hidden"
+            size="lg"
+            className="lg:hidden w-11 h-11 sm:w-10 sm:h-10"
             title="Open menu"
             ariaLabel="Open menu"
           >
-            <RiMenuLine size={18} className="shrink-0" />
+            <RiMenuLine size={22} className="shrink-0" />
           </CircleButton>
         )}
 
@@ -189,14 +194,15 @@ export default function ChatNavbar({
           </div>
         )}
 
-        {/* On mobile: New Chat button at the far right end */}
+        {/* On mobile: New Chat button at the far right end (enlarged for easy touch) */}
         <CircleButton
           to="/ai"
-          className="lg:hidden"
+          size="lg"
+          className="lg:hidden w-11 h-11 sm:w-10 sm:h-10"
           title="New Chat"
           ariaLabel="New Chat"
         >
-          <RiAddLine size={18} className="shrink-0" />
+          <RiAddLine size={22} className="shrink-0" />
         </CircleButton>
       </div>
     </header>

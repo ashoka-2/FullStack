@@ -99,7 +99,7 @@ export default function AuthForgotPasswordForm({
               Registered Email <span className="text-red-400 font-bold ml-0.5">*</span>
             </label>
             <div className="relative">
-              <RiMailLine className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+              <RiMailLine className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)] pointer-events-none" />
               <input
                 type="email"
                 required
@@ -111,7 +111,7 @@ export default function AuthForgotPasswordForm({
                 onFocus={() => onFieldFocus('email')}
                 onBlur={onFieldBlur}
                 placeholder="name@example.com"
-                className="w-full h-11 bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.08] focus:border-[var(--accent-cyan)] focus:bg-white/[0.05] focus:ring-1 focus:ring-[var(--accent-cyan)]/30 rounded-xl pl-10 pr-3.5 text-sm text-white placeholder:text-zinc-500 transition-all outline-none"
+                className="w-full h-11 bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--border)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 rounded-full pl-10 pr-4 text-sm text-[var(--fg)] placeholder:text-[var(--muted)] transition-all outline-none"
               />
             </div>
           </div>
@@ -134,7 +134,7 @@ export default function AuthForgotPasswordForm({
           <button
             type="button"
             onClick={() => onSwitchMode('login')}
-            className="w-full text-xs text-zinc-400 hover:text-white font-medium py-1.5 active:scale-[0.97] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            className="w-full text-xs text-[var(--muted)] hover:text-[var(--fg)] font-medium py-1.5 active:scale-[0.97] transition-all cursor-pointer flex items-center justify-center gap-1.5"
           >
             <RiArrowLeftLine size={14} /> Back to Sign In
           </button>
@@ -149,28 +149,28 @@ export default function AuthForgotPasswordForm({
             <button
               type="button"
               onClick={() => setForgotStep(1)}
-              className="text-xs text-[var(--accent-cyan)] hover:underline font-semibold shrink-0 cursor-pointer"
+              className="text-xs text-[var(--accent)] hover:underline font-semibold shrink-0 cursor-pointer"
             >
               Change
             </button>
           </div>
 
           <div className="space-y-1">
-            <div className="flex items-center justify-between ml-0.5">
-              <label className="text-xs font-medium text-zinc-300">
+            <div className="flex items-center justify-between ml-1">
+              <label className="text-xs font-medium text-[var(--muted)]">
                 6-Digit OTP Code <span className="text-red-400 font-bold ml-0.5">*</span>
               </label>
               <button
                 type="button"
                 disabled={forgotCooldown > 0 || forgotLoading}
                 onClick={onSendOtp}
-                className="text-xs text-[var(--accent-cyan)] hover:underline disabled:text-zinc-500 disabled:no-underline font-medium cursor-pointer"
+                className="text-xs text-[var(--accent)] hover:underline disabled:text-[var(--muted)] disabled:no-underline font-medium cursor-pointer"
               >
                 {forgotCooldown > 0 ? `Resend in ${forgotCooldown}s` : 'Resend Code'}
               </button>
             </div>
             <div className="relative">
-              <RiKey2Line className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+              <RiKey2Line className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)] pointer-events-none" />
               <input
                 type="text"
                 required
@@ -184,7 +184,7 @@ export default function AuthForgotPasswordForm({
                 onFocus={() => onFieldFocus('otp')}
                 onBlur={onFieldBlur}
                 placeholder="123456"
-                className="w-full h-11 font-mono text-center tracking-[0.35em] font-bold bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.08] focus:border-[var(--accent-cyan)] focus:bg-white/[0.05] focus:ring-1 focus:ring-[var(--accent-cyan)]/30 rounded-xl pl-10 pr-4 text-base text-white placeholder:tracking-normal placeholder:font-sans placeholder:text-zinc-500 transition-all outline-none"
+                className="w-full h-11 font-mono text-center tracking-[0.35em] font-bold bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--border)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 rounded-full pl-10 pr-4 text-base text-[var(--fg)] placeholder:tracking-normal placeholder:font-sans placeholder:text-[var(--muted)] transition-all outline-none"
               />
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function AuthForgotPasswordForm({
             <button
               type="button"
               onClick={() => setForgotStep(1)}
-              className="text-xs text-zinc-400 hover:text-white font-medium cursor-pointer flex items-center gap-1 active:scale-[0.97]"
+              className="text-xs text-[var(--muted)] hover:text-[var(--fg)] font-medium cursor-pointer flex items-center gap-1 active:scale-[0.97]"
             >
               <RiArrowLeftLine size={14} /> Back to Email
             </button>
@@ -216,7 +216,7 @@ export default function AuthForgotPasswordForm({
             <button
               type="button"
               onClick={() => onSwitchMode('login')}
-              className="text-xs text-zinc-400 hover:text-white font-medium cursor-pointer active:scale-[0.97]"
+              className="text-xs text-[var(--muted)] hover:text-[var(--fg)] font-medium cursor-pointer active:scale-[0.97]"
             >
               Sign In
             </button>
@@ -233,11 +233,11 @@ export default function AuthForgotPasswordForm({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-300 ml-0.5">
+            <label className="text-xs font-medium text-[var(--muted)] ml-1">
               New Password <span className="text-red-400 font-bold ml-0.5">*</span>
             </label>
             <div className="relative">
-              <RiLockPasswordLine className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+              <RiLockPasswordLine className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)] pointer-events-none" />
               <input
                 type={showNewPassword ? 'text' : 'password'}
                 required
@@ -246,12 +246,12 @@ export default function AuthForgotPasswordForm({
                 onFocus={() => onFieldFocus('newPassword')}
                 onBlur={onFieldBlur}
                 placeholder="Min 6 chars, uppercase & number"
-                className="w-full h-11 bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.08] focus:border-[var(--accent-cyan)] focus:bg-white/[0.05] focus:ring-1 focus:ring-[var(--accent-cyan)]/30 rounded-xl pl-10 pr-10 text-sm text-white placeholder:text-zinc-500 transition-all outline-none"
+                className="w-full h-11 bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--border)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 rounded-full pl-10 pr-10 text-sm text-[var(--fg)] placeholder:text-[var(--muted)] transition-all outline-none"
               />
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white cursor-pointer p-0.5"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--fg)] cursor-pointer p-0.5"
               >
                 {showNewPassword ? <RiEyeOffLine size={16} /> : <RiEyeLine size={16} />}
               </button>
@@ -259,11 +259,11 @@ export default function AuthForgotPasswordForm({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-300 ml-0.5">
+            <label className="text-xs font-medium text-[var(--muted)] ml-1">
               Confirm Password <span className="text-red-400 font-bold ml-0.5">*</span>
             </label>
             <div className="relative">
-              <RiLockPasswordLine className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+              <RiLockPasswordLine className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)] pointer-events-none" />
               <input
                 type={showConfirmNewPassword ? 'text' : 'password'}
                 required
@@ -272,12 +272,12 @@ export default function AuthForgotPasswordForm({
                 onFocus={() => onFieldFocus('confirmNewPassword')}
                 onBlur={onFieldBlur}
                 placeholder="Repeat new password"
-                className="w-full h-11 bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.08] focus:border-[var(--accent-cyan)] focus:bg-white/[0.05] focus:ring-1 focus:ring-[var(--accent-cyan)]/30 rounded-xl pl-10 pr-10 text-sm text-white placeholder:text-zinc-500 transition-all outline-none"
+                className="w-full h-11 bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--border)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 rounded-full pl-10 pr-10 text-sm text-[var(--fg)] placeholder:text-[var(--muted)] transition-all outline-none"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white cursor-pointer p-0.5"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--fg)] cursor-pointer p-0.5"
               >
                 {showConfirmNewPassword ? <RiEyeOffLine size={16} /> : <RiEyeLine size={16} />}
               </button>

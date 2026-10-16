@@ -88,14 +88,28 @@ const Auth = ({ initialMode }) => {
   useDisplayFont();
   useAuthMotion(rootRef, { mode: c.mode, step: c.forgotStep, done: c.isRegistered, bubble: c.bubbleText, error: c.reduxError || c.localError });
 
-  if (c.user && !c.loading) return <Navigate to={c.destination} replace />;
+  if (c.user) return <Navigate to={c.destination} replace />;
+
+  const hasToken = typeof window !== 'undefined' && Boolean(
+    localStorage.getItem('parsu_auth_token') || 
+    localStorage.getItem('perplexity_auth_token') || 
+    localStorage.getItem('token')
+  );
+
+  if (c.loading && hasToken) {
+    return (
+      <main className="min-h-[100dvh] flex items-center justify-center bg-[var(--bg)]">
+        <div className="w-8 h-8 rounded-full border-2 border-zinc-700 border-t-[var(--accent-cyan)] animate-spin" />
+      </main>
+    );
+  }
 
   const pose = c.isPasswordSleeping
     ? 'rotate(-7deg) translateX(-18px)'
     : c.activeField ? 'rotate(5deg) translateX(18px) scale(1.03)' : 'none';
 
   return (
-    <main ref={rootRef} className="relative flex min-h-[100dvh] flex-col overflow-x-hidden bg-[#050507] px-4 text-zinc-100 selection:bg-[var(--accent-cyan)]/25 sm:px-6">
+    <main ref={rootRef} className="auth-shell ui-page relative flex min-h-[100dvh] flex-col overflow-x-hidden bg-[var(--bg)] px-4 text-zinc-100 selection:bg-[var(--accent-cyan)]/25 sm:px-6">
       {c.toast.message && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] pointer-events-auto">
           <Toast message={c.toast.message} type={c.toast.type} onClose={() => c.setToast({ message: null, type: 'info' })} />

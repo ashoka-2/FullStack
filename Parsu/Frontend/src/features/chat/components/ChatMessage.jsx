@@ -28,9 +28,14 @@ import {
   RiArrowUpSLine,
   RiAlertLine,
   RiGlobalLine,
-  RiCompass3Line
+  RiCompass3Line,
+  RiDownloadLine,
+    RiEyeLine,
+    RiFileTextLine
 } from '@remixicon/react';
 import ReactMarkdown from 'react-markdown';
+import { createPortal } from 'react-dom';
+import gsap from 'gsap';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
@@ -40,6 +45,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addToast } from '../../../utils/toast.slice';
 import { EmbeddedMapCard } from './EmbeddedMapCard';
 import { ImageGalleryBlock } from './ImageGalleryBlock';
+import ImageGenerationBlock from './ImageGenerationBlock';
 import { ProductCardsBlock } from './ProductCardsBlock';
 import GUIDES from '../../guide/guides.registry';
 import { useGuideEngine } from '../../guide/useGuideEngine';
@@ -47,10 +53,14 @@ import { useGuideEngine } from '../../guide/useGuideEngine';
 const CodeBlock = React.memo(({ code, language, ...props }) => {
     const [copied, setCopied] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [docked, setDocked] = useState(null);
+    const blockRef = useRef(null);
 
     const safeCode = typeof code === 'string' ? code : String(code || '');
     const lines = safeCode.split('\n');
     const totalLines = lines.length;
+    const isHtmlDocument = /html/i.test(language || '') && /<html\b/i.test(safeCode) && /<\/html\s*>/i.test(safeCode);
+    const isMarkdownDocument = /^(md|markdown)$/i.test(language || '');
     // For large code snippets (70+ lines), render first 70 lines to prevent AST highlighter freezing the UI
     const isLarge = totalLines > 70;
     const displayedCode = isLarge && !isExpanded ? lines.slice(0, 70).join('\n') : safeCode;
@@ -62,42 +72,112 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    return (
-        <div className="relative group my-4 sm:my-6 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-[var(--bg-primary)] max-w-full">
-            <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
-                <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">{language || 'code'}</span>
-                    <span className="text-[10px] text-zinc-400 font-mono">({totalLines} lines)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    
-                    <button 
-                        onClick={handleCopy}
-                        className="flex items-center gap-1.5 p-1.5 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 hover:text-zinc-200 transition-all cursor-pointer"
-                        title="Copy full code snippet"
-                    >
-                        {copied ? (
-                            <>
-                                <span className="text-[10px] font-bold text-emerald-500">Copied!</span>
-                                <RiCheckLine size={14} className="text-emerald-500" />
-                            </>
-                        ) : (
-                            <RiFileCopyLine size={14} />
-                        )}
-                    </button>
-                </div>
+    const handleDownload = () => {
+        const extension = isHtmlDocument ? 'html' : isMarkdownDocument ? 'md' : (language || 'txt').toLowerCase().replace(/[^a-z0-9]/g, '') || 'txt';
+        const mimeType = isHtmlDocument ? 'text/html' : isMarkdownDocument ? 'text/markdown' : 'text/plain';
+        const url = URL.createObjectURL(new Blob([safeCode], { type: mimeType }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `parsu-code.${extension}`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handlePreview = () => {
+        if (isHtmlDocument || isMarkdownDocument) {
+            window.dispatchEvent(new CustomEvent('parsu:open-artifact', { detail: {
+                kind: isHtmlDocument ? 'html' : 'markdown',
+                content: safeCode,
+                name: isHtmlDocument ? 'generated-page.html' : 'generated-document.md',
+            } }));
+        }
+    };
+
+    useEffect(() => {
+        const block = blockRef.current;
+        const scroller = block?.closest('[data-lenis-prevent]');
+        if (!block || !scroller) return;
+        const updateDock = () => {
+            const blockRect = block.getBoundingClientRect();
+            const scrollRect = scroller.getBoundingClientRect();
+            const toolbarHeight = 44;
+            const visible = blockRect.top < scrollRect.top && blockRect.bottom > scrollRect.top + toolbarHeight;
+            setDocked(visible ? { top: scrollRect.top, left: blockRect.left, width: blockRect.width } : null);
+        };
+        updateDock();
+        scroller.addEventListener('scroll', updateDock, { passive: true });
+        window.addEventListener('resize', updateDock);
+        const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateDock) : null;
+        observer?.observe(block);
+        return () => {
+            scroller.removeEventListener('scroll', updateDock);
+            window.removeEventListener('resize', updateDock);
+            observer?.disconnect();
+        };
+    }, [safeCode]);
+
+    const codeToolbar = (
+        <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#1e1e24] border-b border-zinc-800 text-zinc-200 rounded-t-[20px] select-none">
+            <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-[var(--accent)] uppercase tracking-wider">{language || 'code'}</span>
+                <span className="text-[10px] text-zinc-400 font-mono">({totalLines} lines)</span>
             </div>
-            <div className="relative overflow-x-auto custom-scrollbar w-full">
+            <div className="flex items-center gap-1.5">
+                {(isHtmlDocument || isMarkdownDocument) && (
+                    <button
+                        type="button"
+                        onClick={handlePreview}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-[var(--accent)] transition-colors text-xs font-medium cursor-pointer"
+                        title={`Preview ${isMarkdownDocument ? 'Markdown' : 'HTML'}`}
+                    >
+                        {isMarkdownDocument ? <RiFileTextLine size={13} /> : <RiEyeLine size={13} />}
+                        <span className="hidden sm:inline text-[11px]">Preview</span>
+                    </button>
+                )}
+                <button
+                    type="button"
+                    onClick={handleDownload}
+                    className="p-1.5 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                    title="Download code"
+                >
+                    <RiDownloadLine size={14} />
+                </button>
+                <button
+                    type="button"
+                    onClick={handleCopy}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white transition-all cursor-pointer text-xs"
+                    title="Copy full code snippet"
+                >
+                    {copied ? (
+                        <>
+                            <span className="text-[10px] font-bold text-emerald-400">Copied!</span>
+                            <RiCheckLine size={14} className="text-emerald-400" />
+                        </>
+                    ) : (
+                        <RiFileCopyLine size={14} />
+                    )}
+                </button>
+            </div>
+        </div>
+    );
+
+    return (
+        <div ref={blockRef} className="relative group my-4 sm:my-6 rounded-[20px] border border-zinc-800 bg-[#121214] text-zinc-100 max-w-full overflow-hidden shadow-md">
+            <div className={docked ? 'invisible pointer-events-none' : 'sticky top-0 z-20'}>{codeToolbar}</div>
+            {docked && createPortal(<div style={{ top: docked.top, left: docked.left, width: docked.width }} className="fixed z-[80] shadow-xl">{codeToolbar}</div>, document.body)}
+            <div className="relative overflow-x-auto overflow-y-auto max-h-[580px] overscroll-contain custom-scrollbar w-full rounded-b-[20px]">
                 <SyntaxHighlighter
                     style={vscDarkPlus}
                     language={language || 'text'}
                     PreTag="div"
                     customStyle={{
                         margin: 0,
-                        padding: '1rem',
+                        padding: '1.25rem',
                         background: 'transparent',
                         fontSize: '12.5px',
-                        lineHeight: '1.6'
+                        lineHeight: '1.65',
+                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                        borderRadius: '0 0 1.25rem 1.25rem'
                     }}
                     {...props}
                 >
@@ -105,11 +185,11 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
                 </SyntaxHighlighter>
 
                 {isLarge && !isExpanded && (
-                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/85 to-transparent flex items-end justify-center pb-3 pointer-events-auto">
+                    <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-[#121214] via-[#121214]/90 to-transparent flex items-end justify-center pb-3 pointer-events-auto">
                         <button
                             type="button"
                             onClick={() => setIsExpanded(true)}
-                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 text-xs font-bold shadow-lg transition-transform active:scale-95 cursor-pointer"
+                            className="flex items-center gap-1.5 px-5 py-2 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[#151515] text-xs font-bold shadow-lg transition-transform active:scale-95 cursor-pointer"
                         >
                             <span>Show all {totalLines} lines</span>
                             <span className="text-[10px] opacity-75 font-mono">(+{totalLines - 70} hidden)</span>
@@ -131,6 +211,44 @@ const SOCIAL_PLATFORMS_LIST = [
     { id: 'youtube', name: 'YouTube', icon: RiYoutubeLine, color: '#FF0000' }
 ];
 
+const ActivityTrace = ({ steps = [], prompt = '' }) => {
+    const visibleSteps = steps.slice(-5);
+    const safePrompt = String(prompt || '').trim();
+    return (
+        <section className="my-2.5 w-full max-w-2xl rounded-[20px] sm:rounded-[24px] border border-zinc-200/80 bg-white/80 p-4 shadow-sm backdrop-blur-md dark:border-white/[0.08] dark:bg-zinc-900/50" role="status" aria-live="polite" aria-label="Assistant activity">
+            <div className="flex items-center justify-between gap-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                <div className="flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent-cyan)]/15 text-[var(--accent-cyan)]">
+                        <RiSparklingLine size={14} />
+                    </span>
+                    <span>Assistant Reasoning & Workflows</span>
+                </div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Live Trace</span>
+            </div>
+            {safePrompt && <p className="mt-2 line-clamp-1 break-words text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">“{safePrompt}”</p>}
+            {visibleSteps.length > 0 && (
+                <ol className="mt-3 flex flex-col gap-2">
+                    {visibleSteps.map(step => {
+                        const isSkill = step.id === 'skill';
+                        return (
+                            <li key={step.id} className={`flex items-center gap-2.5 text-[11px] sm:text-xs ${step.status === 'active' ? 'text-zinc-900 dark:text-zinc-100 font-medium' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                                {step.status === 'active' ? (
+                                    <span aria-hidden="true" className="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[var(--accent-cyan)] border-t-transparent animate-spin" />
+                                ) : (
+                                    <RiCheckLine size={14} className="shrink-0 text-[var(--accent-cyan)]" />
+                                )}
+                                <span className={isSkill ? 'font-semibold text-cyan-600 dark:text-cyan-400 px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20' : ''}>
+                                    {step.label}
+                                </span>
+                            </li>
+                        );
+                    })}
+                </ol>
+            )}
+        </section>
+    );
+};
+
 const detectCodeLanguage = (str) => {
     if (typeof str !== 'string') return 'code';
     if (/^\s*(import|const|let|var|function|export|document\.|window\.|console\.)/m.test(str)) return 'javascript';
@@ -141,6 +259,8 @@ const detectCodeLanguage = (str) => {
     if (/^\s*(\{[\s\S]*\}|\[[\s\S]*\])$/.test(str.trim()) && (str.includes('":') || str.includes('",'))) return 'json';
     return 'code';
 };
+
+const openArtifact = (detail) => window.dispatchEvent(new CustomEvent('parsu:open-artifact', { detail }));
 
 const isRawCodeBlock = (text) => {
     if (typeof text !== 'string') return false;
@@ -153,10 +273,110 @@ const isRawCodeBlock = (text) => {
     );
 };
 
-const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
+const isVisualSearchPrompt = (text = '') => {
+    const asksForPhotos = /\b(show|see|display|give|send|find|look for)\b.{0,50}\b(images?|photos?|pictures?|pics?)\b|\b(images?|photos?|pictures?|pics?)\s+of\b/i.test(text);
+    const asksToGenerate = /\b(create|make|generate|draw|design)\b.{0,40}\b(image|picture|photo|artwork)\b/i.test(text);
+    const plansATrip = /\bitinerary\b|\bplaces? to (visit|see)\b|\btravel plan\b|\b(plan|planning).{0,35}\btrip\b|\btrip\b.{0,35}\b(plan|itinerary)\b/i.test(text);
+    return (asksForPhotos && !asksToGenerate) || plansATrip;
+};
+
+const normalizeVisualAnswer = (text = '', prompt = '', includeGalleries = true) => {
+    const tripRequest = /\bitinerary\b|\bplaces? to (visit|see)\b|\btravel plan\b|\b(plan|planning).{0,35}\btrip\b|\btrip\b.{0,35}\b(plan|itinerary)\b/i.test(prompt);
+    const cleanQuery = value => String(value || '').replace(/^\s*(?:query|q|search)\s*:\s*/i, '').replace(/[\x5B\x5D`*_]/g, ' ').replace(/\s+/g, ' ').trim();
+    let galleries = [];
+
+    if (tripRequest) {
+        const destinationMatch = prompt.match(/\bto\s+([^,.?!]+?)(?=\s+(?:for|from|with|on|during|itinerary|trip|travel|route)\b|[,.?!]|$)/i)
+            || prompt.match(/\b(?:in|around|near)\s+([^,.?!]+?)(?=\s+(?:for|from|with|on|during|itinerary|trip|travel|route)\b|[,.?!]|$)/i);
+        const destination = destinationMatch?.[1]?.replace(/\b(?:places? to (?:visit|see)|itinerary|travel plan|trip|route)\b.*$/i, '').trim() || '';
+        const galleryBlocks = [...text.matchAll(/```\s*gallery\b\s*([\s\S]*?)(?:```|$)/gi)].map(match => match[1]);
+        const markerQueries = [...text.matchAll(/\[Image:\s*([^\]]{2,140})\]/gi)].map(match => match[1]);
+        const declaredQueries = galleryBlocks.flatMap(block => {
+            const markers = [...block.matchAll(/\[Image:\s*([^\]]{2,140})\]/gi)].map(match => match[1]);
+            return markers.length ? markers : [...block.matchAll(/(?:query|q|search)\s*:\s*([^\n\r]+)/gi)].map(match => match[1]);
+        });
+        const detailsByName = new Map();
+        for (const line of text.split(/\r?\n/)) {
+            const match = line.match(/^\s*(?:(?:\d{1,2}[.)])\s*|[-*]\s*)?\*\*([^*]{2,100})\*\*\s*(?:[:—–-]\s*(.*))?$/)
+                || line.match(/^\s*(?:\d{1,2}[.)]|[-*])\s+([A-Z][^:—–-]{2,80})\s*[:—–-]\s*(.*)$/);
+            if (!match || /^(?:day\s*\d+|itinerary|getting around|where to stay|travel tips?)\b/i.test(match[1])) continue;
+            let rawTitle = match[1];
+            let rawDetails = match[2] || '';
+            if (!rawDetails && rawTitle.includes(':')) {
+                const splitAt = rawTitle.indexOf(':');
+                rawDetails = rawTitle.slice(splitAt + 1);
+                rawTitle = rawTitle.slice(0, splitAt);
+            }
+            const placeTitle = cleanQuery(rawTitle).replace(/[:—–-]+$/, '').trim();
+            detailsByName.set(placeTitle.toLowerCase(), cleanQuery(rawDetails).slice(0, 260));
+        }
+        const explicit = galleryBlocks.map(block => {
+            const read = key => cleanQuery(block.match(new RegExp(`^\\s*${key}\\s*:\\s*(.*)$`, 'im'))?.[1] || '');
+            return { query: read('query') || read('q') || read('search'), title: read('title'), details: read('details') };
+        });
+        const discovered = [...markerQueries, ...declaredQueries].map(cleanQuery).filter(Boolean).map(query => {
+            const title = query.split(',')[0].trim();
+            return { query, title, details: detailsByName.get(title.toLowerCase()) || '' };
+        });
+        const all = [...explicit, ...discovered];
+        for (const [title, details] of detailsByName) all.push({ query: title, title, details });
+        const seen = new Set();
+        galleries = all.map(place => {
+            const title = cleanQuery(place.title || place.query.split(',')[0]).replace(/[:—–-]+$/, '').trim();
+            let query = cleanQuery(place.query || title);
+            if (destination && !query.toLowerCase().includes(destination.toLowerCase())) query = `${query}, ${destination}`;
+            return { query: query.slice(0, 170), title, details: cleanQuery(place.details || detailsByName.get(title.toLowerCase()) || '').slice(0, 260) };
+        }).filter(place => {
+            const key = place.title.toLowerCase();
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        }).slice(0, 20);
+        if (!galleries.length && destination) galleries = [{ query: `${destination} places to visit`.slice(0, 170), title: destination, details: '' }];
+    } else {
+        const subject = prompt
+            .replace(/^\s*(please\s+)?(show|see|display|give|send|find|look for)\s+(me\s+)?/i, '')
+            .replace(/\b(a few|few|some)\s+(images?|photos?|pictures?|pics?)\s+(of\s+)?/i, '')
+            .replace(/^\s*(?:a|an|the)\s+/i, '')
+            .replace(/\s+(so i can visit|that i can visit|please)\s*[?.!]*$/i, '')
+            .replace(/\s+(?:images?|photos?|pictures?|pics?)\s*[?.!]*$/i, '')
+            .replace(/[?.!]+$/g, '')
+            .trim();
+        if (subject) galleries = [{ query: cleanQuery(subject).slice(0, 170), title: cleanQuery(subject), details: '' }];
+    }
+
+    const answer = text
+        .replace(/```(?:html|xhtml)\b[\s\S]*?```/gi, '')
+        .replace(/<!doctype\s+html[\s\S]*?<\/html\s*>/gi, '')
+        .replace(/```\s*gallery\b\s*[\s\S]*?(?:```|$)/gi, '')
+        .replace(/^\s*(?:gallery\s+)?query\s*:\s*.+$/gim, '')
+        .replace(/^\s*\[Image:\s*[^\]]+\]\s*$/gim, '')
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+        .replace(/[ \t]+\n/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    const cleanAnswer = answer
+        .replace(/\*{0,2}\s*`gallery\b[^`]*`\s*\*{0,2}/gi, '')
+        .replace(/`gallery\s+(?:query|q|search)\s*:[^`]*`/gi, '')
+        .replace(/^\s*gallery\s+(?:query|q|search)\s*:[^\r\n]*$/gim, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    const safeAnswer = cleanAnswer || (tripRequest ? 'Here are some places to explore.' : 'Here are some photos.');
+    const galleryBlocks = includeGalleries ? galleries.map(place => `\`\`\`gallery\nquery: ${place.query}\ntitle: ${place.title}\ndetails: ${place.details}\nmode: ${tripRequest ? 'place' : 'search'}\n\`\`\``) : [];
+    return [safeAnswer, ...galleryBlocks].join('\n\n');
+};
+
+const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
     const isUser = msg.role === 'user' || (msg.role !== 'assistant' && msg.role !== 'ai');
+    const requestText = String(previousMessage?.content || '');
+    const requestsDocument = !isUser && previousMessage?.role === 'user'
+        && /\b(create|generate|make|write|export|save|prepare|turn this into)\b/i.test(requestText)
+        && /\b(pdf|markdown|md)\b|\.md\b/i.test(requestText);
+    const requestedDocumentFormat = /\bpdf\b/i.test(requestText) ? 'pdf' : 'markdown';
+    const requestedMarkdown = msg.content?.match(/```(?:markdown|md)\s*\r?\n([\s\S]*?)```/i)?.[1]?.trim();
     const dispatch = useDispatch();
-    const activeToolEvent = useSelector(state => state.chat.activeToolEvent);
+    const activitySteps = useSelector(state => state.chat.activitySteps);
+    const isGenerating = useSelector(state => state.chat.isGenerating);
     const { launchGuide } = useGuideEngine();
     const [copied, setCopied] = useState(false);
 
@@ -198,6 +418,13 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
             document.removeEventListener('mousedown', handleOutsideClick);
             window.removeEventListener('keydown', handleKeyDown);
         };
+    }, [isShareModalOpen]);
+
+    useEffect(() => {
+        const panel = shareModalRef.current;
+        if (!isShareModalOpen || !panel || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const tween = gsap.fromTo(panel, { autoAlpha: 0, y: -8 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: 'power2.out', clearProps: 'transform,opacity,visibility' });
+        return () => tween.kill();
     }, [isShareModalOpen]);
     // HeroUI Pro AI Showcase interactive states
     const [isToolsExpanded, setIsToolsExpanded] = useState(false);
@@ -503,7 +730,10 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
         }
     };
 
-    const contentToRender = msg.content;
+    const isGalleryResponse = !isUser && previousMessage?.role === 'user' && isVisualSearchPrompt(previousMessage.content || '');
+    const contentToRender = isGalleryResponse
+        ? normalizeVisualAnswer(msg.content || '', previousMessage.content || '', !msg.isStreaming)
+        : msg.content;
 
     // A map block must appear ONLY when the AI sends one. Do not auto-inject maps.
     const detectedMapLocation = null;
@@ -552,6 +782,8 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                     const single = allMediaItems[0];
                                     const isVideo = single.fileType === 'video' || single.mimetype?.startsWith('video/') || /\.(mp4|mov|webm)(\?|$)/i.test(single.url);
                                     const isDoc = single.fileType === 'document' || single.mimetype === 'application/pdf' || /\.(pdf|txt|md|doc|docx)(\?|$)/i.test(single.url) || /\.(pdf|txt|md|doc|docx)$/i.test(single.name || '');
+                                    const isPdf = single.mimetype === 'application/pdf' || /\.pdf(\?|$)/i.test(single.url || '') || /\.pdf$/i.test(single.name || '');
+                                    const isMarkdown = /\.(md|markdown)(\?|$)/i.test(single.url || '') || /\.(md|markdown)$/i.test(single.name || '');
 
                                     if (isVideo) {
                                         return (
@@ -569,17 +801,26 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                 href={single.url} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer" 
+                                                onClick={(event) => {
+                                                    if (!isPdf && !isMarkdown) return;
+                                                    event.preventDefault();
+                                                    window.dispatchEvent(new CustomEvent('parsu:open-artifact', { detail: {
+                                                        kind: isPdf ? 'pdf' : 'markdown',
+                                                        url: single.url,
+                                                        name: single.name || (isPdf ? 'document.pdf' : 'document.md'),
+                                                        content: '',
+                                                    } }));
+                                                }}
                                                 className="flex items-center gap-3 p-3.5 bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors group cursor-pointer"
-                                                title="Open and view PDF document in new tab"
+                                                title="Open document in the side viewer"
                                             >
                                                 <div className="p-2 rounded-xl bg-red-500/10 text-red-500 group-hover:bg-red-500/20 transition-colors">
-                                                    <RiFilePdfLine size={24} />
+                                                    {isPdf ? <RiFilePdfLine size={24} /> : <RiFileTextLine size={24} />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-xs font-bold truncate text-zinc-900 dark:text-zinc-100">{single.name || "PDF Document"}</p>
+                                                    <p className="text-xs font-bold truncate text-zinc-900 dark:text-zinc-100">{single.name || (isPdf ? 'PDF Document' : 'Document')}</p>
                                                     <p className="text-[10px] text-zinc-500 uppercase tracking-wider flex items-center gap-1 mt-0.5">
-                                                        <span>View / Download Document</span>
-                                                        <span className="text-[var(--accent-cyan)]">â†—</span>
+                                                        <span>Open in side viewer</span>
                                                     </p>
                                                 </div>
                                             </a>
@@ -587,7 +828,13 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                     } else {
                                         return (
                                             <div>
-                                                <img src={single.url} alt="Attached" className="w-full h-auto object-cover max-h-[380px]" />
+                                                <button type="button" className="block w-full cursor-zoom-in" aria-label={`Open ${single.name || 'attached image'} in side viewer`} onClick={() => openArtifact({
+                                                    kind: 'image', url: single.url, name: single.name || 'attached-image',
+                                                    title: single.name || 'Attached image', source: 'Chat attachment',
+                                                    image: { url: single.url, title: single.name || 'Attached image', source: 'Chat attachment' },
+                                                })}>
+                                                    <img src={single.url} alt="Attached" className="w-full h-auto max-h-[380px] object-cover" />
+                                                </button>
                                                 <div className="px-3.5 py-1.5 bg-zinc-900 border-t border-zinc-800 text-xs text-zinc-400 flex items-center gap-1.5">
                                                     <RiImageLine size={15} className="text-emerald-400" />
                                                     <span className="truncate">{single.name || "Photo"}</span>
@@ -610,7 +857,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
 
                                 <button
                                     onClick={() => setIsShareModalOpen(!isShareModalOpen)}
-                                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:opacity-95 text-white text-[11px] font-bold transition-all shadow cursor-pointer ml-auto"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 text-[11px] font-bold transition-all shadow-sm shadow-cyan-950/15 cursor-pointer ml-auto"
                                     title="Publish to connected social media platforms"
                                 >
                                     <RiShareLine size={13} />
@@ -620,7 +867,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
 
                             {/* Interactive Share to Socials Dropdown / Drawer */}
                             {isShareModalOpen && (
-                                <div ref={shareModalRef} className="p-3.5 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 animate-in slide-in-from-top-2 text-left">
+                                <div ref={shareModalRef} className="p-3.5 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 text-left">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-[12px] font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
                                             <RiSparklingLine size={14} className="text-amber-500" />
@@ -733,7 +980,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                     <button
                                         onClick={handleUniversalPublish}
                                         disabled={isPosting}
-                                        className="w-full py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-95 text-white font-bold text-xs shadow-lg transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                        className="w-full py-2 rounded-xl bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950 font-bold text-xs shadow-md shadow-cyan-950/15 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
                                     >
                                         <RiShareLine size={14} />
                                         <span>{isPosting ? 'Publishing to Socials...' : `Publish to ${selectedPlatforms.length} Platform(s)`}</span>
@@ -744,12 +991,14 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                         </div>
                     )}
 
-                    <div className="bg-zinc-100 dark:bg-[var(--bg-surface)] text-zinc-900 dark:text-zinc-100 px-4 md:px-5 py-2.5 md:py-3 rounded-[20px] md:rounded-[22px] text-[14px] md:text-[15px] border border-zinc-200 dark:border-white/5 shadow-sm transition-all hover:bg-zinc-200/70 dark:hover:bg-[var(--bg-surface-hover)] max-w-full text-left">
+                    <div className="bg-zinc-100 dark:bg-[var(--surface-2)] text-zinc-900 dark:text-[var(--fg)] px-4 md:px-5 py-2.5 md:py-3 rounded-[20px] md:rounded-[22px] text-[14px] md:text-[15px] border border-zinc-200/80 dark:border-[var(--border)] shadow-xs transition-all hover:bg-zinc-200/70 dark:hover:bg-[var(--surface-hover)] max-w-full text-left">
                         {typeof contentToRender === 'string' && contentToRender.includes('```') ? (
                             <div className="prose prose-sm dark:prose-invert max-w-none text-zinc-900 dark:text-zinc-100">
                                 <ReactMarkdown 
                                     remarkPlugins={[remarkGfm]}
                                     components={{
+                                        pre: ({children}) => <>{children}</>,
+                                        img: ({src, alt, ...props}) => <img src={src} alt={alt || ''} loading="lazy" className="rounded-xl max-w-full max-h-[420px] object-contain cursor-zoom-in" onClick={() => openArtifact({ kind: 'image', url: src, name: `${alt || 'image'}.jpg`, title: alt || 'Image', source: 'Chat response', image: { url: src, title: alt || 'Image' } })} onError={(event) => { event.currentTarget.style.display = 'none'; }} {...props} />,
                                         code({node, inline, className, children, ...props}) {
                                             const match = /language-(\w+)/.exec(className || '');
                                             const codeString = String(children).replace(/\n$/, '');
@@ -787,6 +1036,15 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                             </div>
                         )}
                     </div>
+                    <button
+                        type="button"
+                        onClick={handleCopy}
+                        className="inline-flex items-center gap-1.5 self-end rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100 transition-colors"
+                        title="Copy your prompt"
+                        aria-label={copied ? 'Prompt copied' : 'Copy your prompt'}
+                    >
+                        {copied ? <><RiCheckLine size={15} className="text-emerald-500" /><span className="text-[11px] text-emerald-500">Copied</span></> : <RiFileCopyLine size={15} />}
+                    </button>
                 </div>
             ) : (
                 <div className="flex flex-col gap-6">
@@ -885,34 +1143,14 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                 </div>
                             )}
 
-                            {/* Active Tool Execution Status Chip (B2) */}
-                            {msg.isStreaming && activeToolEvent && activeToolEvent.type === 'tool_start' && (
-                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/30 text-xs font-semibold text-[var(--accent-cyan)] animate-pulse w-fit my-1">
-                                    <span className="w-2 h-2 rounded-full bg-[var(--accent-cyan)] animate-ping" />
-                                    <span>
-                                        {activeToolEvent.name === 'post_to_social_media' 
-                                            ? `Publishing to ${activeToolEvent.args?.platform ? (activeToolEvent.args.platform.charAt(0).toUpperCase() + activeToolEvent.args.platform.slice(1)) : 'Social Media'}…` 
-                                            : activeToolEvent.name === 'tavilySearch' 
-                                            ? 'Searching the web…' 
-                                            : activeToolEvent.name === 'googleCalendar' 
-                                            ? 'Updating Google Calendar…' 
-                                            : `Running ${activeToolEvent.name}…`}
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Used memory from previous chats chip */}
-                            {Boolean(msg.usedMemory) && (
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 text-[11px] font-semibold w-fit my-1">
-                                    <RiSparklingLine size={12} className="text-purple-400 shrink-0" />
-                                    <span>Used memory from previous chats</span>
-                                </div>
-                            )}
+                            {msg.isStreaming && isGenerating && <ActivityTrace steps={activitySteps} prompt={previousMessage?.content} />}
 
                             <div className="prose prose-emerald dark:prose-invert max-w-none text-zinc-950 dark:text-zinc-200 leading-[1.7] md:leading-[1.8] text-[15px] md:text-[17px] font-medium tracking-tight">
                                 <ReactMarkdown 
                                     remarkPlugins={[remarkGfm]}
                                     components={{
+                                        pre: ({children}) => <>{children}</>,
+                                        img: ({src, alt, ...props}) => <img src={src} alt={alt || ''} loading="lazy" className="rounded-xl max-w-full max-h-[420px] object-contain cursor-zoom-in" onClick={() => openArtifact({ kind: 'image', url: src, name: `${alt || 'image'}.jpg`, title: alt || 'Image', source: 'Chat response', image: { url: src, title: alt || 'Image' } })} onError={(event) => { event.currentTarget.style.display = 'none'; }} {...props} />,
                                         code({node, inline, className, children, ...props}) {
                                             const match = /language-(\w+)/.exec(className || '');
                                             const codeString = String(children).replace(/\n$/, '');
@@ -933,9 +1171,22 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
 
                                             // Web Image Gallery: ```gallery ... ```
                                             if (match?.[1] && /^gallery$/i.test(match[1])) {
-                                                const qMatch = trimmedCode.match(/(?:query|q|search):\s*(.+)/i);
-                                                const query = qMatch ? qMatch[1].trim() : trimmedCode;
-                                                return <ImageGalleryBlock query={query} />;
+                                                const getGalleryField = key => trimmedCode.match(new RegExp(`^\\s*${key}\\s*:\\s*(.*)$`, 'im'))?.[1]?.trim() || '';
+                                                const query = getGalleryField('query') || getGalleryField('q') || getGalleryField('search') || trimmedCode;
+                                                return (
+                                                    <ImageGalleryBlock
+                                                        query={query}
+                                                        title={getGalleryField('title')}
+                                                        details={getGalleryField('details')}
+                                                        mode={getGalleryField('mode') || 'search'}
+                                                    />
+                                                );
+                                            }
+
+                                            if (match?.[1] && /^imagegen$/i.test(match[1])) {
+                                                const promptMatch = trimmedCode.match(/(?:prompt|description):\s*([\s\S]+)/i);
+                                                const prompt = (promptMatch?.[1] || trimmedCode).trim();
+                                                return prompt ? <ImageGenerationBlock prompt={prompt} /> : null;
                                             }
 
                                             // Product Cards with Details & Uses: ```cards ... ``` or ```product_cards ... ```
@@ -980,19 +1231,24 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                     {...props} 
                                                 />
                                             ) : (
-                                                <code className={`${className} bg-zinc-100 dark:bg-zinc-800/50 px-1.5 py-0.5 rounded text-sm text-zinc-600 dark:text-zinc-300 font-mono`} {...props}>
+                                                <code className={`${className} bg-zinc-200/70 dark:bg-zinc-800/60 px-1.5 py-0.5 rounded text-sm text-zinc-900 dark:text-zinc-200 font-mono font-medium`} {...props}>
                                                     {children}
                                                 </code>
                                             )
                                         },
                                         a: ({href, children, ...props}) => {
                                             const isGoogleMaps = href && /(google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)/i.test(href);
+                                            const isPdfFile = href && /\.pdf(?:[?#]|$)/i.test(href);
+                                            const isMarkdownFile = href && /\.(?:md|markdown)(?:[?#]|$)/i.test(href);
+                                            if (isPdfFile || isMarkdownFile) {
+                                                return <button type="button" onClick={() => openArtifact({ kind: isPdfFile ? 'pdf' : 'markdown', url: href, name: String(children).trim() || (isPdfFile ? 'document.pdf' : 'document.md') })} className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-1)] px-3.5 py-2.5 text-left text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)]">{isPdfFile ? <RiFilePdfLine size={17} aria-hidden="true" /> : <RiFileTextLine size={17} aria-hidden="true" />}<span>{children}</span></button>;
+                                            }
                                             return (
                                                 <a 
                                                     href={href} 
                                                     target="_blank" 
                                                     rel="noopener noreferrer" 
-                                                    className={`underline decoration-[var(--accent-cyan)] decoration-1 underline-offset-2 hover:text-[var(--accent-cyan)] font-medium transition-colors ${isGoogleMaps ? 'inline-flex items-center gap-1 text-[var(--accent-cyan)] font-bold' : 'text-zinc-900 dark:text-zinc-100'}`}
+                                                    className={`underline decoration-[var(--accent)] decoration-1 underline-offset-2 hover:text-[var(--accent)] font-medium transition-colors ${isGoogleMaps ? 'inline-flex items-center gap-1 text-[var(--accent)] font-bold' : 'text-zinc-900 dark:text-zinc-100'}`}
                                                     {...props}
                                                 >
                                                     {children}
@@ -1000,19 +1256,19 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                                 </a>
                                             );
                                         },
-                                        p: ({children}) => <div className="text-zinc-800 dark:text-zinc-300 leading-relaxed mb-6 last:mb-0">{children}</div>,
-                                        ul: ({children}) => <ul className="list-disc pl-5 space-y-3 mb-6 last:mb-0">{children}</ul>,
-                                        ol: ({children}) => <ol className="list-decimal pl-5 space-y-2 mb-6 last:mb-0 text-zinc-800 dark:text-zinc-300 leading-relaxed">{children}</ol>,
-                                        li: ({children}) => <li className="text-zinc-800 dark:text-zinc-300 leading-relaxed pl-1">{children}</li>,
+                                        p: ({children}) => <div className="text-zinc-900 dark:text-zinc-200 leading-relaxed mb-6 last:mb-0 font-normal">{children}</div>,
+                                        ul: ({children}) => <ul className="list-disc pl-5 space-y-3 mb-6 last:mb-0 text-zinc-900 dark:text-zinc-200 leading-relaxed">{children}</ul>,
+                                        ol: ({children}) => <ol className="list-decimal pl-5 space-y-2 mb-6 last:mb-0 text-zinc-900 dark:text-zinc-200 leading-relaxed">{children}</ol>,
+                                        li: ({children}) => <li className="text-zinc-900 dark:text-zinc-200 leading-relaxed pl-1">{children}</li>,
                                         strong: ({children}) => <strong className="font-bold text-zinc-950 dark:text-white">{children}</strong>,
                                         blockquote: ({children}) => (
-                                            <blockquote className="border-l-4 border-[var(--accent-cyan)]/70 bg-zinc-100/70 dark:bg-zinc-800/40 rounded-r-xl px-4 py-2.5 my-4 italic text-zinc-700 dark:text-zinc-300">
+                                            <blockquote className="border-l-4 border-[var(--accent)]/70 bg-zinc-100 dark:bg-zinc-800/40 rounded-r-xl px-4 py-2.5 my-4 italic text-zinc-800 dark:text-zinc-200">
                                                 {children}
                                             </blockquote>
                                         ),
-                                        h1: ({children}) => <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white mt-10 mb-6 tracking-tight">{children}</h1>,
-                                        h2: ({children}) => <h2 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-white mt-8 mb-4 tracking-tight">{children}</h2>,
-                                        h3: ({children}) => <h3 className="text-lg md:text-xl font-bold text-zinc-900 dark:text-white mt-6 mb-3 tracking-tight">{children}</h3>,
+                                        h1: ({children}) => <h1 className="text-2xl md:text-3xl font-bold text-zinc-950 dark:text-white mt-10 mb-6 tracking-tight">{children}</h1>,
+                                        h2: ({children}) => <h2 className="text-xl md:text-2xl font-bold text-zinc-950 dark:text-white mt-8 mb-4 tracking-tight">{children}</h2>,
+                                        h3: ({children}) => <h3 className="text-lg md:text-xl font-bold text-zinc-950 dark:text-white mt-6 mb-3 tracking-tight">{children}</h3>,
                                         table: ({children}) => (
                                             <div className="w-full overflow-x-auto my-6 rounded-xl border border-zinc-200 dark:border-zinc-800 custom-scrollbar">
                                                 <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[360px]">
@@ -1021,12 +1277,12 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                                             </div>
                                         ),
                                         th: ({children}) => (
-                                            <th className="px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-800/80 font-bold text-xs text-zinc-700 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-700">
+                                            <th className="px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-800/80 font-bold text-xs text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-700">
                                                 {children}
                                             </th>
                                         ),
                                         td: ({children}) => (
-                                            <td className="px-3.5 py-2 text-xs border-b border-zinc-100 dark:border-zinc-800/60 text-zinc-600 dark:text-zinc-300">
+                                            <td className="px-3.5 py-2 text-xs border-b border-zinc-100 dark:border-zinc-800/60 text-zinc-800 dark:text-zinc-200">
                                                 {children}
                                             </td>
                                         ),
@@ -1080,6 +1336,15 @@ const ChatMessage = ({ msg, isLatest, isNewMessage }) => {
                     )}
                     {msg.content && (
                         <div className="flex items-center gap-3.5 sm:gap-4 pt-4 border-t border-zinc-200 dark:border-zinc-900/50 opacity-60 hover:opacity-100 transition-opacity">
+                            {requestsDocument && <button type="button" onClick={() => openArtifact({
+                                kind: 'markdown',
+                                content: requestedMarkdown || msg.content,
+                                  name: 'generated-document.md',
+                                  mode: 'preview',
+                              })} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-[var(--border-default)] bg-[var(--surface-1)] px-3 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)]">
+                                {requestedDocumentFormat === 'pdf' ? <RiFilePdfLine size={15} /> : <RiFileTextLine size={15} />}
+                                {requestedDocumentFormat === 'pdf' ? 'Open PDF export' : 'Open Markdown'}
+                            </button>}
                             {/* Copy Message */}
                             <button 
                                 onClick={handleCopy}

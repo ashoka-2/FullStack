@@ -12,7 +12,14 @@ import {
     getUserBugReports,
     getAdminBugReports,
     updateBugReportStatus,
-    deleteAdminBugReport
+    deleteAdminBugReport,
+    getUserSkills,
+    createUserSkill,
+    deleteUserSkill,
+    getMcpServers,
+    createMcpServer,
+    deleteMcpServer,
+    testMcpServer
 } from '../controllers/settings.controller.js';
 
 const settingsRouter = Router();
@@ -23,6 +30,15 @@ settingsRouter.put('/', authUser, updateUserSettings);
 settingsRouter.delete('/memory', authUser, clearMemory);
 settingsRouter.post('/memory/fact', authUser, addMemoryFact);
 settingsRouter.delete('/memory/fact/:index', authUser, deleteMemoryFact);
+settingsRouter.get('/skills', authUser, getUserSkills);
+settingsRouter.post('/skills', authUser, createUserSkill);
+settingsRouter.delete('/skills/:skillId', authUser, deleteUserSkill);
+
+// ── Model Context Protocol (MCP) ──────────────────────────────────────────
+settingsRouter.get('/mcp', authUser, getMcpServers);
+settingsRouter.post('/mcp', authUser, createMcpServer);
+settingsRouter.delete('/mcp/:serverId', authUser, deleteMcpServer);
+settingsRouter.post('/mcp/:serverId/test', authUser, testMcpServer);
 
 // ── Media Management ────────────────────────────────────────────────────────
 settingsRouter.get('/media', authUser, getUserMedia);

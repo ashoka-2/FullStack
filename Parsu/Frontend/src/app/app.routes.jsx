@@ -59,6 +59,7 @@ const SystemStatus = withLazy(() => import("../features/pages/SystemStatus"));
 const Changelog = withLazy(() => import("../features/pages/Changelog"));
 const NotFound = withLazy(() => import("../features/pages/NotFound"));
 const MaintenanceMode = withLazy(() => import("../features/pages/MaintenanceMode"));
+const CookiePolicy = withLazy(() => import("../features/pages/CookiePolicy"));
 
 // Admin Console (Lazy Loaded)
 const AdminLayout = withLazy(() => import("../features/admin/components/AdminLayout"));
@@ -140,6 +141,10 @@ export const router = createBrowserRouter([
                 element: <Protected><SocialConnections /></Protected>
             },
             {
+                path: "/plugins",
+                element: <Protected><SocialConnections /></Protected>
+            },
+            {
                 path: "/socials",
                 element: <Navigate to="/social-connections" replace />
             },
@@ -212,6 +217,10 @@ export const router = createBrowserRouter([
             {
                 path: "/privacy",
                 element: <PrivacyPolicy />
+            },
+            {
+                path: "/cookies",
+                element: <CookiePolicy />
             },
             {
                 path: "/terms",

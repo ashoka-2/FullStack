@@ -12,6 +12,8 @@ import {
   RiCheckLine,
   RiCameraLine
 } from '@remixicon/react';
+import PrimaryButton from '../../Components/PrimaryButton';
+import { Group, GroupLabel } from '../../Components/GroupedList';
 
 const PRESET_AVATARS = [
   "https://api.dicebear.com/7.x/bottts/svg?seed=Felix",
@@ -67,33 +69,54 @@ const ProfileSettingsForm = ({ user, onSuccess }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xs">
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-zinc-200 dark:border-white/5">
-        <div className="w-10 h-10 rounded-2xl bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] flex items-center justify-center font-bold">
-          <RiUser3Line size={20} />
+    <form onSubmit={handleSaveProfile} className="space-y-7">
+      
+      {/* ── Avatar Section (Minimal AI-UI 96dp centered Avatar) ── */}
+      <div className="flex flex-col items-center text-center p-6 rounded-[28px] bg-[var(--surface)] border border-[var(--line)]">
+        <div className="relative mb-4">
+          <img 
+            src={avatarUrl || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"} 
+            alt="Profile Avatar"
+            className="w-24 h-24 rounded-full object-cover border-2 border-[var(--line-strong)] shadow-sm bg-[var(--surface-2)]"
+          />
+          <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[var(--text)] text-[var(--bg)] flex items-center justify-center shadow-md">
+            <RiCameraLine size={16} />
+          </div>
         </div>
-        <div>
-          <h2 className="text-base font-bold text-zinc-900 dark:text-white">Profile Information</h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">Manage your public persona, avatar, and personal details</p>
+
+        <p className="text-base font-semibold text-[var(--text)]">
+          {username || 'Anonymous User'}
+        </p>
+        <p className="text-xs text-[var(--text-muted)] mt-0.5">
+          {user?.email}
+        </p>
+
+        {/* Preset Avatars Row */}
+        <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+          <span className="text-xs text-[var(--text-subtle)] font-medium mr-1">Presets:</span>
+          {PRESET_AVATARS.map((preset, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setAvatarUrl(preset)}
+              className={`w-8 h-8 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
+                avatarUrl === preset ? 'border-[var(--accent)] scale-110 shadow-sm' : 'border-[var(--line)] opacity-60 hover:opacity-100'
+              }`}
+              title={`Avatar preset ${i + 1}`}
+            >
+              <img src={preset} alt={`Preset ${i + 1}`} className="w-full h-full object-cover" />
+            </button>
+          ))}
         </div>
       </div>
 
-      <form onSubmit={handleSaveProfile} className="space-y-6">
-        {/* Avatar Preview & Selection */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <div className="relative group">
-            <img 
-              src={avatarUrl || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"} 
-              alt="Profile Avatar"
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-zinc-200 dark:border-white/10 shadow-sm"
-            />
-            <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all cursor-pointer pointer-events-none">
-              <RiCameraLine size={24} className="text-white" />
-            </div>
-          </div>
-
-          <div className="flex-1 space-y-2 w-full">
-            <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+      {/* ── Form Inputs (Minimal AI-UI Grouped Fields) ── */}
+      <div>
+        <GroupLabel>Identity Details</GroupLabel>
+        <div className="flex flex-col gap-3">
+          {/* Avatar URL Input */}
+          <div className="p-4 rounded-[20px] bg-[var(--surface)] flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-[var(--text-muted)]">
               Avatar Image URL
             </label>
             <input 
@@ -101,104 +124,77 @@ const ProfileSettingsForm = ({ user, onSuccess }) => {
               value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
               placeholder="https://example.com/avatar.png"
-              className="w-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all"
+              className="w-full h-11 bg-[var(--surface-2)] border border-[var(--line)] rounded-full px-4 text-sm text-[var(--text)] placeholder-[var(--text-subtle)] focus:outline-none focus:border-[var(--accent)] transition-all font-mono text-xs"
             />
-            <div className="flex items-center gap-2 pt-1 flex-wrap">
-              <span className="text-[11px] text-zinc-500 font-medium">Or pick an avatar:</span>
-              {PRESET_AVATARS.map((preset, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setAvatarUrl(preset)}
-                  className={`w-7 h-7 rounded-lg overflow-hidden border transition-all cursor-pointer ${
-                    avatarUrl === preset ? 'border-[var(--accent-cyan)] ring-2 ring-[var(--accent-cyan)]/30 scale-105' : 'border-zinc-200 dark:border-white/10 opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <img src={preset} alt={`Preset ${i + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
           </div>
-        </div>
 
-        {/* Form Inputs Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
-          {/* Username (Editable) */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 ml-0.5">
+          {/* Username */}
+          <div className="p-4 rounded-[20px] bg-[var(--surface)] flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-[var(--text-muted)]">
               Username
             </label>
-            <div className="relative">
-              <input 
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Your username"
-                className="w-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[var(--accent-cyan)] focus:ring-1 focus:ring-[var(--accent-cyan)] transition-all font-medium"
-              />
-            </div>
+            <input 
+              type="text"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Your username"
+              className="w-full h-11 bg-[var(--surface-2)] border border-[var(--line)] rounded-full px-4 text-sm text-[var(--text)] placeholder-[var(--text-subtle)] focus:outline-none focus:border-[var(--accent)] transition-all font-medium"
+            />
           </div>
 
-          {/* Email (Strictly Read-Only with Lock) */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between ml-0.5">
-              <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 flex items-center gap-1">
+          {/* Email (Read-Only) */}
+          <div className="p-4 rounded-[20px] bg-[var(--surface)] flex flex-col gap-1.5 opacity-80">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1">
                 <span>Email Address</span>
-                <RiLock2Line size={13} className="text-zinc-400" />
+                <RiLock2Line size={13} />
               </label>
-              <span className="text-[10px] uppercase font-bold text-amber-500 tracking-wider">
-                Read-Only
+              <span className="text-[10px] uppercase font-bold text-[var(--text-subtle)] tracking-wider">
+                Locked
               </span>
             </div>
-            <div className="relative">
-              <input 
-                type="email"
-                disabled
-                value={user?.email || ''}
-                className="w-full bg-zinc-100/70 dark:bg-zinc-900/40 border border-zinc-200 dark:border-white/5 rounded-xl px-3.5 py-2.5 text-sm text-zinc-500 dark:text-zinc-400 cursor-not-allowed select-none font-mono"
-              />
-            </div>
-            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 ml-0.5">
-              Email address cannot be modified to ensure account security.
+            <input 
+              type="email"
+              disabled
+              value={user?.email || ''}
+              className="w-full h-11 bg-[var(--surface-2)] border border-[var(--line)] rounded-full px-4 text-sm text-[var(--text-muted)] cursor-not-allowed select-none font-mono"
+            />
+            <p className="text-[11px] text-[var(--text-subtle)] mt-0.5">
+              Email is permanently tied to your account identity.
             </p>
           </div>
         </div>
+      </div>
 
-        {/* Account Meta Badges */}
-        <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-zinc-500 dark:text-zinc-400">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/5">
-            <RiShieldCheckLine size={14} className="text-emerald-500" />
-            <span>Auth: <strong className="text-zinc-800 dark:text-zinc-200 capitalize">{user?.authProvider || 'Email'}</strong></span>
-          </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/5">
-            <RiCheckLine size={14} className="text-emerald-500" />
-            <span>Status: <strong className="text-emerald-500">{user?.verified ? 'Verified Account' : 'Pending Verification'}</strong></span>
-          </div>
+      {/* ── Account Badges ── */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--surface)] text-xs text-[var(--text-muted)]">
+          <RiShieldCheckLine size={14} className="text-[var(--accent-text)]" />
+          <span>Provider: <strong className="text-[var(--text)] capitalize">{user?.authProvider || 'Email'}</strong></span>
         </div>
+        <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--surface)] text-xs text-[var(--text-muted)]">
+          <RiCheckLine size={14} className="text-[var(--success)]" />
+          <span>Status: <strong className="text-[var(--success)]">{user?.verified ? 'Verified Account' : 'Standard'}</strong></span>
+        </div>
+      </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end pt-2">
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-2.5 bg-zinc-950 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 font-bold rounded-xl text-sm transition-all flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-60"
-          >
-            {loading ? (
-              <>
-                <RiLoader4Line size={16} className="animate-spin" />
-                <span>Saving...</span>
-              </>
-            ) : (
-              <>
-                <RiSaveLine size={16} />
-                <span>Save Changes</span>
-              </>
-            )}
-          </button>
-        </div>
-      </form>
-    </div>
+      {/* ── Submit Action ── */}
+      <div className="pt-2">
+        <PrimaryButton
+          type="submit"
+          disabled={loading}
+          loading={loading}
+          icon={RiSaveLine}
+          iconPosition="left"
+          fullWidth
+          size="md"
+        >
+          {loading ? 'Saving…' : 'Save Changes'}
+        </PrimaryButton>
+      </div>
+
+    </form>
   );
 };
 

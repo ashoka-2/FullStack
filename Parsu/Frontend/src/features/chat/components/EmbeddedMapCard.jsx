@@ -180,6 +180,7 @@ export const EmbeddedMapCard = ({
   const [viewType, setViewType] = useState(initialView); // roadmap (m) | satellite (k)
   const [zoom, setZoom] = useState(initialZoom);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [isGpsLocating, setIsGpsLocating] = useState(false);
@@ -203,6 +204,7 @@ export const EmbeddedMapCard = ({
     }
     setActiveStopPreview(null);
     setIsLoading(true);
+    setControlsOpen(false);
   }, [initialPayload]);
 
   // Clean values
@@ -353,8 +355,8 @@ export const EmbeddedMapCard = ({
           ? 'fixed inset-0 w-screen h-screen z-[99999999] bg-white dark:bg-zinc-950 flex flex-col m-0 p-0 rounded-none border-0 shadow-2xl'
           : 'relative group my-4 rounded-2xl md:rounded-3xl border border-zinc-200/90 dark:border-white/10 bg-white/95 dark:bg-[var(--bg-surface)] shadow-xl backdrop-blur-xl w-full max-w-2xl flex flex-col'
       }`}>
-        {/* Top Header Bar */}
-        <div className="flex flex-col gap-2 p-3 sm:p-4 bg-zinc-100/90 dark:bg-white/[0.03] border-b border-zinc-200/80 dark:border-white/5 select-none shrink-0">
+        {/* The map stays front and center; trip controls open on demand. */}
+        {(isFs || controlsOpen) && <div className="flex flex-col gap-2 p-3 sm:p-4 bg-zinc-100/90 dark:bg-white/[0.03] border-b border-zinc-200/80 dark:border-white/5 select-none shrink-0 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:duration-200">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
@@ -675,12 +677,23 @@ export const EmbeddedMapCard = ({
               </div>
             </div>
           )}
-        </div>
+        </div>}
 
         {/* Interactive Google Maps Viewport */}
         <div className={`relative w-full bg-zinc-100 dark:bg-zinc-950 overflow-hidden ${
           isFs ? 'flex-1 min-h-0' : 'h-64 sm:h-84'
         }`}>
+          {!isFs && (
+            <button
+              type="button"
+              onClick={() => setControlsOpen(open => !open)}
+              aria-label={controlsOpen ? 'Hide map details' : 'Show map details'}
+              aria-expanded={controlsOpen}
+              className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/70 bg-white/90 text-zinc-700 shadow-lg backdrop-blur-md transition hover:bg-white dark:border-white/15 dark:bg-zinc-950/85 dark:text-zinc-100"
+            >
+              <RiArrowRightSLine size={18} className={`transition-transform ${controlsOpen ? 'rotate-90' : '-rotate-90'}`} />
+            </button>
+          )}
           {isLoading && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-zinc-100/90 dark:bg-zinc-900/90 backdrop-blur-xs gap-2">
               <div className="w-8 h-8 rounded-full border-2 border-[var(--accent-cyan)] border-t-transparent animate-spin" />
@@ -705,7 +718,7 @@ export const EmbeddedMapCard = ({
         </div>
 
         {/* Card Footer Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900/60 border-t border-zinc-200/80 dark:border-white/5 text-xs shrink-0">
+        {(isFs || controlsOpen) && <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900/60 border-t border-zinc-200/80 dark:border-white/5 text-xs shrink-0">
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
@@ -772,7 +785,7 @@ export const EmbeddedMapCard = ({
               <RiExternalLinkLine size={13} />
             </a>
           </div>
-        </div>
+        </div>}
       </div>
     );
   };

@@ -156,6 +156,35 @@ const userSchema = new mongoose.Schema({
         librarySearchEnabled: { type: Boolean, default: false },
         lastUpdated: { type: Date, default: Date.now }
     },
+    skills: [{
+        name: { type: String, required: true, trim: true, maxlength: 120 },
+        description: { type: String, default: "", trim: true, maxlength: 500 },
+        triggers: [{ type: String, trim: true, maxlength: 80 }],
+        instructions: { type: String, required: true, maxlength: 30000 },
+        files: [{
+            name: { type: String, required: true },
+            path: { type: String, default: "" },
+            content: { type: String, default: "" },
+            size: { type: Number, default: 0 }
+        }],
+        enabled: { type: Boolean, default: true },
+        createdAt: { type: Date, default: Date.now }
+    }],
+
+    // ── Model Context Protocol (MCP) Servers ─────────────────────────────────
+    mcpServers: [{
+        name: { type: String, required: true, trim: true, maxlength: 100 },
+        transport: { type: String, enum: ['sse', 'http', 'stdio', 'local'], default: 'sse' },
+        url: { type: String, default: "", trim: true },
+        command: { type: String, default: "", trim: true },
+        description: { type: String, default: "", trim: true, maxlength: 300 },
+        headers: { type: Map, of: String },
+        enabled: { type: Boolean, default: true },
+        status: { type: String, enum: ['connected', 'disconnected', 'error'], default: 'disconnected' },
+        toolsCount: { type: Number, default: 0 },
+        lastPing: { type: Date },
+        createdAt: { type: Date, default: Date.now }
+    }],
 
     // ── User Preferences ─────────────────────────────────────────────────────
     preferences: {

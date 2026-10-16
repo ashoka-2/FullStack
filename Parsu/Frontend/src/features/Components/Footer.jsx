@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router';
 import { useDispatch } from 'react-redux';
 import {
@@ -68,7 +68,7 @@ export default function Footer() {
       dispatch(
         addToast({
           type: 'success',
-          message: res?.data?.message || 'ðŸŽ‰ Subscribed to Parsu AI weekly briefings!'
+          message: res?.data?.message || 'Subscribed to Parsu AI weekly briefings!'
         })
       );
     } catch (err) {
@@ -151,6 +151,7 @@ export default function Footer() {
     { to: '/contact', label: 'Contact Team', icon: RiMailLine },
     { to: '/status', label: 'System Health', icon: RiPulseLine },
     { to: '/privacy', label: 'Privacy Policy', icon: RiShieldCheckLine },
+    { to: '/cookies', label: 'Cookie Policy', icon: RiShieldCheckLine },
     { to: '/terms', label: 'Terms of Service', icon: RiFileTextLine }
   ];
 
@@ -166,11 +167,8 @@ export default function Footer() {
   return (
     <footer
       ref={footerRef}
-      className="relative z-10 w-full border-t border-zinc-200/80 dark:border-white/[0.08] bg-zinc-50/80 dark:bg-[var(--bg-secondary)]/90 backdrop-blur-2xl text-zinc-600 dark:text-zinc-400 mt-auto transition-colors duration-300"
+      className="ui-footer relative z-10 w-full border-t border-zinc-200/80 dark:border-white/[0.08] bg-zinc-50/80 dark:bg-[var(--bg-secondary)]/90 backdrop-blur-2xl text-zinc-600 dark:text-zinc-400 mt-auto transition-colors duration-300"
     >
-      {/* Razor-thin top cyan ambient highlight rim */}
-      <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-3/4 max-w-4xl h-px bg-gradient-to-r from-transparent via-[var(--accent-cyan)]/50 to-transparent" />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-8 sm:pb-10">
         
         {/* â”€â”€ MAIN CONTENT GRID: BRAND + NEWSLETTER + LINK COLUMNS â”€â”€ */}
@@ -269,7 +267,7 @@ export default function Footer() {
                       data-link-nudge
                       className="group inline-flex items-center gap-2 text-xs sm:text-[13px] text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors"
                     >
-                      <Icon size={14} className="text-zinc-400 dark:text-zinc-500 group-hover:text-[var(--accent-cyan)] transition-colors shrink-0" />
+                      <Icon aria-hidden="true" size={14} className="text-zinc-400 dark:text-zinc-500 group-hover:text-[var(--accent-cyan)] transition-colors shrink-0" />
                       <span>{link.label}</span>
                     </Link>
                   </li>
@@ -293,7 +291,7 @@ export default function Footer() {
                       data-link-nudge
                       className="group inline-flex items-center gap-2 text-xs sm:text-[13px] text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors"
                     >
-                      <Icon size={14} className="text-zinc-400 dark:text-zinc-500 group-hover:text-[var(--accent-cyan)] transition-colors shrink-0" />
+                      <Icon aria-hidden="true" size={14} className="text-zinc-400 dark:text-zinc-500 group-hover:text-[var(--accent-cyan)] transition-colors shrink-0" />
                       <span>{link.label}</span>
                     </Link>
                   </li>
@@ -321,7 +319,7 @@ export default function Footer() {
                     title={social.label}
                     aria-label={social.label}
                   >
-                    <Icon size={16} className="text-zinc-500 dark:text-zinc-400 group-hover:text-[var(--accent-cyan)] transition-colors" />
+                    <Icon aria-hidden="true" size={16} className="text-zinc-500 dark:text-zinc-400 group-hover:text-[var(--accent-cyan)] transition-colors" />
                   </a>
                 );
               })}
@@ -336,18 +334,22 @@ export default function Footer() {
         {/* â”€â”€ BOTTOM COPYRIGHT & SECONDARY NAVIGATION â”€â”€ */}
         <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 dark:text-zinc-400">
           <p className="text-[11px] font-medium">
-            Â© {currentYear} Parsu AI. Autonomous Multi-Model Intelligence â€” All rights reserved.
+            &copy; {currentYear} Parsu AI. Autonomous Multi-Model Intelligence &mdash; All rights reserved.
           </p>
 
           <div className="flex items-center gap-4 text-xs font-medium">
             <Link to="/privacy" className="hover:text-zinc-900 dark:hover:text-white transition-colors">
               Privacy
             </Link>
-            <span className="text-zinc-300 dark:text-zinc-700">â€¢</span>
+            <span aria-hidden="true" className="text-zinc-300 dark:text-zinc-700">·</span>
+            <Link to="/cookies" className="hover:text-zinc-900 dark:hover:text-white transition-colors">
+              Cookies
+            </Link>
+            <span aria-hidden="true" className="text-zinc-300 dark:text-zinc-700">·</span>
             <Link to="/terms" className="hover:text-zinc-900 dark:hover:text-white transition-colors">
               Terms
             </Link>
-            <span className="text-zinc-300 dark:text-zinc-700">â€¢</span>
+            <span aria-hidden="true" className="text-zinc-300 dark:text-zinc-700">·</span>
             <Link to="/contact" className="hover:text-zinc-900 dark:hover:text-white transition-colors">
               Support
             </Link>

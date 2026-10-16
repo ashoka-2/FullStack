@@ -156,17 +156,17 @@ export default function Changelog() {
             <div className="space-y-10 sm:space-y-12">
                 
                 {/* ── Category Filters ── */}
-                <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-white/5">
-                    <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-zinc-200/70 dark:bg-white/5 border border-zinc-300 dark:border-white/10">
+                <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-[var(--border)]">
+                    <div className="flex items-center gap-1.5 p-1 rounded-full bg-zinc-200/70 dark:bg-[var(--surface-2)] border border-zinc-300 dark:border-[var(--border)]">
                         {categories.map((cat) => (
                             <button
                                 key={cat}
                                 type="button"
                                 onClick={() => setSelectedCategory(cat)}
-                                className={`px-3.5 py-1 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+                                className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${
                                     selectedCategory === cat
-                                        ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-xs'
-                                        : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'
+                                        ? 'bg-white dark:bg-[var(--surface)] text-zinc-900 dark:text-[var(--fg)] shadow-xs'
+                                        : 'text-zinc-500 hover:text-zinc-900 dark:text-[var(--fg-muted)] dark:hover:text-[var(--fg)]'
                                 }`}
                             >
                                 {cat}
@@ -174,13 +174,13 @@ export default function Changelog() {
                         ))}
                     </div>
 
-                    <span className="text-[11px] text-zinc-400">
+                    <span className="text-[11px] text-zinc-400 dark:text-[var(--fg-muted)]">
                         Showing {filteredReleases.length} release updates
                     </span>
                 </div>
 
                 {/* ── Releases Timeline ── */}
-                <div className="relative pl-6 sm:pl-8 space-y-12 before:absolute before:left-2 sm:before:left-3 before:top-3 before:bottom-3 before:w-0.5 before:bg-zinc-200 dark:before:bg-white/10">
+                <div className="relative pl-6 sm:pl-8 space-y-12 before:absolute before:left-2 sm:before:left-3 before:top-3 before:bottom-3 before:w-0.5 before:bg-zinc-200 dark:before:bg-[var(--border)]">
                     {filteredReleases.map((release, idx) => (
                         <motion.div
                             key={release.version}
@@ -190,38 +190,38 @@ export default function Changelog() {
                             className="relative space-y-4"
                         >
                             {/* Timeline bullet icon */}
-                            <div className="absolute -left-[31px] sm:-left-[39px] top-1.5 w-6 h-6 rounded-full bg-white dark:bg-[var(--bg-surface)] border-2 border-cyan-500 flex items-center justify-center text-cyan-500 shadow-sm">
-                                <div className="w-2 h-2 rounded-full bg-cyan-500" />
+                            <div className="absolute -left-[31px] sm:-left-[39px] top-1.5 w-6 h-6 rounded-full bg-white dark:bg-[var(--surface)] border-2 border-[var(--accent)] flex items-center justify-center text-[var(--accent)] shadow-xs">
+                                <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
                             </div>
 
                             {/* Release Header */}
                             <div className="flex flex-wrap items-center gap-2.5">
-                                <span className="font-mono text-sm sm:text-base font-extrabold text-cyan-600 dark:text-cyan-400">
+                                <span className="font-mono text-sm sm:text-base font-extrabold text-[var(--accent)]">
                                     {release.version}
                                 </span>
-                                <span className="text-xs text-zinc-400 dark:text-zinc-500">•</span>
-                                <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                                <span className="text-xs text-zinc-400 dark:text-[var(--fg-muted)]">•</span>
+                                <span className="text-xs text-zinc-500 dark:text-[var(--fg-muted)] font-medium">
                                     {release.date}
                                 </span>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent-muted)] text-[var(--accent)] border border-[var(--accent)]/20">
                                     {release.badge}
                                 </span>
                             </div>
 
-                            <h3 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white">
+                            <h3 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-[var(--fg)]">
                                 {release.title}
                             </h3>
 
                             {/* Release Card */}
-                            <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-4">
+                            <div className="p-5 sm:p-6 rounded-[28px] bg-white dark:bg-[var(--surface)] border border-zinc-200/80 dark:border-[var(--border)] shadow-xs space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {release.highlights.map((h, i) => (
-                                        <div key={i} className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-100 dark:border-white/5 space-y-1">
-                                            <h4 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
+                                        <div key={i} className="p-4 rounded-[18px] bg-zinc-50 dark:bg-[var(--surface-2)] border border-zinc-100 dark:border-[var(--border)] space-y-1">
+                                            <h4 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-[var(--fg)] flex items-center gap-1.5">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
                                                 <span>{h.title}</span>
                                             </h4>
-                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                                            <p className="text-xs text-zinc-500 dark:text-[var(--fg-muted)] leading-relaxed">
                                                 {h.desc}
                                             </p>
                                         </div>
@@ -233,18 +233,18 @@ export default function Changelog() {
                 </div>
 
                 {/* ── Bottom Callout ── */}
-                <div className="p-6 rounded-3xl bg-zinc-100/70 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="p-6 rounded-[28px] bg-zinc-100/70 dark:bg-[var(--surface)] border border-zinc-200 dark:border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="space-y-0.5 text-center sm:text-left">
-                        <h4 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white">
+                        <h4 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-[var(--fg)]">
                             Have a feature request or feedback?
                         </h4>
-                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                        <p className="text-[11px] text-zinc-500 dark:text-[var(--fg-muted)]">
                             Our team ships updates weekly based on community votes and user suggestions.
                         </p>
                     </div>
                     <Link
                         to="/contact"
-                        className="shrink-0 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-black font-semibold text-xs transition-all"
+                        className="shrink-0 px-5 py-2.5 rounded-full bg-zinc-900 hover:bg-zinc-800 dark:bg-[var(--accent)] dark:hover:bg-[var(--accent-hover)] text-white dark:text-[#151515] font-semibold text-xs transition-all shadow-xs"
                     >
                         Submit Idea
                     </Link>

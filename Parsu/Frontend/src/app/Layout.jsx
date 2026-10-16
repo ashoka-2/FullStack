@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router';
+import React, { useState, useEffect, useRef } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router';
+import gsap from 'gsap';
 import { ReactLenis } from 'lenis/react';
 import 'lenis/dist/lenis.css';
 import ScrollToTop from '../features/Components/ScrollToTop';
@@ -12,15 +13,25 @@ import ConnectionMonitor from '../features/Components/ConnectionMonitor';
 import { usePWA } from '../hooks/usePWA';
 import GuideOverlay from '../features/guide/GuideOverlay';
 import useGuideEngine from '../features/guide/useGuideEngine';
+import CookieConsentBanner from '../features/Components/CookieConsentBanner';
 
 const Layout = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const pageContentRef = useRef(null);
     const dispatch = useDispatch();
     // Register service worker, push notifications & background sync
     usePWA();
     // AI Guided Help engine — watches AI messages for guide triggers
     useGuideEngine();
     const authLoading = useSelector(state => state.auth.loading);
+    const routeMotionKey = location.pathname.startsWith('/chat/') ? '/chat' : location.pathname;
+
+    useEffect(() => {
+        const node = pageContentRef.current;
+        if (!node || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        gsap.fromTo(node, { autoAlpha: 0.86 }, { autoAlpha: 1, duration: 0.2, ease: 'power2.out', clearProps: 'opacity,visibility' });
+    }, [routeMotionKey]);
     
     // Detect standalone PWA mode (installed mobile or desktop web application)
     const isStandalonePWA = typeof window !== 'undefined' && (
@@ -77,6 +88,7 @@ const Layout = () => {
 
         // Sync Initial Theme & User Custom Colors
         const theme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.dataset.theme = theme;
         if (theme === 'dark') {
             document.documentElement.classList.add('dark');
             document.documentElement.classList.remove('light');
@@ -133,9 +145,12 @@ const Layout = () => {
 
                     {/* Main app content with background data prefetching */}
                     <ScrollToTop />
-                    <Outlet />
+                    <div ref={pageContentRef} className="min-h-screen">
+                        <Outlet />
+                    </div>
                     <FloatingBlobMascot />
                     <GuideOverlay />
+                    <CookieConsentBanner />
                     <ToastContainer />
                 </div>
             </ConnectionMonitor>

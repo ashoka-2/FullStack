@@ -11,65 +11,14 @@ import { addToast } from '../../../../utils/toast.slice';
 import gsap from 'gsap';
 import { getWebSearchSetting, setWebSearchSetting } from '../../../../utils/aiSettingsSync';
 import PrimaryButton from '../../../Components/PrimaryButton';
+import { Group, GroupLabel, GroupFooter, Row } from '../../../Components/GroupedList';
 
-const SectionLabel = ({ children }) => (
-    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-600 mb-3 px-0.5">{children}</p>
-);
-
-const Surface = ({ children, className = '' }) => (
-    <div className={`rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06] px-4 ${className}`}>
-        {children}
-    </div>
-);
-
-const SettingRow = ({ icon: Icon, title, description, action, noBorder = false }) => (
-    <div className={`flex items-center justify-between gap-4 py-4 ${!noBorder ? 'border-b border-zinc-100 dark:border-white/5' : ''}`}>
-        <div className="flex items-center gap-3 min-w-0">
-            {Icon && (
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: 'rgba(32,184,205,0.08)' }}>
-                    <Icon size={16} className="text-[var(--accent-cyan)]" />
-                </div>
-            )}
-            <div className="min-w-0">
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</p>
-                {description && <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-0.5 leading-relaxed">{description}</p>}
-            </div>
-        </div>
-        <div className="shrink-0">{action}</div>
-    </div>
-);
-
-// ─── Theme Picker ────────────────────────────────────────────────────────────
 const THEMES = [
     { value: 'system', label: 'System', icon: RiComputerLine },
     { value: 'light', label: 'Light', icon: RiSunLine },
     { value: 'dark', label: 'Dark', icon: RiMoonLine },
 ];
 
-const ThemePicker = ({ value, onChange }) => (
-    <div className="grid grid-cols-3 gap-2">
-        {THEMES.map(({ value: v, label, icon: Icon }) => (
-            <button
-                key={v}
-                type="button"
-                onClick={() => onChange(v)}
-                className={[
-                    'flex flex-col items-center gap-2 py-3 px-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer',
-                    'active:scale-95',
-                    value === v
-                        ? 'bg-[var(--accent-cyan)]/10 border-[var(--accent-cyan)]/50 text-[var(--accent-cyan)]'
-                        : 'bg-zinc-50 dark:bg-zinc-800/60 border-zinc-200 dark:border-white/8 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-white/14'
-                ].join(' ')}
-            >
-                <Icon size={18} />
-                {label}
-            </button>
-        ))}
-    </div>
-);
-
-// ─── General Settings Page ───────────────────────────────────────────────────
 const GeneralSettingsPage = () => {
     const dispatch = useDispatch();
     const containerRef = useRef(null);
@@ -105,9 +54,9 @@ const GeneralSettingsPage = () => {
     useEffect(() => {
         if (!loading && containerRef.current) {
             gsap.fromTo(
-                containerRef.current.children,
-                { opacity: 0, y: 14 },
-                { opacity: 1, y: 0, duration: 0.5, stagger: 0.07, ease: 'power2.out' }
+                '.settings-group-item',
+                { opacity: 0, y: 12 },
+                { opacity: 1, y: 0, duration: 0.35, stagger: 0.06, ease: 'power2.out', clearProps: 'all' }
             );
         }
     }, [loading]);
@@ -115,12 +64,12 @@ const GeneralSettingsPage = () => {
     // Apply theme immediately on change
     useEffect(() => {
         const root = document.documentElement;
+        root.dataset.theme = theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
         if (theme === 'dark') {
             root.classList.add('dark');
         } else if (theme === 'light') {
             root.classList.remove('dark');
         } else {
-            // System
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             prefersDark ? root.classList.add('dark') : root.classList.remove('dark');
         }
@@ -133,7 +82,6 @@ const GeneralSettingsPage = () => {
             await updateUserSettings({
                 preferences: { theme, hapticFeedback: haptic, webSearchEnabled: webSearch }
             });
-            // Persist web search preference and notify all components
             setWebSearchSetting(webSearch);
             localStorage.setItem('parsu_haptic', haptic ? '1' : '0');
             dispatch(addToast({ type: 'success', message: 'General settings saved!' }));
@@ -152,70 +100,98 @@ const GeneralSettingsPage = () => {
         >
             {loading ? (
                 <div className="flex items-center justify-center py-24">
-                    <RiLoader4Line size={28} className="text-[var(--accent-cyan)] animate-spin" />
+                    <RiLoader4Line size={28} className="text-[var(--accent)] animate-spin" />
                 </div>
             ) : (
-                <div ref={containerRef} className="space-y-6">
+                <div ref={containerRef} className="space-y-7">
 
-                    {/* ── Theme ─────────────────────────────────────────── */}
-                    <div>
-                        <SectionLabel>Appearance</SectionLabel>
-                        <Surface className="py-4">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                                    style={{ background: 'rgba(32,184,205,0.08)' }}>
-                                    <RiPaletteLine size={16} className="text-[var(--accent-cyan)]" />
+                    {/* ── Theme / Appearance ── */}
+                    <div className="settings-group-item">
+                        <GroupLabel>Appearance</GroupLabel>
+                        <Group>
+                            <div className="rounded-[28px] bg-[var(--surface)] p-4 sm:p-5 flex flex-col gap-3.5">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--accent-text)] shrink-0">
+                                        <RiPaletteLine size={19} />
+                                    </div>
+                                    <div>
+                                        <p className="text-[15px] font-medium text-[var(--text)]">Color Scheme</p>
+                                        <p className="text-xs text-[var(--text-muted)] mt-0.5">Select interface theme</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Theme</p>
-                                    <p className="text-xs text-zinc-500 mt-0.5">Choose your preferred color scheme</p>
+
+                                {/* Minimal-AI-UI Segmented Control */}
+                                <div className="h-11 p-1 rounded-full bg-[var(--surface-2)] grid grid-cols-3 gap-1 select-none">
+                                    {THEMES.map(({ value: v, label, icon: Icon }) => {
+                                        const isSelected = theme === v;
+                                        return (
+                                            <button
+                                                key={v}
+                                                type="button"
+                                                onClick={() => setTheme(v)}
+                                                className={`h-full rounded-full flex items-center justify-center gap-1.5 text-xs font-medium cursor-pointer transition-all duration-150 ${
+                                                    isSelected
+                                                        ? 'bg-[var(--text)] text-[var(--bg)] shadow-sm'
+                                                        : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                                                }`}
+                                            >
+                                                <Icon size={14} />
+                                                <span>{label}</span>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
-                            <ThemePicker value={theme} onChange={setTheme} />
-                        </Surface>
+                        </Group>
                     </div>
 
-                    {/* ── Behaviour ─────────────────────────────────────── */}
-                    <div>
-                        <SectionLabel>Behaviour</SectionLabel>
-                        <Surface>
-                            <SettingRow
+                    {/* ── Behaviour ── */}
+                    <div className="settings-group-item">
+                        <GroupLabel>Behaviour</GroupLabel>
+                        <Group>
+                            <Row
                                 icon={RiPulseLine}
-                                title="Haptic Feedback"
-                                description="Vibration on send, receive and other interactions"
-                                action={<PremiumToggle checked={haptic} onChange={setHaptic} />}
+                                label="Haptic Feedback"
+                                description="Tactile feedback on send, receive and key taps"
+                                trailing={<PremiumToggle checked={haptic} onChange={setHaptic} />}
                             />
-                            <SettingRow
+                            <Row
                                 icon={RiSearchLine}
-                                title="Web Search"
-                                description="Automatically search the web for real-time information using Tavily"
-                                noBorder
-                                action={<PremiumToggle checked={webSearch} onChange={(val) => {
-                                    setWebSearch(val);
-                                    setWebSearchSetting(val);
-                                }} />}
+                                label="Live Web Search"
+                                description="Fetch real-time data using Tavily grounding"
+                                trailing={
+                                    <PremiumToggle
+                                        checked={webSearch}
+                                        onChange={(val) => {
+                                            setWebSearch(val);
+                                            setWebSearchSetting(val);
+                                        }}
+                                    />
+                                }
                             />
-                        </Surface>
+                        </Group>
                         {webSearch && (
-                            <p className="text-xs text-[var(--accent-cyan)] mt-2 px-1 flex items-center gap-1.5">
-                                <RiSearchLine size={12} />
-                                Live web search is active — Parsu AI will fetch real-time data.
-                            </p>
+                            <GroupFooter>
+                                Live search is active — Parsu AI will search the web when answering time-sensitive queries.
+                            </GroupFooter>
                         )}
                     </div>
 
-                    {/* ── Save ──────────────────────────────────────────── */}
-                    <PrimaryButton
-                        onClick={handleSave}
-                        disabled={saving}
-                        loading={saving}
-                        icon={RiCheckLine}
-                        iconPosition="left"
-                        fullWidth
-                        size="md"
-                    >
-                        {saving ? 'Saving…' : 'Save Changes'}
-                    </PrimaryButton>
+                    {/* ── Save Button ── */}
+                    <div className="settings-group-item pt-2">
+                        <PrimaryButton
+                            onClick={handleSave}
+                            disabled={saving}
+                            loading={saving}
+                            icon={RiCheckLine}
+                            iconPosition="left"
+                            fullWidth
+                            size="md"
+                        >
+                            {saving ? 'Saving…' : 'Save Changes'}
+                        </PrimaryButton>
+                    </div>
+
                 </div>
             )}
         </SettingsPageLayout>

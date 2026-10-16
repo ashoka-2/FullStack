@@ -4,7 +4,7 @@ import { router } from './app.routes';
 import { useAuth } from '../features/auth/hook/useAuth';
 import { initializeSocketConnection } from '../features/chat/service/chat.socket';
 import { useDispatch } from 'react-redux';
-import { appendChunk, resetStreamingChunk, setActiveToolEvent } from '../features/chat/chat.slice';
+import { appendChunk, resetStreamingChunk, setActiveToolEvent, setActivityStep } from '../features/chat/chat.slice';
 import { isMaintenanceModeActive } from '../utils/maintenance';
 import MaintenanceMode from '../features/pages/MaintenanceMode';
 
@@ -53,23 +53,32 @@ const App = () => {
 
     const handleToolEvent = (event) => {
       if (event?.type === "tool_start") {
-        let label = "Working...";
+        let label = "Using an assistant tool";
         if (event.name === "post_to_social_media" || event.name === "postToSocialMedia") {
-          const platforms = event.args?.platforms || [];
-          const platformStr = Array.isArray(platforms) ? platforms.join(", ") : String(platforms || "");
-          label = platformStr ? `Publishing to ${platformStr}...` : "Publishing to social media...";
+          label = "Preparing your social post";
         } else if (event.name === "search_web" || event.name === "tavilySearch") {
-          label = "Searching the web...";
+          label = "Searching the web";
         } else if (event.name) {
-          label = `Executing ${event.name}...`;
+          const knownTools = {
+            googleCalendar: "Checking your calendar",
+            sendEmail: "Preparing your email",
+            searchImages: "Finding relevant images",
+            createImage: "Creating an image",
+            deviceControl: "Working with a connected device"
+          };
+          label = knownTools[event.name] || "Using an assistant tool";
         }
         dispatch(setActiveToolEvent({ ...event, label }));
       } else if (event?.type === "tool_end") {
-        dispatch(setActiveToolEvent(null));
+        dispatch(setActiveToolEvent({ ...event, label: "Task complete" }));
       }
     };
 
-    const handleRelay = ({ action, params, senderDeviceName }) => {
+    const handleActivityUpdate = (step) => {
+      if (step?.id && step?.label) dispatch(setActivityStep(step));
+    };
+
+    const handleRelay = ({ action, params }) => {
       if (action === "open_url" && params?.url) {
         window.open(params.url, "_blank");
       } else if (action === "write_clipboard" && params?.text) {
@@ -82,6 +91,7 @@ const App = () => {
     socket.on("chunk", handleChunk);
     socket.on("chunk:reset", handleChunkReset);
     socket.on("tool:event", handleToolEvent);
+    socket.on("activity:update", handleActivityUpdate);
     socket.on("device:incoming_relay", handleRelay);
 
     return () => {
@@ -89,6 +99,7 @@ const App = () => {
       socket.off("chunk", handleChunk);
       socket.off("chunk:reset", handleChunkReset);
       socket.off("tool:event", handleToolEvent);
+      socket.off("activity:update", handleActivityUpdate);
       socket.off("device:incoming_relay", handleRelay);
     };
   }, [isMaintenance]);

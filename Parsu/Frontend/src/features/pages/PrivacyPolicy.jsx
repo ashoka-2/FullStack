@@ -17,12 +17,12 @@ import InfoPageLayout from './InfoPageLayout';
 const Section = ({ icon: Icon, title, children }) => (
   <div className="mb-8">
     <div className="flex items-center gap-2.5 mb-3">
-      <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
-        <Icon className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+      <div className="p-2 rounded-full bg-[var(--accent-muted)] border border-[var(--accent)]/20">
+        <Icon className="w-4 h-4 text-[var(--accent)]" />
       </div>
-      <h2 className="text-lg font-bold text-zinc-900 dark:text-white">{title}</h2>
+      <h2 className="text-lg font-bold text-zinc-900 dark:text-[var(--fg)]">{title}</h2>
     </div>
-    <div className="text-[13px] sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed space-y-3 pl-0.5">
+    <div className="text-[13px] sm:text-sm text-zinc-600 dark:text-[var(--fg-muted)] leading-relaxed space-y-3 pl-0.5">
       {children}
     </div>
   </div>
@@ -35,8 +35,8 @@ const PrivacyPolicy = () => {
       subtitle="Last updated: January 2025" 
       badge="GDPR / CCPA Compliant"
     >
-      <div className="bg-white dark:bg-[#0e0f10] rounded-3xl border border-zinc-200/60 dark:border-white/5 p-6 sm:p-10 shadow-sm">
-        <p className="text-[13px] sm:text-sm text-zinc-500 dark:text-zinc-400 mb-8 leading-relaxed">
+      <div className="bg-white dark:bg-[var(--surface)] rounded-[28px] border border-zinc-200/80 dark:border-[var(--border)] p-6 sm:p-10 shadow-xs">
+        <p className="text-[13px] sm:text-sm text-zinc-500 dark:text-[var(--fg-muted)] mb-8 leading-relaxed">
           Your privacy is critically important to us. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered research platform.
         </p>
 

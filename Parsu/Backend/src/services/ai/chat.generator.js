@@ -167,6 +167,7 @@ const YES_RX = /^\s*(yes|yeah|yep|yup|ok(ay)?|sure|please|do it|go ahead|show( i
 const MAP_OFFER_RX = /(show|see|view|open|display).{0,40}\bmap\b|\bmap\b.{0,40}(directions?|route|mark)/i;
 const TRIP_RX = /\b(trip|itinerary|road ?trip|tour|travel plan|plan.{0,20}(visit|travel|journey)|places to (visit|see)|weekend (getaway|plan)|vacation|holiday)\b/i;
 const VISUAL_RX = /\b(show|see|display|give|send)\b.{0,40}\b(images?|photos?|pictures?|pics?)\b|\b(images?|photos?|pictures?|pics?) of\b|\bwith (its |their |the )?(details|uses|photos?|images?)\b/i;
+const IMAGE_GENERATION_RX = /\b(create|make|generate|draw|design|illustrate)\b.{0,50}\b(image|picture|photo|artwork|illustration|poster|thumbnail|graphic|logo|banner|cover|infographic)\b|\b(image|picture|photo|artwork|illustration|poster|thumbnail|graphic|logo|banner|cover|infographic)\b.{0,40}\b(create|make|generate|draw|design)\b/i;
 const APP_RX = /\b(parsu|settings?|connect|api key|byok|memory|mascot|voice|model|library|social hub|account)\b/i;
 const SMALLTALK_RX = /^\s*((hi+|hii+|hello+|hey+|heya|hola)(\s+(there|parsu|bro|buddy|everyone|friend|ai))?|yo|sup|namaste|vanakkam|good\s*(morning|afternoon|evening|night)|gm|gn|thanks?( you)?|thx|ty|ok(ay)?|cool|nice|great|bye|see you|how are you( doing)?|what'?s up|wassup|who are you|what can you do)\s*[!.?😊🙂👋]*\s*$/i;
 const FRESH_RX = /\b(latest|today|tonight|yesterday|news|current|right now|price|stock|score|weather|live|who is|who won|release date|202\d)\b/i;
@@ -204,6 +205,7 @@ function detectIntent(messages, userContext) {
     text, post, platforms, wantsAll, hasMedia, asksHowTo,
     wantsMap, trip: trip && !post,
     visual: VISUAL_RX.test(text) && !post,
+    generateImage: IMAGE_GENERATION_RX.test(text) && !post,
     appHelp: asksHowTo && APP_RX.test(text) && !post ? true : (/where (can|do) i (find|change)|how do i (connect|add|change|set)/i.test(text) && APP_RX.test(text)),
     fresh: FRESH_RX.test(text),
     smallTalk: SMALLTALK_RX.test(text) && !hasMedia,
@@ -383,14 +385,24 @@ If images of the place are requested also add: \`\`\`gallery\\nquery: Place Name
   } else if (intent.trip) {
     parts.push(
 `TRIP PLANNING (map NOT requested)
-Give the itinerary: day-wise plan, distances, travel time, halts, food, costs and tips. If the start or destination is missing, ask where they want to go in one line.
+Give the itinerary: day-wise plan, distances, travel time, halts, food, costs and tips. Add a relevant photo gallery after the key places in the itinerary (one \`\`\`gallery block per major place, 1–2 per day) so the user can preview the destinations. Use the exact place and city in each query. If the start or destination is missing, ask where they want to go in one line.
 NEVER output a \`\`\`map block now. End with exactly this line: "🗺️ Want me to show this on a map with directions?"`);
   } else {
     parts.push("Never output a ```map block unless the user explicitly asks for a map or directions.");
   }
 
+  /* ── image creation ── */
+  if (intent.generateImage) {
+    parts.push(`IMAGE CREATION
+The user asked you to create an image. Write a concise, specific image prompt based on their request, then output exactly one image-generation block:
+\`\`\`imagegen
+prompt: Describe the requested image
+\`\`\`
+The app will show generation progress and render the result only if a connected provider confirms an available free image model. Do not claim an image was created if no model is available.`);
+  }
+
   /* ── visual cards ── */
-  if (intent.visual) {
+  if (intent.visual && !intent.generateImage) {
     parts.push(
 `IMAGES & PRODUCT CARDS
 Photos/pictures of something -> a short warm description plus:

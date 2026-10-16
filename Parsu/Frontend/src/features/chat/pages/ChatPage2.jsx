@@ -3,7 +3,7 @@ import { useParams } from 'react-router';
 import {
     RiArrowDownLine,
     RiSpyLine,
-    RiAlertLine
+    RiAlertLine,
 } from '@remixicon/react';
 import Sidebar from '../../Components/Sidebar';
 import ChatMessage from '../components/ChatMessage';
@@ -22,6 +22,7 @@ import VoiceMode from '../components/VoiceMode';
 import { resolveIntent } from '../hook/useVoiceAgent';
 import { executeDeviceCommandApi } from '../../device/service/device.api';
 import useSEO from '../../../utils/useSEO';
+import ArtifactPane from '../components/ArtifactPane';
 
 const ChatPage2 = () => {
     useSEO({
@@ -56,6 +57,7 @@ const ChatPage2 = () => {
 
     // Redux selectors for messages, pagination, and error states
     const messages = useSelector(state => state.chat.messages);
+    const messagesLoadingChatId = useSelector(state => state.chat.messagesLoadingChatId);
     const chats = useSelector(state => state.chat.chats);
     const error = useSelector(state => state.chat.error);
     const hasMoreMessages = useSelector(state => state.chat.hasMoreMessages);
@@ -66,6 +68,33 @@ const ChatPage2 = () => {
     const dispatch = useDispatch();
     const [latestMessageId, setLatestMessageId] = useState(null);
     const [showScrollButton, setShowScrollButton] = useState(false);
+    const [artifact, setArtifact] = useState(null);
+    const [codePreviewMode, setCodePreviewMode] = useState('preview');
+    const [previewFullscreen, setPreviewFullscreen] = useState(false);
+    const [artifactWidth, setArtifactWidth] = useState(660);
+
+    useEffect(() => {
+        const openPreview = (event) => {
+            const detail = event.detail || {};
+            if (typeof detail.content === 'string' || typeof detail.code === 'string' || typeof detail.url === 'string') {
+                setArtifact({ ...detail, kind: detail.kind || 'html', content: detail.content ?? detail.code ?? '' });
+                setCodePreviewMode(detail.mode === 'code' ? 'code' : 'preview');
+                setPreviewFullscreen(false);
+            }
+        };
+        window.addEventListener('parsu:open-artifact', openPreview);
+        window.addEventListener('parsu:open-code-preview', openPreview);
+        return () => {
+            window.removeEventListener('parsu:open-artifact', openPreview);
+            window.removeEventListener('parsu:open-code-preview', openPreview);
+        };
+    }, []);
+
+    // Close preview pane when navigating to another chat
+    useEffect(() => {
+        setArtifact(null);
+        setPreviewFullscreen(false);
+    }, [id]);
 
     // Web Search and Cross-Chat Memory feature toggles synced across all pages & settings
     const {
@@ -511,10 +540,11 @@ const ChatPage2 = () => {
 
 
     return (
-        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30">
+        <div className="chat-shell ui-page flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            <div className={`flex-1 flex flex-col h-[100dvh] ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} overflow-hidden relative transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
+            <div className={`flex-1 flex h-[100dvh] ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} overflow-hidden relative transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
+              <div className="flex min-w-0 flex-1 flex-col h-full overflow-hidden relative">
 
                 {/* Main AI Chatbot Navbar (ChatGPT-style) */}
                 <ChatNavbar
@@ -573,7 +603,7 @@ const ChatPage2 = () => {
                             </div>
                         )}
 
-                        {((loading || error || (typeof navigator !== 'undefined' && !navigator.onLine)) && messages.length === 0) ? (
+                        {((messagesLoadingChatId === id || error || (typeof navigator !== 'undefined' && !navigator.onLine)) && messages.length === 0) ? (
                             <MessagesSkeleton />
                         ) : (
                             <>
@@ -581,6 +611,7 @@ const ChatPage2 = () => {
                                     <ChatMessage 
                                         key={msg._id} 
                                         msg={msg} 
+                                        previousMessage={messages[index - 1]}
                                         isLatest={index === messages.length - 1}
                                         isNewMessage={msg._id === latestMessageId}
                                     />
@@ -589,7 +620,7 @@ const ChatPage2 = () => {
                                     messages.length === 0 || 
                                     messages[messages.length - 1].role !== 'ai' || 
                                     !messages[messages.length - 1].content?.trim()
-                                ) && (
+                                ) && !messages.some(msg => msg.role === 'ai' && msg.isStreaming) && (
                                     <ThinkingSkeleton />
                                 )}
                                 {lastFailedSend && (
@@ -627,7 +658,7 @@ const ChatPage2 = () => {
 
                 {/* Move to bottom button */}
                 {showScrollButton && (
-                    <div className={`absolute bottom-[180px] left-0 right-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} flex justify-center z-40 pointer-events-none transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
+                    <div className="absolute bottom-[180px] left-0 right-0 flex justify-center z-40 pointer-events-none">
                         <button 
                             onClick={scrollToBottom}
                             className="bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-100 p-2.5 rounded-full shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-4 duration-300 group pointer-events-auto"
@@ -677,6 +708,18 @@ const ChatPage2 = () => {
                     lastAiMessage={messages.length > 0 ? (messages.filter(m => m.role === 'ai').at(-1)?.content || '') : ''}
                     onSendMessage={handleSendFollowUp}
                 />
+              </div>
+
+              {artifact && <ArtifactPane
+                artifact={artifact}
+                mode={codePreviewMode}
+                onModeChange={setCodePreviewMode}
+                fullscreen={previewFullscreen}
+                onFullscreenChange={setPreviewFullscreen}
+                width={artifactWidth}
+                onResize={setArtifactWidth}
+                onClose={() => { setArtifact(null); setPreviewFullscreen(false); }}
+              />}
             </div>
         </div>
 

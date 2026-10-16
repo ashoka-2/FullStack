@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import {
   RiSparkling2Line,
@@ -98,7 +98,7 @@ export default function About() {
             <div
               key={i}
               ref={el => statsRef.current[i] = el}
-              className="p-5 rounded-2xl bg-zinc-100/80 dark:bg-white/[0.03] hover:bg-zinc-200/60 dark:hover:bg-white/[0.05] border border-zinc-200 dark:border-white/[0.07] transition-all duration-200"
+              className="p-5 rounded-[24px] bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] transition-all duration-200"
             >
               <p className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight font-display mb-1">
                 {stat.value}
@@ -109,8 +109,8 @@ export default function About() {
           ))}
         </div>
 
-        {/* â”€â”€ Architectural Philosophy â”€â”€ */}
-        <div className="p-7 sm:p-10 rounded-3xl bg-gradient-to-br from-zinc-100 to-zinc-50 dark:from-white/[0.04] dark:to-white/[0.01] border border-zinc-200 dark:border-white/[0.08] relative overflow-hidden">
+        {/* ── Architectural Philosophy ── */}
+        <div className="p-7 sm:p-10 rounded-[28px] bg-[var(--surface)] border border-[var(--border)] relative overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <ParsuLogo size={32} className="text-zinc-900 dark:text-white" />
             <div>
@@ -123,7 +123,7 @@ export default function About() {
           </p>
         </div>
 
-        {/* â”€â”€ Capabilities Matrix â”€â”€ */}
+        {/* ── Capabilities Matrix ── */}
         <div>
           <div className="text-center mb-8">
             <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">Platform Capabilities</h2>
@@ -137,7 +137,7 @@ export default function About() {
                 <div
                   key={i}
                   ref={el => cardsRef.current[i] = el}
-                  className="p-6 rounded-2xl bg-white dark:bg-[var(--bg-card)] hover:bg-zinc-50 dark:hover:bg-[var(--bg-surface-hover)] border border-zinc-200 dark:border-white/[0.07] hover:border-[var(--accent-cyan)]/40 transition-all duration-200 flex flex-col justify-between group shadow-sm"
+                  className="p-6 rounded-[28px] bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--accent)]/40 transition-all duration-200 flex flex-col justify-between group shadow-xs"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-4">
@@ -161,7 +161,7 @@ export default function About() {
           </div>
         </div>
 
-        {/* â”€â”€ Ready to Start Callout â”€â”€ */}
+        {/* ── Ready to Start Callout ── */}
         <div className="text-center pt-6 pb-2">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Ready to elevate your intelligence?</h3>
           <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-md mx-auto mb-6">
@@ -178,7 +178,7 @@ export default function About() {
             </PrimaryButton>
             <Link
               to="/contact"
-              className="inline-flex items-center gap-1.5 px-5 py-3 rounded-xl bg-zinc-100 dark:bg-white/[0.04] hover:bg-zinc-200/80 dark:hover:bg-white/[0.08] border border-zinc-200 dark:border-white/[0.08] text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-all"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--border)] text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-all"
             >
               Contact Team
             </Link>

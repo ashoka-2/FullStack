@@ -84,15 +84,7 @@ app.get(["/health", "/api/health"], (req, res) => {
         database: {
             status: dbStates[dbStatus] || "unknown",
             readyState: dbStatus
-        },
-        system: {
-            memoryUsage: {
-                rss: `${(process.memoryUsage().rss / 1024 / 1024).toFixed(2)} MB`,
-                heapUsed: `${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB`
-            },
-            nodeVersion: process.version
-        },
-        environment: process.env.NODE_ENV || "development"
+        }
     });
 });
 
@@ -139,7 +131,7 @@ app.use((err, req, res, next) => {
     const statusCode = err.status || err.statusCode || 500;
     res.status(statusCode).json({
         success: false,
-        message: err.message || "An unexpected server error occurred",
+        message: statusCode >= 500 ? "An unexpected server error occurred" : (err.message || "The request could not be completed"),
         ...(process.env.NODE_ENV !== "production" ? { stack: err.stack } : {})
     });
 });

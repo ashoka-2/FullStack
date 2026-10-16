@@ -23,11 +23,11 @@ export default function DeviceAuditLog({ logs, onUndo }) {
     const visible = filter === 'all' ? logs : logs.filter(l => l.tier === filter);
 
     return (
-        <div className="rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06] p-5">
+        <div className="rounded-[28px] bg-white dark:bg-zinc-900/40 border border-zinc-200/80 dark:border-white/[0.08] p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <div>
                     <h2 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                        <RiTimeLine size={16} className="text-zinc-400" />
+                        <RiTimeLine size={16} className="text-[var(--accent-cyan)]" />
                         Action Audit Log
                     </h2>
                     <p className="text-xs text-zinc-500 mt-0.5">Every automation command — duration, tier, status, and undo support.</p>

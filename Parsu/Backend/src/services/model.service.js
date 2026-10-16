@@ -1,5 +1,36 @@
 import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
+
+/** Reject custom API base URLs that can reach local/private network services. */
+export async function assertPublicHttpsUrl(value) {
+  if (!value) return;
+  let parsed;
+  try { parsed = new URL(value); } catch { throw new Error("API base URL must be a valid HTTPS URL"); }
+  const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (parsed.protocol !== "https:" || parsed.username || parsed.password ||
+      host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host === "metadata.google.internal") {
+    throw new Error("API base URL must use HTTPS and a public hostname");
+  }
+  const addresses = isIP(host) ? [{ address: host }] : await lookup(host, { all: true });
+  const isPublicAddress = (address) => {
+    const ip = address.toLowerCase();
+    const mappedIpv4 = ip.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)?.[1];
+    if (mappedIpv4) return isPublicAddress(mappedIpv4);
+    if (isIP(ip) === 4) {
+      const [a, b] = ip.split(".").map(Number);
+      return !(a === 0 || a === 10 || a === 127 || (a === 100 && b >= 64 && b <= 127) ||
+        (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
+        (a === 192 && (b === 0 || b === 168)) || (a === 198 && (b === 18 || b === 19)) || a >= 224);
+    }
+    return !(ip === "::" || ip === "::1" || /^f[cd]/i.test(ip) || /^fe[89ab]/i.test(ip) ||
+      /^ff/i.test(ip) || ip.startsWith("2001:db8:"));
+  };
+  if (!addresses.length || addresses.some(({ address }) => !isPublicAddress(address))) {
+    throw new Error("API base URL must resolve to a public IP address");
+  }
+}
 
 // Default Built-in Models supported by our site
 export const DEFAULT_MODELS = [
@@ -218,6 +249,8 @@ export async function fetchModelsForProvider(provider, apiKey, customBaseUrl = "
   }
 
   const cleanKey = apiKey.trim();
+  if (!PROVIDER_CONFIGS[provider]) throw new Error("Unsupported API provider");
+  if (customBaseUrl) await assertPublicHttpsUrl(customBaseUrl);
   const baseUrl = (customBaseUrl || PROVIDER_CONFIGS[provider]?.defaultBaseUrl || "").replace(/\/$/, "");
 
   // 1. Google Gemini
@@ -396,6 +429,7 @@ export async function executeModelChatStream({
   documentRagContext = "",
   onChunk = () => {}
 }) {
+  if (baseUrl) await assertPublicHttpsUrl(baseUrl);
   let systemPrompt = `You are a world-class AI search assistant (Parsu AI). Be accurate and well-structured. Use headings and bullets only when the answer is long enough to need them.
 Match answer length to the question. For greetings or short chat reply in 1-2 friendly sentences. Do not add headings, 'Welcome Back', conversation summaries, or a 'Sources & Citations' section unless live web search results were actually provided and used. Never write 'Sources: None'.
 CRITICAL CITATION & LINK RULES:

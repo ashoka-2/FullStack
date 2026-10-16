@@ -42,13 +42,13 @@ export default function DeviceAutomationPanel({
     const hasTarget = !!selectedDeviceId;
 
     return (
-        <div className="rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06] p-5 space-y-4">
+        <div className="rounded-[28px] bg-white dark:bg-zinc-900/40 border border-zinc-200/80 dark:border-white/[0.08] p-6 shadow-sm space-y-5">
             <div>
                 <h2 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                     <RiFlashlightLine size={16} className="text-amber-400" />
                     Quick Automation Dispatcher
                 </h2>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-zinc-500 mt-1">
                     Instantly run OS commands on your selected device. Or just ask the AI in chat — it will do this automatically.
                 </p>
             </div>
@@ -59,7 +59,7 @@ export default function DeviceAutomationPanel({
                     <select
                         value={action}
                         onChange={e => setAction(e.target.value)}
-                        className="w-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-white/[0.08] text-xs rounded-xl px-3 py-2.5 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-[var(--accent-cyan)] appearance-none cursor-pointer"
+                        className="w-full bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-white/[0.08] text-xs rounded-[14px] px-3.5 py-3 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[var(--accent-cyan)] appearance-none cursor-pointer shadow-sm"
                     >
                         {['read-only', 'mutating', 'destructive'].map(tier => (
                             <optgroup key={tier} label={`── ${tier.toUpperCase()} ──`}>
@@ -84,6 +84,7 @@ export default function DeviceAutomationPanel({
                     icon={RiPlayLine}
                     iconPosition="left"
                     size="sm"
+                    className="rounded-full px-5 whitespace-nowrap"
                     title={!hasTarget ? 'Select a device first' : undefined}
                 >
                     {executing ? 'Dispatching...' : 'Run Command'}

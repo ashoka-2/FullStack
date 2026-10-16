@@ -38,21 +38,12 @@ export const MessagesSkeleton = () => (
 );
 
 export const ThinkingSkeleton = () => {
-  const [stepIndex, setStepIndex] = React.useState(0);
   const [elapsed, setElapsed] = React.useState(0);
-
-  const steps = [
-    "Thinking…",
-    "Analyzing your request…",
-    "Retrieving context & memory…",
-    "Synthesizing response…"
-  ];
 
   React.useEffect(() => {
     const t = setInterval(() => setElapsed(e => +(e + 0.5).toFixed(1)), 500);
-    const s = setInterval(() => setStepIndex(i => (i + 1) % steps.length), 2000);
-    return () => { clearInterval(t); clearInterval(s); };
-  }, [steps.length]);
+    return () => clearInterval(t);
+  }, []);
 
   return (
     <div className="flex flex-col gap-3 py-3 px-1 max-w-2xl animate-in fade-in duration-300">
@@ -61,7 +52,7 @@ export const ThinkingSkeleton = () => {
         <MatrixOrb size={26} state="thinking" color="#20b8cd" dots={8} />
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 font-mono tracking-wide animate-pulse">
-            {steps[stepIndex]}
+            Working on your request…
           </span>
           <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">
             {elapsed}s

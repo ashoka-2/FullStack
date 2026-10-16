@@ -13,7 +13,7 @@ import {
 import { useChat } from '../hook/useChat';
 import { useNavigate } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
-import { setMessages } from '../chat.slice';
+import { setCurrentChatId } from '../chat.slice';
 import { addToast } from '../../../utils/toast.slice';
 import ParsuLogo from '../../Components/ParsuLogo';
 import { getModels } from '../service/model.api';
@@ -356,7 +356,7 @@ const ChatArea = () => {
       setInput('');
       setFiles([]);
       setIsFullScreenEditor(false);
-      dispatch(setMessages([]));
+      dispatch(setCurrentChatId(null));
       navigate('/chat/new');
 
       // Auto-switch to the user's custom key model if they have one and are on a built-in model

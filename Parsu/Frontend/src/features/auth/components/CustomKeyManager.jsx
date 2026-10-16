@@ -191,19 +191,19 @@ export default function CustomKeyManager({ onNotify }) {
   const selectedProviderConfig = PRESET_PROVIDERS.find(p => p.id === provider) || PRESET_PROVIDERS[0];
 
   return (
-    <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+    <div className="bg-[var(--surface)] border border-[var(--line)] rounded-[28px] p-5 sm:p-7 shadow-xs space-y-6 select-none">
       {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--line)]">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-full bg-[var(--surface-2)] text-[var(--accent-text)] flex items-center justify-center shrink-0">
             <RiCpuLine size={20} />
           </div>
           <div>
-            <h2 className="text-base font-bold text-zinc-900 dark:text-white">
+            <h2 className="text-base font-semibold text-[var(--text)]">
               AI Models & Custom API Keys
             </h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Bring your own API keys for OpenAI, Claude, DeepSeek, Groq, NVIDIA NIM, OmniRoute, Zen Extra & more. Keys are encrypted secretly in DB.
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">
+              Bring your own API keys for OpenAI, Claude, DeepSeek, Groq & more. Keys are encrypted secretly with AES-256.
             </p>
           </div>
         </div>
@@ -215,7 +215,7 @@ export default function CustomKeyManager({ onNotify }) {
             setIsAdding(!isAdding);
             setTestResult(null);
           }}
-          className="w-full sm:w-auto justify-center px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+          className="h-10 px-5 rounded-full bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--line)] text-xs font-semibold text-[var(--text)] flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0 whitespace-nowrap self-start sm:self-auto shadow-xs"
         >
           <RiAddLine size={16} />
           <span>{isAdding ? "Close Form" : "Add Custom Key"}</span>

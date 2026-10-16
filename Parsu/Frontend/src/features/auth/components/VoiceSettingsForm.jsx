@@ -154,15 +154,15 @@ const VoiceSettingsForm = ({ onSuccess }) => {
     : voices.find(v => v.voiceURI === selectedVoiceURI);
 
   return (
-    <div className="bg-white dark:bg-[var(--bg-surface)] border border-zinc-200 dark:border-white/10 rounded-2xl p-5 sm:p-7 shadow-xs">
-      <div className="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-white/5 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)] border border-[var(--accent-cyan)]/20">
+    <div className="bg-[var(--surface)] border border-[var(--line)] rounded-[28px] p-5 sm:p-7 shadow-xs select-none space-y-6">
+      <div className="flex items-center justify-between pb-4 border-b border-[var(--line)]">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-full bg-[var(--surface-2)] text-[var(--accent-text)] flex items-center justify-center shrink-0">
             <RiVoiceprintLine size={20} />
           </div>
           <div>
-            <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white">AI Voice & Speech Settings</h2>
-            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">Choose the voice and speaking speed used when reading AI messages aloud.</p>
+            <h2 className="text-base font-semibold text-[var(--text)]">AI Voice & Speech Settings</h2>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Select voice persona and speech rate for spoken responses</p>
           </div>
         </div>
 
@@ -170,10 +170,10 @@ const VoiceSettingsForm = ({ onSuccess }) => {
         <button
           type="button"
           onClick={handleTestVoice}
-          className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 ${
+          className={`flex items-center gap-2 h-10 px-5 rounded-full text-xs font-semibold transition-all cursor-pointer shadow-xs active:scale-95 ${
             isPlayingTest
-              ? 'bg-rose-500 hover:bg-rose-600 text-white'
-              : 'bg-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-hover)] text-zinc-950'
+              ? 'bg-[var(--danger)] text-white hover:opacity-90'
+              : 'bg-[var(--text)] text-[var(--bg)] hover:opacity-92'
           }`}
         >
           {isPlayingTest ? (
@@ -193,7 +193,7 @@ const VoiceSettingsForm = ({ onSuccess }) => {
       <div className="space-y-6">
         {/* Voice Selector */}
         <div>
-          <label className="block text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+          <label className="block text-xs font-semibold text-[var(--text-muted)] mb-2">
             Selected Voice
           </label>
           <div className="relative">
@@ -201,7 +201,7 @@ const VoiceSettingsForm = ({ onSuccess }) => {
               value={selectedVoiceURI}
               data-guide="voice-tts-toggle"
               onChange={handleVoiceChange}
-              className="w-full bg-zinc-50 dark:bg-[#181818] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-[var(--accent-cyan)] transition-all cursor-pointer"
+              className="w-full h-11 bg-[var(--surface-2)] border border-[var(--line)] rounded-full px-4 text-xs sm:text-sm text-[var(--text)] focus:outline-none focus:border-[var(--accent)] transition-all cursor-pointer"
             >
               <option value="charon_jarvis">
                 ⚡ Charon — Jarvis AI (Sophisticated, Deep British Voice)
@@ -217,7 +217,7 @@ const VoiceSettingsForm = ({ onSuccess }) => {
             </select>
           </div>
           {currentVoiceObj && (
-            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1.5 flex items-center gap-1.5">
+            <p className="text-[11px] text-[var(--text-subtle)] mt-1.5 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
               Active voice: <span className="font-semibold text-zinc-700 dark:text-zinc-300">{currentVoiceObj.name}</span> ({currentVoiceObj.lang})
             </p>

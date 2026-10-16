@@ -23,6 +23,6 @@ modelRouter.post("/keys", authUser, saveCustomApiKey);
 modelRouter.delete("/keys/:keyId", authUser, deleteCustomApiKey);
 
 // Update user's active/selected model
-modelRouter.put("/selected", optionalAuthUser, setSelectedModel);
+modelRouter.put("/selected", authUser, setSelectedModel);
 
 export default modelRouter;

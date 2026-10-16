@@ -1,4 +1,4 @@
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, useStore } from "react-redux";
 import { 
     sendMessage, 
     getChats, 
@@ -10,19 +10,19 @@ import {
 import { 
     setChats, 
     prependChat,
-    setMessages, 
     addMessage, 
     setLoading, 
     setIsGenerating,
     setError, 
     setCurrentChatId,
     setIsCreating,
-    appendChunk,
     prependMessages,
     setHasMoreMessages,
     setMessagesPage,
     setTotalMessages,
-    setIsLoadingMore
+    setIsLoadingMore,
+    setChatMessages,
+    setMessagesLoadingChatId
 } from "../chat.slice";
 import { getSocket, initializeSocketConnection } from "../service/chat.socket";
 import { useNavigate } from "react-router";
@@ -34,6 +34,7 @@ let lastSendTime = 0;
 // Yeh custom hook chat se related saare operations (send message, fetch chats, etc.) handle karta hai
 export const useChat = () => {
     const dispatch = useDispatch(); // For dispatching Redux state updates
+    const store = useStore();
     const navigate = useNavigate(); // For navigating across pages
 
     // Sends user message, creates chat if needed, and sets up optimistic streaming
@@ -161,23 +162,28 @@ export const useChat = () => {
 
     // Fetches paginated messages for a specific chat
     async function handleGetMessages(chatId) {
+        if (!chatId) return null;
+        // Switch immediately; Redux restores a cached conversation or shows an empty skeleton.
+        dispatch(setCurrentChatId(chatId));
+        dispatch(setMessagesLoadingChatId(chatId));
         try {
             dispatch(setError(null));
-            dispatch(setLoading(true));
-            
             const response = await getMessages(chatId, 1, 10);
-            dispatch(setMessages(response.messages));
-            dispatch(setCurrentChatId(chatId));
-            dispatch(setHasMoreMessages(response.hasMore));
-            dispatch(setMessagesPage(1));
-            dispatch(setTotalMessages(response.totalMessages));
+            dispatch(setChatMessages({ chatId, messages: response.messages || [] }));
+            if (store.getState().chat.currentChatId === chatId) {
+                dispatch(setHasMoreMessages(response.hasMore));
+                dispatch(setMessagesPage(1));
+                dispatch(setTotalMessages(response.totalMessages));
+            }
             return response;
         } catch (error) {
             console.error("❌ Fetch Messages Error:", error);
-            dispatch(setError(error.response?.data?.message || "Failed to load messages for this conversation. Please try again."));
+            if (store.getState().chat.currentChatId === chatId) {
+                dispatch(setError(error.response?.data?.message || "Failed to load messages for this conversation. Please try again."));
+            }
             throw error;
         } finally {
-            dispatch(setLoading(false));
+            if (store.getState().chat.messagesLoadingChatId === chatId) dispatch(setMessagesLoadingChatId(null));
         }
     }
 
@@ -187,6 +193,7 @@ export const useChat = () => {
             dispatch(setIsLoadingMore(true));
             const nextPage = currentPage + 1;
             const response = await getMessages(chatId, nextPage, 10);
+            if (store.getState().chat.currentChatId !== chatId) return null;
             dispatch(prependMessages(response.messages));
             dispatch(setHasMoreMessages(response.hasMore));
             dispatch(setMessagesPage(nextPage));

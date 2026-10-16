@@ -33,12 +33,12 @@ export default function SocialPlatformCard({
     return (
         <div
             data-guide={`social-card-${platform.id}`}
-            className={`group relative bg-white/70 dark:bg-[#121212]/70 backdrop-blur-2xl rounded-3xl sm:rounded-[28px] border transition-all duration-300 overflow-hidden flex flex-col justify-between
+            className={`group relative bg-white dark:bg-zinc-900/40 rounded-[24px] sm:rounded-[28px] border transition-all duration-200 overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-md
                 ${connection
                     ? isExpired
-                        ? 'border-amber-500/30 shadow-[0_8px_30px_rgba(245,158,11,0.08)] ring-1 ring-amber-500/20'
-                        : 'border-emerald-500/30 shadow-[0_8px_30px_rgba(16,185,129,0.08)] ring-1 ring-emerald-500/20'
-                    : 'border-zinc-200/90 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/20 hover:shadow-xl hover:-translate-y-0.5'
+                        ? 'border-amber-500/40 shadow-amber-500/5'
+                        : 'border-emerald-500/40 shadow-emerald-500/5'
+                    : 'border-zinc-200/80 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/20'
                 }`}
         >
             {/* Top ambient color reflection */}
@@ -137,7 +137,7 @@ export default function SocialPlatformCard({
                                 type="button"
                                 onClick={() => onConnect(platform)}
                                 disabled={isLoading}
-                                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer active:scale-[0.98]"
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer active:scale-[0.98]"
                             >
                                 {isLoading ? <RiLoader4Line className="animate-spin" size={15} /> : <RiArrowRightUpLine size={15} />}
                                 <span>Reconnect</span>
@@ -146,7 +146,7 @@ export default function SocialPlatformCard({
                                 type="button"
                                 onClick={() => onDisconnect(platform.id)}
                                 disabled={isLoading}
-                                className="p-2.5 rounded-2xl bg-zinc-100 dark:bg-white/[0.04] hover:bg-red-500/10 text-zinc-500 hover:text-red-500 border border-zinc-200/80 dark:border-white/10 transition-all text-xs font-semibold cursor-pointer active:scale-[0.98]"
+                                className="p-2.5 rounded-full bg-zinc-100 dark:bg-white/[0.04] hover:bg-red-500/10 text-zinc-500 hover:text-red-500 border border-zinc-200/80 dark:border-white/10 transition-all text-xs font-semibold cursor-pointer active:scale-[0.98]"
                                 title="Disconnect Channel"
                             >
                                 <RiLinkUnlinkM size={15} />
@@ -157,7 +157,7 @@ export default function SocialPlatformCard({
                             type="button"
                             onClick={() => onDisconnect(platform.id)}
                             disabled={isLoading}
-                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-zinc-100 dark:bg-white/[0.04] hover:bg-red-500/10 hover:border-red-500/30 text-zinc-600 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 border border-zinc-200/80 dark:border-white/10 transition-all text-xs font-semibold cursor-pointer active:scale-[0.98]"
+                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-zinc-100 dark:bg-white/[0.04] hover:bg-red-500/10 hover:border-red-500/30 text-zinc-600 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 border border-zinc-200/80 dark:border-white/10 transition-all text-xs font-semibold cursor-pointer active:scale-[0.98]"
                         >
                             {isLoading ? (
                                 <RiLoader4Line className="animate-spin" size={15} />
@@ -171,7 +171,7 @@ export default function SocialPlatformCard({
                     <button
                         type="button"
                         disabled
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/80 dark:border-white/10 text-zinc-400 dark:text-zinc-500 font-semibold text-xs cursor-not-allowed select-none"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/80 dark:border-white/10 text-zinc-400 dark:text-zinc-500 font-semibold text-xs cursor-not-allowed select-none"
                     >
                         <span>Coming Soon</span>
                     </button>
@@ -179,7 +179,7 @@ export default function SocialPlatformCard({
                     <button
                         type="button"
                         disabled
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/80 dark:border-white/10 text-zinc-400 dark:text-zinc-500 font-semibold text-xs cursor-not-allowed select-none"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/80 dark:border-white/10 text-zinc-400 dark:text-zinc-500 font-semibold text-xs cursor-not-allowed select-none"
                     >
                         <RiLock2Line size={14} className="text-zinc-400 dark:text-zinc-500 shrink-0" />
                         <span>Locked by Admin</span>
@@ -191,7 +191,7 @@ export default function SocialPlatformCard({
                         onClick={() => onConnect(platform)}
                         onMouseEnter={() => triggerBlobSocialHover(platform.id)}
                         disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-bold text-xs hover:opacity-90 active:scale-[0.98] transition-all shadow-sm cursor-pointer"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 font-bold text-xs hover:opacity-90 active:scale-[0.98] transition-all shadow-sm cursor-pointer"
                     >
                         {isLoading ? (
                             <RiLoader4Line className="animate-spin" size={15} />

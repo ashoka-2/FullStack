@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -85,7 +85,7 @@ export default function Pricing() {
     };
   }, []);
 
-  const currencySymbol = currency === 'INR' ? 'â‚¹' : '$';
+  const currencySymbol = currency === 'INR' ? '₹' : '$';
 
   // Pricing tier definitions
   const TIERS = [
@@ -203,7 +203,7 @@ export default function Pricing() {
   const FAQS = [
     {
       q: 'How does India vs International pricing work?',
-      a: 'Parsu AI automatically checks your location. Visitors in India are shown local Indian Rupee (â‚¹) pricing with localized UPI and RuPay card support. International visitors receive standard USD ($) pricing with zero foreign transaction fees.'
+      a: 'Parsu AI automatically checks your location. Visitors in India are shown local Indian Rupee (₹) pricing with localized UPI and RuPay card support. International visitors receive standard USD ($) pricing with zero foreign transaction fees.'
     },
     {
       q: 'Can I start with the Free plan?',
@@ -505,12 +505,12 @@ export default function Pricing() {
           {/* Location & Currency Switcher */}
           <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 dark:bg-zinc-900/70 border border-zinc-200/80 dark:border-white/10 shadow-xs backdrop-blur-md">
             {isIndia ? (
-              <span className="text-sm">ðŸ‡®ðŸ‡³</span>
+              <span className="text-sm">🇮🇳</span>
             ) : (
               <RiGlobalLine size={15} className="text-[var(--accent-cyan)]" />
             )}
             <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-              {currency === 'INR' ? 'India Pricing (â‚¹ INR)' : 'International ($ USD)'}
+              {currency === 'INR' ? 'India Pricing (₹ INR)' : 'International ($ USD)'}
             </span>
             <span className="text-zinc-300 dark:text-zinc-700">|</span>
             <button
@@ -525,15 +525,15 @@ export default function Pricing() {
           </div>
 
           {/* Monthly / Annual Toggle with Save 20% Badge */}
-          <div className="inline-flex items-center p-1 rounded-full bg-zinc-100/90 dark:bg-white/[0.05] border border-zinc-200/80 dark:border-white/10 backdrop-blur-md shadow-xs">
+          <div className="inline-flex items-center p-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] backdrop-blur-md shadow-xs">
             <button
               type="button"
               data-magnetic
               onClick={() => setBillingCycle('monthly')}
               className={`relative px-4 sm:px-5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
                 billingCycle === 'monthly'
-                  ? 'bg-white dark:bg-white/15 text-zinc-950 dark:text-white shadow-xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                  ? 'bg-[var(--surface)] text-[var(--fg)] shadow-xs border border-[var(--border)]'
+                  : 'text-[var(--muted)] hover:text-[var(--fg)]'
               }`}
             >
               Monthly
@@ -544,19 +544,19 @@ export default function Pricing() {
               onClick={() => setBillingCycle('yearly')}
               className={`relative flex items-center gap-1.5 px-4 sm:px-5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
                 billingCycle === 'yearly'
-                  ? 'bg-white dark:bg-white/15 text-zinc-950 dark:text-white shadow-xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                  ? 'bg-[var(--surface)] text-[var(--fg)] shadow-xs border border-[var(--border)]'
+                  : 'text-[var(--muted)] hover:text-[var(--fg)]'
               }`}
             >
               <span>Yearly</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                 Save 20%
               </span>
             </button>
           </div>
         </div>
 
-        {/* â”€â”€ 3 INTERACTIVE PRICING CARDS â”€â”€ */}
+        {/* ── 3 INTERACTIVE PRICING CARDS ── */}
         <section className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch max-w-6xl mx-auto">
           {TIERS.map((tier) => {
             const Icon = tier.icon;
@@ -565,10 +565,10 @@ export default function Pricing() {
             return (
               <div
                 key={tier.id}
-                className={`tier-card group relative flex flex-col justify-between rounded-[2rem] p-7 sm:p-9 transition-all duration-300 will-change-transform ${
+                className={`tier-card group relative flex flex-col justify-between rounded-[28px] p-7 sm:p-9 transition-all duration-300 will-change-transform ${
                   tier.popular
-                    ? 'bg-gradient-to-b from-white via-white to-cyan-50/30 dark:from-[var(--bg-secondary)] dark:via-[var(--bg-primary)] dark:to-[var(--bg-primary)] border-2 border-[var(--accent-cyan)] shadow-2xl shadow-cyan-500/15 lg:-translate-y-2'
-                    : 'bg-white/80 dark:bg-white/[0.03] border border-zinc-200/80 dark:border-white/10 shadow-lg shadow-black/[0.02] dark:shadow-none backdrop-blur-xl'
+                    ? 'bg-[var(--surface)] border-2 border-[var(--accent)] shadow-xl shadow-[var(--accent)]/10 lg:-translate-y-2'
+                    : 'bg-[var(--surface)] border border-[var(--border)] shadow-xs hover:border-[var(--border-hover)]'
                 }`}
               >
                 {/* Reactive Card Spotlight on Pointer Hover */}

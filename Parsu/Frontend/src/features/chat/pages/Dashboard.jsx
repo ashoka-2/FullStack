@@ -44,7 +44,7 @@ const Dashboard = () => {
     }, [error, dispatch])
 
     return (
-        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30">
+        <div className="chat-shell ui-page flex bg-[var(--bg)] h-[100dvh] overflow-hidden text-[var(--fg)] font-sans selection:bg-[var(--accent)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             <div className={`flex-1 flex flex-col h-[100dvh] overflow-hidden relative ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
