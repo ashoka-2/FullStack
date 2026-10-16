@@ -436,11 +436,33 @@ export async function sendMessage(req, res) {
         const autoTriggerKeywords = ["latest", "recent", "news", "latest info", "right now", "live score"];
         const autoTriggerWebSearch = autoTriggerKeywords.some(kw => promptRaw.includes(kw)) || newsLikePattern.test(promptRaw);
         const shouldExecuteWebSearch = explicitWebSearch || autoTriggerWebSearch;
+        const sendActivityStep = (id, label, status = 'active') => {
+            if (socketId) io.to(socketId).emit('activity:update', { id, label, status });
+        };
+        sendActivityStep('request', 'Understanding your request', 'active');
 
         // Small talk detection: avoid web search, RAG, and memory recall for greetings / short chat
         const isSmallTalk = (t) => /^\s*((hi+|hello+|hey+|heya|hola)(\s+(there|parsu|bro|buddy|everyone|friend|ai))?|yo|sup|namaste|good\s*(morning|afternoon|evening|night)|thanks?( you)?|thx|ok(ay)?|cool|nice|bye|how are you( doing)?|what'?s up|who are you|what can you do)\s*[!.?]*\s*$/i.test(t || "");
         const smallTalk = isSmallTalk((message || "").trim()) && uploadedFiles.length === 0;
         const wordCount = (message || "").trim().split(/\s+/).filter(Boolean).length;
+        const imageSearchRequest = /\b(show|see|display|give|send|find|look for)\b.{0,50}\b(images?|photos?|pictures?|pics?)\b|\b(images?|photos?|pictures?|pics?)\s+of\b/i.test(message || "")
+            && !/\b(create|make|generate|draw|design)\b.{0,40}\b(image|picture|photo|artwork)\b/i.test(message || "");
+        const tripImageRequest = /\bitinerary\b|\bplaces? to (visit|see)\b|\btravel plan\b|\b(plan|planning).{0,35}\btrip\b|\btrip\b.{0,35}\b(plan|itinerary)\b/i.test(message || "");
+        const imageQuery = String(message || "")
+            .replace(/^\s*(please\s+)?(show|see|display|give|send|find|look for)\s+(me\s+)?/i, "")
+            .replace(/\b(a few|few|some|a|an)\s+(images?|photos?|pictures?|pics?)\s+(of\s+)?/i, "")
+            .replace(/\s+(so i can visit|that i can visit|please)\s*[?.!]*$/i, "")
+            .replace(/^\s*(?:a|an|the)\s+/i, "")
+            .replace(/\s+(?:images?|photos?|pictures?|pics?)\s*[?.!]*$/i, "")
+            .trim() || String(message || "").trim();
+        const destinationMatch = String(message || "").match(/\bto\s+([^,.?!]+?)(?=\s+(?:for|from|with|on|during|itinerary|trip|travel|route)\b|[,.?!]|$)/i)
+            || String(message || "").match(/\b(?:in|around|near)\s+([^,.?!]+?)(?=\s+(?:for|from|with|on|during|itinerary|trip|travel|route)\b|[,.?!]|$)/i);
+        const tripDestination = destinationMatch?.[1]?.trim()
+            .replace(/\b(?:places? to (?:visit|see)|itinerary|travel plan|trip|route)\b.*$/i, "")
+            .trim();
+        const tripGalleryQuery = tripDestination
+            ? `${tripDestination} places to visit`
+            : `${imageQuery} places to visit`;
 
         // Uploaded media & social media link context
         let uploadedMediaContext = "";
@@ -470,6 +492,7 @@ export async function sendMessage(req, res) {
         // ── Parallel Retrieval: Tavily Search, Cross-Chat Memory, and Document RAG ──
         const fetchWebSearchContext = async () => {
             if (smallTalk || !shouldExecuteWebSearch || !(message || userMessage.content)) return "";
+            sendActivityStep('web-search', 'Searching the web', 'active');
             try {
                 const { tavily } = await import("@tavily/core");
                 const tvly = new tavily(process.env.TAVILY_API_KEY);
@@ -485,12 +508,15 @@ export async function sendMessage(req, res) {
                 }
             } catch (tavilyErr) {
                 console.warn("⚠️ Tavily web search error in chat.controller:", tavilyErr.message);
+            } finally {
+                sendActivityStep('web-search', 'Searching the web', 'complete');
             }
             return "";
         };
 
         const fetchMemoryContext = async () => {
-            if (!isMemoryEnabled || !currentUserId || smallTalk || wordCount < 4) return "";
+            if (!isMemoryEnabled || fullUser?.memory?.librarySearchEnabled !== true || !currentUserId || smallTalk || wordCount < 4) return "";
+            sendActivityStep('memory-context', 'Checking relevant saved context', 'active');
             try {
                 const currentChatId = chatId || chat._id;
                 const otherChats = await chatModel.find({
@@ -548,6 +574,8 @@ export async function sendMessage(req, res) {
                 }
             } catch (memErr) {
                 console.warn("⚠️ Cross-chat memory retrieval warning:", memErr.message);
+            } finally {
+                sendActivityStep('memory-context', 'Checking relevant saved context', 'complete');
             }
             return "";
         };
@@ -557,17 +585,18 @@ export async function sendMessage(req, res) {
             const targetDoc = newlyIndexedDocument || (chatId ? await documentModel.findOne({ chat: chatId }).sort({ createdAt: -1 }) : null);
             if (!targetDoc || !targetDoc.chunks || targetDoc.chunks.length === 0) return "";
 
+            sendActivityStep('document', 'Reading your uploaded document', 'active');
             const userPrompt = (message || "").trim();
-            if (!userPrompt) {
-                const previewChunks = targetDoc.chunks.slice(0, 4).map(c => c.text).join("\n\n---\n\n");
-                return `The user uploaded the PDF document "${targetDoc.filename}" (View URL: ${targetDoc.file?.url || ''}) without asking any specific question.\n\n` +
-                    `PDF Content Excerpts:\n${previewChunks}\n\n` +
-                    `TASK INSTRUCTIONS:\n` +
-                    `1. Provide an executive summary of this document, mentioning key insights, topics, and important facts extracted from it.\n` +
-                    `2. Provide a clickable link to view the document: [📄 View PDF: ${targetDoc.filename}](${targetDoc.file?.url || ''})\n` +
-                    `3. Conclude by proactively asking the user: "What more would you like to know or explore about this document?" and suggest 3-4 specific follow-up questions they can ask based on its contents.\n`;
-            } else {
-                try {
+            try {
+                if (!userPrompt) {
+                    const previewChunks = targetDoc.chunks.slice(0, 4).map(c => c.text).join("\n\n---\n\n");
+                    return `The user uploaded the PDF document "${targetDoc.filename}" (View URL: ${targetDoc.file?.url || ''}) without asking any specific question.\n\n` +
+                        `PDF Content Excerpts:\n${previewChunks}\n\n` +
+                        `TASK INSTRUCTIONS:\n` +
+                        `1. Provide an executive summary of this document, mentioning key insights, topics, and important facts extracted from it.\n` +
+                        `2. Provide a clickable link to view the document: [📄 View PDF: ${targetDoc.filename}](${targetDoc.file?.url || ''})\n` +
+                        `3. Conclude by proactively asking the user: "What more would you like to know or explore about this document?" and suggest 3-4 specific follow-up questions they can ask based on its contents.\n`;
+                }
                     const queryVector = await generateEmbedding(userPrompt);
                     let scoredChunks = [];
                     for (const chunk of targetDoc.chunks) {
@@ -594,11 +623,12 @@ export async function sendMessage(req, res) {
                         `Relevant Excerpts Retrieved via Vector Cosine Similarity Search in MongoDB:\n` +
                         topChunks.map((c, i) => `[Excerpt ${i + 1} - Relevance Score: ${(c.score * 100).toFixed(1)}%]:\n${c.text}`).join("\n\n") +
                         `\n\nINSTRUCTION: Ground your answer strictly and accurately in the retrieved document context above. If referencing the document, include the direct link [${targetDoc.filename}](${targetDoc.file?.url || ''}).\n`;
-                } catch (ragErr) {
-                    console.warn("⚠️ Document RAG query error:", ragErr.message);
-                }
+            } catch (ragErr) {
+                console.warn("⚠️ Document RAG query error:", ragErr.message);
+                return "";
+            } finally {
+                sendActivityStep('document', 'Reading your uploaded document', 'complete');
             }
-            return "";
         };
 
         const [webSearchContext, memoryContext, documentRagContext] = await Promise.all([
@@ -606,6 +636,7 @@ export async function sendMessage(req, res) {
             fetchMemoryContext(),
             fetchDocumentRagContext()
         ]);
+        sendActivityStep('context', 'Preparing the answer', 'active');
 
         // ── Thinking Level & Reasoning Budget (Default: low for fastest results) ──
         const rawThinking = req.body.thinkingLevel || fullUser?.preferences?.thinkingLevel || 'low';
@@ -614,6 +645,17 @@ export async function sendMessage(req, res) {
             : rawThinking;
 
         const customInstructions = (fullUser?.memory?.customInstructions || fullUser?.customInstructions || "").trim();
+        const skillPrompt = String(message || userMessage?.content || "").toLowerCase();
+        const matchedSkills = (fullUser?.skills || []).filter(skill => {
+            if (skill.enabled === false) return false;
+            const terms = [...(skill.triggers || []), ...(skill.triggers?.length ? [] : [skill.name])]
+                .map(term => String(term).trim().toLowerCase()).filter(term => term.length >= 3);
+            return terms.some(term => skillPrompt.includes(term));
+        }).slice(0, 3);
+        const effectiveInstructions = [
+            customInstructions,
+            ...matchedSkills.map(skill => `Active skill: ${skill.name}\n${skill.instructions}`)
+        ].filter(Boolean).join("\n\n");
         const userNickname = fullUser?.memory?.nickname || "";
         const userOccupation = fullUser?.memory?.occupation || "";
         const memorySummary = fullUser?.memory?.summary || "";
@@ -640,7 +682,7 @@ export async function sendMessage(req, res) {
             uploadedMediaContext,
             feedbackInstruction: smallTalk ? "" : feedbackInstruction,
             memoryContext: smallTalk ? "" : memoryContext,
-            customInstructions,
+            customInstructions: smallTalk ? "" : effectiveInstructions,
             userNickname,
             userOccupation,
             thinkingLevel,
@@ -706,13 +748,18 @@ export async function sendMessage(req, res) {
 
         // Prepare message payload: inject real-time Tavily search context, media links, and feedback instruction
         const chatHistoryForModel = messages.map(m => ({ role: m.role, content: m.content }));
+        const visualInstruction = imageSearchRequest
+            ? `\n\nThe user explicitly requested photos. Answer briefly, then include a rendered image gallery using exactly this format:\n\`\`\`gallery\nquery: ${imageQuery}\n\`\`\`. Do not write HTML, CSS, JavaScript, code samples, Markdown image URLs, or raw image links. The app renders the gallery itself; never claim you cannot display images.`
+            : tripImageRequest
+                ? `\n\nThis is a trip or destination-planning request. Include one rendered photo gallery for each major place you recommend, after the itinerary. Use one exact place name per block:\n\`\`\`gallery\nquery: Tiger Hill, Darjeeling\n\`\`\`. Do not combine multiple places into one query. Do not write HTML, CSS, JavaScript, code samples, Markdown image URLs, or raw image links. The app renders the galleries itself.`
+                : "";
         const extraContext = smallTalk
             ? (uploadedMediaContext || "")
             : ((webSearchContext ? webSearchContext : "") + 
                (uploadedMediaContext ? uploadedMediaContext : "") +
                (feedbackInstruction ? feedbackInstruction : "") + 
                (memoryContext ? memoryContext : "") +
-               (documentRagContext ? `\n\n--- DOCUMENT CONTEXT ---\n${documentRagContext}` : ""));
+               (documentRagContext ? `\n\n--- DOCUMENT CONTEXT ---\n${documentRagContext}` : "") + visualInstruction);
         if (extraContext && chatHistoryForModel.length > 0) {
             const lastUserIndex = chatHistoryForModel.map(m => m.role).lastIndexOf("user");
             if (lastUserIndex !== -1) {
@@ -722,6 +769,7 @@ export async function sendMessage(req, res) {
 
         let executedSuccessfully = false;
         let lastExecutionError = null;
+        sendActivityStep('model', 'Generating a response', 'active');
 
         for (let idx = 0; idx < candidates.length; idx++) {
             const candidate = candidates[idx];
@@ -761,7 +809,7 @@ export async function sendMessage(req, res) {
                         baseUrl: targetBaseUrl,
                         messages: chatHistoryForModel,
                         images: imagesForModel,
-                        customInstructions,
+                        customInstructions: smallTalk ? "" : effectiveInstructions,
                         thinkingLevel,
                         memorySummary,
                         memoryFacts,
@@ -849,6 +897,107 @@ export async function sendMessage(req, res) {
             }, fallbackCtx);
         }
 
+        // Normalize visual answers after generation. Models sometimes emit HTML examples or
+        // combine every itinerary photo marker into one oversized gallery search query.
+        if (imageSearchRequest || tripImageRequest) {
+            const rawResult = String(result || "");
+            const galleryBlocks = [...rawResult.matchAll(/```\s*gallery\b\s*([\s\S]*?)```/gi)].map(match => match[1]);
+            const markerQueries = [...rawResult.matchAll(/\[Image:\s*([^\]]{2,140})\]/gi)].map(match => match[1]);
+            const declaredQueries = galleryBlocks.flatMap(block => {
+                const markers = [...block.matchAll(/\[Image:\s*([^\]]{2,140})\]/gi)].map(match => match[1]);
+                if (markers.length) return markers;
+                return [...block.matchAll(/(?:query|q|search)\s*:\s*([^\n\r]+)/gi)].map(match => match[1]);
+            });
+            const normalizeQuery = value => String(value || "")
+                .replace(/^\s*(?:query|q|search)\s*:\s*/i, "")
+                .replace(/[\[\]`*_]/g, " ")
+                .replace(/\s+/g, " ")
+                .trim()
+                .slice(0, 120);
+            let galleryPlaces;
+            if (imageSearchRequest) {
+                galleryPlaces = [{ query: normalizeQuery(imageQuery), title: normalizeQuery(imageQuery), details: "" }];
+            } else {
+                const placeDetails = [];
+                for (const line of rawResult.split(/\r?\n/)) {
+                    const match = line.match(/^\s*(?:(?:\d{1,2}[.)])\s*|[-*]\s*)?\*\*([^*]{2,100})\*\*\s*(?:[:—–-]\s*(.*))?$/)
+                        || line.match(/^\s*(?:\d{1,2}[.)]|[-*])\s+([A-Z][^:—–-]{2,80})\s*[:—–-]\s*(.*)$/);
+                    if (!match) continue;
+                    let rawTitle = match[1];
+                    let rawDetails = match[2] || "";
+                    // Models often bold the complete list item, e.g. **Jaipur: The Pink City...**.
+                    // Split that inline format so the search uses the place name, not its whole description.
+                    if (!rawDetails && rawTitle.includes(":")) {
+                        const splitAt = rawTitle.indexOf(":");
+                        rawDetails = rawTitle.slice(splitAt + 1);
+                        rawTitle = rawTitle.slice(0, splitAt);
+                    }
+                    const title = normalizeQuery(rawTitle).replace(/[:—–-]+$/, "").trim();
+                    if (!title || /^(?:day\s*\d+|itinerary|getting around|where to stay|travel tips?)\b/i.test(title)) continue;
+                    placeDetails.push({ title, details: normalizeQuery(rawDetails) });
+                }
+
+                const destinationName = normalizeQuery(tripDestination);
+                const detailByName = new Map(placeDetails.map(place => [place.title.toLowerCase(), place]));
+                const modelPlaces = [...markerQueries, ...declaredQueries]
+                    .map(normalizeQuery)
+                    .filter(Boolean)
+                    .map(query => {
+                        const title = query.split(",")[0].trim();
+                        const detail = detailByName.get(title.toLowerCase())
+                            || placeDetails.find(place => query.toLowerCase().includes(place.title.toLowerCase()));
+                        return { query, title: detail?.title || title, details: detail?.details || "" };
+                    });
+                const places = [...placeDetails, ...modelPlaces];
+                const seenPlaces = new Set();
+                galleryPlaces = places
+                    .map(place => {
+                        const title = normalizeQuery(place.title);
+                        let query = normalizeQuery(place.query || title);
+                        if (destinationName && !query.toLowerCase().includes(destinationName.toLowerCase())) {
+                            query = `${query}, ${destinationName}`;
+                        }
+                        return { query: query.slice(0, 170), title, details: normalizeQuery(place.details).slice(0, 260) };
+                    })
+                    .filter(place => {
+                        const key = place.title.toLowerCase();
+                        if (!place.title || seenPlaces.has(key)) return false;
+                        seenPlaces.add(key);
+                        return true;
+                    })
+                    .slice(0, 20);
+                if (!galleryPlaces.length) {
+                    const fallback = normalizeQuery(tripGalleryQuery);
+                    galleryPlaces = fallback ? [{ query: fallback, title: destinationName || fallback, details: "" }] : [];
+                }
+            }
+
+            const cleanAnswer = rawResult
+                .replace(/\*{0,2}\s*`gallery\b[^`]*`\s*\*{0,2}/gi, "")
+                .replace(/`gallery\s+(?:query|q|search)\s*:[^`]*`/gi, "")
+                .replace(/^\s*gallery\s+(?:query|q|search)\s*:[^\r\n]*$/gim, "")
+                .replace(/```(?:html|xhtml)\b[\s\S]*?```/gi, "")
+                .replace(/<!doctype\s+html[\s\S]*?<\/html\s*>/gi, "")
+                .replace(/```\s*gallery\b\s*[\s\S]*?```/gi, "")
+                .replace(/^\s*(?:gallery\s+)?query\s*:\s*.+$/gim, "")
+                .replace(/^\s*\[Image:\s*[^\]]+\]\s*$/gim, "")
+                .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+                .replace(/[ \t]+\n/g, "\n")
+                .replace(/\n{3,}/g, "\n\n")
+                .trim();
+            const safeAnswer = cleanAnswer || (tripImageRequest ? "Here are some places to explore." : "Here are some photos.");
+            const normalizedGallery = galleryPlaces.filter(place => place.query)
+                .map(place => `\`\`\`gallery\nquery: ${place.query}\ntitle: ${place.title}\ndetails: ${place.details}\nmode: ${imageSearchRequest ? "search" : "place"}\n\`\`\``)
+                .join("\n\n");
+            result = `${safeAnswer}\n\n${normalizedGallery}`;
+            // Replace streamed provider output with the sanitized version so malformed image
+            // code and oversized gallery queries cannot remain in the active chat transcript.
+            if (socketId) {
+                io.to(socketId).emit("chunk:reset");
+                io.to(socketId).emit("chunk", result);
+            }
+        }
+
         const aiMessage = await messageModel.create({
             chat: chatId || chat._id,
             content: result,
@@ -921,12 +1070,12 @@ export async function sendMessage(req, res) {
         const statusCode = isOverload ? 429 : 500;
         const message = isOverload
             ? "Gemini is experiencing high traffic right now and may take a moment to respond. Please try again shortly or switch to another model."
-            : (error.message || "Internal server error");
+            : "The assistant could not complete this request. Please try again or choose another model.";
 
         res.status(statusCode).json({
             message,
             isOverloaded: isOverload,
-            error: error.message
+            error: isOverload ? error.message : undefined
         });
     }
 }

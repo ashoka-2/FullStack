@@ -156,6 +156,14 @@ const userSchema = new mongoose.Schema({
         librarySearchEnabled: { type: Boolean, default: false },
         lastUpdated: { type: Date, default: Date.now }
     },
+    skills: [{
+        name: { type: String, required: true, trim: true, maxlength: 80 },
+        description: { type: String, default: "", trim: true, maxlength: 240 },
+        triggers: [{ type: String, trim: true, maxlength: 60 }],
+        instructions: { type: String, required: true, maxlength: 3000 },
+        enabled: { type: Boolean, default: true },
+        createdAt: { type: Date, default: Date.now }
+    }],
 
     // ── User Preferences ─────────────────────────────────────────────────────
     preferences: {

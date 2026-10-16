@@ -12,7 +12,10 @@ import {
     getUserBugReports,
     getAdminBugReports,
     updateBugReportStatus,
-    deleteAdminBugReport
+    deleteAdminBugReport,
+    getUserSkills,
+    createUserSkill,
+    deleteUserSkill
 } from '../controllers/settings.controller.js';
 
 const settingsRouter = Router();
@@ -23,6 +26,9 @@ settingsRouter.put('/', authUser, updateUserSettings);
 settingsRouter.delete('/memory', authUser, clearMemory);
 settingsRouter.post('/memory/fact', authUser, addMemoryFact);
 settingsRouter.delete('/memory/fact/:index', authUser, deleteMemoryFact);
+settingsRouter.get('/skills', authUser, getUserSkills);
+settingsRouter.post('/skills', authUser, createUserSkill);
+settingsRouter.delete('/skills/:skillId', authUser, deleteUserSkill);
 
 // ── Media Management ────────────────────────────────────────────────────────
 settingsRouter.get('/media', authUser, getUserMedia);

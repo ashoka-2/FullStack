@@ -22,6 +22,7 @@ import gsap from 'gsap';
 import { triggerBlobSocialConnected } from '../../../utils/blobReactions';
 import Footer from '../../Components/Footer';
 import Sidebar from '../../Components/Sidebar';
+import CustomSkillsPanel from '../components/CustomSkillsPanel';
 import ChatNavbar from '../../chat/components/ChatNavbar';
 import PrimaryButton from '../../Components/PrimaryButton';
 import SocialPlatformCard from '../components/SocialPlatformCard';
@@ -174,6 +175,7 @@ const SocialConnections = () => {
     const [createPostOpen, setCreatePostOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [copiedPrompt, setCopiedPrompt] = useState(null);
+    const [activeTab, setActiveTab] = useState('apps');
     const [searchParams, setSearchParams] = useSearchParams();
     const containerRef = useRef(null);
     const dispatch = useDispatch();
@@ -308,11 +310,15 @@ const SocialConnections = () => {
                 {/* Main AI Chatbot Navbar (ChatGPT-style header) */}
                 <ChatNavbar
                     onOpenSidebar={() => setIsSidebarOpen(true)}
-                    title="Social Hub"
+                    title="Plugins"
                     showShareButton={false}
                     rightSlot={
                         <div className="flex items-center gap-2">
-                            {connectedCount > 0 && (
+                            <div className="inline-flex rounded-xl border border-zinc-200 bg-zinc-100 p-0.5 dark:border-white/10 dark:bg-white/[0.04]" role="tablist" aria-label="Plugin sections">
+                                <button type="button" role="tab" aria-selected={activeTab === 'apps'} onClick={() => setActiveTab('apps')} className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition ${activeTab === 'apps' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-white' : 'text-zinc-500'}`}>Apps</button>
+                                <button type="button" role="tab" aria-selected={activeTab === 'skills'} onClick={() => setActiveTab('skills')} className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition ${activeTab === 'skills' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-white' : 'text-zinc-500'}`}>Skills</button>
+                            </div>
+                            {activeTab === 'apps' && connectedCount > 0 && (
                                 <PrimaryButton
                                     type="button"
                                     onClick={() => setCreatePostOpen(true)}
@@ -323,7 +329,7 @@ const SocialConnections = () => {
                                     <span className="hidden xs:inline">Create Post</span>
                                 </PrimaryButton>
                             )}
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200/80 dark:border-white/10 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+                            {activeTab === 'apps' && <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200/80 dark:border-white/10 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
                                 {loading ? (
                                     <ThemedSkeleton width={75} height={14} borderRadius="0.5rem" />
                                 ) : (
@@ -332,7 +338,7 @@ const SocialConnections = () => {
                                         <span>{connectedCount} / {PLATFORMS.length} Active</span>
                                     </>
                                 )}
-                            </div>
+                            </div>}
                         </div>
                     }
                 />
@@ -340,6 +346,7 @@ const SocialConnections = () => {
                 {/* Scrollable Content */}
                 <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
                     <main className="max-w-5xl w-full mx-auto px-4 sm:px-8 md:px-12 py-6 sm:py-10">
+                        {activeTab === 'skills' ? <CustomSkillsPanel /> : <>
                         <div ref={containerRef}>
                             
                             {/* Apple-style Hero Section */}
@@ -461,7 +468,7 @@ const SocialConnections = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div></>}
                     </main>
                     <Footer />
                 </div>

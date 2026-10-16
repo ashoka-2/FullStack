@@ -26,6 +26,21 @@ export async function deleteMemoryFactApi(index) {
     return res.data;
 }
 
+export async function getUserSkills() {
+    const res = await api.get('/api/settings/skills');
+    return res.data;
+}
+
+export async function createUserSkill(payload) {
+    const res = await api.post('/api/settings/skills', payload);
+    return res.data;
+}
+
+export async function deleteUserSkill(skillId) {
+    const res = await api.delete(`/api/settings/skills/${skillId}`);
+    return res.data;
+}
+
 // ─── Media ─────────────────────────────────────────────────────────────────
 export async function getUserMedia() {
     const res = await api.get('/api/settings/media');

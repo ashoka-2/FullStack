@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'react-router';
 import {
     RiArrowDownLine,
     RiSpyLine,
-    RiAlertLine
+    RiAlertLine,
+    RiCloseLine,
+    RiFullscreenLine,
+    RiFullscreenExitLine,
+    RiFileCopyLine,
+    RiDownloadLine
 } from '@remixicon/react';
 import Sidebar from '../../Components/Sidebar';
 import ChatMessage from '../components/ChatMessage';
@@ -56,6 +62,7 @@ const ChatPage2 = () => {
 
     // Redux selectors for messages, pagination, and error states
     const messages = useSelector(state => state.chat.messages);
+    const messagesLoadingChatId = useSelector(state => state.chat.messagesLoadingChatId);
     const chats = useSelector(state => state.chat.chats);
     const error = useSelector(state => state.chat.error);
     const hasMoreMessages = useSelector(state => state.chat.hasMoreMessages);
@@ -66,6 +73,19 @@ const ChatPage2 = () => {
     const dispatch = useDispatch();
     const [latestMessageId, setLatestMessageId] = useState(null);
     const [showScrollButton, setShowScrollButton] = useState(false);
+    const [codePreview, setCodePreview] = useState(null);
+    const [previewFullscreen, setPreviewFullscreen] = useState(false);
+
+    useEffect(() => {
+        const openPreview = (event) => {
+            if (typeof event.detail?.code === 'string') {
+                setCodePreview(event.detail.code);
+                setPreviewFullscreen(false);
+            }
+        };
+        window.addEventListener('parsu:open-code-preview', openPreview);
+        return () => window.removeEventListener('parsu:open-code-preview', openPreview);
+    }, []);
 
     // Web Search and Cross-Chat Memory feature toggles synced across all pages & settings
     const {
@@ -514,7 +534,8 @@ const ChatPage2 = () => {
         <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--color-clear-hanada)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            <div className={`flex-1 flex flex-col h-[100dvh] ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} overflow-hidden relative transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
+            <div className={`flex-1 flex h-[100dvh] ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} overflow-hidden relative transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
+              <div className="flex min-w-0 flex-1 flex-col h-full overflow-hidden relative">
 
                 {/* Main AI Chatbot Navbar (ChatGPT-style) */}
                 <ChatNavbar
@@ -573,7 +594,7 @@ const ChatPage2 = () => {
                             </div>
                         )}
 
-                        {((loading || error || (typeof navigator !== 'undefined' && !navigator.onLine)) && messages.length === 0) ? (
+                        {((messagesLoadingChatId === id || error || (typeof navigator !== 'undefined' && !navigator.onLine)) && messages.length === 0) ? (
                             <MessagesSkeleton />
                         ) : (
                             <>
@@ -581,6 +602,7 @@ const ChatPage2 = () => {
                                     <ChatMessage 
                                         key={msg._id} 
                                         msg={msg} 
+                                        previousMessage={messages[index - 1]}
                                         isLatest={index === messages.length - 1}
                                         isNewMessage={msg._id === latestMessageId}
                                     />
@@ -589,7 +611,7 @@ const ChatPage2 = () => {
                                     messages.length === 0 || 
                                     messages[messages.length - 1].role !== 'ai' || 
                                     !messages[messages.length - 1].content?.trim()
-                                ) && (
+                                ) && !messages.some(msg => msg.role === 'ai' && msg.isStreaming) && (
                                     <ThinkingSkeleton />
                                 )}
                                 {lastFailedSend && (
@@ -627,7 +649,7 @@ const ChatPage2 = () => {
 
                 {/* Move to bottom button */}
                 {showScrollButton && (
-                    <div className={`absolute bottom-[180px] left-0 right-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} flex justify-center z-40 pointer-events-none transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
+                    <div className="absolute bottom-[180px] left-0 right-0 flex justify-center z-40 pointer-events-none">
                         <button 
                             onClick={scrollToBottom}
                             className="bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-100 p-2.5 rounded-full shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-4 duration-300 group pointer-events-auto"
@@ -677,6 +699,39 @@ const ChatPage2 = () => {
                     lastAiMessage={messages.length > 0 ? (messages.filter(m => m.role === 'ai').at(-1)?.content || '') : ''}
                     onSendMessage={handleSendFollowUp}
                 />
+              </div>
+
+              {codePreview && !previewFullscreen && (
+                <aside className="absolute inset-0 z-50 flex min-w-0 flex-col border-l border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-950 shadow-2xl animate-in fade-in slide-in-from-right-3 duration-200 md:static md:inset-auto md:mt-0 md:h-full md:w-[min(48%,680px)] md:shrink-0">
+                    <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 dark:border-white/10 px-4">
+                        <div className="min-w-0">
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">HTML preview</p>
+                            <p className="text-[11px] text-zinc-500">Sandboxed local preview</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <button type="button" onClick={() => navigator.clipboard.writeText(codePreview)} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Copy HTML" aria-label="Copy HTML"><RiFileCopyLine size={16} /></button>
+                            <button type="button" onClick={() => { const url = URL.createObjectURL(new Blob([codePreview], { type: 'text/html' })); const link = document.createElement('a'); link.href = url; link.download = 'parsu-preview.html'; link.click(); URL.revokeObjectURL(url); }} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Download HTML" aria-label="Download HTML"><RiDownloadLine size={16} /></button>
+                            <button type="button" onClick={() => setPreviewFullscreen(v => !v)} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title={previewFullscreen ? 'Exit full screen' : 'Full screen'} aria-label={previewFullscreen ? 'Exit full screen' : 'Full screen'}>{previewFullscreen ? <RiFullscreenExitLine size={16} /> : <RiFullscreenLine size={16} />}</button>
+                            <button type="button" onClick={() => { setCodePreview(null); setPreviewFullscreen(false); }} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Close preview" aria-label="Close preview"><RiCloseLine size={17} /></button>
+                        </div>
+                    </header>
+                    <iframe title="Generated HTML preview" sandbox="allow-scripts" srcDoc={codePreview} className="min-h-0 flex-1 bg-white" />
+                </aside>
+              )}
+              {codePreview && previewFullscreen && createPortal(
+                <aside className="fixed inset-0 z-[10010] flex min-w-0 flex-col border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-950 shadow-2xl animate-in fade-in duration-200">
+                    <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 dark:border-white/10 px-4">
+                        <div className="min-w-0"><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">HTML preview</p><p className="text-[11px] text-zinc-500">Sandboxed local preview</p></div>
+                        <div className="flex items-center gap-1">
+                            <button type="button" onClick={() => navigator.clipboard.writeText(codePreview)} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Copy HTML" aria-label="Copy HTML"><RiFileCopyLine size={16} /></button>
+                            <button type="button" onClick={() => { const url = URL.createObjectURL(new Blob([codePreview], { type: 'text/html' })); const link = document.createElement('a'); link.href = url; link.download = 'parsu-preview.html'; link.click(); URL.revokeObjectURL(url); }} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Download HTML" aria-label="Download HTML"><RiDownloadLine size={16} /></button>
+                            <button type="button" onClick={() => setPreviewFullscreen(false)} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Exit full screen" aria-label="Exit full screen"><RiFullscreenExitLine size={16} /></button>
+                            <button type="button" onClick={() => { setCodePreview(null); setPreviewFullscreen(false); }} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/10" title="Close preview" aria-label="Close preview"><RiCloseLine size={17} /></button>
+                        </div>
+                    </header>
+                    <iframe title="Generated HTML preview" sandbox="allow-scripts" srcDoc={codePreview} className="min-h-0 flex-1 bg-white" />
+                </aside>, document.body
+              )}
             </div>
         </div>
 

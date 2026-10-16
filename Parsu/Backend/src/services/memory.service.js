@@ -53,6 +53,12 @@ export async function extractAndStoreMemory(userId, messageContent) {
             }
         }
 
+        // Remember durable interests and preferences shared in ordinary conversation.
+        if (!detectedFact) {
+            const interestMatch = trimmed.match(/^(i\s+(?:prefer|like|love|enjoy|am interested in|am passionate about|usually choose)\s+.{2,180})$/i);
+            if (interestMatch?.[1]) detectedFact = interestMatch[1].trim();
+        }
+
         if (!detectedFact) return;
 
         // Clean up punctuation at the end

@@ -185,7 +185,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const menuItems = [
     { icon: RiSearchLine, label: 'Search', action: 'search', isProtected: false },
     { icon: RiHistoryLine, label: 'Chats', path: '/library', active: location.pathname === '/library', isProtected: true },
-    { icon: RiApps2Line, label: 'Social Hub', path: '/social-connections', active: location.pathname === '/social-connections', isProtected: true },
+    { icon: RiApps2Line, label: 'Plugins', path: '/social-connections', active: location.pathname === '/social-connections' || location.pathname === '/plugins', isProtected: true },
     { icon: RiSettings4Line, label: 'Settings', path: '/settings', active: location.pathname.startsWith('/settings'), isProtected: true },
   ];
 

@@ -56,6 +56,53 @@ export async function updateUserSettings(req, res) {
     }
 }
 
+// ─── User Skills ───────────────────────────────────────────────────────────
+export async function getUserSkills(req, res) {
+    try {
+        const user = await userModel.findById(req.user.id).select("skills").lean();
+        res.json({ success: true, skills: user?.skills || [] });
+    } catch {
+        res.status(500).json({ success: false, message: "Could not load skills" });
+    }
+}
+
+export async function createUserSkill(req, res) {
+    try {
+        const name = String(req.body?.name || "").trim().slice(0, 80);
+        const description = String(req.body?.description || "").trim().slice(0, 240);
+        const instructions = String(req.body?.instructions || "").trim().slice(0, 3000);
+        const triggers = Array.isArray(req.body?.triggers)
+            ? [...new Set(req.body.triggers.map(value => String(value).trim().slice(0, 60)).filter(Boolean))].slice(0, 10)
+            : [];
+        if (!name || instructions.length < 10) {
+            return res.status(400).json({ success: false, message: "A name and at least 10 characters of instructions are required" });
+        }
+        const user = await userModel.findById(req.user.id).select("skills");
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        if ((user.skills || []).length >= 20) return res.status(409).json({ success: false, message: "You can save up to 20 skills" });
+        const skill = { name, description, instructions, triggers, enabled: true };
+        user.skills.push(skill);
+        await user.save();
+        res.status(201).json({ success: true, skills: user.skills });
+    } catch {
+        res.status(500).json({ success: false, message: "Could not save this skill" });
+    }
+}
+
+export async function deleteUserSkill(req, res) {
+    try {
+        const user = await userModel.findById(req.user.id).select("skills");
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        const before = user.skills.length;
+        user.skills = user.skills.filter(skill => skill._id.toString() !== req.params.skillId);
+        if (user.skills.length === before) return res.status(404).json({ success: false, message: "Skill not found" });
+        await user.save();
+        res.json({ success: true, skills: user.skills });
+    } catch {
+        res.status(500).json({ success: false, message: "Could not delete this skill" });
+    }
+}
+
 // ─── Clear Memory Facts ────────────────────────────────────────────────────
 export async function clearMemory(req, res) {
     try {

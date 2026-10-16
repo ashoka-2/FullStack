@@ -48,6 +48,7 @@ export async function getAvailableModels(req, res) {
     // Build flattened list of custom models for selector
     const customModelsList = [];
     for (const key of customKeys) {
+      if (key.isActive === false) continue;
       if (key.models && key.models.length > 0) {
         for (const m of key.models) {
           customModelsList.push({
@@ -80,6 +81,13 @@ export async function getAvailableModels(req, res) {
       };
     });
 
+    const selectedIsAvailable = mappedDefaultModels.some(m => m.id === selectedModel.modelId && !m.isLocked) ||
+      customModelsList.some(m => m.id === selectedModel.modelId && m.provider === selectedModel.provider);
+    if (!selectedIsAvailable) {
+      const fallbackModel = mappedDefaultModels.find(m => !m.isLocked) || DEFAULT_MODELS[0];
+      selectedModel = { provider: fallbackModel.provider, modelId: fallbackModel.id, modelName: fallbackModel.name };
+    }
+
     res.status(200).json({
       success: true,
       defaultModels: mappedDefaultModels,
@@ -94,7 +102,7 @@ export async function getAvailableModels(req, res) {
     res.status(500).json({
       success: false,
       message: "Failed to load models",
-      error: error.message
+      error: "An internal error occurred while loading models"
     });
   }
 }
@@ -200,7 +208,7 @@ export async function saveCustomApiKey(req, res) {
     console.error("Save API Key failed:", error);
     res.status(400).json({
       success: false,
-      message: error.message || "Failed to validate and save API key"
+      message: "Could not validate this API key or load its models"
     });
   }
 }
@@ -246,6 +254,18 @@ export async function setSelectedModel(req, res) {
     }
 
     if (req.user?.id) {
+      const user = await userModel.findById(req.user.id).select("+customApiKeys.apiKey");
+      const defaultModel = DEFAULT_MODELS.find(model => model.id === modelId && model.provider === (provider || model.provider));
+      const userPlan = user?.subscription?.plan || "free";
+      const isPaidUser = ["pro", "ultra", "enterprise"].includes(userPlan) || user?.role === "admin";
+      const hasProviderKey = user?.customApiKeys?.some(key => key.provider === defaultModel?.provider && key.isActive !== false);
+      const isDefaultModel = Boolean(defaultModel && (defaultModel.tier !== "paid" || isPaidUser || hasProviderKey));
+      const customKey = user?.customApiKeys?.find(key =>
+        key.isActive !== false && key.provider === provider && key.models?.some(model => model.id === modelId)
+      );
+      if (!isDefaultModel && !customKey) {
+        return res.status(403).json({ success: false, message: "That model is not available on this account" });
+      }
       await userModel.findByIdAndUpdate(req.user.id, {
         selectedModel: {
           provider: provider || "gemini",
@@ -268,7 +288,6 @@ export async function setSelectedModel(req, res) {
     res.status(500).json({
       success: false,
       message: "Failed to set selected model",
-      error: error.message
     });
   }
 }
