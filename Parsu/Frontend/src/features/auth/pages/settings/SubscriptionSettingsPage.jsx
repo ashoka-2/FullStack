@@ -187,12 +187,12 @@ export default function SubscriptionSettingsPage() {
             <div className="space-y-6 sm:space-y-8">
                 
                 {/* ── Current Active Tier Card ── */}
-                <div className={`p-6 sm:p-7 rounded-3xl border transition-all duration-300 relative overflow-hidden shadow-lg ${
+                <div className={`p-6 sm:p-7 rounded-[28px] border transition-all duration-300 relative overflow-hidden bg-[var(--surface)] border-[var(--line)] ${
                     isUltra
-                        ? 'bg-gradient-to-br from-amber-500/10 via-cyan-500/5 to-transparent border-cyan-500/30'
+                        ? 'ring-1 ring-[var(--accent)]/30'
                         : isPro 
-                        ? 'bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border-emerald-500/30'
-                        : 'bg-white dark:bg-[var(--bg-surface)] border-zinc-200/80 dark:border-white/10'
+                        ? 'ring-1 ring-[var(--success)]/30'
+                        : ''
                 }`}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-1.5">
@@ -200,45 +200,39 @@ export default function SubscriptionSettingsPage() {
                                 {loading ? (
                                     <ThemedSkeleton width={80} height={18} borderRadius="9999px" />
                                 ) : (
-                                    <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-                                        isUltra
-                                            ? 'bg-gradient-to-r from-amber-500/20 to-cyan-500/20 text-cyan-300 border-cyan-500/30'
-                                            : isPro
-                                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                                            : 'bg-zinc-100 dark:bg-white/10 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-white/10'
-                                    }`}>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[var(--surface-2)] text-[var(--accent-text)] border border-[var(--line)]">
                                         {subscription?.plan?.toUpperCase()} PLAN
                                     </span>
                                 )}
-                                <span className="text-[11px] font-semibold text-emerald-500 flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span className="text-xs font-semibold text-[var(--success)] flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" />
                                     Active
                                 </span>
                             </div>
 
-                            <h2 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white">
+                            <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)]">
                                 {isUltra ? 'Ultra Tier' : isPro ? 'Pro Researcher Tier' : 'Free Community Tier'}
                             </h2>
 
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md leading-relaxed">
+                            <p className="text-xs text-[var(--text-muted)] max-w-md leading-relaxed">
                                 {isUltra
                                     ? 'Unrestricted frontier reasoning, massive 1M+ token context, and dedicated compute pipelines.'
                                     : isPro
                                     ? 'Full flagship intelligence with unlimited queries, Google Workspace sync, and universal social publishing.'
-                                    : 'Community Starter tier active. Paid Pro & Ultra tiers with expanded quotas are currently in early-access preview and coming soon.'}
+                                    : 'Community Starter tier active. Paid Pro & Ultra tiers with expanded quotas are currently in early-access preview.'}
                             </p>
                         </div>
 
                         <div className="flex flex-col sm:items-end gap-2 shrink-0">
                             {isFree ? (
                                 <div className="flex flex-col sm:items-end gap-2">
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-[11px] font-bold text-[var(--accent-cyan)]">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                                        <span>Pro & Ultra Tiers Coming Soon</span>
+                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-soft)] border border-[var(--accent)]/30 text-xs font-medium text-[var(--accent-text)]">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
+                                        <span>Pro & Ultra Coming Soon</span>
                                     </div>
                                     <Link
                                         to="/pricing"
-                                        className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/15 text-zinc-800 dark:text-zinc-200 font-semibold text-xs flex items-center gap-1.5 transition-all self-start sm:self-auto cursor-pointer"
+                                        className="h-10 px-4 rounded-full bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--line)] text-[var(--text)] font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                                     >
                                         <span>Preview Plans</span>
                                         <RiArrowRightLine size={13} />
@@ -247,7 +241,7 @@ export default function SubscriptionSettingsPage() {
                             ) : (
                                 <Link
                                     to="/pricing"
-                                    className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/15 text-zinc-800 dark:text-zinc-200 font-semibold text-xs flex items-center gap-1.5 transition-all"
+                                    className="h-10 px-4 rounded-full bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--line)] text-[var(--text)] font-medium text-xs flex items-center gap-1.5 transition-colors"
                                 >
                                     <span>Manage Plan</span>
                                     <RiArrowRightLine size={14} />
@@ -255,7 +249,7 @@ export default function SubscriptionSettingsPage() {
                             )}
 
                             {subscription?.endDate && (
-                                <span className="text-[10px] text-zinc-400">
+                                <span className="text-[10px] text-[var(--text-subtle)]">
                                     Renews on {new Date(subscription.endDate).toLocaleDateString()}
                                 </span>
                             )}
@@ -265,60 +259,60 @@ export default function SubscriptionSettingsPage() {
 
                 {/* ── Custom API Key Benefit Status Banner ── */}
                 {hasCustomKeys ? (
-                    <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="flex items-start gap-3">
-                            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shrink-0">
+                    <div className="p-5 rounded-[24px] border border-[var(--line)] bg-[var(--surface)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-start gap-3.5">
+                            <div className="w-10 h-10 rounded-full bg-[var(--surface-2)] text-[var(--accent-text)] flex items-center justify-center shrink-0">
                                 <RiKey2Line size={20} />
                             </div>
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)] flex items-center gap-1">
                                         <RiCheckLine size={12} />
                                         Custom Key Added
                                     </span>
-                                    <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                    <span className="text-xs text-[var(--text-muted)]">
                                         BYOK Boost Active
                                     </span>
                                 </div>
-                                <p className="text-xs font-medium text-zinc-800 dark:text-zinc-200">
-                                    <strong>Unlimited</strong> AI Messages &bull; <strong>{isPro ? '15' : '5'}</strong> RAG file uploads/day &bull; <strong>{isPro ? '50' : '20'}</strong> Social media posts/day
+                                <p className="text-xs font-medium text-[var(--text)]">
+                                    <strong>Unlimited</strong> AI Messages &bull; <strong>{isPro ? '15' : '5'}</strong> RAG uploads/day &bull; <strong>{isPro ? '50' : '20'}</strong> Social posts/day
                                 </p>
-                                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                    When you prompt the AI, requests route to your custom model with automatic multi-model failover on quota limits.
+                                <p className="text-[11px] text-[var(--text-subtle)]">
+                                    Prompts automatically route to your custom model with multi-model failover.
                                 </p>
                             </div>
                         </div>
                         <Link
                             to="/settings/api-keys"
-                            className="px-3.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 font-semibold text-xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                            className="h-9 px-4 rounded-full bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--line)] text-[var(--text)] font-medium text-xs flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer"
                         >
                             <span>Manage Keys</span>
                             <RiArrowRightLine size={13} />
                         </Link>
                     </div>
                 ) : (
-                    <div className="p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-950/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="flex items-start gap-3">
-                            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 shrink-0">
+                    <div className="p-5 rounded-[24px] border border-[var(--line)] bg-[var(--surface)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-start gap-3.5">
+                            <div className="w-10 h-10 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)] flex items-center justify-center shrink-0">
                                 <RiKey2Line size={20} />
                             </div>
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)]">
                                         Standard Quotas (No Custom Key)
                                     </span>
                                 </div>
-                                <p className="text-xs font-medium text-zinc-800 dark:text-zinc-200">
+                                <p className="text-xs font-medium text-[var(--text)]">
                                     Daily 50 messages &bull; 2 RAG file uploads/day &bull; 10 Social posts/day
                                 </p>
-                                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                    Add your custom API key to unlock <strong>Unlimited AI messages</strong>, <strong>5 RAG uploads/day</strong>, and <strong>20 social posts daily</strong>!
+                                <p className="text-[11px] text-[var(--text-subtle)]">
+                                    Add your custom API key to unlock <strong>Unlimited AI messages</strong> and higher limits!
                                 </p>
                             </div>
                         </div>
                         <Link
                             to="/settings/api-keys"
-                            className="px-3.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-semibold text-xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                            className="h-9 px-4 rounded-full bg-[var(--text)] text-[var(--bg)] font-medium text-xs flex items-center gap-1.5 transition-opacity hover:opacity-90 shrink-0 cursor-pointer"
                         >
                             <span>Add Custom Key</span>
                             <RiArrowRightLine size={13} />
@@ -327,35 +321,35 @@ export default function SubscriptionSettingsPage() {
                 )}
 
                 {/* ── Real-Time Resource Quotas Dashboard ── */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                            <RiFlashlightLine size={16} className="text-cyan-500" />
+                <div className="space-y-3.5">
+                    <div className="flex items-center justify-between px-1">
+                        <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
+                            <RiFlashlightLine size={15} className="text-[var(--accent-text)]" />
                             <span>Resource Usage & Limits</span>
                         </h3>
                         <button
                             type="button"
                             onClick={loadData}
-                            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-200/50 dark:hover:bg-white/5 transition-all cursor-pointer"
+                            className="text-[var(--text-muted)] hover:text-[var(--text)] p-1.5 rounded-full hover:bg-[var(--surface)] transition-colors cursor-pointer"
                             title="Refresh Quota Telemetry"
                         >
                             <RiRefreshLine size={14} className={loading ? 'animate-spin' : ''} />
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         
                         {/* Daily AI Queries */}
-                        <div className="p-5 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-3">
+                        <div className="p-4 sm:p-5 rounded-[24px] bg-[var(--surface)] border border-[var(--line)] space-y-3">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                <span className="text-xs font-medium text-[var(--text-muted)]">
                                     Daily AI Messages
                                 </span>
-                                <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1">
+                                <span className="text-xs font-bold text-[var(--text)] tabular-nums flex items-center gap-1">
                                     {loading ? (
                                         <ThemedSkeleton width={50} height={14} />
                                     ) : isUnlimitedQueries ? (
-                                        <span className="flex items-center gap-1 text-emerald-500">
+                                        <span className="flex items-center gap-1 text-[var(--success)]">
                                             <RiInfinityLine size={16} />
                                             <span>Unlimited</span>
                                         </span>
@@ -365,35 +359,35 @@ export default function SubscriptionSettingsPage() {
                                 </span>
                             </div>
 
-                            <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-white/10 overflow-hidden">
+                            <div className="w-full h-1.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
                                 <div
                                     className={`h-full rounded-full transition-all duration-500 ${
                                         isUnlimitedQueries
-                                            ? 'bg-emerald-500 w-full'
+                                            ? 'bg-[var(--success)] w-full'
                                             : getQueryPercentage() > 80
-                                            ? 'bg-red-500'
-                                            : 'bg-cyan-500'
+                                            ? 'bg-[var(--danger)]'
+                                            : 'bg-[var(--accent)]'
                                     }`}
                                     style={{ width: `${isUnlimitedQueries ? 100 : getQueryPercentage()}%` }}
                                 />
                             </div>
 
-                            <p className="text-[10px] text-zinc-400">
-                                {isUnlimitedQueries ? 'Custom key active — Unlimited messages & multi-model failover' : '50 messages per day (Add custom key for Unlimited)'}
+                            <p className="text-[11px] text-[var(--text-subtle)]">
+                                {isUnlimitedQueries ? 'Custom key active — Unlimited messages' : '50 messages per day'}
                             </p>
                         </div>
 
                         {/* Document & PDF Uploads */}
-                        <div className="p-5 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-3">
+                        <div className="p-4 sm:p-5 rounded-[24px] bg-[var(--surface)] border border-[var(--line)] space-y-3">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                                    Document / RAG Uploads
+                                <span className="text-xs font-medium text-[var(--text-muted)]">
+                                    Document Uploads
                                 </span>
-                                <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1">
+                                <span className="text-xs font-bold text-[var(--text)] tabular-nums flex items-center gap-1">
                                     {loading ? (
                                         <ThemedSkeleton width={50} height={14} />
                                     ) : effectiveDocLimit === -1 ? (
-                                        <span className="flex items-center gap-1 text-emerald-500">
+                                        <span className="flex items-center gap-1 text-[var(--success)]">
                                             <RiInfinityLine size={16} />
                                             <span>Unlimited</span>
                                         </span>
@@ -403,33 +397,31 @@ export default function SubscriptionSettingsPage() {
                                 </span>
                             </div>
 
-                            <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-white/10 overflow-hidden">
+                            <div className="w-full h-1.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
                                 <div
-                                    className="h-full rounded-full bg-blue-500 transition-all duration-500"
+                                    className="h-full rounded-full bg-[var(--accent)] transition-all duration-500"
                                     style={{ width: `${effectiveDocLimit === -1 ? 100 : getDocPercentage()}%` }}
                                 />
                             </div>
 
-                            <p className="text-[10px] text-zinc-400">
+                            <p className="text-[11px] text-[var(--text-subtle)]">
                                 {effectiveDocLimit === -1
                                     ? 'Unlimited document research'
-                                    : hasCustomKeys
-                                    ? `${effectiveDocLimit} uploads daily with custom key`
-                                    : `${effectiveDocLimit} uploads daily standard (Add custom key to get 5/day)`}
+                                    : `${effectiveDocLimit} uploads daily`}
                             </p>
                         </div>
 
                         {/* Social Media Posts */}
-                        <div className="p-5 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 shadow-xs space-y-3">
+                        <div className="p-4 sm:p-5 rounded-[24px] bg-[var(--surface)] border border-[var(--line)] space-y-3">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                <span className="text-xs font-medium text-[var(--text-muted)]">
                                     Social Publishing / Day
                                 </span>
-                                <span className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1">
+                                <span className="text-xs font-bold text-[var(--text)] tabular-nums flex items-center gap-1">
                                     {loading ? (
                                         <ThemedSkeleton width={50} height={14} />
                                     ) : effectiveSocialLimit === -1 ? (
-                                        <span className="flex items-center gap-1 text-emerald-500">
+                                        <span className="flex items-center gap-1 text-[var(--success)]">
                                             <RiInfinityLine size={16} />
                                             <span>Unlimited</span>
                                         </span>
@@ -439,19 +431,17 @@ export default function SubscriptionSettingsPage() {
                                 </span>
                             </div>
 
-                            <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-white/10 overflow-hidden">
+                            <div className="w-full h-1.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
                                 <div
-                                    className="h-full rounded-full bg-purple-500 transition-all duration-500"
+                                    className="h-full rounded-full bg-[var(--accent)] transition-all duration-500"
                                     style={{ width: `${effectiveSocialLimit === -1 ? 100 : getSocialPercentage()}%` }}
                                 />
                             </div>
 
-                            <p className="text-[10px] text-zinc-400">
+                            <p className="text-[11px] text-[var(--text-subtle)]">
                                 {effectiveSocialLimit === -1
-                                    ? 'Unlimited social publishing across platforms'
-                                    : hasCustomKeys
-                                    ? `${effectiveSocialLimit} posts daily with custom key`
-                                    : `${effectiveSocialLimit} posts daily standard (Add custom key for 20/day)`}
+                                    ? 'Unlimited social publishing'
+                                    : `${effectiveSocialLimit} posts daily`}
                             </p>
                         </div>
 
@@ -472,77 +462,77 @@ export default function SubscriptionSettingsPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
                         {/* Free - Default */}
-                        <div className={`p-4 rounded-2xl border ${!hasCustomKeys && isFree ? 'border-cyan-500/50 bg-cyan-500/5 ring-1 ring-cyan-500/30' : 'border-zinc-200/80 dark:border-white/10 bg-zinc-50 dark:bg-white/[0.02]'} space-y-2`}>
+                        <div className={`p-4 rounded-[20px] border ${!hasCustomKeys && isFree ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--line)] bg-[var(--surface-2)]'} space-y-2`}>
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-zinc-900 dark:text-white">Free (Default)</span>
-                                {!hasCustomKeys && isFree && <span className="text-[10px] font-extrabold text-cyan-500">Current</span>}
+                                <span className="text-xs font-semibold text-[var(--text)]">Free (Default)</span>
+                                {!hasCustomKeys && isFree && <span className="text-[10px] font-bold text-[var(--accent-text)]">Current</span>}
                             </div>
-                            <ul className="text-xs space-y-1.5 text-zinc-600 dark:text-zinc-400">
-                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 50 messages / day</li>
-                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 2 RAG files / day</li>
-                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 10 social posts / day</li>
+                            <ul className="text-xs space-y-1.5 text-[var(--text-muted)]">
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-[var(--success)] shrink-0" /> 50 messages / day</li>
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-[var(--success)] shrink-0" /> 2 RAG files / day</li>
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-[var(--success)] shrink-0" /> 10 social posts / day</li>
                             </ul>
                         </div>
 
                         {/* Free - Custom Key */}
-                        <div className={`p-4 rounded-2xl border ${hasCustomKeys && isFree ? 'border-emerald-500/50 bg-emerald-500/5 ring-1 ring-emerald-500/30' : 'border-zinc-200/80 dark:border-white/10 bg-zinc-50 dark:bg-white/[0.02]'} space-y-2`}>
+                        <div className={`p-4 rounded-[20px] border ${hasCustomKeys && isFree ? 'border-[var(--success)] bg-[var(--success)]/10' : 'border-[var(--line)] bg-[var(--surface-2)]'} space-y-2`}>
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <span className="text-xs font-semibold text-[var(--success)] flex items-center gap-1">
                                     <RiKey2Line size={13} />
                                     Free + Custom Key
                                 </span>
-                                {hasCustomKeys && isFree && <span className="text-[10px] font-extrabold text-emerald-500">Current</span>}
+                                {hasCustomKeys && isFree && <span className="text-[10px] font-bold text-[var(--success)]">Current</span>}
                             </div>
-                            <ul className="text-xs space-y-1.5 text-zinc-600 dark:text-zinc-400">
-                                <li className="flex items-center gap-1.5 font-semibold text-emerald-600 dark:text-emerald-400"><RiCheckLine size={14} className="shrink-0" /> Unlimited messages</li>
-                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 5 RAG files / day</li>
-                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 20 social posts / day</li>
+                            <ul className="text-xs space-y-1.5 text-[var(--text-muted)]">
+                                <li className="flex items-center gap-1.5 font-semibold text-[var(--success)]"><RiCheckLine size={14} className="shrink-0" /> Unlimited messages</li>
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-[var(--success)] shrink-0" /> 5 RAG files / day</li>
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-[var(--success)] shrink-0" /> 20 social posts / day</li>
                             </ul>
                         </div>
 
                         {/* Pro Plan */}
-                        <div className={`p-4 rounded-2xl border ${isPro ? 'border-cyan-500/50 bg-cyan-500/5 ring-1 ring-cyan-500/30' : 'border-zinc-200/80 dark:border-white/10 bg-zinc-50 dark:bg-white/[0.02]'} space-y-2`}>
+                        <div className={`p-4 rounded-[20px] border ${isPro ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--line)] bg-[var(--surface-2)]'} space-y-2`}>
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-zinc-900 dark:text-white">Pro Plan</span>
-                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500">Coming Soon</span>
+                                <span className="text-xs font-semibold text-[var(--text)]">Pro Plan</span>
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--warning)]/20 text-[var(--warning)]">Coming Soon</span>
                             </div>
-                            <ul className="text-xs space-y-1.5 text-zinc-600 dark:text-zinc-400">
-                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 50 msgs / day (or Unlimited w/ key)</li>
-                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 10 RAG files (15 w/ key)</li>
-                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-emerald-500 shrink-0" /> 50 social posts / day</li>
+                            <ul className="text-xs space-y-1.5 text-[var(--text-muted)]">
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-[var(--success)] shrink-0" /> 50 msgs / day (or Unlimited w/ key)</li>
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-[var(--success)] shrink-0" /> 10 RAG files (15 w/ key)</li>
+                                <li className="flex items-center gap-1.5"><RiCheckLine size={14} className="text-[var(--success)] shrink-0" /> 50 social posts / day</li>
                             </ul>
                         </div>
 
                         {/* Ultra Plan */}
-                        <div className={`p-4 rounded-2xl border ${isUltra ? 'border-amber-500/50 bg-amber-500/5 ring-1 ring-amber-500/30' : 'border-zinc-200/80 dark:border-white/10 bg-zinc-50 dark:bg-white/[0.02]'} space-y-2`}>
+                        <div className={`p-4 rounded-[20px] border ${isUltra ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--line)] bg-[var(--surface-2)]'} space-y-2`}>
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-amber-500">Ultra Plan</span>
-                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500">Coming Soon</span>
+                                <span className="text-xs font-semibold text-[var(--accent-text)]">Ultra Plan</span>
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--warning)]/20 text-[var(--warning)]">Coming Soon</span>
                             </div>
-                            <ul className="text-xs space-y-1.5 text-zinc-600 dark:text-zinc-400">
-                                <li className="flex items-center gap-1.5 font-semibold text-amber-500"><RiInfinityLine size={14} className="shrink-0" /> Unlimited messages</li>
-                                <li className="flex items-center gap-1.5 font-semibold text-amber-500"><RiInfinityLine size={14} className="shrink-0" /> Unlimited RAG files</li>
-                                <li className="flex items-center gap-1.5 font-semibold text-amber-500"><RiInfinityLine size={14} className="shrink-0" /> Unlimited social posts</li>
+                            <ul className="text-xs space-y-1.5 text-[var(--text-muted)]">
+                                <li className="flex items-center gap-1.5 font-semibold text-[var(--accent-text)]"><RiInfinityLine size={14} className="shrink-0" /> Unlimited messages</li>
+                                <li className="flex items-center gap-1.5 font-semibold text-[var(--accent-text)]"><RiInfinityLine size={14} className="shrink-0" /> Unlimited RAG files</li>
+                                <li className="flex items-center gap-1.5 font-semibold text-[var(--accent-text)]"><RiInfinityLine size={14} className="shrink-0" /> Unlimited social posts</li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
                 {/* ── Plan Comparison Table / Quick Switch ── */}
-                <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200/80 dark:border-white/10 space-y-4">
+                <div className="p-5 sm:p-6 rounded-[28px] bg-[var(--surface)] border border-[var(--line)] space-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-0.5">
-                            <h4 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                                <RiShieldCheckLine size={18} className="text-cyan-500" />
+                            <h4 className="text-sm font-semibold text-[var(--text)] flex items-center gap-2">
+                                <RiShieldCheckLine size={17} className="text-[var(--accent-text)]" />
                                 <span>Upcoming Tiers & Quota Expansion</span>
                             </h4>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                            <p className="text-xs text-[var(--text-muted)]">
                                 Explore upcoming model access, larger file contexts, and multi-network capabilities.
                             </p>
                         </div>
                         <Link
                             to="/pricing"
-                            className="shrink-0 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-black font-bold text-xs flex items-center gap-1.5 transition-all self-start sm:self-auto cursor-pointer"
+                            className="shrink-0 h-10 px-5 rounded-full bg-[var(--text)] text-[var(--bg)] font-medium text-xs flex items-center gap-1.5 transition-opacity hover:opacity-90 self-start sm:self-auto cursor-pointer"
                         >
                             <span>Preview Upcoming Plans</span>
                             <RiArrowRightLine size={14} />

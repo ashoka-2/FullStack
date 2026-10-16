@@ -944,7 +944,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                         </div>
                     )}
 
-                    <div className="bg-zinc-100 dark:bg-[var(--bg-surface)] text-zinc-900 dark:text-zinc-100 px-4 md:px-5 py-2.5 md:py-3 rounded-[20px] md:rounded-[22px] text-[14px] md:text-[15px] border border-zinc-200 dark:border-white/5 shadow-sm transition-all hover:bg-zinc-200/70 dark:hover:bg-[var(--bg-surface-hover)] max-w-full text-left">
+                    <div className="bg-zinc-100 dark:bg-[var(--surface-2)] text-zinc-900 dark:text-[var(--fg)] px-4 md:px-5 py-2.5 md:py-3 rounded-[20px] md:rounded-[22px] text-[14px] md:text-[15px] border border-zinc-200/80 dark:border-[var(--border)] shadow-xs transition-all hover:bg-zinc-200/70 dark:hover:bg-[var(--surface-hover)] max-w-full text-left">
                         {typeof contentToRender === 'string' && contentToRender.includes('```') ? (
                             <div className="prose prose-sm dark:prose-invert max-w-none text-zinc-900 dark:text-zinc-100">
                                 <ReactMarkdown 

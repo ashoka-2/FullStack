@@ -95,7 +95,7 @@ const Auth = ({ initialMode }) => {
     : c.activeField ? 'rotate(5deg) translateX(18px) scale(1.03)' : 'none';
 
   return (
-    <main ref={rootRef} className="auth-shell ui-page relative flex min-h-[100dvh] flex-col overflow-x-hidden bg-[#050507] px-4 text-zinc-100 selection:bg-[var(--accent-cyan)]/25 sm:px-6">
+    <main ref={rootRef} className="auth-shell ui-page relative flex min-h-[100dvh] flex-col overflow-x-hidden bg-[var(--bg)] px-4 text-zinc-100 selection:bg-[var(--accent-cyan)]/25 sm:px-6">
       {c.toast.message && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] pointer-events-auto">
           <Toast message={c.toast.message} type={c.toast.type} onClose={() => c.setToast({ message: null, type: 'info' })} />

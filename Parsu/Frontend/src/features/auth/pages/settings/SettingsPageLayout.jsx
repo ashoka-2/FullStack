@@ -22,11 +22,11 @@ const SettingsPageLayout = ({ title, icon: Icon, description, children }) => {
     });
 
     return (
-        <div className="settings-page-shell ui-page flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30">
+        <div className="settings-page-shell ui-page flex bg-[var(--bg)] h-[100dvh] overflow-hidden text-[var(--text)] font-sans selection:bg-[var(--accent-soft)]">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             {/* Main column — dynamic padding based on sidebar collapse */}
-            <div className={`flex-1 flex flex-col min-h-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
+            <div className={`flex-1 flex flex-col min-h-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.2,0,0,1)]`}>
 
                 {/* ChatGPT-style AI Chatbot Navbar */}
                 <ChatNavbar
@@ -38,8 +38,8 @@ const SettingsPageLayout = ({ title, icon: Icon, description, children }) => {
                 />
 
                 {/* Scrollable content — data-lenis-prevent stops Lenis from intercepting */}
-                <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar flex flex-col justify-between">
-                    <div className="max-w-3xl w-full mx-auto px-3 sm:px-8 py-5 sm:py-10 pb-20 sm:pb-28">
+                <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar flex flex-col justify-between mu-page-enter">
+                    <div className="max-w-[620px] w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24 sm:pb-32">
                         {children}
                     </div>
                     <Footer />

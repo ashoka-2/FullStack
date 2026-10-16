@@ -332,7 +332,7 @@ const LandingPage = () => {
   }, [openFaq]);
 
   return (
-    <div ref={rootRef} className="min-h-screen bg-[var(--bg-primary)] text-zinc-900 dark:text-zinc-100 font-sans antialiased overflow-x-hidden relative selection:bg-[var(--accent-cyan)]/30">
+    <div ref={rootRef} className="min-h-screen bg-[var(--bg)] text-[var(--fg)] font-sans antialiased overflow-x-hidden relative selection:bg-[var(--accent)]/30">
       <style>{`
         .parsu-shine{background-image:linear-gradient(105deg,#0e7490 0%,#22b8cf 22%,#7dd3fc 45%,#0891b2 70%,#22d3ee 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:parsuShine 7s ease-in-out infinite;filter:drop-shadow(0 6px 24px rgba(32,184,205,.28))}
         .dark .parsu-shine{background-image:linear-gradient(105deg,#a5f3fc 0%,#22d3ee 22%,#f0fdff 45%,#38bdf8 70%,#67e8f9 100%);filter:drop-shadow(0 6px 30px rgba(34,211,238,.35))}
@@ -342,7 +342,7 @@ const LandingPage = () => {
 
       <LiquidGlassNav theme={theme} toggleTheme={toggleTheme} />
 
-      {/* HERO â€” compact top spacing so the CTA is visible without scrolling */}
+      {/* HERO — compact top spacing so the CTA is visible without scrolling */}
       <section className="hero relative isolate overflow-hidden pt-24 sm:pt-28 lg:pt-32 pb-16 sm:pb-24 px-4 sm:px-6">
         <div className="hero-bg absolute inset-0 will-change-transform"><HeroGradientBackground /></div>
         <div className="absolute inset-0 opacity-80"><BlobBackground /></div>
@@ -406,7 +406,7 @@ const LandingPage = () => {
             Experience our multi-model intelligence, desktop agent automation, Google integrations, and social publishing live.
           </p>
         </div>
-        <div className="rounded-3xl border border-zinc-200/90 dark:border-white/10 bg-white/80 dark:bg-white/[0.03] p-3 sm:p-6 backdrop-blur-2xl shadow-2xl">
+        <div className="rounded-[28px] border border-zinc-200/90 dark:border-[var(--border)] bg-white/80 dark:bg-[var(--surface)] p-3 sm:p-6 backdrop-blur-2xl shadow-xl">
           <DemoStage id="interactive-demo" />
         </div>
       </section>
@@ -436,7 +436,7 @@ const LandingPage = () => {
               <div
                 key={s.label}
                 data-lift
-                className="group min-w-0 rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-[var(--bg-card)] p-5 sm:p-7 text-center backdrop-blur-xl shadow-lg hover:border-[var(--accent-cyan)]/60 dark:hover:border-[var(--accent-cyan)]/60 transition-all duration-300 hover:-translate-y-1"
+                className="group min-w-0 rounded-[28px] border border-zinc-200 dark:border-[var(--border)] bg-white dark:bg-[var(--surface)] p-5 sm:p-7 text-center backdrop-blur-xl shadow-xs hover:border-[var(--accent)]/60 dark:hover:border-[var(--accent)]/60 transition-all duration-300 hover:-translate-y-1"
               >
                 <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[var(--accent-cyan)]/15 text-[var(--accent-cyan)] border border-[var(--accent-cyan)]/30 group-hover:scale-110 transition-transform">
                   <StatIcon size={24} />

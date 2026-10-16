@@ -59,11 +59,11 @@ export default function AuthLoginForm({
       <form onSubmit={onSubmit} className="space-y-3.5">
         {/* Email Field */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-zinc-300 ml-0.5">
+          <label className="text-xs font-medium text-[var(--muted)] ml-1">
             Email Address <span className="text-red-400 font-bold ml-0.5">*</span>
           </label>
           <div className="relative">
-            <RiMailLine className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+            <RiMailLine className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)] pointer-events-none" />
             <input
               type="email"
               required
@@ -75,27 +75,27 @@ export default function AuthLoginForm({
               onFocus={() => onFieldFocus('email')}
               onBlur={onFieldBlur}
               placeholder="name@example.com"
-              className="w-full h-11 bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.08] focus:border-[var(--accent-cyan)] focus:bg-white/[0.05] focus:ring-1 focus:ring-[var(--accent-cyan)]/30 rounded-xl pl-10 pr-3.5 text-sm text-white placeholder:text-zinc-500 transition-all outline-none"
+              className="w-full h-11 bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--border)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 rounded-full pl-10 pr-4 text-sm text-[var(--fg)] placeholder:text-[var(--muted)] transition-all outline-none"
             />
           </div>
         </div>
 
         {/* Password Field */}
         <div className="space-y-1">
-          <div className="flex items-center justify-between ml-0.5">
-            <label className="text-xs font-medium text-zinc-300">
+          <div className="flex items-center justify-between ml-1">
+            <label className="text-xs font-medium text-[var(--muted)]">
               Password <span className="text-red-400 font-bold ml-0.5">*</span>
             </label>
             <button
               type="button"
               onClick={() => onSwitchMode('forgot')}
-              className="text-xs text-[var(--accent-cyan)] hover:underline cursor-pointer font-medium"
+              className="text-xs text-[var(--accent)] hover:underline cursor-pointer font-medium"
             >
               Forgot?
             </button>
           </div>
           <div className="relative">
-            <RiLockPasswordLine className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+            <RiLockPasswordLine className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)] pointer-events-none" />
             <input
               type={showPassword ? 'text' : 'password'}
               required
@@ -104,7 +104,7 @@ export default function AuthLoginForm({
               onFocus={() => onFieldFocus('password')}
               onBlur={onFieldBlur}
               placeholder="••••••••"
-              className="w-full h-11 bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.08] focus:border-[var(--accent-cyan)] focus:bg-white/[0.05] focus:ring-1 focus:ring-[var(--accent-cyan)]/30 rounded-xl pl-10 pr-10 text-sm text-white placeholder:text-zinc-500 transition-all outline-none"
+              className="w-full h-11 bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--border)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 rounded-full pl-10 pr-10 text-sm text-[var(--fg)] placeholder:text-[var(--muted)] transition-all outline-none"
             />
             <button
               type="button"
@@ -125,7 +125,7 @@ export default function AuthLoginForm({
                   setBubbleText("Masked again! Eyes open, waiting for you! 👀");
                 }
               }}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white cursor-pointer p-0.5"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--fg)] cursor-pointer p-0.5"
             >
               {showPassword ? <RiEyeOffLine size={16} /> : <RiEyeLine size={16} />}
             </button>

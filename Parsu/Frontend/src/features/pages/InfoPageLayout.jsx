@@ -78,7 +78,7 @@ export default function InfoPageLayout({
   }, [location.pathname]);
 
   return (
-    <div className="info-page-shell ui-page min-h-screen bg-[var(--bg-primary)] text-zinc-900 dark:text-zinc-100 flex flex-col font-sans selection:bg-[var(--accent-cyan)]/25 overflow-x-hidden relative transition-colors duration-300">
+    <div className="info-page-shell ui-page min-h-screen bg-[var(--bg)] text-[var(--fg)] flex flex-col font-sans selection:bg-[var(--accent)]/25 overflow-x-hidden relative transition-colors duration-300">
 
       {/* Main Landing Page Sticky LiquidGlassNav */}
       <LiquidGlassNav theme={theme} toggleTheme={toggleTheme} />

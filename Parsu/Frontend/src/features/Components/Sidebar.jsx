@@ -299,7 +299,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       <aside
         ref={drawerRef}
         data-lenis-prevent="true"
-        className={`ui-sidebar fixed top-0 left-0 z-[9990] h-[100dvh] flex flex-col bg-white dark:bg-[var(--bg-secondary)] text-zinc-600 dark:text-zinc-400 shrink-0 border-r border-zinc-200/80 dark:border-white/[0.08] shadow-2xl lg:shadow-none
+        className={`ui-sidebar fixed top-0 left-0 z-[9990] h-[100dvh] flex flex-col bg-white dark:bg-[var(--surface)] text-zinc-600 dark:text-zinc-400 shrink-0 border-r border-zinc-200/80 dark:border-[var(--border)] shadow-2xl lg:shadow-none
           transition-[transform,width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
           ${isOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none lg:pointer-events-auto'}
           lg:translate-x-0

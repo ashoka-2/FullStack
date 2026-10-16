@@ -187,53 +187,54 @@ const StorageSettingsPage = () => {
             ) : (
                 <div ref={containerRef} className="space-y-5">
 
-                    {/* ── Stats bar ─────────────────────────────────────── */}
+                    {/* ── Stats bar ── */}
                     <div className="grid grid-cols-3 gap-3">
                         {[
-                            { label: 'Total Files', value: media.length, icon: RiFileLine, color: 'text-[var(--accent-cyan)]', bg: 'rgba(32,184,205,0.08)' },
-                            { label: 'Images', value: imageCount, icon: RiImageLine, color: 'text-sky-500', bg: 'rgba(14,165,233,0.08)' },
-                            { label: 'Videos', value: videoCount, icon: RiVideoLine, color: 'text-purple-500', bg: 'rgba(168,85,247,0.08)' },
+                            { label: 'Total Files', value: media.length, icon: RiFileLine, color: 'text-[var(--accent-text)]' },
+                            { label: 'Images', value: imageCount, icon: RiImageLine, color: 'text-[var(--accent-text)]' },
+                            { label: 'Videos', value: videoCount, icon: RiVideoLine, color: 'text-[var(--accent-text)]' },
                         ].map(s => (
-                            <div key={s.label} className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-white/[0.06]">
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: s.bg }}>
+                            <div key={s.label} className="flex flex-col items-center gap-1.5 p-3.5 sm:p-4 rounded-[20px] bg-[var(--surface)] border border-[var(--line)]">
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--surface-2)]">
                                     <s.icon size={16} className={s.color} />
                                 </div>
-                                <span className="text-xl font-black text-zinc-900 dark:text-white">{s.value}</span>
-                                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">{s.label}</span>
+                                <span className="text-xl font-bold text-[var(--text)] tabular-nums">{s.value}</span>
+                                <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">{s.label}</span>
                             </div>
                         ))}
                     </div>
 
-                    {/* ── Total size hint ───────────────────────────────── */}
+                    {/* ── Total size hint ── */}
                     {totalSize > 0 && (
-                        <p className="text-xs text-zinc-500 text-center">
-                            Approximate total: <strong className="text-zinc-700 dark:text-zinc-300">{formatBytes(totalSize)}</strong> stored in ImageKit CDN
+                        <p className="text-xs text-[var(--text-muted)] text-center">
+                            Approximate storage: <strong className="text-[var(--text)]">{formatBytes(totalSize)}</strong> on ImageKit CDN
                         </p>
                     )}
 
                     {media.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
-                                <RiHardDriveLine size={28} className="text-zinc-400" />
+                            <div className="w-14 h-14 rounded-full bg-[var(--surface)] border border-[var(--line)] flex items-center justify-center mb-4 text-[var(--text-muted)]">
+                                <RiHardDriveLine size={24} />
                             </div>
-                            <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1">No media uploaded yet</p>
-                            <p className="text-xs text-zinc-500 max-w-xs">Images and videos you upload in chat will appear here and can be deleted.</p>
+                            <p className="text-sm font-semibold text-[var(--text)] mb-1">No media files uploaded</p>
+                            <p className="text-xs text-[var(--text-muted)] max-w-xs">Images and video attachments from conversations appear here.</p>
                         </div>
                     ) : (
                         <>
-                            {/* ── Toolbar ───────────────────────────────── */}
+                            {/* ── Toolbar ── */}
                             <div className="flex items-center justify-between gap-3">
                                 {/* Filter tabs */}
-                                <div className="flex gap-1 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-white/5">
+                                <div className="flex gap-1 p-1 rounded-full bg-[var(--surface-2)] border border-[var(--line)]">
                                     {['all', 'image', 'video'].map(f => (
                                         <button
                                             key={f}
+                                            type="button"
                                             onClick={() => setFilter(f)}
-                                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer capitalize
-                                                ${filter === f
-                                                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
-                                                    : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
-                                                }`}
+                                            className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer capitalize ${
+                                                filter === f
+                                                    ? 'bg-[var(--text)] text-[var(--bg)] shadow-xs'
+                                                    : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                                            }`}
                                         >
                                             {f === 'all' ? `All (${media.length})` : f === 'image' ? `Images (${imageCount})` : `Videos (${videoCount})`}
                                         </button>
@@ -241,20 +242,32 @@ const StorageSettingsPage = () => {
                                 </div>
                                 {/* View mode */}
                                 <div className="flex gap-1">
-                                    <button onClick={() => setViewMode('grid')} title="Grid view"
-                                        className={`p-2 rounded-lg transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]' : 'text-zinc-400 hover:text-zinc-600'}`}>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setViewMode('grid')} 
+                                        title="Grid view"
+                                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                                            viewMode === 'grid' ? 'bg-[var(--surface)] text-[var(--text)] border border-[var(--line)]' : 'text-[var(--text-subtle)] hover:text-[var(--text)]'
+                                        }`}
+                                    >
                                         <RiGridLine size={16} />
                                     </button>
-                                    <button onClick={() => setViewMode('list')} title="List view"
-                                        className={`p-2 rounded-lg transition-all cursor-pointer ${viewMode === 'list' ? 'bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]' : 'text-zinc-400 hover:text-zinc-600'}`}>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setViewMode('list')} 
+                                        title="List view"
+                                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                                            viewMode === 'list' ? 'bg-[var(--surface)] text-[var(--text)] border border-[var(--line)]' : 'text-[var(--text-subtle)] hover:text-[var(--text)]'
+                                        }`}
+                                    >
                                         <RiListCheck size={16} />
                                     </button>
                                 </div>
                             </div>
 
-                            {/* ── Media Grid / List ─────────────────────── */}
+                            {/* ── Media Grid / List ── */}
                             {filtered.length === 0 ? (
-                                <p className="text-center text-sm text-zinc-500 py-8">No {filter}s found.</p>
+                                <p className="text-center text-xs text-[var(--text-muted)] py-8">No {filter}s found.</p>
                             ) : viewMode === 'grid' ? (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                     {filtered.map(item => (
@@ -279,11 +292,11 @@ const StorageSettingsPage = () => {
                                 </div>
                             )}
 
-                            {/* ── Info note ────────────────────────────── */}
-                            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-white/5">
-                                <RiAlertLine size={14} className="text-zinc-400 shrink-0 mt-0.5" />
-                                <p className="text-xs text-zinc-500 leading-relaxed">
-                                    Deleting a file removes it from our CDN permanently. In the related chat, it will appear as <em>"[Deleted by user]"</em>.
+                            {/* ── Info note ── */}
+                            <div className="flex items-start gap-2.5 p-3.5 rounded-[16px] bg-[var(--surface)] border border-[var(--line)]">
+                                <RiAlertLine size={15} className="text-[var(--text-muted)] shrink-0 mt-0.5" />
+                                <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                                    Deleting an attachment removes it permanently from ImageKit CDN. In chat history, the card will display as <em>"[Deleted by user]"</em>.
                                 </p>
                             </div>
                         </>

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router';
 import {
   RiQuestionLine,
@@ -153,10 +153,10 @@ const FAQ = () => {
         {/* FAQ Categories */}
         <div className="space-y-6">
           {faqData.map((category, catIdx) => (
-            <div key={catIdx} className="bg-white dark:bg-[var(--bg-card)] rounded-2xl border border-zinc-200/60 dark:border-white/5 p-5 sm:p-6 shadow-sm">
+            <div key={catIdx} className="bg-white dark:bg-[var(--surface)] rounded-[28px] border border-zinc-200/60 dark:border-[var(--border)] p-5 sm:p-6 shadow-xs">
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
-                  <category.icon className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                <div className="p-2 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20">
+                  <category.icon className="w-4 h-4 text-[var(--accent)]" />
                 </div>
                 <h2 className="text-sm font-bold text-zinc-900 dark:text-white">{category.category}</h2>
               </div>
@@ -178,7 +178,7 @@ const FAQ = () => {
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3">Still have questions?</p>
           <Link
             to="/contact"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-bold hover:opacity-90 transition-all shadow-lg"
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[var(--fg)] text-[var(--bg)] text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all shadow-xs"
           >
             Contact Us
           </Link>

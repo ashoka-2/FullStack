@@ -31,7 +31,7 @@ export default function NotFound() {
     ];
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] text-zinc-900 dark:text-zinc-100 font-sans flex flex-col justify-between selection:bg-[var(--accent-cyan)]/30 overflow-hidden relative">
+        <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] font-sans flex flex-col justify-between selection:bg-[var(--accent)]/30 overflow-hidden relative">
             
             {/* Ambient background glows */}
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-cyan-500/10 dark:bg-cyan-500/15 blur-[120px] pointer-events-none rounded-full" />
@@ -43,14 +43,14 @@ export default function NotFound() {
                     <ParsuLogo size={28} className="text-zinc-900 dark:text-white group-hover:scale-105 transition-transform" />
                     <div className="flex items-baseline gap-1.5">
                         <span className="font-extrabold text-lg tracking-tight text-zinc-900 dark:text-white">PARSU</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-cyan)] bg-[var(--accent-cyan)]/10 px-1.5 py-0.5 rounded-md">AI</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] bg-[var(--accent)]/10 px-1.5 py-0.5 rounded-md">AI</span>
                     </div>
                 </Link>
 
                 <button
                     type="button"
                     onClick={() => navigate(-1)}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white px-3 py-1.5 rounded-xl hover:bg-zinc-200/50 dark:hover:bg-white/5 transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white px-3.5 py-1.5 rounded-full hover:bg-zinc-200/50 dark:hover:bg-white/5 transition-all cursor-pointer"
                 >
                     <RiArrowLeftLine size={16} />
                     <span>Go Back</span>
@@ -71,7 +71,7 @@ export default function NotFound() {
                         404
                     </div>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-xs font-bold uppercase tracking-wider shadow-lg backdrop-blur-md">
+                        <span className="px-3.5 py-1 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/30 text-[var(--accent)] text-xs font-bold uppercase tracking-wider shadow-sm backdrop-blur-md">
                             Page Not Found
                         </span>
                     </div>
@@ -105,13 +105,13 @@ export default function NotFound() {
                 >
                     <Link
                         to="/"
-                        className="px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        className="px-6 py-2.5 rounded-full font-bold text-xs sm:text-sm bg-[var(--accent)] hover:opacity-90 text-zinc-950 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
                         Return to Assistant
                     </Link>
                     <Link
                         to="/contact"
-                        className="px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm bg-zinc-200/80 hover:bg-zinc-300/80 dark:bg-white/10 dark:hover:bg-white/15 text-zinc-800 dark:text-zinc-200 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        className="px-5 py-2.5 rounded-full font-semibold text-xs sm:text-sm bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--border)] text-zinc-800 dark:text-zinc-200 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
                         Report Issue
                     </Link>
@@ -130,13 +130,13 @@ export default function NotFound() {
                                 <Link
                                     key={i}
                                     to={item.to}
-                                    className="p-3.5 rounded-2xl bg-white dark:bg-[var(--bg-surface)] border border-zinc-200/80 dark:border-white/10 hover:border-cyan-500/40 dark:hover:border-cyan-500/40 shadow-xs hover:shadow-md transition-all group flex items-center gap-3.5"
+                                    className="p-3.5 rounded-[24px] bg-white dark:bg-[var(--surface)] border border-zinc-200/80 dark:border-[var(--border)] hover:border-[var(--accent)]/40 shadow-xs transition-all group flex items-center gap-3.5"
                                 >
                                     <div className={`w-9 h-9 rounded-xl bg-zinc-100 dark:bg-white/5 flex items-center justify-center ${item.color} group-hover:scale-105 transition-transform`}>
                                         <Icon size={18} />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                                        <p className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-white group-hover:text-[var(--accent)] transition-colors">
                                             {item.label}
                                         </p>
                                         <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">

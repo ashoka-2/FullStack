@@ -1,167 +1,134 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { useSelector } from 'react-redux';
 import Sidebar from '../../Components/Sidebar';
 import Footer from '../../Components/Footer';
 import ChatNavbar from '../../chat/components/ChatNavbar';
 import {
-    RiMenuLine,
     RiUserLine,
     RiLockPasswordLine,
     RiKeyLine,
     RiGhost2Line,
     RiVoiceprintLine,
-    RiArrowRightLine,
-    RiSettingsLine,
     RiApps2Line,
-    RiShieldCheckLine,
     RiVipCrownLine,
     RiBrainLine,
     RiSettings3Line,
     RiShieldLine,
     RiHardDriveLine,
     RiBugLine,
-    RiSideBarLine,
     RiLogoutBoxRLine,
     RiNotificationLine,
     RiComputerLine,
 } from '@remixicon/react';
-import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router';
 import { useAuth } from '../hook/useAuth';
 import ConfirmationModal from '../../Components/ConfirmationModal';
-import { toggleSidebarCollapse } from '../../chat/chat.slice';
+import { Group, GroupLabel, Row } from '../../Components/GroupedList';
+import gsap from 'gsap';
 
 const SETTING_GROUPS = [
     {
         label: 'Account',
-        cards: [
+        items: [
             {
                 to: '/settings/subscription',
                 icon: RiVipCrownLine,
                 title: 'Plan & Quotas',
-                description: 'View your active plan, monitor daily query limits and resource quotas.',
-                color: '#10b981',
-                glow: 'rgba(16,185,129,0.15)',
+                description: 'View active plan, daily query limits and resource quotas.',
+                accent: true,
             },
             {
                 to: '/settings/profile',
                 icon: RiUserLine,
                 title: 'Profile',
-                description: 'Update your display name, avatar, bio and account information.',
-                color: '#20b8cd',
-                glow: 'rgba(32,184,205,0.12)',
+                description: 'Display name, avatar, bio and account details.',
             },
             {
                 to: '/settings/password',
                 icon: RiLockPasswordLine,
                 title: 'Change Password',
-                description: 'Update your password and manage account security.',
-                color: '#a78bfa',
-                glow: 'rgba(167,139,250,0.12)',
+                description: 'Manage account credentials and security.',
             },
             {
                 to: '/settings/api-keys',
                 icon: RiKeyLine,
                 title: 'AI Models & API Keys',
-                description: 'Configure active models or add your own API keys for Gemini, Claude, OpenAI, DeepSeek & Groq.',
-                color: '#f59e0b',
-                glow: 'rgba(245,158,11,0.12)',
+                description: 'Add custom BYOK keys for Gemini, Claude, OpenAI, DeepSeek & Groq.',
             },
         ],
     },
     {
         label: 'Preferences',
-        cards: [
+        items: [
             {
                 to: '/settings/memory',
                 icon: RiBrainLine,
                 title: 'Memory',
-                description: 'Control what Parsu AI learns about you — nickname, occupation, and custom instructions.',
-                color: '#6366f1',
-                glow: 'rgba(99,102,241,0.12)',
+                description: 'Control what Parsu AI learns about you and custom instructions.',
             },
             {
                 to: '/settings/general',
                 icon: RiSettings3Line,
                 title: 'General',
-                description: 'App theme, haptic feedback and web search (Tavily) settings.',
-                color: '#20b8cd',
-                glow: 'rgba(32,184,205,0.10)',
+                description: 'Theme, haptic feedback and web search settings.',
             },
             {
                 to: '/settings/notifications',
                 icon: RiNotificationLine,
                 title: 'Notifications',
-                description: 'Manage push and browser notifications, sounds and alerts.',
-                color: '#f43f5e',
-                glow: 'rgba(244,63,94,0.12)',
+                description: 'Manage push alerts, sounds and system updates.',
             },
             {
                 to: '/settings/safety',
                 icon: RiShieldLine,
-                title: 'Safety',
-                description: 'Configure content filters to block harmful or sensitive AI-generated content.',
-                color: '#10b981',
-                glow: 'rgba(16,185,129,0.12)',
+                title: 'Safety & Content Filters',
+                description: 'Filter sensitive or restricted AI generation.',
             },
         ],
     },
     {
         label: 'AI & Media',
-        cards: [
+        items: [
             {
                 to: '/settings/mascot',
                 icon: RiGhost2Line,
                 title: 'Mascot Companion',
-                description: 'Customize your floating blob mascot size, mood and behavior.',
-                color: '#34d399',
-                glow: 'rgba(52,211,153,0.12)',
+                description: 'Customize floating JellyBlob size, mood and physics behavior.',
             },
             {
                 to: '/settings/voice',
                 icon: RiVoiceprintLine,
                 title: 'Voice & Speech',
-                description: 'Configure AI voice responses and speech-to-text settings.',
-                color: '#f87171',
-                glow: 'rgba(248,113,113,0.12)',
+                description: 'Configure conversational voice responses and audio input.',
             },
             {
                 to: '/settings/storage',
                 icon: RiHardDriveLine,
-                title: 'Storage',
-                description: 'View and delete images and videos you have uploaded in your chats.',
-                color: '#60a5fa',
-                glow: 'rgba(96,165,250,0.12)',
+                title: 'Storage & Media',
+                description: 'View and manage uploaded images, documents and video files.',
             },
             {
                 to: '/social-connections',
                 icon: RiApps2Line,
                 title: 'Social Connections',
-                description: 'Connect Instagram, YouTube, Twitter and other social accounts.',
-                color: '#60A6AF',
-                glow: 'rgba(96,166,175,0.12)',
+                description: 'Link YouTube, Instagram, Twitter/X and LinkedIn channels.',
             },
             {
                 to: '/settings/devices',
                 icon: RiComputerLine,
                 title: 'Connected Devices',
-                description: 'Cross-device control agent for Windows, macOS & Android with sub-500ms execution.',
-                color: '#20b8cd',
-                glow: 'rgba(32,184,205,0.15)',
+                description: 'Cross-device control agent for Windows, macOS & Android.',
             },
         ],
     },
     {
-        label: 'Support',
-        cards: [
+        label: 'Support & Session',
+        items: [
             {
                 to: '/settings/report-bug',
                 icon: RiBugLine,
                 title: 'Report a Bug',
-                description: 'Found something broken? Tell us — your report goes directly to our team.',
-                color: '#fb923c',
-                glow: 'rgba(251,146,60,0.12)',
+                description: 'Send feedback and bug reports directly to the Parsu team.',
             },
         ],
     },
@@ -170,112 +137,111 @@ const SETTING_GROUPS = [
 const Settings = () => {
     const { user } = useSelector(state => state.auth);
     const isSidebarCollapsed = useSelector(state => state.chat.isSidebarCollapsed);
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
     const { handleLogout } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const contentRef = useRef(null);
+
+    useEffect(() => {
+        if (!contentRef.current) return;
+        const ctx = gsap.context(() => {
+            gsap.fromTo(
+                '.settings-group-item',
+                { opacity: 0, y: 12 },
+                {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.35,
+                    stagger: 0.05,
+                    ease: 'power2.out',
+                    clearProps: 'all'
+                }
+            );
+        }, contentRef);
+
+        return () => ctx.revert();
+    }, []);
+
+    const userInitial = (user?.name || user?.username || 'U')[0].toUpperCase();
+    const planName = (user?.subscription?.plan || 'Free').toUpperCase();
 
     return (
-        <div className="settings-hub ui-page flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30">
+        <div className="settings-hub ui-page flex bg-[var(--bg)] h-[100dvh] overflow-hidden text-[var(--text)] font-sans selection:bg-[var(--accent-soft)]">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            {/* Main column — dynamic padding based on sidebar collapse */}
-            <div className={`flex-1 flex flex-col min-h-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]`}>
+            {/* Main column */}
+            <div className={`flex-1 flex flex-col min-h-0 ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56'} transition-[padding] duration-300 ease-[cubic-bezier(0.2,0,0,1)]`}>
 
-                {/* ChatGPT-style Header */}
                 <ChatNavbar
                     onOpenSidebar={() => setIsSidebarOpen(true)}
                     title="Settings"
                     showShareButton={false}
                 />
 
-                {/* Scrollable content — data-lenis-prevent stops Lenis from intercepting */}
-                <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
-                    <div className="max-w-3xl w-full mx-auto px-3.5 sm:px-8 py-6 sm:py-10 pb-32">
+                <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar flex flex-col justify-between">
+                    <div ref={contentRef} className="max-w-[620px] w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-32">
 
-                        {/* User identity card */}
+                        {/* Minimal AI-UI Profile Card (Avatar + Identity + Plan Chip) */}
                         {user && (
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 p-4 rounded-2xl bg-white dark:bg-[#111111] border border-zinc-200/90 dark:border-white/[0.08] shadow-sm">
-                                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-zinc-100 dark:bg-[#1A1A1A] border border-zinc-200/80 dark:border-white/[0.08] flex items-center justify-center text-[var(--accent-cyan)] font-black text-base sm:text-lg shrink-0 shadow-sm">
-                                        {(user.name || user.username || 'U')[0].toUpperCase()}
+                            <div className="settings-group-item mb-8 p-4 sm:p-5 rounded-[28px] bg-[var(--surface)] border border-[var(--line)] flex items-center justify-between gap-4 select-none">
+                                <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
+                                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[var(--surface-2)] border border-[var(--line)] flex items-center justify-center text-[var(--accent-text)] font-semibold text-lg sm:text-xl shrink-0">
+                                        {userInitial}
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="font-bold text-sm sm:text-base text-zinc-900 dark:text-white truncate">{user.name || user.username}</p>
-                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{user.email}</p>
+                                        <p className="font-semibold text-base sm:text-lg text-[var(--text)] truncate">
+                                            {user.name || user.username}
+                                        </p>
+                                        <p className="text-xs sm:text-sm text-[var(--text-muted)] truncate">
+                                            {user.email}
+                                        </p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-zinc-200/60 dark:border-white/[0.06] w-full sm:w-auto justify-between sm:justify-end">
+
+                                <div className="flex items-center gap-2 shrink-0">
                                     <Link
                                         to="/settings/subscription"
-                                        className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 dark:text-cyan-400 border border-cyan-500/20 transition-all flex items-center gap-1"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] border border-[var(--line)] text-xs font-semibold text-[var(--accent-text)] transition-colors"
                                     >
-                                        <RiVipCrownLine size={12} />
-                                        <span>{(user.subscription?.plan || 'free').toUpperCase()}</span>
+                                        <RiVipCrownLine size={14} />
+                                        <span>{planName}</span>
                                     </Link>
-                                    <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-500 dark:text-emerald-400 bg-emerald-500/8 border border-emerald-500/15 px-2.5 py-1 rounded-full">
-                                        <RiShieldCheckLine size={12} />
-                                        <span>Active</span>
-                                    </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Settings card groups */}
-                        {SETTING_GROUPS.map(({ label, cards }) => (
-                            <div key={label} className="mb-8">
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-4 px-0.5">{label}</p>
-                                <div className="settings-group-list grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                    {cards.map(({ to, icon: Icon, title, description }) => (
-                                        <Link
+                        {/* Grouped List Rows */}
+                        {SETTING_GROUPS.map(({ label, items }) => (
+                            <div key={label} className="settings-group-item mb-7">
+                                <GroupLabel>{label}</GroupLabel>
+                                <Group>
+                                    {items.map(({ to, icon, title, description, accent }) => (
+                                        <Row
                                             key={to}
                                             to={to}
-                                            className="group flex items-start gap-4 p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111111] border border-zinc-200/90 dark:border-white/[0.08] hover:border-zinc-300 dark:hover:border-white/20 hover:bg-zinc-50 dark:hover:bg-[#161616] shadow-sm transition-all duration-200 active:scale-[0.98]"
-                                        >
-                                            {/* Icon badge - uniform monochrome with subtle hover transition */}
-                                            <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-[#1A1A1A] border border-zinc-200/80 dark:border-white/[0.08] flex items-center justify-center shrink-0 text-zinc-700 dark:text-zinc-300 group-hover:text-[var(--accent-cyan)] group-hover:border-[var(--accent-cyan)]/30 group-hover:scale-105 transition-all">
-                                                <Icon size={20} />
-                                            </div>
-
-                                            {/* Text */}
-                                            <div className="min-w-0 flex-1">
-                                                <p className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 mb-0.5 group-hover:text-[var(--accent-cyan)] transition-colors">{title}</p>
-                                                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">{description}</p>
-                                            </div>
-
-                                            {/* Arrow */}
-                                            <RiArrowRightLine
-                                                size={16}
-                                                className="text-zinc-400 dark:text-zinc-600 group-hover:text-[var(--accent-cyan)] group-hover:translate-x-0.5 transition-all mt-1 shrink-0"
-                                            />
-                                        </Link>
+                                            icon={icon}
+                                            label={title}
+                                            description={description}
+                                            accent={accent}
+                                        />
                                     ))}
-                                </div>
+                                </Group>
                             </div>
                         ))}
 
-                        {/* Account Actions / Logout Section */}
+                        {/* Sign Out Row as single destructive row */}
                         {user && (
-                            <div className="pt-2 pb-6">
-                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111111] border border-red-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <div>
-                                        <p className="font-semibold text-sm text-zinc-900 dark:text-white flex items-center gap-2">
-                                            <RiLogoutBoxRLine size={17} className="text-red-500 dark:text-red-400" />
-                                            <span>Sign Out of Parsu AI</span>
-                                        </p>
-                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                                            End your current session on this browser. You can sign back in at any time.
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
+                            <div className="settings-group-item mb-8">
+                                <GroupLabel>Session</GroupLabel>
+                                <Group>
+                                    <Row
+                                        icon={RiLogoutBoxRLine}
+                                        label="Log Out of Parsu AI"
+                                        description="End your session on this device. You can log back in at any time."
+                                        destructive={true}
                                         onClick={() => setShowLogoutModal(true)}
-                                        className="px-4 py-2 rounded-xl text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 border border-red-500/20 transition-all cursor-pointer self-start sm:self-auto shrink-0 active:scale-[0.98]"
-                                    >
-                                        Log Out
-                                    </button>
-                                </div>
+                                    />
+                                </Group>
                             </div>
                         )}
 
@@ -293,9 +259,8 @@ const Settings = () => {
                 }}
                 title="Log Out of Parsu AI?"
                 message="Are you sure you want to end your session? You will be returned to the sign-in screen."
+                confirmText="Log Out"
             />
-
-
         </div>
     );
 };
