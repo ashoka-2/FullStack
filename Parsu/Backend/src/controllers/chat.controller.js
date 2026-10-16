@@ -1570,3 +1570,55 @@ export async function togglePinChat(req, res) {
         res.status(500).json({ success: false, message: err.message });
     }
 }
+
+// ─── Update Message Code (Artifact Editor DB Persistence) ────────────────────
+export async function updateMessageCode(req, res) {
+    try {
+        const { messageId } = req.params;
+        const { code, content, language } = req.body;
+        const newCode = typeof code === 'string' ? code : (typeof content === 'string' ? content : null);
+
+        if (newCode === null) {
+            return res.status(400).json({ success: false, message: "Code or content string is required" });
+        }
+
+        const message = await messageModel.findById(messageId).populate('chat');
+        if (!message) {
+            return res.status(404).json({ success: false, message: "Message not found" });
+        }
+
+        // Verify that the user owns the chat containing this message
+        if (message.chat && message.chat.user && message.chat.user.toString() !== req.user.id) {
+            return res.status(403).json({ success: false, message: "Access denied. You do not own this chat." });
+        }
+
+        const originalContent = message.content || '';
+        const codeBlockRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/;
+
+        if (codeBlockRegex.test(originalContent)) {
+            const match = originalContent.match(codeBlockRegex);
+            const lang = language || (match ? match[1] : '');
+            message.content = originalContent.replace(codeBlockRegex, `\`\`\`${lang}\n${newCode}\n\`\`\``);
+        } else {
+            message.content = newCode;
+        }
+
+        await message.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Code updated successfully in database",
+            messageId: message._id,
+            updatedCode: newCode,
+            content: message.content
+        });
+    } catch (err) {
+        console.error("Error in updateMessageCode controller:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to save code in database",
+            error: err.message
+        });
+    }
+}
+

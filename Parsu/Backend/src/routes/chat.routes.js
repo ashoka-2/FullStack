@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import { getChats, getMessages, sendMessage, deleteChat, getSuggestions, searchMessages, rateMessageFeedback, renameChat, togglePinChat } from '../controllers/chat.controller.js';
+import { getChats, getMessages, sendMessage, deleteChat, getSuggestions, searchMessages, rateMessageFeedback, renameChat, togglePinChat, updateMessageCode } from '../controllers/chat.controller.js';
 import { authUser, optionalAuthUser } from '../middlewares/auth.middleware.js';
 import { chatLimiter } from '../middlewares/rateLimiter.middleware.js';
 
@@ -13,6 +13,7 @@ const chatRouter = Router();
 
 chatRouter.post("/message", authUser, chatLimiter, upload.any(), sendMessage)
 chatRouter.post("/message/:messageId/feedback", authUser, rateMessageFeedback)
+chatRouter.put("/message/:messageId/code", authUser, updateMessageCode)
 chatRouter.get("/", authUser, getChats)
 // Naya global search endpoint jisme query '?q=' aayega
 chatRouter.get("/search", authUser, searchMessages)
