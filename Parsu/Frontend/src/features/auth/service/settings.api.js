@@ -41,6 +41,27 @@ export async function deleteUserSkill(skillId) {
     return res.data;
 }
 
+// ─── Model Context Protocol (MCP) ─────────────────────────────────────────
+export async function getMcpServers() {
+    const res = await api.get('/api/settings/mcp');
+    return res.data;
+}
+
+export async function createMcpServer(payload) {
+    const res = await api.post('/api/settings/mcp', payload);
+    return res.data;
+}
+
+export async function deleteMcpServer(serverId) {
+    const res = await api.delete(`/api/settings/mcp/${serverId}`);
+    return res.data;
+}
+
+export async function testMcpServer(serverId) {
+    const res = await api.post(`/api/settings/mcp/${serverId}/test`);
+    return res.data;
+}
+
 // ─── Media ─────────────────────────────────────────────────────────────────
 export async function getUserMedia() {
     const res = await api.get('/api/settings/media');

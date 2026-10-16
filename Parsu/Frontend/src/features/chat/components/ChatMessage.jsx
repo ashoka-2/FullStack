@@ -215,22 +215,34 @@ const ActivityTrace = ({ steps = [], prompt = '' }) => {
     const visibleSteps = steps.slice(-5);
     const safePrompt = String(prompt || '').trim();
     return (
-        <section className="my-1 w-full max-w-2xl rounded-2xl border border-zinc-200/80 bg-white/70 p-3.5 dark:border-white/[0.07] dark:bg-zinc-900/45" role="status" aria-live="polite" aria-label="Assistant activity">
-            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]"><RiSparklingLine size={14} /></span>
-                <span>Working on your request</span>
+        <section className="my-2.5 w-full max-w-2xl rounded-[20px] sm:rounded-[24px] border border-zinc-200/80 bg-white/80 p-4 shadow-sm backdrop-blur-md dark:border-white/[0.08] dark:bg-zinc-900/50" role="status" aria-live="polite" aria-label="Assistant activity">
+            <div className="flex items-center justify-between gap-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                <div className="flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent-cyan)]/15 text-[var(--accent-cyan)]">
+                        <RiSparklingLine size={14} />
+                    </span>
+                    <span>Assistant Reasoning & Workflows</span>
+                </div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Live Trace</span>
             </div>
-            {safePrompt && <p className="mt-2 line-clamp-2 break-words text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">“{safePrompt}”</p>}
+            {safePrompt && <p className="mt-2 line-clamp-1 break-words text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">“{safePrompt}”</p>}
             {visibleSteps.length > 0 && (
-                <ol className="mt-3 flex flex-col gap-1.5">
-                    {visibleSteps.map(step => (
-                        <li key={step.id} className={`flex items-center gap-2 text-[11px] ${step.status === 'active' ? 'text-zinc-800 dark:text-zinc-200' : 'text-zinc-500 dark:text-zinc-400'}`}>
-                            {step.status === 'active'
-                                ? <span aria-hidden="true" className="h-3 w-3 shrink-0 rounded-full border-2 border-[var(--accent-cyan)] border-t-transparent animate-spin" />
-                                : <RiCheckLine size={13} className="shrink-0 text-[var(--accent-cyan)]" />}
-                            <span>{step.label}</span>
-                        </li>
-                    ))}
+                <ol className="mt-3 flex flex-col gap-2">
+                    {visibleSteps.map(step => {
+                        const isSkill = step.id === 'skill';
+                        return (
+                            <li key={step.id} className={`flex items-center gap-2.5 text-[11px] sm:text-xs ${step.status === 'active' ? 'text-zinc-900 dark:text-zinc-100 font-medium' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                                {step.status === 'active' ? (
+                                    <span aria-hidden="true" className="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-[var(--accent-cyan)] border-t-transparent animate-spin" />
+                                ) : (
+                                    <RiCheckLine size={14} className="shrink-0 text-[var(--accent-cyan)]" />
+                                )}
+                                <span className={isSkill ? 'font-semibold text-cyan-600 dark:text-cyan-400 px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20' : ''}>
+                                    {step.label}
+                                </span>
+                            </li>
+                        );
+                    })}
                 </ol>
             )}
         </section>

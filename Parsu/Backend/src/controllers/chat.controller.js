@@ -646,15 +646,31 @@ export async function sendMessage(req, res) {
 
         const customInstructions = (fullUser?.memory?.customInstructions || fullUser?.customInstructions || "").trim();
         const skillPrompt = String(message || userMessage?.content || "").toLowerCase();
+        const explicitSkillId = req.body?.selectedSkillId || req.body?.skillId;
         const matchedSkills = (fullUser?.skills || []).filter(skill => {
             if (skill.enabled === false) return false;
-            const terms = [...(skill.triggers || []), ...(skill.triggers?.length ? [] : [skill.name])]
+            if (explicitSkillId && skill._id?.toString() === explicitSkillId.toString()) return true;
+            const terms = [...(skill.triggers || []), ...(skill.triggers?.length ? [] : [skill.name]), skill.name]
                 .map(term => String(term).trim().toLowerCase()).filter(term => term.length >= 3);
             return terms.some(term => skillPrompt.includes(term));
-        }).slice(0, 3);
+        }).slice(0, 4);
+
+        if (matchedSkills.length > 0) {
+            const skillNames = matchedSkills.map(s => s.name).join(", ");
+            sendActivityStep('skill', `Applied skill: ${skillNames}`, 'done');
+        }
+
+        const skillBlocks = matchedSkills.map(skill => {
+            let block = `=== APPLIED USER SKILL: ${skill.name} ===\n${skill.description ? `Description: ${skill.description}\n` : ''}Instructions:\n${skill.instructions}`;
+            if (Array.isArray(skill.files) && skill.files.length > 0) {
+                block += `\n\nBundled Skill Files:\n` + skill.files.map(f => `--- File: ${f.path || f.name} ---\n${f.content}`).join("\n\n");
+            }
+            return block;
+        });
+
         const effectiveInstructions = [
             customInstructions,
-            ...matchedSkills.map(skill => `Active skill: ${skill.name}\n${skill.instructions}`)
+            ...skillBlocks
         ].filter(Boolean).join("\n\n");
         const fileRequestPrompt = String(message || userMessage?.content || "");
         const requestedDocumentFormat = /\b(pdf|markdown|md)\b|\.md\b/i.test(fileRequestPrompt)

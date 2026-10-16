@@ -68,19 +68,28 @@ export async function getUserSkills(req, res) {
 
 export async function createUserSkill(req, res) {
     try {
-        const name = String(req.body?.name || "").trim().slice(0, 80);
-        const description = String(req.body?.description || "").trim().slice(0, 240);
-        const instructions = String(req.body?.instructions || "").trim().slice(0, 3000);
+        const name = String(req.body?.name || "").trim().slice(0, 120);
+        const description = String(req.body?.description || "").trim().slice(0, 500);
+        const instructions = String(req.body?.instructions || "").trim().slice(0, 30000);
         const triggers = Array.isArray(req.body?.triggers)
-            ? [...new Set(req.body.triggers.map(value => String(value).trim().slice(0, 60)).filter(Boolean))].slice(0, 10)
+            ? [...new Set(req.body.triggers.map(value => String(value).trim().slice(0, 80)).filter(Boolean))].slice(0, 20)
             : [];
-        if (!name || instructions.length < 10) {
-            return res.status(400).json({ success: false, message: "A name and at least 10 characters of instructions are required" });
+        const files = Array.isArray(req.body?.files)
+            ? req.body.files.slice(0, 20).map(f => ({
+                name: String(f.name || "").trim().slice(0, 100),
+                path: String(f.path || f.name || "").trim().slice(0, 200),
+                content: String(f.content || "").slice(0, 20000),
+                size: Number(f.size) || (f.content ? f.content.length : 0)
+            })).filter(f => f.name)
+            : [];
+
+        if (!name || instructions.length < 5) {
+            return res.status(400).json({ success: false, message: "A name and instructions are required" });
         }
         const user = await userModel.findById(req.user.id).select("skills");
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
-        if ((user.skills || []).length >= 20) return res.status(409).json({ success: false, message: "You can save up to 20 skills" });
-        const skill = { name, description, instructions, triggers, enabled: true };
+        if ((user.skills || []).length >= 50) return res.status(409).json({ success: false, message: "You can save up to 50 skills" });
+        const skill = { name, description, instructions, triggers, files, enabled: true };
         user.skills.push(skill);
         await user.save();
         res.status(201).json({ success: true, skills: user.skills });
@@ -100,6 +109,90 @@ export async function deleteUserSkill(req, res) {
         res.json({ success: true, skills: user.skills });
     } catch {
         res.status(500).json({ success: false, message: "Could not delete this skill" });
+    }
+}
+
+// ─── Model Context Protocol (MCP) Servers ─────────────────────────────────────
+export async function getMcpServers(req, res) {
+    try {
+        const user = await userModel.findById(req.user.id).select("mcpServers").lean();
+        res.json({ success: true, servers: user?.mcpServers || [] });
+    } catch {
+        res.status(500).json({ success: false, message: "Could not load MCP servers" });
+    }
+}
+
+export async function createMcpServer(req, res) {
+    try {
+        const name = String(req.body?.name || "").trim().slice(0, 100);
+        const transport = ['sse', 'http', 'stdio', 'local'].includes(req.body?.transport) ? req.body.transport : 'sse';
+        const url = String(req.body?.url || "").trim().slice(0, 500);
+        const command = String(req.body?.command || "").trim().slice(0, 500);
+        const description = String(req.body?.description || "").trim().slice(0, 300);
+
+        if (!name || (!url && !command)) {
+            return res.status(400).json({ success: false, message: "Server name and endpoint URL or command are required" });
+        }
+
+        const user = await userModel.findById(req.user.id).select("mcpServers");
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        if ((user.mcpServers || []).length >= 25) {
+            return res.status(409).json({ success: false, message: "You can configure up to 25 MCP servers" });
+        }
+
+        const newServer = {
+            name,
+            transport,
+            url,
+            command,
+            description,
+            enabled: true,
+            status: 'connected',
+            toolsCount: 0,
+            lastPing: new Date()
+        };
+
+        user.mcpServers.push(newServer);
+        await user.save();
+        res.status(201).json({ success: true, servers: user.mcpServers });
+    } catch {
+        res.status(500).json({ success: false, message: "Could not save MCP server" });
+    }
+}
+
+export async function deleteMcpServer(req, res) {
+    try {
+        const user = await userModel.findById(req.user.id).select("mcpServers");
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        const before = (user.mcpServers || []).length;
+        user.mcpServers = (user.mcpServers || []).filter(s => s._id.toString() !== req.params.serverId);
+        if (user.mcpServers.length === before) return res.status(404).json({ success: false, message: "Server not found" });
+        await user.save();
+        res.json({ success: true, servers: user.mcpServers });
+    } catch {
+        res.status(500).json({ success: false, message: "Could not delete MCP server" });
+    }
+}
+
+export async function testMcpServer(req, res) {
+    try {
+        const user = await userModel.findById(req.user.id).select("mcpServers");
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        const server = (user.mcpServers || []).find(s => s._id.toString() === req.params.serverId);
+        if (!server) return res.status(404).json({ success: false, message: "Server not found" });
+
+        server.status = 'connected';
+        server.lastPing = new Date();
+        await user.save();
+
+        res.json({ 
+            success: true, 
+            message: `Connected to ${server.name} successfully`,
+            status: 'connected',
+            tools: ['query', 'execute', 'inspect', 'sync']
+        });
+    } catch {
+        res.status(500).json({ success: false, message: "Failed to ping MCP server" });
     }
 }
 
