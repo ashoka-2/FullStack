@@ -897,10 +897,6 @@ html, body {
   --motion-base: 200ms;
   --motion-slow: 300ms;
   --ease-standard: cubic-bezier(.2, 0, 0, 1);
-  --accent-cyan: #169db4;
-  --color-clear-hanada: #169db4;
-  --btn-primary-bg: #169db4;
-  --btn-primary-shadow: none;
 }
 
 :root.light,
@@ -920,10 +916,6 @@ html, body {
   --border-subtle: rgba(0, 0, 0, .06);
   --border-default: rgba(0, 0, 0, .10);
   --border-hover: rgba(0, 0, 0, .16);
-  --accent-cyan: #176b8b;
-  --color-clear-hanada: #176b8b;
-  --btn-primary-bg: #176b8b;
-  --btn-primary-shadow: none;
 }
 
 html:not(.light):not([data-theme="light"]) { color-scheme: dark; }
@@ -934,20 +926,34 @@ html:not(.light):not([data-theme="light"]) { color-scheme: dark; }
   font-family: Inter, Geist, ui-sans-serif, system-ui, sans-serif;
 }
 
-.ui-page :is(input, textarea, select) {
-  border-radius: 14px;
+.ui-page :is(input, select) {
+  min-height: 44px;
+  border-radius: 9999px;
   border-color: var(--border-default);
   transition: border-color var(--motion-base) var(--ease-standard), background-color var(--motion-base) var(--ease-standard), box-shadow var(--motion-base) var(--ease-standard);
 }
+.ui-page input:is([type="checkbox"], [type="radio"], [type="file"], [type="hidden"], [type="range"]) {
+  min-height: 0;
+}
 
-.ui-page :is(input, textarea, select):focus-visible,
+.ui-page textarea {
+  border-radius: 16px;
+  border-color: var(--border-default);
+}
+
+.ui-page :is(input, textarea, select):focus,
+.ui-page :is(input, textarea, select):focus-visible {
+  outline: none !important;
+  border-color: var(--border-default) !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
+
 .ui-page :is(button, a, [role="button"], [role="tab"]):focus-visible {
   outline: 2px solid var(--accent-cyan);
   outline-offset: 2px;
 }
-
-.ui-page :is(button, a, [role="button"]) { transition-duration: var(--motion-fast); }
-.ui-page :is(button, [role="button"]):active { transform: scale(.985); }
 
 .ui-page .ui-surface,
 .ui-page .ui-card,
@@ -958,7 +964,7 @@ html:not(.light):not([data-theme="light"]) { color-scheme: dark; }
   border-radius: var(--radius-card);
 }
 
-.ui-page :is(
+.ui-page :not(button):not(a):not([role="button"]):is(
   [class*="rounded-"][class*="bg-white"],
   [class*="rounded-"][class*="bg-zinc-50"],
   [class*="rounded-"][class*="bg-zinc-100"],
@@ -970,15 +976,57 @@ html:not(.light):not([data-theme="light"]) { color-scheme: dark; }
   border-color: var(--border-subtle);
 }
 
+.ui-page :is(div, section, article, aside)[class*="rounded-"][class*="bg-white"],
+.ui-page :is(div, section, article, aside)[class*="rounded-"][class*="bg-zinc-50"],
+.ui-page :is(div, section, article, aside)[class*="rounded-"][class*="bg-zinc-100"],
+.ui-page :is(div, section, article, aside)[class*="rounded-"][class*="dark:bg-zinc-900"],
+.ui-page :is(div, section, article, aside)[class*="rounded-"][class*="dark:bg-zinc-950"],
+.ui-page :is(div, section, article, aside)[class*="rounded-"][class*="dark:bg-[#"] {
+  border-radius: var(--radius-card);
+}
+
+.ui-page :not(button):not(a):not([role="button"])[class*="border-zinc-200"],
+.ui-page :not(button):not(a):not([role="button"])[class*="dark:border-white/"] { border-color: var(--border-subtle) !important; }
+.ui-page :is(p, small, label)[class~="text-zinc-500"],
+.ui-page :is(p, small, label)[class~="dark:text-zinc-400"] { color: var(--text-secondary); }
+.ui-page :is(.list-group, [role="list"]):not(.keep-card) > * + * { margin-top: 2px; }
+
+.ui-page :is(div, section, article, aside)[class*="rounded-"][class*="bg-gradient-"] {
+  background-image: none !important;
+  background-color: var(--surface-1) !important;
+  border-color: var(--border-subtle);
+}
+
+.ui-page :is(div, section, article, aside, main):not([role="button"]):not([role="dialog"]):not([data-floating="true"])[class*="shadow-"] {
+  box-shadow: none !important;
+}
+
 .artifact-pane {
   background: var(--bg-primary) !important;
   border-color: var(--border-default) !important;
   color: var(--text-primary);
   corner-shape: var(--corner-shape);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .artifact-view-toggle { background: var(--surface-1); border: 1px solid var(--border-subtle); }
 .artifact-code { background: var(--bg-primary); color: var(--text-primary); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.artifact-pane iframe { display: block; width: 100%; min-height: 0; flex: 1 1 auto; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; }
+.artifact-pane header > button { min-width: 40px; min-height: 40px; display: inline-grid; place-items: center; }
+.artifact-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border-default);
+  border-radius: 9999px;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  transition: color 150ms var(--ease-standard), background-color 150ms var(--ease-standard), border-color 150ms var(--ease-standard);
+}
+.artifact-icon-button:hover { background: var(--surface-hover); color: var(--text-primary); border-color: var(--border-hover); }
 
 @supports (corner-shape: squircle) {
   :where(.ui-page .ui-surface, .ui-page .ui-card, .ui-page .surface, .ui-page .card,
@@ -991,9 +1039,280 @@ html:not(.light):not([data-theme="light"]) { color-scheme: dark; }
   :root { --radius-card: 28px; }
 }
 
+.ui-footer {
+  background: var(--bg-primary) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-secondary) !important;
+  backdrop-filter: none !important;
+}
+.ui-footer > [aria-hidden="true"] { display: none; }
+
+/* Shared app chrome and grouped-page rhythm. Keep primary action fills on the
+   existing Parsu button tokens; these rules only unify neutral surfaces. */
+.ui-page {
+  min-width: 0;
+  line-height: 1.5;
+}
+.ui-page :is(h1, h2, h3) {
+  text-wrap: balance;
+  letter-spacing: -.025em;
+}
+.ui-page h1 { font-weight: 600; }
+.ui-page h2, .ui-page h3 { font-weight: 550; }
+.ui-chat-navbar {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.ui-sidebar {
+  background: var(--surface-1) !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow: none !important;
+}
+.ui-sidebar nav a[class*="bg-zinc-100"][class*="border"],
+.ui-sidebar nav a[class*="dark:bg-[var(--bg-surface)]"] {
+  background: var(--surface-2) !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow: none !important;
+}
+.ui-sidebar :is(nav a, nav button) { min-height: 42px; }
+.ui-page :is([role="dialog"], [role="menu"], [role="listbox"]) {
+  border-color: var(--border-default);
+  background-color: var(--surface-2);
+  border-radius: 20px;
+}
+.ui-page :is(label, legend) { color: var(--text-secondary); }
+.ui-page :is(input, select, textarea) { color: var(--text-primary); }
+.ui-page :is(input, select)::placeholder,
+.ui-page textarea::placeholder { color: var(--text-tertiary); opacity: 1; }
+.ui-page :is(button, a, [role="button"]) { -webkit-tap-highlight-color: transparent; }
+.ui-page :is(article, section)[class*="rounded-"][class*="border"] {
+  corner-shape: var(--corner-shape);
+}
+.ui-page :is(.settings-page-shell, .settings-hub, .plugins-shell, .library-shell,
+  .admin-shell, .info-page-shell) :is(main, [data-lenis-prevent]) {
+  scrollbar-color: var(--border-hover) transparent;
+  scrollbar-width: thin;
+}
+.ui-page :is(main, [data-lenis-prevent])::-webkit-scrollbar { width: 8px; height: 8px; }
+.ui-page :is(main, [data-lenis-prevent])::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 9999px;
+}
+.settings-hub > div > [data-lenis-prevent] > .max-w-3xl > div.mb-8 > p {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.settings-hub .settings-group-list { display: flex; flex-direction: column; gap: 2px; }
+.settings-hub .settings-group-list > a {
+  min-height: 72px;
+  align-items: center;
+  border-radius: 12px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.settings-hub .settings-group-list > a:hover {
+  background: var(--surface-1);
+  border-color: var(--border-subtle);
+}
+.settings-hub .settings-group-list > a > div:first-child {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border-color: var(--border-subtle);
+  color: var(--text-secondary);
+}
+.settings-hub .settings-group-list > a p:first-child { font-weight: 500; }
+.settings-hub .settings-group-list > a p:nth-child(2) { color: var(--text-tertiary); }
+.settings-hub .settings-group-list > a > svg:last-child { color: var(--text-tertiary); }
+.admin-shell { background: var(--bg-primary) !important; }
+.auth-shell { background: var(--bg-primary) !important; }
+.admin-shell > aside {
+  background: var(--surface-1) !important;
+  border-color: var(--border-subtle) !important;
+  backdrop-filter: none !important;
+}
+.admin-shell > :is(div, header) { background-color: var(--bg-primary); }
+.admin-shell [class*="bg-white/"], .admin-shell [class*="dark:bg-[#0c0d12]"] {
+  background-color: var(--surface-1) !important;
+}
+.info-page-shell > main { width: min(100%, 960px); }
+
 @media (prefers-reduced-motion: no-preference) {
   .ui-page :is(.artifact-pane, [role="dialog"], .sidebar-drawer) {
     animation-duration: var(--motion-slow);
     animation-timing-function: var(--ease-standard);
+  }
+}
+
+.artifact-pane {
+  height: 100%;
+  max-height: 100%;
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.artifact-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.artifact-scroll-region {
+  flex: 1 1 0%;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-height: 100%;
+  overflow: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--border-hover) transparent;
+  scrollbar-width: thin;
+}
+.artifact-code {
+  margin: 0;
+  padding: 18px 20px 24px;
+  white-space: pre;
+  overflow-wrap: normal;
+  tab-size: 2;
+  line-height: 1.65;
+  -webkit-overflow-scrolling: touch;
+}
+.artifact-code code { display: block; min-width: max-content; }
+.artifact-markdown { padding: 20px clamp(16px, 4vw, 32px); }
+.artifact-markdown > div { min-height: min-content; }
+.artifact-pdf-frame, .artifact-html-frame { height: 100%; border: 0; }
+.artifact-pane-fullscreen {
+  height: 100dvh;
+  max-height: 100dvh;
+  width: 100vw;
+  border-radius: 0;
+  border: 0;
+  background: var(--bg-primary);
+}
+.artifact-resize-handle { display: none; }
+.artifact-image-view { display: flex; flex-direction: column; padding: 0; }
+.artifact-image-stage {
+  display: grid;
+  flex: 1 1 auto;
+  min-height: 180px;
+  place-items: center;
+  padding: clamp(12px, 2vw, 24px);
+  background: var(--bg-primary);
+}
+.artifact-image-stage img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 14px;
+}
+.artifact-image-details {
+  flex: 0 0 auto;
+  display: grid;
+  gap: 6px;
+  padding: 16px 20px max(16px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+}
+.artifact-image-details h2 { margin: 0; font-size: 16px; font-weight: 550; }
+.artifact-image-details p { margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
+.artifact-image-details span { color: var(--text-tertiary); font-size: 12px; }
+.artifact-image-details a { width: fit-content; color: var(--accent-cyan); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+@media (min-width: 1024px) {
+  .artifact-pane:not(.artifact-pane-fullscreen) {
+    position: relative;
+    inset: auto;
+    flex: 0 1 var(--artifact-pane-width, 660px);
+    width: min(var(--artifact-pane-width, 660px), 58%);
+    max-width: 58%;
+    min-width: 320px;
+    height: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .artifact-resize-handle {
+    display: block;
+    position: absolute;
+    z-index: 3;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    cursor: col-resize;
+    touch-action: none;
+    outline: none;
+  }
+  .artifact-resize-handle::after {
+    content: "";
+    position: absolute;
+    width: 2px;
+    height: 36px;
+    left: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 9999px;
+    background: transparent;
+    transition: background-color 150ms var(--ease-standard);
+  }
+  .artifact-resize-handle:hover::after,
+  .artifact-resize-handle:focus-visible::after,
+  .artifact-resize-handle:active::after { background: var(--accent-cyan); }
+}
+@supports (corner-shape: squircle) {
+  .artifact-pane, .artifact-header, .artifact-view-toggle { corner-shape: var(--corner-shape); }
+}
+@media (max-width: 1023px) {
+  .artifact-pane:not(.artifact-pane-fullscreen) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: 100%;
+    border-radius: 0;
+  }
+  .artifact-pane:not(.artifact-pane-fullscreen) .artifact-header {
+    padding-top: env(safe-area-inset-top);
+  }
+  .artifact-image-stage { min-height: 0; }
+}
+@media (max-width: 400px) {
+  .artifact-header { gap: 2px; padding-inline: 8px; }
+  .artifact-pane header > button, .artifact-icon-button { width: 36px; min-width: 36px; height: 38px; min-height: 38px; }
+  .artifact-tab { min-width: 34px; padding-inline: 7px; }
+  .artifact-pane header > div:first-child { max-width: 34%; }
+  .artifact-pane header > div:last-child { gap: 0; }
+  .artifact-header .artifact-tab span { display: none; }
+}
+
+@media (max-width: 767px) {
+  .artifact-pane:not(.artifact-pane-fullscreen) {
+    border-radius: 0;
+    border: 0;
+    height: 100%;
+    max-height: 100%;
+  }
+  .artifact-header { min-height: 56px; padding-inline: 10px; gap: 6px; }
+  .artifact-header > div:last-child { gap: 0; }
+  .artifact-pane header > button { min-width: 38px; min-height: 40px; }
+  .artifact-tab { min-width: 40px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ui-page :is(.ui-card, .ui-surface, .card, [role="dialog"]) {
+    transition: background-color var(--motion-base) var(--ease-standard),
+      border-color var(--motion-base) var(--ease-standard),
+      opacity var(--motion-base) var(--ease-standard);
   }
 }

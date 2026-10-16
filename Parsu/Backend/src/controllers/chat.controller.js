@@ -656,6 +656,15 @@ export async function sendMessage(req, res) {
             customInstructions,
             ...matchedSkills.map(skill => `Active skill: ${skill.name}\n${skill.instructions}`)
         ].filter(Boolean).join("\n\n");
+        const fileRequestPrompt = String(message || userMessage?.content || "");
+        const requestedDocumentFormat = /\b(pdf|markdown|md)\b|\.md\b/i.test(fileRequestPrompt)
+            && /\b(create|generate|make|write|export|save|prepare|turn this into)\b/i.test(fileRequestPrompt)
+            ? (/\bpdf\b/i.test(fileRequestPrompt) ? "PDF" : "Markdown")
+            : "";
+        const documentCreationInstruction = requestedDocumentFormat
+            ? `The user asked you to create a ${requestedDocumentFormat} document. Write the complete document body and wrap it in exactly one fenced Markdown block (\`\`\`markdown ... \`\`\`). Do not return HTML or source code for document content. The app provides a Markdown download and a browser Print / Save as PDF action; do not claim a PDF file is attached unless you actually have a file URL.`
+            : "";
+        const responseInstructions = [effectiveInstructions, documentCreationInstruction].filter(Boolean).join("\n\n");
         const userNickname = fullUser?.memory?.nickname || "";
         const userOccupation = fullUser?.memory?.occupation || "";
         const memorySummary = fullUser?.memory?.summary || "";
@@ -682,7 +691,7 @@ export async function sendMessage(req, res) {
             uploadedMediaContext,
             feedbackInstruction: smallTalk ? "" : feedbackInstruction,
             memoryContext: smallTalk ? "" : memoryContext,
-            customInstructions: smallTalk ? "" : effectiveInstructions,
+            customInstructions: smallTalk ? "" : responseInstructions,
             userNickname,
             userOccupation,
             thinkingLevel,
@@ -809,7 +818,7 @@ export async function sendMessage(req, res) {
                         baseUrl: targetBaseUrl,
                         messages: chatHistoryForModel,
                         images: imagesForModel,
-                        customInstructions: smallTalk ? "" : effectiveInstructions,
+                        customInstructions: smallTalk ? "" : responseInstructions,
                         thinkingLevel,
                         memorySummary,
                         memoryFacts,

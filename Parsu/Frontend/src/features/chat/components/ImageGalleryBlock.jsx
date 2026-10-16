@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { 
-  RiImageLine, 
-  RiExternalLinkLine, 
-  RiFileCopyLine, 
-  RiCheckLine, 
-  RiCloseLine, 
-  RiSearchLine,
-} from '@remixicon/react';
+import { RiImageLine, RiExternalLinkLine, RiSearchLine } from '@remixicon/react';
 
 const imageResultCache = new Map();
 const IMAGE_RESULT_CACHE_TTL = 15 * 60 * 1000;
@@ -34,8 +27,6 @@ export const ImageGalleryBlock = ({ query, title, details, mode = 'search' }) =>
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [copiedUrl, setCopiedUrl] = useState(false);
   const [loadedImages, setLoadedImages] = useState({});
 
   const fetchImages = useCallback(async () => {
@@ -56,13 +47,6 @@ export const ImageGalleryBlock = ({ query, title, details, mode = 'search' }) =>
   useEffect(() => {
     fetchImages();
   }, [fetchImages]);
-
-  const handleCopy = (url, e) => {
-    e?.stopPropagation();
-    navigator.clipboard.writeText(url);
-    setCopiedUrl(true);
-    setTimeout(() => setCopiedUrl(false), 2000);
-  };
 
   const handleImageError = (image, event) => {
     const imageKey = image.thumbnail || image.url;
@@ -113,7 +97,16 @@ export const ImageGalleryBlock = ({ query, title, details, mode = 'search' }) =>
               <div key={`${img.url}-${idx}`}>
               <button
                 type="button"
-                onClick={() => setSelectedImage(img)}
+                onClick={() => window.dispatchEvent(new CustomEvent('parsu:open-artifact', { detail: {
+                  kind: 'image',
+                  url: img.url,
+                  name: `${(img.title || title || query).slice(0, 72) || 'image'}.jpg`,
+                  title: img.title || title || query,
+                  details: details || '',
+                  source: img.source || 'Web image',
+                  contextUrl: img.contextUrl || '',
+                  image: { ...img, alt: img.title || query, title: img.title || title || query, details: details || '' },
+                } }))}
                 className={`group relative w-full ${mode === 'place' ? 'aspect-[16/9]' : 'aspect-square'} rounded-xl overflow-hidden bg-zinc-950 border border-zinc-200 dark:border-white/10 cursor-pointer shadow-xs transition-all hover:shadow-md`}
                 aria-label={`View ${img.title || query}`}
               >
@@ -140,84 +133,6 @@ export const ImageGalleryBlock = ({ query, title, details, mode = 'search' }) =>
         )}
       </div>
 
-      {/* Lightbox Modal */}
-      {selectedImage && (
-        <div 
-          onClick={() => setSelectedImage(null)}
-          className="fixed inset-0 z-[10000] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            className="relative max-w-2xl w-full bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95"
-          >
-            {/* Top Bar */}
-            <div className="flex items-center justify-between px-4 py-2.5 bg-black/40 border-b border-white/10 text-xs">
-              <span className="text-zinc-200 font-semibold truncate max-w-[80%]">
-                {title || selectedImage.title || query}
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedImage(null)}
-                className="p-1 rounded-full text-zinc-400 hover:text-white hover:bg-white/10"
-              >
-                <RiCloseLine size={18} />
-              </button>
-            </div>
-
-            {/* Large Image View */}
-            <div className="relative bg-black flex items-center justify-center max-h-[65vh] overflow-hidden">
-              <img
-                src={selectedImage.url}
-                alt={selectedImage.title || query}
-                className="max-h-[65vh] w-auto object-contain mx-auto"
-                onError={() => {
-                  if (selectedImage.thumbnail && selectedImage.thumbnail !== selectedImage.url) {
-                    setSelectedImage(current => ({ ...current, url: current.thumbnail }));
-                  } else {
-                    handleImageError(selectedImage);
-                    setSelectedImage(null);
-                  }
-                }}
-              />
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="flex items-center justify-between px-4 py-3 bg-zinc-950 border-t border-white/10 text-xs">
-              <span className="text-zinc-500 text-[11px]">
-                Source: {selectedImage.source || "Web"}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={(e) => handleCopy(selectedImage.url, e)}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/10 text-zinc-200 hover:bg-white/20 transition-all font-medium text-[11px]"
-                >
-                  {copiedUrl ? (
-                    <>
-                      <RiCheckLine size={13} className="text-emerald-400" />
-                      <span className="text-emerald-400 font-bold">Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <RiFileCopyLine size={13} />
-                      <span>Copy Link</span>
-                    </>
-                  )}
-                </button>
-                <a
-                  href={selectedImage.contextUrl || selectedImage.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--accent-cyan)] text-zinc-950 hover:bg-[var(--accent-cyan-hover)] transition-all font-bold text-[11px]"
-                >
-                  <span>Open Full Size</span>
-                  <RiExternalLinkLine size={13} />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

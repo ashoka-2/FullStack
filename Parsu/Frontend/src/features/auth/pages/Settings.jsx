@@ -177,7 +177,7 @@ const Settings = () => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     return (
-        <div className="flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30">
+        <div className="settings-hub ui-page flex bg-[var(--bg-primary)] h-[100dvh] overflow-hidden text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[var(--accent-cyan)]/30">
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
             {/* Main column — dynamic padding based on sidebar collapse */}
@@ -226,7 +226,7 @@ const Settings = () => {
                         {SETTING_GROUPS.map(({ label, cards }) => (
                             <div key={label} className="mb-8">
                                 <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-4 px-0.5">{label}</p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                <div className="settings-group-list grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     {cards.map(({ to, icon: Icon, title, description }) => (
                                         <Link
                                             key={to}

@@ -30,7 +30,8 @@ import {
   RiGlobalLine,
   RiCompass3Line,
   RiDownloadLine,
-  RiEyeLine
+    RiEyeLine,
+    RiFileTextLine
 } from '@remixicon/react';
 import ReactMarkdown from 'react-markdown';
 import { createPortal } from 'react-dom';
@@ -59,6 +60,7 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
     const lines = safeCode.split('\n');
     const totalLines = lines.length;
     const isHtmlDocument = /html/i.test(language || '') && /<html\b/i.test(safeCode) && /<\/html\s*>/i.test(safeCode);
+    const isMarkdownDocument = /^(md|markdown)$/i.test(language || '');
     // For large code snippets (70+ lines), render first 70 lines to prevent AST highlighter freezing the UI
     const isLarge = totalLines > 70;
     const displayedCode = isLarge && !isExpanded ? lines.slice(0, 70).join('\n') : safeCode;
@@ -71,8 +73,9 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
     };
 
     const handleDownload = () => {
-        const extension = isHtmlDocument ? 'html' : (language || 'txt').toLowerCase().replace(/[^a-z0-9]/g, '') || 'txt';
-        const url = URL.createObjectURL(new Blob([safeCode], { type: isHtmlDocument ? 'text/html' : 'text/plain' }));
+        const extension = isHtmlDocument ? 'html' : isMarkdownDocument ? 'md' : (language || 'txt').toLowerCase().replace(/[^a-z0-9]/g, '') || 'txt';
+        const mimeType = isHtmlDocument ? 'text/html' : isMarkdownDocument ? 'text/markdown' : 'text/plain';
+        const url = URL.createObjectURL(new Blob([safeCode], { type: mimeType }));
         const link = document.createElement('a');
         link.href = url;
         link.download = `parsu-code.${extension}`;
@@ -81,7 +84,13 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
     };
 
     const handlePreview = () => {
-        if (isHtmlDocument) window.dispatchEvent(new CustomEvent('parsu:open-code-preview', { detail: { code: safeCode } }));
+        if (isHtmlDocument || isMarkdownDocument) {
+            window.dispatchEvent(new CustomEvent('parsu:open-artifact', { detail: {
+                kind: isHtmlDocument ? 'html' : 'markdown',
+                content: safeCode,
+                name: isHtmlDocument ? 'generated-page.html' : 'generated-document.md',
+            } }));
+        }
     };
 
     useEffect(() => {
@@ -111,7 +120,7 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
         <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2 bg-zinc-100/95 dark:bg-zinc-900/95 backdrop-blur border-b border-zinc-200 dark:border-zinc-800 rounded-t-xl">
             <div className="flex items-center gap-2"><span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">{language || 'code'}</span><span className="text-[10px] text-zinc-400 font-mono">({totalLines} lines)</span></div>
             <div className="flex items-center gap-1">
-                {isHtmlDocument && <button type="button" onClick={handlePreview} className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-[var(--accent-cyan)] transition-colors" title="Preview HTML"><RiEyeLine size={14} /><span className="hidden sm:inline text-[11px]">Preview</span></button>}
+                {(isHtmlDocument || isMarkdownDocument) && <button type="button" onClick={handlePreview} className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-[var(--accent-cyan)] transition-colors" title={`Preview ${isMarkdownDocument ? 'Markdown' : 'HTML'}`}>{isMarkdownDocument ? <RiFileTextLine size={14} /> : <RiEyeLine size={14} />}<span className="hidden sm:inline text-[11px]">Preview</span></button>}
                 <button type="button" onClick={handleDownload} className="p-1.5 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors" title="Download code"><RiDownloadLine size={14} /></button>
                 <button type="button" onClick={handleCopy} className="flex items-center gap-1.5 p-1.5 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all cursor-pointer" title="Copy full code snippet">{copied ? <><span className="text-[10px] font-bold text-emerald-500">Copied!</span><RiCheckLine size={14} className="text-emerald-500" /></> : <RiFileCopyLine size={14} />}</button>
             </div>
@@ -203,6 +212,8 @@ const detectCodeLanguage = (str) => {
     if (/^\s*(\{[\s\S]*\}|\[[\s\S]*\])$/.test(str.trim()) && (str.includes('":') || str.includes('",'))) return 'json';
     return 'code';
 };
+
+const openArtifact = (detail) => window.dispatchEvent(new CustomEvent('parsu:open-artifact', { detail }));
 
 const isRawCodeBlock = (text) => {
     if (typeof text !== 'string') return false;
@@ -310,6 +321,12 @@ const normalizeVisualAnswer = (text = '', prompt = '', includeGalleries = true) 
 
 const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
     const isUser = msg.role === 'user' || (msg.role !== 'assistant' && msg.role !== 'ai');
+    const requestText = String(previousMessage?.content || '');
+    const requestsDocument = !isUser && previousMessage?.role === 'user'
+        && /\b(create|generate|make|write|export|save|prepare|turn this into)\b/i.test(requestText)
+        && /\b(pdf|markdown|md)\b|\.md\b/i.test(requestText);
+    const requestedDocumentFormat = /\bpdf\b/i.test(requestText) ? 'pdf' : 'markdown';
+    const requestedMarkdown = msg.content?.match(/```(?:markdown|md)\s*\r?\n([\s\S]*?)```/i)?.[1]?.trim();
     const dispatch = useDispatch();
     const activitySteps = useSelector(state => state.chat.activitySteps);
     const isGenerating = useSelector(state => state.chat.isGenerating);
@@ -718,6 +735,8 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                                     const single = allMediaItems[0];
                                     const isVideo = single.fileType === 'video' || single.mimetype?.startsWith('video/') || /\.(mp4|mov|webm)(\?|$)/i.test(single.url);
                                     const isDoc = single.fileType === 'document' || single.mimetype === 'application/pdf' || /\.(pdf|txt|md|doc|docx)(\?|$)/i.test(single.url) || /\.(pdf|txt|md|doc|docx)$/i.test(single.name || '');
+                                    const isPdf = single.mimetype === 'application/pdf' || /\.pdf(\?|$)/i.test(single.url || '') || /\.pdf$/i.test(single.name || '');
+                                    const isMarkdown = /\.(md|markdown)(\?|$)/i.test(single.url || '') || /\.(md|markdown)$/i.test(single.name || '');
 
                                     if (isVideo) {
                                         return (
@@ -735,17 +754,26 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                                                 href={single.url} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer" 
+                                                onClick={(event) => {
+                                                    if (!isPdf && !isMarkdown) return;
+                                                    event.preventDefault();
+                                                    window.dispatchEvent(new CustomEvent('parsu:open-artifact', { detail: {
+                                                        kind: isPdf ? 'pdf' : 'markdown',
+                                                        url: single.url,
+                                                        name: single.name || (isPdf ? 'document.pdf' : 'document.md'),
+                                                        content: '',
+                                                    } }));
+                                                }}
                                                 className="flex items-center gap-3 p-3.5 bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors group cursor-pointer"
-                                                title="Open and view PDF document in new tab"
+                                                title="Open document in the side viewer"
                                             >
                                                 <div className="p-2 rounded-xl bg-red-500/10 text-red-500 group-hover:bg-red-500/20 transition-colors">
-                                                    <RiFilePdfLine size={24} />
+                                                    {isPdf ? <RiFilePdfLine size={24} /> : <RiFileTextLine size={24} />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-xs font-bold truncate text-zinc-900 dark:text-zinc-100">{single.name || "PDF Document"}</p>
+                                                    <p className="text-xs font-bold truncate text-zinc-900 dark:text-zinc-100">{single.name || (isPdf ? 'PDF Document' : 'Document')}</p>
                                                     <p className="text-[10px] text-zinc-500 uppercase tracking-wider flex items-center gap-1 mt-0.5">
-                                                        <span>View / Download Document</span>
-                                                        <span className="text-[var(--accent-cyan)]">â†—</span>
+                                                        <span>Open in side viewer</span>
                                                     </p>
                                                 </div>
                                             </a>
@@ -753,7 +781,13 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                                     } else {
                                         return (
                                             <div>
-                                                <img src={single.url} alt="Attached" className="w-full h-auto object-cover max-h-[380px]" />
+                                                <button type="button" className="block w-full cursor-zoom-in" aria-label={`Open ${single.name || 'attached image'} in side viewer`} onClick={() => openArtifact({
+                                                    kind: 'image', url: single.url, name: single.name || 'attached-image',
+                                                    title: single.name || 'Attached image', source: 'Chat attachment',
+                                                    image: { url: single.url, title: single.name || 'Attached image', source: 'Chat attachment' },
+                                                })}>
+                                                    <img src={single.url} alt="Attached" className="w-full h-auto max-h-[380px] object-cover" />
+                                                </button>
                                                 <div className="px-3.5 py-1.5 bg-zinc-900 border-t border-zinc-800 text-xs text-zinc-400 flex items-center gap-1.5">
                                                     <RiImageLine size={15} className="text-emerald-400" />
                                                     <span className="truncate">{single.name || "Photo"}</span>
@@ -917,7 +951,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                                     remarkPlugins={[remarkGfm]}
                                     components={{
                                         pre: ({children}) => <>{children}</>,
-                                        img: ({src, alt, ...props}) => <img src={src} alt={alt || ''} loading="lazy" className="rounded-xl max-w-full max-h-[420px] object-contain" onError={(event) => { event.currentTarget.style.display = 'none'; }} {...props} />,
+                                        img: ({src, alt, ...props}) => <img src={src} alt={alt || ''} loading="lazy" className="rounded-xl max-w-full max-h-[420px] object-contain cursor-zoom-in" onClick={() => openArtifact({ kind: 'image', url: src, name: `${alt || 'image'}.jpg`, title: alt || 'Image', source: 'Chat response', image: { url: src, title: alt || 'Image' } })} onError={(event) => { event.currentTarget.style.display = 'none'; }} {...props} />,
                                         code({node, inline, className, children, ...props}) {
                                             const match = /language-(\w+)/.exec(className || '');
                                             const codeString = String(children).replace(/\n$/, '');
@@ -1069,7 +1103,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                                     remarkPlugins={[remarkGfm]}
                                     components={{
                                         pre: ({children}) => <>{children}</>,
-                                        img: ({src, alt, ...props}) => <img src={src} alt={alt || ''} loading="lazy" className="rounded-xl max-w-full max-h-[420px] object-contain" onError={(event) => { event.currentTarget.style.display = 'none'; }} {...props} />,
+                                        img: ({src, alt, ...props}) => <img src={src} alt={alt || ''} loading="lazy" className="rounded-xl max-w-full max-h-[420px] object-contain cursor-zoom-in" onClick={() => openArtifact({ kind: 'image', url: src, name: `${alt || 'image'}.jpg`, title: alt || 'Image', source: 'Chat response', image: { url: src, title: alt || 'Image' } })} onError={(event) => { event.currentTarget.style.display = 'none'; }} {...props} />,
                                         code({node, inline, className, children, ...props}) {
                                             const match = /language-(\w+)/.exec(className || '');
                                             const codeString = String(children).replace(/\n$/, '');
@@ -1157,6 +1191,11 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                                         },
                                         a: ({href, children, ...props}) => {
                                             const isGoogleMaps = href && /(google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)/i.test(href);
+                                            const isPdfFile = href && /\.pdf(?:[?#]|$)/i.test(href);
+                                            const isMarkdownFile = href && /\.(?:md|markdown)(?:[?#]|$)/i.test(href);
+                                            if (isPdfFile || isMarkdownFile) {
+                                                return <button type="button" onClick={() => openArtifact({ kind: isPdfFile ? 'pdf' : 'markdown', url: href, name: String(children).trim() || (isPdfFile ? 'document.pdf' : 'document.md') })} className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-1)] px-3.5 py-2.5 text-left text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)]">{isPdfFile ? <RiFilePdfLine size={17} aria-hidden="true" /> : <RiFileTextLine size={17} aria-hidden="true" />}<span>{children}</span></button>;
+                                            }
                                             return (
                                                 <a 
                                                     href={href} 
@@ -1250,6 +1289,15 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                     )}
                     {msg.content && (
                         <div className="flex items-center gap-3.5 sm:gap-4 pt-4 border-t border-zinc-200 dark:border-zinc-900/50 opacity-60 hover:opacity-100 transition-opacity">
+                            {requestsDocument && <button type="button" onClick={() => openArtifact({
+                                kind: 'markdown',
+                                content: requestedMarkdown || msg.content,
+                                  name: 'generated-document.md',
+                                  mode: 'preview',
+                              })} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-[var(--border-default)] bg-[var(--surface-1)] px-3 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)]">
+                                {requestedDocumentFormat === 'pdf' ? <RiFilePdfLine size={15} /> : <RiFileTextLine size={15} />}
+                                {requestedDocumentFormat === 'pdf' ? 'Open PDF export' : 'Open Markdown'}
+                            </button>}
                             {/* Copy Message */}
                             <button 
                                 onClick={handleCopy}

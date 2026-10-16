@@ -63,7 +63,7 @@ export default function ChatNavbar({
   };
 
   return (
-    <header className="h-14 w-full shrink-0 z-30 px-3.5 sm:px-6 flex items-center justify-between select-none bg-gradient-to-b from-white from-40% via-white/60 to-transparent dark:from-black dark:from-40% dark:via-black/60 dark:to-transparent backdrop-blur-xl">
+    <header className="ui-chat-navbar h-14 w-full shrink-0 z-30 px-3.5 sm:px-6 flex items-center justify-between select-none">
       
       {/* ── Left Section: Mobile Menu Icon / Desktop Brand Pill & Back Link ── */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
