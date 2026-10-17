@@ -50,20 +50,42 @@ import { ProductCardsBlock } from './ProductCardsBlock';
 import GUIDES from '../../guide/guides.registry';
 import { useGuideEngine } from '../../guide/useGuideEngine';
 
-const CodeBlock = React.memo(({ code, language, ...props }) => {
+const CodeBlock = React.memo(({ code, language, messageId, chatId, ...props }) => {
     const [copied, setCopied] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [docked, setDocked] = useState(null);
+    const [localCode, setLocalCode] = useState(code);
     const blockRef = useRef(null);
 
-    const safeCode = typeof code === 'string' ? code : String(code || '');
+    useEffect(() => {
+        setLocalCode(code);
+    }, [code]);
+
+    // Reactively update code display if user edited and saved it in the artifact preview drawer
+    useEffect(() => {
+        const handleArtifactSaved = (e) => {
+            if (e.detail?.messageId && e.detail.messageId === messageId && typeof e.detail.code === 'string') {
+                setLocalCode(e.detail.code);
+            }
+        };
+        window.addEventListener('parsu:artifact-saved', handleArtifactSaved);
+        return () => window.removeEventListener('parsu:artifact-saved', handleArtifactSaved);
+    }, [messageId]);
+
+    const activeCode = localCode ?? code;
+    const safeCode = typeof activeCode === 'string' ? activeCode : String(activeCode || '');
     const lines = safeCode.split('\n');
     const totalLines = lines.length;
-    const isHtmlDocument = /html/i.test(language || '') && /<html\b/i.test(safeCode) && /<\/html\s*>/i.test(safeCode);
+    const isHtmlDocument = /html/i.test(language || '') || (/<(!DOCTYPE\s+html|html|head|body|div\s+id=)/i.test(safeCode) && /<\/(html|body|div)>/i.test(safeCode));
+    const isSvgDocument = /svg/i.test(language || '') || (/<svg\b[\s\S]*<\/svg>/i.test(safeCode));
     const isMarkdownDocument = /^(md|markdown)$/i.test(language || '');
-    // For large code snippets (70+ lines), render first 70 lines to prevent AST highlighter freezing the UI
-    const isLarge = totalLines > 70;
-    const displayedCode = isLarge && !isExpanded ? lines.slice(0, 70).join('\n') : safeCode;
+    const hasVisualPreview = isHtmlDocument || isMarkdownDocument || isSvgDocument;
+
+    // For code blocks with more than 16 lines, collapse by default with zero vertical scroll trap
+    const COLLAPSED_LIMIT = 16;
+    const isLarge = totalLines > COLLAPSED_LIMIT;
+    const displayedCode = isLarge && !isExpanded ? lines.slice(0, COLLAPSED_LIMIT).join('\n') : safeCode;
+
 
     const handleCopy = () => {
         // Always copy the 100% complete code
@@ -73,8 +95,8 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
     };
 
     const handleDownload = () => {
-        const extension = isHtmlDocument ? 'html' : isMarkdownDocument ? 'md' : (language || 'txt').toLowerCase().replace(/[^a-z0-9]/g, '') || 'txt';
-        const mimeType = isHtmlDocument ? 'text/html' : isMarkdownDocument ? 'text/markdown' : 'text/plain';
+        const extension = isHtmlDocument ? 'html' : isMarkdownDocument ? 'md' : isSvgDocument ? 'svg' : (language || 'txt').toLowerCase().replace(/[^a-z0-9]/g, '') || 'txt';
+        const mimeType = isHtmlDocument ? 'text/html' : isMarkdownDocument ? 'text/markdown' : isSvgDocument ? 'image/svg+xml' : 'text/plain';
         const url = URL.createObjectURL(new Blob([safeCode], { type: mimeType }));
         const link = document.createElement('a');
         link.href = url;
@@ -84,14 +106,19 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
     };
 
     const handlePreview = () => {
-        if (isHtmlDocument || isMarkdownDocument) {
-            window.dispatchEvent(new CustomEvent('parsu:open-artifact', { detail: {
-                kind: isHtmlDocument ? 'html' : 'markdown',
-                content: safeCode,
-                name: isHtmlDocument ? 'generated-page.html' : 'generated-document.md',
-            } }));
-        }
+        const kind = isHtmlDocument ? 'html' : isMarkdownDocument ? 'markdown' : 'code';
+        const defaultName = isHtmlDocument ? 'generated-page.html' : isMarkdownDocument ? 'document.md' : isSvgDocument ? 'graphic.svg' : `file.${(language || 'code').toLowerCase()}`;
+        window.dispatchEvent(new CustomEvent('parsu:open-artifact', { detail: {
+            kind,
+            content: safeCode,
+            name: defaultName,
+            language: language || (isHtmlDocument ? 'html' : isMarkdownDocument ? 'markdown' : 'code'),
+            messageId,
+            chatId,
+            mode: hasVisualPreview ? 'preview' : 'code',
+        } }));
     };
+
 
     useEffect(() => {
         const block = blockRef.current;
@@ -123,17 +150,15 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
                 <span className="text-[10px] text-zinc-400 font-mono">({totalLines} lines)</span>
             </div>
             <div className="flex items-center gap-1.5">
-                {(isHtmlDocument || isMarkdownDocument) && (
-                    <button
-                        type="button"
-                        onClick={handlePreview}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-[var(--accent)] transition-colors text-xs font-medium cursor-pointer"
-                        title={`Preview ${isMarkdownDocument ? 'Markdown' : 'HTML'}`}
-                    >
-                        {isMarkdownDocument ? <RiFileTextLine size={13} /> : <RiEyeLine size={13} />}
-                        <span className="hidden sm:inline text-[11px]">Preview</span>
-                    </button>
-                )}
+                <button
+                    type="button"
+                    onClick={handlePreview}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-[var(--accent)] transition-colors text-xs font-medium cursor-pointer"
+                    title={hasVisualPreview ? (isMarkdownDocument ? 'Preview Markdown' : 'Preview Live Output') : 'Open in Code Drawer'}
+                >
+                    {isMarkdownDocument ? <RiFileTextLine size={13} /> : hasVisualPreview ? <RiEyeLine size={13} /> : <RiCodeSSlashLine size={13} />}
+                    <span className="hidden sm:inline text-[11px]">{hasVisualPreview ? 'Preview' : 'Open Drawer'}</span>
+                </button>
                 <button
                     type="button"
                     onClick={handleDownload}
@@ -165,7 +190,8 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
         <div ref={blockRef} className="relative group my-4 sm:my-6 rounded-[20px] border border-zinc-800 bg-[#121214] text-zinc-100 max-w-full overflow-hidden shadow-md">
             <div className={docked ? 'invisible pointer-events-none' : 'sticky top-0 z-20'}>{codeToolbar}</div>
             {docked && createPortal(<div style={{ top: docked.top, left: docked.left, width: docked.width }} className="fixed z-[80] shadow-xl">{codeToolbar}</div>, document.body)}
-            <div className="relative overflow-x-auto overflow-y-auto max-h-[580px] overscroll-contain custom-scrollbar w-full rounded-b-[20px]">
+            {/* When collapsed (!isExpanded): overflow-y-hidden so mouse wheel scrolls chat naturally */}
+            <div className={`relative overflow-x-auto ${isExpanded ? 'overflow-y-auto max-h-[620px] custom-scrollbar' : 'overflow-y-hidden max-h-[380px]'} w-full rounded-b-[20px]`}>
                 <SyntaxHighlighter
                     style={vscDarkPlus}
                     language={language || 'text'}
@@ -185,18 +211,30 @@ const CodeBlock = React.memo(({ code, language, ...props }) => {
                 </SyntaxHighlighter>
 
                 {isLarge && !isExpanded && (
-                    <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-[#121214] via-[#121214]/90 to-transparent flex items-end justify-center pb-3 pointer-events-auto">
+                    <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-[#121214] via-[#121214]/95 to-transparent flex items-end justify-center pb-3 pointer-events-auto">
                         <button
                             type="button"
                             onClick={() => setIsExpanded(true)}
                             className="flex items-center gap-1.5 px-5 py-2 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[#151515] text-xs font-bold shadow-lg transition-transform active:scale-95 cursor-pointer"
                         >
                             <span>Show all {totalLines} lines</span>
-                            <span className="text-[10px] opacity-75 font-mono">(+{totalLines - 70} hidden)</span>
+                            <span className="text-[10px] opacity-75 font-mono">(+{totalLines - COLLAPSED_LIMIT} hidden)</span>
                         </button>
                     </div>
                 )}
             </div>
+
+            {isLarge && isExpanded && (
+                <div className="flex justify-center py-2 px-4 bg-[#121214] border-t border-zinc-800/60">
+                    <button
+                        type="button"
+                        onClick={() => setIsExpanded(false)}
+                        className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-medium transition-all active:scale-95 cursor-pointer"
+                    >
+                        <span>Collapse code ({totalLines} lines)</span>
+                    </button>
+                </div>
+            )}
         </div>
     );
 });
@@ -1006,12 +1044,16 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                                                 <CodeBlock 
                                                     code={codeString} 
                                                     language={match[1]} 
+                                                    messageId={msg?._id}
+                                                    chatId={msg?.chat || msg?.chatId}
                                                     {...props} 
                                                 />
                                             ) : !inline ? (
                                                 <CodeBlock 
                                                     code={codeString} 
                                                     language="code" 
+                                                    messageId={msg?._id}
+                                                    chatId={msg?.chat || msg?.chatId}
                                                     {...props} 
                                                 />
                                             ) : (
@@ -1028,7 +1070,7 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                             </div>
                         ) : typeof contentToRender === 'string' && isRawCodeBlock(contentToRender) ? (
                             <div className="w-full max-w-full overflow-hidden">
-                                <CodeBlock code={contentToRender} language={detectCodeLanguage(contentToRender)} />
+                                <CodeBlock code={contentToRender} language={detectCodeLanguage(contentToRender)} messageId={msg?._id} chatId={msg?.chat || msg?.chatId} />
                             </div>
                         ) : (
                             <div className="whitespace-pre-wrap break-words leading-relaxed font-medium">
@@ -1228,6 +1270,8 @@ const ChatMessage = ({ msg, isLatest, isNewMessage, previousMessage }) => {
                                                 <CodeBlock 
                                                     code={codeString} 
                                                     language={match[1]} 
+                                                    messageId={msg?._id}
+                                                    chatId={msg?.chat || msg?.chatId}
                                                     {...props} 
                                                 />
                                             ) : (

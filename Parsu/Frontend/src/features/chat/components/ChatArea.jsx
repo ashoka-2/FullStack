@@ -637,8 +637,25 @@ const ChatArea = () => {
           </div>
         </div>
 
+        {/* Daily Market & News Focus Pills from Redis cache */}
+        {aiSuggestions?.pills && aiSuggestions.pills.length > 0 && (
+          <div className="w-full max-w-[800px] mt-8 flex items-center justify-center sm:justify-start gap-1.5 flex-wrap px-1">
+            <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mr-1">Daily Market:</span>
+            {aiSuggestions.pills.map((pill, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleTry(`Give me today's latest market and news updates about ${pill}`)}
+                className="px-2.5 py-0.5 text-[11px] font-medium rounded-full bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 text-zinc-600 dark:text-zinc-300 hover:border-[var(--accent-cyan)] dark:hover:border-[var(--accent-cyan)] hover:text-zinc-900 dark:hover:text-white transition-all cursor-pointer"
+              >
+                {pill}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Suggested queries from backend */}
-        <div className="w-full max-w-[800px] mt-10 space-y-3">
+        <div className="w-full max-w-[800px] mt-6 space-y-3">
           {suggestionsLoading ? (
             [1, 2, 3, 4, 5].map(i => <div key={i} className="w-full h-8 bg-zinc-900/50 rounded-lg animate-pulse" />)
           ) : (

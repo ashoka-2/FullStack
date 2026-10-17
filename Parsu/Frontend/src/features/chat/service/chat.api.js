@@ -95,3 +95,9 @@ export async function sendFeedback(messageId, feedback) {
     const response = await api.post(`/api/chats/message/${messageId}/feedback`, { feedback });
     return response.data;
 }
+
+// Update message code in database when edited in artifact preview drawer
+export async function updateMessageCode(messageId, code, language) {
+    const response = await api.put(`/api/chats/message/${messageId}/code`, { code, language });
+    return response.data;
+}

@@ -315,23 +315,6 @@ const SocialConnections = () => {
                     showShareButton={false}
                     rightSlot={
                         <div className="flex items-center gap-1.5 sm:gap-2">
-                            <div className="inline-flex rounded-full border border-zinc-200/80 bg-zinc-100/90 p-0.5 dark:border-white/10 dark:bg-white/[0.05]" role="tablist" aria-label="Plugin sections">
-                                <button type="button" role="tab" aria-selected={activeTab === 'apps'} onClick={() => setActiveTab('apps')} className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${activeTab === 'apps' ? 'bg-white text-zinc-900 shadow-xs dark:bg-zinc-800 dark:text-white' : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}`}>Apps</button>
-                                <button type="button" role="tab" aria-selected={activeTab === 'skills'} onClick={() => setActiveTab('skills')} className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${activeTab === 'skills' ? 'bg-white text-zinc-900 shadow-xs dark:bg-zinc-800 dark:text-white' : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}`}>Skills</button>
-                                <button type="button" role="tab" aria-selected={activeTab === 'mcp'} onClick={() => setActiveTab('mcp')} className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${activeTab === 'mcp' ? 'bg-white text-zinc-900 shadow-xs dark:bg-zinc-800 dark:text-white' : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}`}>MCP Servers</button>
-                            </div>
-                            {activeTab === 'apps' && (
-                                <PrimaryButton
-                                    type="button"
-                                    onClick={() => setCreatePostOpen(true)}
-                                    size="xs"
-                                    icon={RiSendPlaneFill}
-                                    iconPosition="left"
-                                    className="rounded-full px-3 cursor-pointer"
-                                >
-                                    <span className="hidden sm:inline">Create Post</span>
-                                </PrimaryButton>
-                            )}
                             {activeTab === 'apps' && (
                                 <div className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200/80 dark:border-white/10 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
                                     {loading ? (
@@ -351,13 +334,55 @@ const SocialConnections = () => {
                 {/* Scrollable Content */}
                 <div data-lenis-prevent className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
                     <main className="max-w-5xl w-full mx-auto px-4 sm:px-6 md:px-8 py-5 sm:py-8 pb-32 sm:pb-24">
-                        {activeTab === 'skills' ? (
-                            <CustomSkillsPanel />
-                        ) : activeTab === 'mcp' ? (
-                            <McpServersPanel />
-                        ) : (
-                            <>
-                        <div ref={containerRef}>
+                        {/* Minimal-AI-UI In-Page Tab Navigation */}
+                        <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
+                            <div className="inline-flex rounded-full border border-zinc-200/90 bg-zinc-100/90 p-1 dark:border-white/10 dark:bg-white/[0.06] shadow-2xs" role="tablist" aria-label="Plugin sections">
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={activeTab === 'apps'}
+                                    onClick={() => setActiveTab('apps')}
+                                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                                        activeTab === 'apps'
+                                            ? 'bg-white text-zinc-950 shadow-xs dark:bg-zinc-800 dark:text-white'
+                                            : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                                    }`}
+                                >
+                                    Apps & Channels
+                                </button>
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={activeTab === 'skills'}
+                                    onClick={() => setActiveTab('skills')}
+                                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                                        activeTab === 'skills'
+                                            ? 'bg-white text-zinc-950 shadow-xs dark:bg-zinc-800 dark:text-white'
+                                            : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                                    }`}
+                                >
+                                    Custom Skills
+                                </button>
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={activeTab === 'mcp'}
+                                    onClick={() => setActiveTab('mcp')}
+                                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                                        activeTab === 'mcp'
+                                            ? 'bg-white text-zinc-950 shadow-xs dark:bg-zinc-800 dark:text-white'
+                                            : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                                    }`}
+                                >
+                                    MCP Servers
+                                </button>
+                            </div>
+                        </div>
+
+                        {activeTab === 'skills' && <CustomSkillsPanel />}
+                        {activeTab === 'mcp' && <McpServersPanel />}
+                        {activeTab === 'apps' && (
+                            <div ref={containerRef}>
                             
                             {/* Apple-style Hero Section */}
                             <div className="mb-8 sm:mb-10">
@@ -477,8 +502,7 @@ const SocialConnections = () => {
                                 </div>
                             </div>
                         </div>
-                        </>
-                        )}
+                    )}
                     </main>
                     <Footer />
                 </div>

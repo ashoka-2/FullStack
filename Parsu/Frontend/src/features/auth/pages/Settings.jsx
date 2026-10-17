@@ -20,6 +20,7 @@ import {
     RiLogoutBoxRLine,
     RiNotificationLine,
     RiComputerLine,
+    RiCompass3Line,
 } from '@remixicon/react';
 import { useAuth } from '../hook/useAuth';
 import ConfirmationModal from '../../Components/ConfirmationModal';
@@ -124,6 +125,12 @@ const SETTING_GROUPS = [
     {
         label: 'Support & Session',
         items: [
+            {
+                to: '/settings/guide',
+                icon: RiCompass3Line,
+                title: 'AI Guide & Tours',
+                description: 'Interactive walkthroughs, feature guides, and shortcut cheat-sheets.',
+            },
             {
                 to: '/settings/report-bug',
                 icon: RiBugLine,

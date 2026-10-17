@@ -112,6 +112,36 @@ export async function deleteUserSkill(req, res) {
     }
 }
 
+export async function updateUserSkill(req, res) {
+    try {
+        const user = await userModel.findById(req.user.id).select("skills");
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        const skill = (user.skills || []).find(s => s._id.toString() === req.params.skillId);
+        if (!skill) return res.status(404).json({ success: false, message: "Skill not found" });
+
+        if (req.body.name) skill.name = String(req.body.name).trim().slice(0, 120);
+        if (req.body.description !== undefined) skill.description = String(req.body.description).trim().slice(0, 500);
+        if (req.body.instructions) skill.instructions = String(req.body.instructions).trim().slice(0, 30000);
+        if (Array.isArray(req.body.triggers)) {
+            skill.triggers = [...new Set(req.body.triggers.map(v => String(v).trim().slice(0, 80)).filter(Boolean))].slice(0, 20);
+        }
+        if (Array.isArray(req.body.files)) {
+            skill.files = req.body.files.slice(0, 20).map(f => ({
+                name: String(f.name || "").trim().slice(0, 100),
+                path: String(f.path || f.name || "").trim().slice(0, 200),
+                content: String(f.content || "").slice(0, 20000),
+                size: Number(f.size) || (f.content ? f.content.length : 0)
+            })).filter(f => f.name);
+        }
+        if (req.body.enabled !== undefined) skill.enabled = Boolean(req.body.enabled);
+
+        await user.save();
+        res.json({ success: true, skills: user.skills });
+    } catch {
+        res.status(500).json({ success: false, message: "Could not update this skill" });
+    }
+}
+
 // ─── Model Context Protocol (MCP) Servers ─────────────────────────────────────
 export async function getMcpServers(req, res) {
     try {
